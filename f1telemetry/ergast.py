@@ -11,7 +11,7 @@ def load(year, gp, session):
     mainly to port on upper level libraries
     """
     day = 'qualifying' if session == 'Qualifying' else 'results'
-    sel = 'QualifyingReults' if session == 'Qualifying' else 'Results'
+    sel = 'QualifyingResults' if session == 'Qualifying' else 'Results'
     return _parse_ergast(fetch_day(year, gp, day))[sel]
 
 
