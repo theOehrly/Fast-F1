@@ -65,9 +65,11 @@ def _cached_panda(func):
 
 
 def load(name, date, session):
-    for name in pages:
-        #fetch_page(make_path(name, date, session), name)
-        pass
+    data = {}
+    path = make_path(name, date, session)
+    data['car_data'] = car_data(path)
+    data['position'] = position(path)
+    return data
 
 
 def make_path(wname, d, session):
@@ -97,7 +99,9 @@ def car_data(path):
     """Fetch and create pandas dataframe for Telemetry. Cached data is
     used if already fetched.
 
-    Samples are not synchronised with the other dataframes
+    Samples are not synchronised with the other dataframes and sampling
+    time is not constant, usually 240ms but sometimes can be ~270ms.
+    Keep absolute reference.
 
     Useful columns:
         - Time: sample pandas datetime
@@ -112,7 +116,7 @@ def car_data(path):
     """
     index = {'0': 'RPM', '2': 'Speed', '3': 'nGear',
              '4': 'Throttle', '5': 'Brake', '45': 'DRS'}
-    data = {'Time': [],'Date': [], 'Driver': []}
+    data = {'Clock': [],'Time': [], 'Driver': []}
     [data.update({index[i]: []}) for i in index]
     logging.info("Fetching car data") 
     raw = fetch_page(path, 'car_data')
@@ -134,7 +138,9 @@ def position(path):
     """Fetch and create pandas dataframe for Position. Cached data is
     used if already fetched.
 
-    Samples are not synchronised with the other dataframes
+    Samples are not synchronised with the other dataframes and sampling
+    time is not constant, usually 300ms but sometimes can be ~200ms.
+    Keep absolute reference.
 
     Useful columns:
         - Time: pandas datetime of sample
@@ -148,7 +154,7 @@ def position(path):
         pandas dataframe
     """
     index = {'Status': 'Status', 'X': 'X', 'Y': 'Y', 'Z': 'Z'}
-    data = {'Time': [],'Date': [], 'Driver': []}
+    data = {'Clock': [],'Time': [], 'Driver': []}
     [data.update({index[i]: []}) for i in index]
     logging.info("Fetching position") 
     raw = fetch_page(path, 'position')
@@ -166,6 +172,19 @@ def position(path):
 
 
 def fetch_page(path, name):
+    """Fetch formula1 web api, given url path and page name. An attempt
+    to parse json or decode known messages is made.
+
+    Args:
+        path: url path (see :func:`make_path`)
+        name: page name (see :attr:`pages`)
+
+    Returns:
+        dictionary if content was json, list of entries if jsonStream,
+        where each element is len 2: [clock, content]. Content is
+        parsed with :func:`parse`. None if request failed.
+
+    """
     page = pages[name]
     is_stream = 'jsonStream' in page
     is_z = '.z.' in page
@@ -183,6 +202,8 @@ def fetch_page(path, name):
 
 
 def parse(text, zipped=False):
+    """Parse json and jsonStream as known from livetiming.formula1.com
+    """
     if text[0] == '{':
         return json.loads(text)
     if text[0] == '"':
