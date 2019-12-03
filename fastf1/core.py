@@ -102,10 +102,12 @@ class Session:
         self.summary = api.summary(api.make_path(w.name, w.date, s))
         numbers = self.summary['Driver']
         self.summary['Driver'] = numbers.map(self._get_driver_map())
-        self.summary.rename(columns={'LastLapTime': 'LapTime'}, inplace=True)
+        self.summary.rename(columns={'LastLapTime': 'LapTime',
+                                     'NumberOfLaps': 'LapNumber'},
+                                     inplace=True)
         _ = self.summary['LapTime'].apply(lambda x: x if x is None
                                                       else '00:' + x)
-        self.summary['LapTime'] = pd.to_timedelta(_).dt.total_seconds()
+        self.summary['LapTime'] = pd.to_timedelta(_)
         return self
 
     def get_driver(self, identifier):

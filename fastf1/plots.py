@@ -68,6 +68,24 @@ def _subplots(*args, **kwargs):
     return fig, ax
 plt.subplots = _subplots
 
+def _timedelta_plot(func):
+    def plot(*args, **kwargs):
+        if len(args) > 2 and str(args[2].dtype) == 'timedelta64[ns]':
+            ax = args[0]
+            y = args[2].dt.total_seconds()
+            def time_ticks(x, pos):
+                if not np.isnan(x):
+                    pieces = f'{x - 60*int(x/60)}'.split('.')
+                    pieces[0] = pieces[0].zfill(2)
+                    x = f'{int(x/60)}:{".".join(pieces)}' 
+                return x
+            formatter = matplotlib.ticker.FuncFormatter(time_ticks)
+            ax.yaxis.set_major_formatter(formatter)
+            args = (ax, args[1], y)
+        return func(*args, **kwargs)
+    return plot
+matplotlib.axes.Axes.plot = _timedelta_plot(matplotlib.axes.Axes.plot)
+
 
 _savefig_placeholder = matplotlib.figure.Figure.savefig
 def _save(*args, **kwargs):

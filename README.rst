@@ -21,24 +21,30 @@ Setting up an experiment is easy, especially if you are already familiar
 with pandas and numpy.
 
 Suppose that we want to analyse the race pace of Leclerc compared to 
-Hamilton from the Bahrain GP of 2019.::
+Hamilton from the Bahrain GP (weekend number 2) of 2019.
+
+.. code:: python
 
     import fastf1 as f1
     from fastf1 import plots
     from matplotlib import pyplot as plt
 
     race = f1.get_session(2019, 2, 'R').init()
-    # Season, Race number and session (FP#, Q and R)
 
-    lec = race.summary['Driver'] == 'LEC'
-    ham = race.summary['Driver'] == 'HAM'
+    lec = race.summary[race.summary['Driver'] == 'LEC']
+    ham = race.summary[race.summary['Driver'] == 'HAM']
 
 Once the session is loaded, and drivers are selected, you can plot the
-information::
+information
+
+.. code:: python
 
     fig, ax = plt.subplots()
-    ax.plot(race.summary[lec]['NumberOfLaps'], race.summary[lec]['LapTime'], color='red')
-    ax.plot(race.summary[ham]['NumberOfLaps'], race.summary[ham]['LapTime'], color='cyan')
+    ax.plot(lec['LapNumber'], lec['LapTime'], color='red')
+    ax.plot(ham['LapNumber'], ham['LapTime'], color='cyan')
+    ax.set_title("LEC vs HAM")
+    ax.set_xlabel("Lap Number")
+    ax.set_ylabel("Lap Time")
     plt.show()
 
 .. image:: docs/_static/readme.svg
