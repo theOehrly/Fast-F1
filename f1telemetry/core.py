@@ -91,8 +91,11 @@ class Session:
         """Load web data or cache if available and populate object
         """
         w, s = self.weekend.init(), self.session_name
-        #self.results = ergast.load(w.year, w.gp, s)
+        self.results = ergast.load(w.year, w.gp, s)
         self.event = api.load(w.name, w.date, s)
+        self.summary = api.summary(api.make_path(w.name, w.date, s))
+        numbers = self.summary['Driver']
+        self.summary['Driver'] = numbers.map(self._get_driver_map())
         return self
 
     def get_driver(self, identifier):
@@ -101,6 +104,12 @@ class Session:
                 if info['Driver']['code'] == identifier:
                     return Driver(self, info)
         return None
+
+    def _get_driver_map(self):
+        lookup = {}
+        for block in self.results:
+            lookup[block['number']] = block['Driver']['code']
+        return lookup
 
 
 class Driver:

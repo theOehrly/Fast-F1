@@ -132,14 +132,14 @@ def summary(path):
     useful = useful[~useful['Compound'].isnull()]
     useful['Time'] = pd.to_timedelta(useful['Time'])
     for driver in laps_data['Driver'].unique():
-        sel1 = laps_data['Driver'] == driver
-        sel2 = useful['Driver'] == driver
-        result = pd.merge_asof(laps_data[sel1], useful[sel2], on='Time', by='Driver')
+        d1 = laps_data[laps_data['Driver'] == driver]
+        d2 = useful[useful['Driver'] == driver]
+        result = pd.merge_asof(d1, d2, on='Time', by='Driver')
         for stint in result['Stint'].unique():
             sel = result['Stint'] == stint
             result.loc[sel, 'TotalLaps'] += np.arange(0, sel.sum()) + 1
         df = result if df is None else pd.concat([df, result])    
-    df.rename(columns={'TotalLaps': 'TyreLife', 'New': 'FreshTyre'})
+    df.rename(columns={'TotalLaps': 'TyreLife', 'New': 'FreshTyre'}, inplace=True)
     return df
 
 
