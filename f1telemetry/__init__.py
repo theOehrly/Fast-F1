@@ -56,5 +56,3 @@ For some more advanced stuff, just a few more steps::
 
 """
 from f1telemetry.core import get_session
-
-__version__ = 'v0.1.0'

@@ -1,9 +1,8 @@
 from distutils.core import setup
-from f1telemetry import __version__
 
 setup(
         name='f1telemetry',
-        version=__version__,
+        version='v0.1.0',
         author='Ax_6',
         author_email='axolo6@gmail.com',
         packages=['f1telemetry'],
