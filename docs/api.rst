@@ -1,2 +1,2 @@
-.. automodule:: f1telemetry.api
+.. automodule:: fastf1.api
    :members:

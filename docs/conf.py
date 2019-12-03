@@ -7,14 +7,14 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../'))
-from f1telemetry import __version__
+from setup import info
 
 # -- Project information -----------------------------------------------------
 
 project = 'F1 Telemetry'
 copyright = 'MIT'
 author = 'Ax_6'
-version = __version__
+version = info['version']
 
 
 # -- General configuration ---------------------------------------------------

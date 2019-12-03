@@ -1,4 +1,4 @@
-.. automodule:: f1telemetry.core
+.. automodule:: fastf1.core
     :members:
     :show-inheritance:
 

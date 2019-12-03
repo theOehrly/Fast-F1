@@ -3,9 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-==========================
-F1 Telemetry documentation
-==========================
+=====================
+Fast F1 documentation
+=====================
 
 For the passionate F1 nerds.
 
@@ -13,8 +13,7 @@ For the passionate F1 nerds.
    :maxdepth: 2
    :caption: Contents:
 
-   includeme
-   f1telemetry
+   fastf1
    core
    api
 
