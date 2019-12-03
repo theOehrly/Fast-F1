@@ -1,5 +1,6 @@
+F1 Telemetry
+============
 
-HEllo?
-=====
+A python package to provide accessible F1 data. 
 
-ciao
+Documentation can be found `here <https://ax6.github.io/f1-telemetry/f1telemetry.html>`_.
