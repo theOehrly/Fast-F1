@@ -15,7 +15,7 @@ Usage
 =====
 
 Full documentation can be found
-`here <https://ax6.github.io/Fast-F1/fast-f1.html>`_.
+`here <https://ax6.github.io/Fast-F1/fastf1.html>`_.
 
 Setting up an experiment is easy, especially if you are already familiar
 with pandas and numpy.

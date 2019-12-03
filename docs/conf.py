@@ -11,7 +11,7 @@ from setup import info
 
 # -- Project information -----------------------------------------------------
 
-project = 'F1 Telemetry'
+project = 'Fast F1'
 copyright = 'MIT'
 author = 'Ax_6'
 version = info['version']
