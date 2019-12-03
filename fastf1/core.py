@@ -1,5 +1,9 @@
-from f1telemetry import ergast
-from f1telemetry import api
+"""
+:mod:`fastf1.core` - Core module
+================================
+"""
+from fastf1 import ergast
+from fastf1 import api
 
 
 def get_session(year, gp, event=None):

@@ -24,9 +24,9 @@ Getting started
 
 Setting up a running snippet is straightforward::
 
-    import f1telemetry as f1
+    import fastf1 as ff1
 
-    monza_quali = f1.get_session(2019, 14, 'Q')
+    monza_quali = ff1.get_session(2019, 14, 'Q')
     monza_quali = monza_quali.init()
 
     vettel = monza_quali.get_driver('VET')
@@ -36,12 +36,12 @@ Setting up a running snippet is straightforward::
 For some more advanced stuff, just a few more steps::
 
     from matplotlib import pyplot as plt
-    from f1telemetry import plots
+    from fastf1 import plots
 
     leclerc = monza_quali.get_driver('LEC')
     t = leclerc.car_data['Time']
     vCar = leclerc.car_data['Speed']
-    
+
     # The rest is just plotting
     fig, ax = plt.subplots()
     ax.plot(t, vCar, label='Fast')
@@ -55,4 +55,4 @@ For some more advanced stuff, just a few more steps::
     :target: _static/gettingstarted.svg
 
 """
-from f1telemetry.core import get_session
+from fastf1.core import get_session

@@ -7,7 +7,7 @@
 F1 Telemetry documentation
 ==========================
 
-A python framework for the passionate F1 nerds.
+For the passionate F1 nerds.
 
 .. toctree::
    :maxdepth: 2
@@ -15,6 +15,7 @@ A python framework for the passionate F1 nerds.
 
    includeme
    f1telemetry
+   core
    api
 
 ==================

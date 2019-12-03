@@ -1,5 +1,8 @@
-"""Some notes on notation
-- line: driver position
+"""
+:mod:`fastf1.api` - Api module
+==============================
+
+This module contains the main interfaces to the f1 web api
 """
 import os
 import json
@@ -49,6 +52,8 @@ pages = {
 }
 """Known requests
 """
+# Some notes on notation:
+# - line: driver position
 
 CACHE_ENABLE = True
 """Boolean: Enable/Disable cache for parsed data (Everything under
