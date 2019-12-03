@@ -13,6 +13,7 @@ A python framework for the passionate F1 nerds.
    :maxdepth: 2
    :caption: Contents:
 
+   includeme
    f1telemetry
    api
 
