@@ -7,8 +7,7 @@ setup(
         author_email='axolo6@gmail.com',
         packages=['f1telemetry'],
         install_requires=[
-            'numpy', 'pandas', 'zlib', 'requests', 'requests_cache', 
-            'matplotlib'
+            'numpy', 'pandas', 'requests', 'requests_cache', 'matplotlib'
         ],
         license='MIT',
         url='',
