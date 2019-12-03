@@ -41,8 +41,8 @@ information::
     ax.plot(race.summary[ham]['NumberOfLaps'], race.summary[ham]['LapTime'], color='cyan')
     plt.show()
 
-.. image:: docs/source/_static/readme.svg
-    :target: docs/source/_static/readme.svg
+.. image:: docs/_static/readme.svg
+    :target: docs/_static/readme.svg
 
 Compatibility
 =============
