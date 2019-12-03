@@ -13,14 +13,20 @@ def get_session(year, gp, event=None):
         event(=None): may be 'R' or 'Q', full weekend otherwise.
 
     Returns:
-        :class:`Weekend`, :class:`Race` or :class:`Quali`
+        :class:`Weekend` or :class:`Session`
 
     """
     weekend = Weekend(year, gp)
-    if event == 'Q':
-        return weekend.get_quali()
     if event == 'R':
-        return weekend.get_race()
+        return Session(weekend, 'Race')
+    if event == 'Q':
+        return Session(weekend, 'Qualifying')
+    if event == 'FP3':
+        return Session(weekend, 'Practice 3')
+    if event == 'FP2':
+        return Session(weekend, 'Practice 2')
+    if event == 'FP1':
+        return Session(weekend, 'Practice 1')
     return weekend
 
 
@@ -39,15 +45,28 @@ class Weekend:
             self._loaded = True
         return self
 
-    def get_quali(self):
-        """Fetch and returns Race instance of weekend
+    def get_practice(self, number):
         """
-        return Quali(self)
+        Args:
+            number: 1, 2 or 3 Free practice session number
+        Returns:
+            :class:`Session` instance
+        """
+        return Session(self, 'Qualifying')
+
+    def get_quali(self):
+        """
+        Returns:
+            :class:`Session` instance
+        """
+        return Session(self, 'Qualifying')
 
     def get_race(self):
-        """Fetch and returns Race instance of weekend
         """
-        return Race(self)
+        Returns:
+            :class:`Session` instance
+        """
+        return Session(self, 'Race')
 
     @property
     def name(self):
@@ -57,21 +76,22 @@ class Weekend:
 
     @property
     def date(self):
-        """Weekend race date
+        """Weekend race date (YYYY-MM-DD)
         """
         return self.data['date']
 
 
-class Classification:
+class Session:
 
-    def __init__(self, weekend):
+    def __init__(self, weekend, session_name):
         self.weekend = weekend
+        self.session_name = session_name
 
     def init(self):
-        """Load web data
+        """Load web data or cache if available and populate object
         """
-        w, s = self.weekend.init(), self.session
-        self.results = ergast.load(w.year, w.gp, s)
+        w, s = self.weekend.init(), self.session_name
+        #self.results = ergast.load(w.year, w.gp, s)
         self.event = api.load(w.name, w.date, s)
         return self
 
@@ -81,16 +101,6 @@ class Classification:
                 if info['Driver']['code'] == identifier:
                     return Driver(self, info)
         return None
-
-
-class Quali(Classification):
-
-    session = 'Qualifying'
-
-
-class Race(Classification):
-
-    session = 'Race'
 
 
 class Driver:

@@ -1,28 +1,23 @@
 """
-============
-F1 Telemetry
-============
-
-A python framework for the passionate F1 nerds.
------------------------------------------------
-
 Introduction
 ============
 
-This package interfaces with two main online sources of data:
+This package features two main online sources of data:
     - The official f1 data stream ->
-        `link`<https://www.formula1.com/en/f1-live.html>_
-    - Ergast web api -> `link`<http://ergast.com/mrd/>_
+      `link <https://www.formula1.com/en/f1-live.html>`_
+    - Ergast web api -> `link <http://ergast.com/mrd/>`_
 
 Car position, speed traces, tyres, timings and weekend history are some
-of the many features available and no formula1 account is needed.
+of the many available resources. No formula1 account is needed.
 
 The library is designed to be interfaced with matplotlib (although you
 can use whatever you want) but there is a neat :mod:`plots` module which
 you can import and gives some color to your graphs. 
 
 Modules handle big chunks of data (~30mb per session) so most of the
-information is stored locally as cached requests, be aware!
+information is stored locally as cached requests (be aware).
+
+Have fun!
 
 Getting started
 ===============
@@ -38,7 +33,7 @@ Setting up a running snippet is straightforward::
     print(f"Pronto {vettel.name}?")
     # Pronto Se🅱️astian?
 
-For some more advanced stuff just a few more steps::
+For some more advanced stuff, just a few more steps::
 
     from matplotlib import pyplot as plt
     from f1telemetry import plots
@@ -56,7 +51,10 @@ For some more advanced stuff just a few more steps::
     ax.legend()
     plt.show()
 
+.. image:: _static/gettingstarted.svg
+    :target: _static/gettingstarted.svg
+
 """
 from f1telemetry.core import get_session
 
-version = 'v0.1.0'
+__version__ = 'v0.1.0'

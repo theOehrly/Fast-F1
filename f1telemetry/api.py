@@ -1,12 +1,17 @@
+"""Some notes on notation
+- line: driver position
+"""
 import os
 import json
 import base64
+import copy
 import zlib
 import requests
 import requests_cache
 import logging
 import functools
 import pandas as pd
+import numpy as np
 
 base_url = 'https://livetiming.formula1.com'
 requests_cache.install_cache('formula1_cache', allowable_methods=('GET', 'POST'))
@@ -21,10 +26,6 @@ headers = {
   'X-Unity-Version': '2018.4.1f1'
 }
 
-"""Some notes on notation
-- line: driver position
-"""
-
 pages = {
   'session_info': 'SessionInfo.json', # more rnd
   'archive_status': 'ArchiveStatus.json', # rnd=1880327548
@@ -35,8 +36,8 @@ pages = {
   'race_control_messages': 'RaceControlMessages.json', # Flags etc
   'session_status': 'SessionStatus.jsonStream', # Start and finish times
   'team_radio': 'TeamRadio.jsonStream', # Links to team radios
-  'timing_app_data': 'TimingAppData.jsonStream', # Tyres and lap times
-  'timing_stats': 'TimingStats.jsonStream', # Sector times and top speed 
+  'timing_app_data': 'TimingAppData.jsonStream', # Tyres and laps (juicy)
+  'timing_stats': 'TimingStats.jsonStream', # 'Best times/speed' useless
   'track_status': 'TrackStatus.jsonStream', # SC, VSC and Yellow
   'weather_data': 'WeatherData.jsonStream', # Temp, wind and rain
   'position': 'Position.z.jsonStream', # Coordinates, not GPS? (.z)
@@ -46,6 +47,14 @@ pages = {
   'lap_count': 'LapCount.jsonStream', # Lap counter
   'championship_predicion': 'ChampionshipPrediction.jsonStream' # Points
 }
+"""Known requests
+"""
+
+CACHE_ENABLE = True
+"""Boolean: Enable/Disable cache for parsed data (Everything under
+./F1_Data). Note that raw requests are still cached, data is quite fixed
+and shouldn't really change..
+"""
 
 def _cached_panda(func):
     @functools.wraps(func)
@@ -54,6 +63,7 @@ def _cached_panda(func):
         name = func.__name__
         pkl = f"{cache_path}/{'_'.join(path.split('/')[-3:-1])}_{name}.pkl"
         if os.path.isfile(pkl):
+            print(f"Hit cache for {pkl}")
             df = pd.read_pickle(pkl)
         else:
             df = func(*args, **kwargs)
@@ -61,7 +71,7 @@ def _cached_panda(func):
         return df
     cache_path = './F1_Data'
     os.makedirs(cache_path, exist_ok=True)
-    return decorator
+    return decorator if CACHE_ENABLE else func
 
 
 def load(name, date, session):
@@ -92,6 +102,244 @@ def make_path(wname, d, session):
         d_real = d
     smooth_operator = f'{d[:4]}/{d} {wname}/{d_real} {session}/'
     return '/static/' + smooth_operator.replace(' ', '_')
+
+
+@_cached_panda
+def summary(path):
+    """From `timing_data` and `timing_app_data` a summary table is
+    built. Lap by lap, information on tyre, sectors and times are 
+    organised in an accessible pandas data frame.
+
+    Args:
+        path: path returned from :func:`make_path`
+
+    Returns:
+        pandas dataframe
+
+    """
+    laps_data, _ = timing_data(path)
+    laps_app_data = timing_app_data(path)
+
+    # Now we do some manipulation to make it beautiful
+    df = None
+    laps_data['Stint'] = laps_data['NumberOfPitStops'] + 1
+    laps_data.drop(columns=['NumberOfPitStops'], inplace=True)
+    laps_data['Time'] = pd.to_timedelta(laps_data['Time'])
+    # Matching laps_data and laps_app_data. Not super straightworward
+    # Sometimes a car may enter the pit without changing tyres, so
+    # new compound is associated with the help of log time.
+    useful = laps_app_data[['Driver', 'Time', 'Compound', 'TotalLaps', 'New']]
+    useful = useful[~useful['Compound'].isnull()]
+    useful['Time'] = pd.to_timedelta(useful['Time'])
+    for driver in laps_data['Driver'].unique():
+        sel1 = laps_data['Driver'] == driver
+        sel2 = useful['Driver'] == driver
+        result = pd.merge_asof(laps_data[sel1], useful[sel2], on='Time', by='Driver')
+        for stint in result['Stint'].unique():
+            sel = result['Stint'] == stint
+            result.loc[sel, 'TotalLaps'] += np.arange(0, sel.sum()) + 1
+        df = result if df is None else pd.concat([df, result])    
+    df.rename(columns={'TotalLaps': 'TyreLife', 'New': 'FreshTyre'})
+    return df
+
+
+def timing_data(path):
+    """Timing data is a mixed stream of information of each driver.
+    At a given time a packet of data may indicate position, lap time,
+    speed trap, sector time and so on.
+
+    While most of this data can be mapped lap by lap given a readable and
+    usable data structure, other entries like position and time gaps are
+    separated and mapped on finer timeseries.
+    """
+    raw = fetch_page(path, 'timing_data')
+    laps_data = _timing_data_laps(path, response=raw)
+    stream_data = _timing_data_stream(path, response=raw)
+    return laps_data, stream_data
+
+
+def _timing_data_stream(path, response=None):
+    """Path is mandatory to target cache file, but pre-fetched response
+    can be fed if other functions parse the same raw data.
+    """
+    data, df = {}, None
+    if response is None:
+        response = fetch_page(path, 'timing_data')
+    for entry in response:
+        for driver in entry[1]['Lines']:
+            if driver not in data:
+                data[driver] = {'Time': [], 'Driver': [], 'Position': [],
+                                'GapToLeader': [], 'IntervalToPositionAhead':[]}
+            time = entry[0]
+            block = entry[1]['Lines'][driver]
+            new_entry = False
+
+            key = 'Position'
+            if key in block:
+                data[driver][key].append(block[key])
+                new_entry = True
+            key = 'GapToLeader'
+            if key in block:
+                data[driver][key].append(block[key])
+                new_entry = True
+            key = 'IntervalToPositionAhead'  
+            if key in block:
+                if 'Value' in block[key]:
+                    data[driver][key].append(block[key]['Value'])
+                    new_entry = True
+
+            if new_entry:
+                data[driver]['Time'].append(time)
+                data[driver]['Driver'].append(driver)
+                expected_length = len(data[driver]['Time'])
+                for key in data[driver]:
+                    if len(data[driver][key]) == 0:
+                        data[driver][key].append(None)
+                    elif len(data[driver][key]) < expected_length:
+                        data[driver][key].append(data[driver][key][-1])
+    for driver in data:
+        data[driver] = pd.DataFrame(data[driver])
+        df = data[driver] if df is None else pd.concat([df, data[driver]])
+    return df
+
+
+def _timing_data_laps(path, response=None):
+    """Path is mandatory to target cache file, but pre-fetched response
+    can be fed if other functions parse the same raw data.
+    """
+    if response is None:
+        response = fetch_page(path, 'timing_data')
+    data, df = {}, None
+    for entry in response:
+        for driver in entry[1]['Lines']:
+            data = _timing_data_laps_entry(entry, driver, data)
+    
+    empty_check = [key for key in data[driver] if key not in ['Time', 'Driver']]
+    for driver in data:
+        _df = pd.DataFrame(data[driver])
+        if not _df.iloc[-1][empty_check].any():
+            # Pop last row if all entries are empty
+            _df = _df.iloc[:-1]
+        # To increase pitstop count on next lap start and not end 
+        pit_stops = _df['NumberOfPitStops'].max()
+        _df['NumberOfPitStops'] -= 1
+        pit_laps = _df[~_df['NumberOfPitStops'].isnull()].index
+        for lap in (pit_laps.to_list() + [len(_df)])[::-1]:
+            # Going in reverse to spot easily if this messes up
+            # (Should always have 0 pitstops at start)
+            _df.loc[_df.index <= lap, 'NumberOfPitStops'] = pit_stops
+            pit_stops -= 1
+        df = _df if df is None else pd.concat([df, _df])
+    return df
+
+
+def _timing_data_laps_entry(entry, driver, data={}):
+    if driver not in data:
+        data[driver] = {'Time': [], 'Driver': [], 'LastLapTime':[],
+                        'NumberOfLaps':[], 'NumberOfPitStops': [],
+                        'PitOutTime': [], 'PitInTime': [],
+                        'Sector1Time':[], 'Sector2Time': [], 'Sector3Time': [],
+                        'SpeedI1': [], 'SpeedI2': [], 'SpeedFL': [], 'SpeedST':[]}
+        [data[driver][key].append(None) for key in data[driver]]
+    time = entry[0]
+    block = entry[1]['Lines'][driver]
+
+    # i is the row index that this block has to populate. The
+    # arrival of information is a bit randomic. It is assumed that
+    # if something arrives 5s after a new record is created, it
+    # still belongs to the lap before
+    i = -1
+    if len(data[driver]['Time']) > 1:
+        block_time = pd.to_timedelta(time) 
+        last_time = pd.to_timedelta(data[driver]['Time'][-2])
+        if block_time < (last_time + pd.to_timedelta('5s')):
+            i = -2
+
+    # Final word on time remains to NumberOfLaps, but this
+    # keeps also the last entry populated (in quali can be inlap)
+    data[driver]['Time'][-1] = time
+    data[driver]['Driver'][-1] = driver
+
+    # The easy one
+    if 'NumberOfPitStops' in block:
+        data[driver]['NumberOfPitStops'][i] = block['NumberOfPitStops']
+
+    # Sectors are flattened on three separated series
+    if 'Sectors' in block:
+        for _n, sector in enumerate(block['Sectors']):
+            if isinstance(block['Sectors'], dict):
+                # For this trip of pure consistency, we have that
+                # sometimes Sectors is a list, so it will be... 
+                _n = int(sector)
+                sector = block['Sectors'][str(_n)]
+            if 'Value' in sector:
+                data[driver][f'Sector{str(_n+1)}Time'][i] = sector['Value']
+
+    # Same for speed traps
+    if 'Speeds' in block:
+        for trap in block['Speeds']:
+            if 'Value' in block['Speeds'][trap]:
+                data[driver][f'Speed{trap}'][i] = block['Speeds'][trap]['Value']
+
+    # F1 Reports start and end time of InPit and PitOut
+    # To simplify these are reduced to a single pit in start
+    # and pit out end time
+    if 'PitOut' in block and block['PitOut'] == False:
+        data[driver]['PitOutTime'][i] = time
+    if 'InPit' in block and block['InPit'] == True:
+        data[driver]['PitInTime'][i] = time
+
+    # Populate LastLapTime only if value is given sometimes it
+    # tells it was personal best or something but nobody cares
+    # just use .min()
+    if ('LastLapTime' in block
+        and 'Value' in block['LastLapTime']
+        and block['LastLapTime']['Value'] != ''):
+            data[driver]['LastLapTime'][i] = block['LastLapTime']['Value']
+
+    # Number of laps triggers a new entry it looks like always
+    # comes before LastLapTime, so is used as time reference
+    if ('NumberOfLaps' in block):
+        data[driver]['Time'][-1] = time
+        data[driver]['NumberOfLaps'][-1] = block['NumberOfLaps']
+        [data[driver][key].append(None) for key in data[driver]]
+    return data
+
+
+def timing_app_data(path, response=None):
+    """Full parse of timing app data. This parsing is quite ignorant,
+    with  minimum logic just to fix data structure inconsistencies. Tyre
+    information is passed to the summary table.
+    """
+    if response is None:
+        response = fetch_page(path, 'timing_app_data')
+    data = {'LapNumber': [],'Driver': [], 'LapTime': [], 'Stint': [],
+            'TotalLaps': [], 'Compound': [], 'New': [],
+            'TyresNotChanged': [], 'Time': [], 'LapFlags': [],
+            'LapCountTime': [], 'StartLaps': [], 'Outlap': []}
+    for entry in response:
+        time = entry[0]
+        row = entry[1]
+        for driver_number in row['Lines']:
+            if 'Stints' in row['Lines'][driver_number]:
+                update = row['Lines'][driver_number]['Stints']
+                for stint_number, stint in enumerate(update):
+                    if isinstance(update, dict):
+                        stint_number = int(stint)
+                        stint = update[stint]
+                    for key in data:
+                        if key in stint:
+                            data[key].append(stint[key])
+                        else:
+                            data[key].append(None)
+                    for key in stint:
+                        if key not in data:
+                            # Just for debug, maybe remove one day?
+                            print(f"{key} not in data!")
+                    data['Time'][-1] = time
+                    data['Driver'][-1] = driver_number
+                    data['Stint'][-1] = stint_number
+    return pd.DataFrame(data)
 
 
 @_cached_panda
@@ -214,3 +462,32 @@ def parse(text, zipped=False):
     logging.warning("Couldn't parse text")
     return text
 
+
+def _json_inspector(obj, start=None):
+    """This function builds a unique data structure from any jsonStream,
+    it allows further inspection for debug/features.
+
+    Args:
+        obj: structure returned from fetch_page, usually array 
+
+    Returns:
+        dictionary
+
+    """
+    structure = obj if start is None else start
+    if isinstance(obj, list):
+        structure = [{}]
+        for e in obj:
+            structure[0] = json_inspector(e, start=structure[0])
+        return structure
+    elif isinstance(obj, dict):
+        for key in obj:
+            if key not in structure:
+                try:
+                    structure[key] = {}
+                except:
+                    print("Inconsistent structure")
+                    return None
+            structure[key] = json_inspector(obj[key], start=structure[key])
+        return structure
+    return obj

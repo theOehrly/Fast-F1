@@ -66,8 +66,18 @@ def _subplots(*args, **kwargs):
     fig, ax = _subplots_placeholder(*args, **kwargs)
     _nice_grid(ax)
     return fig, ax
-
 plt.subplots = _subplots
+
+
+_savefig_placeholder = matplotlib.figure.Figure.savefig
+def _save(*args, **kwargs):
+    if 'facecolor' not in kwargs:
+        kwargs['facecolor'] = args[0].get_facecolor()
+    if 'edgecolors' not in kwargs:
+        kwargs['edgecolor'] = 'none'
+    return _savefig_placeholder(*args, **kwargs)
+matplotlib.figure.Figure.savefig = _save
+
 
 plt.rcParams['figure.facecolor'] = '#292625'
 plt.rcParams['axes.edgecolor'] = '#2d2928'
