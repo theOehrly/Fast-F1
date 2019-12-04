@@ -4,7 +4,6 @@
 
 This module contains the main interfaces to the f1 web api
 """
-import os
 import json
 import base64
 import copy
@@ -12,9 +11,10 @@ import zlib
 import requests
 import requests_cache
 import logging
-import functools
 import pandas as pd
 import numpy as np
+from fastf1 import utils
+
 
 base_url = 'https://livetiming.formula1.com'
 requests_cache.install_cache('formula1_cache', allowable_methods=('GET', 'POST'))
@@ -55,40 +55,13 @@ pages = {
 # Some notes on notation:
 # - line: driver position
 
-CACHE_PATH = os.environ['HOME'] + '/Documents/FF1Data'
-"""Path for cache, default location is ~/Documments/FF1Data
-"""
-CACHE_ENABLE = True
-"""Boolean: Enable/Disable cache for parsed data (Everything under
-./F1_Data). Note that raw requests are still cached, data is quite fixed
-and shouldn't really change..
-"""
 
-def _cached_panda(func):
-    @functools.wraps(func)
-    def decorator(*args, **kwargs):
-        if not CACHE_ENABLE:
-            return func(*args, **kwargs)
-        path = args[0]
-        name = func.__name__
-        pkl = f"{CACHE_PATH}/{'_'.join(path.split('/')[-3:-1])}_{name}.pkl"
-        if os.path.isfile(pkl):
-            print(f"Hit cache for {pkl}")
-            df = pd.read_pickle(pkl)
-        else:
-            df = func(*args, **kwargs)
-            os.makedirs(CACHE_PATH, exist_ok=True)
-            df.to_pickle(pkl)
-        return df
-    return decorator
-
-
-def load(name, date, session):
-    data = {}
-    path = make_path(name, date, session)
-    data['car_data'] = car_data(path)
-    data['position'] = position(path)
-    return data
+#def load(name, date, session):
+#    data = {}
+#    path = make_path(name, date, session)
+#    data['car_data'] = car_data(path)
+#    data['position'] = position(path)
+#    return data
 
 
 def make_path(wname, d, session):
@@ -113,7 +86,7 @@ def make_path(wname, d, session):
     return '/static/' + smooth_operator.replace(' ', '_')
 
 
-@_cached_panda
+@utils._cached_panda
 def summary(path):
     """From `timing_data` and `timing_app_data` a summary table is
     built. Lap by lap, information on tyre, sectors and times are 
@@ -351,7 +324,7 @@ def timing_app_data(path, response=None):
     return pd.DataFrame(data)
 
 
-@_cached_panda
+@utils._cached_panda
 def car_data(path):
     """Fetch and create pandas dataframe for Telemetry. Cached data is
     used if already fetched.
@@ -390,7 +363,7 @@ def car_data(path):
     return pd.DataFrame(data)
 
 
-@_cached_panda
+@utils._cached_panda
 def position(path):
     """Fetch and create pandas dataframe for Position. Cached data is
     used if already fetched.

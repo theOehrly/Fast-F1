@@ -2,11 +2,13 @@
 :mod:`fastf1.core` - Core module
 ================================
 """
+from fastf1 import utils
 from fastf1 import ergast
 from fastf1 import api
 import pandas as pd
 import numpy as np
-
+import logging
+logging.basicConfig(level=logging.INFO)
 
 def get_session(year, gp, event=None):
     """Main core function, also the only to be exposed at package level.
@@ -101,6 +103,52 @@ class Session:
         self.results = ergast.load(w.year, w.gp, s)
         return self
 
+    @utils._cached_laps
+    def load_laps(self):
+        """With load laps all the timing information is merged in a
+        single pandas dataframe. The first time you run the method on
+        a session it may take a while to load, some megabytes are of
+        data are downloaded and processed, but then laps will be 
+        stored locally. Each dataframe entry has the following columns:
+
+            - 'Time' (timedelta): Time when the lap was recorded
+            - 'Driver' (string): Three letters driver identifier
+            - 'LapTime' (timedelta): Recorded lap time
+            - 'LapNumber' (int): Recorded lap number
+            - 'PitOutTime' (timedelta): Time when car exited the pit
+            - 'PitInTime' (timedelta): Time when car entered the pit
+            - 'Sector1Time' (timedelta): Sector 1 recorded time
+            - 'Sector2Time' (timedelta): Sector 2 recorded time
+            - 'Sector3Time' (timedelta): Sector 3 recorded time
+            - 'SpeedI1' (float): Speedtrap sector 1
+            - 'SpeedI2' (float): Speedtrap sector 2
+            - 'SpeedFL' (float): Speedtrap sector 3 (Not sure)
+            - 'SpeedST' (float): Speedtrap on longest straight (Not sure)
+            - 'Stint' (int): Indicates the stint number
+            - 'Compound' (str): Tyre compound name: SOFT, MEDIUM ..
+            - 'TyreLife' (int): Laps spent on that compound
+            - 'FreshTyre' (bool): Tyre had TyreLife=0 at stint start
+            - 'DriverNumber' (str): Car number
+            - 'Team' (str): Team name
+            - 'LapStartDate' (datetime): When the lap started
+            - 'telemetry': (pandas dataframe of lap telemetry)
+                - 'Time' (timedelta): Time axis (0 is start of lap)
+                - 'RPM' (int): Car RPM
+                - 'Speed' (float): Car speed
+                - 'nGear' (int): Car gear number
+                - 'Throttle' (float): 0-100 Throttle pedal pressure
+                - 'Brake' (float): 0-100 Brake pedal pressure
+                - 'DRS' (int): DRS indicator
+
+        """
+        logging.info(f"Loading laps for {self.weekend.name} {self.session_name}")
+        self.laps = self._load_summary()
+        telemetry, lap_start_date = self._load_telemetry()
+        self.laps['LapStartDate'] = lap_start_date
+        self.laps['telemetry'] = telemetry
+        logging.info(f"Laps loaded and saved!")
+        return self
+
     def get_driver(self, identifier):
         if type(identifier) is str:
             for info in self.results:
@@ -114,31 +162,42 @@ class Session:
             lookup[block['number']] = block['Driver']['code']
         return lookup
 
-    def load_laps(self):
-        self.laps = self._load_summary()
-        telemetry, lap_start_date = self._load_telemetry()
-        self.laps['LapStartDate'] = lap_start_date
-        self.laps['telemetry'] = telemetry
-        return self
+    def _get_team_map(self):
+        lookup = {}
+        for block in self.results:
+            lookup[block['number']] = block['Constructor']['name']
+        return lookup
 
     def _load_summary(self):
+        """Load summary data to be associated for each lap.
+        """
+        logging.info("Getting summary...")
         summary = api.summary(self.api_path)
+        logging.info("Formatting summary...")
         numbers = summary['Driver']
         summary['DriverNumber'] = numbers
+        summary['Team'] = numbers.map(self._get_team_map())
         summary['Driver'] = numbers.map(self._get_driver_map())
         summary.rename(columns={'LastLapTime': 'LapTime',
                                  'NumberOfLaps': 'LapNumber'},
                                  inplace=True)
-        _ = summary['LapTime'].apply(lambda x: x if x is None
-                                                      else '00:' + x)
-        summary['LapTime'] = pd.to_timedelta(_)
-        summary['Time'] = pd.to_timedelta(summary['Time'])
+        def __time_formatter(x):
+            return x if x is None else '00:' + x
+        formatted_time = summary['LapTime'].apply(__time_formatter)
+        summary['LapTime'] = pd.to_timedelta(formatted_time)
+        for column in ['Time', 'PitOutTime', 'PitInTime']:
+            summary[column] = pd.to_timedelta(summary[column])
+        for column in ['Sector1Time','Sector2Time', 'Sector3Time']:
+            numeric = pd.to_numeric(summary[column])
+            summary[column] = pd.to_timedelta(numeric, unit='seconds')
         return summary
 
     def _load_telemetry(self):
         """Load telemetry data to be associated for each lap.
         """
+        logging.info("Getting telemetry data...")
         car_data, res = api.car_data(self.api_path), {}
+        logging.info("Parsing temetry...")
         car_data['Time'] = pd.to_timedelta(car_data['Time'])
         for _drv in self.laps['DriverNumber'].unique():
             to_pass = car_data[car_data['Driver'] == _drv] # 30 % time
@@ -229,8 +288,6 @@ class Driver:
         self.info = info
         self.identifier = info['Driver']['code']
         self.number = info['number']
-        self.car_data = self._filter(self.session.event['car_data'])
-        self.car_position = self._filter(self.session.event['position'])
 
     @property
     def dnf(self):
