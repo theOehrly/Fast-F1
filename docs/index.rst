@@ -9,6 +9,10 @@ Fast F1 documentation
 
 For the passionate F1 nerds.
 
+
+.. toctree::
+   ← Back to Github <https://github.com/Ax6/Fast-F1>
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
