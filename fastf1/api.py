@@ -55,6 +55,9 @@ pages = {
 # Some notes on notation:
 # - line: driver position
 
+CACHE_PATH = os.environ['HOME'] + '/Documents/FF1Data'
+"""Path for cache, default location is ~/Documments/FF1Data
+"""
 CACHE_ENABLE = True
 """Boolean: Enable/Disable cache for parsed data (Everything under
 ./F1_Data). Note that raw requests are still cached, data is quite fixed
@@ -64,19 +67,20 @@ and shouldn't really change..
 def _cached_panda(func):
     @functools.wraps(func)
     def decorator(*args, **kwargs):
+        if not CACHE_ENABLE:
+            return func(*args, **kwargs)
         path = args[0]
         name = func.__name__
-        pkl = f"{cache_path}/{'_'.join(path.split('/')[-3:-1])}_{name}.pkl"
+        pkl = f"{CACHE_PATH}/{'_'.join(path.split('/')[-3:-1])}_{name}.pkl"
         if os.path.isfile(pkl):
             print(f"Hit cache for {pkl}")
             df = pd.read_pickle(pkl)
         else:
             df = func(*args, **kwargs)
+            os.makedirs(CACHE_PATH, exist_ok=True)
             df.to_pickle(pkl)
         return df
-    cache_path = './F1_Data'
-    os.makedirs(cache_path, exist_ok=True)
-    return decorator if CACHE_ENABLE else func
+    return decorator
 
 
 def load(name, date, session):
@@ -145,7 +149,7 @@ def summary(path):
             result.loc[sel, 'TotalLaps'] += np.arange(0, sel.sum()) + 1
         df = result if df is None else pd.concat([df, result])    
     df.rename(columns={'TotalLaps': 'TyreLife', 'New': 'FreshTyre'}, inplace=True)
-    return df
+    return df.reset_index(drop=True)
 
 
 def timing_data(path):
@@ -357,7 +361,7 @@ def car_data(path):
     Keep absolute reference.
 
     Useful columns:
-        - Time: sample pandas datetime
+        - Date: sample pandas datetime
         - Driver: driver identifier
         - Speed: Km/h
         - RPM, Gear
@@ -369,7 +373,7 @@ def car_data(path):
     """
     index = {'0': 'RPM', '2': 'Speed', '3': 'nGear',
              '4': 'Throttle', '5': 'Brake', '45': 'DRS'}
-    data = {'Clock': [],'Time': [], 'Driver': []}
+    data = {'Date': [],'Time': [], 'Driver': []}
     [data.update({index[i]: []}) for i in index]
     logging.info("Fetching car data") 
     raw = fetch_page(path, 'car_data')
@@ -379,8 +383,8 @@ def car_data(path):
             cars = entry['Cars']
             date = pd.to_datetime(entry['Utc'], format="%Y-%m-%dT%H:%M:%S.%f%z")
             for car in cars:
-                data['Clock'].append(line[0])
-                data['Time'].append(date)
+                data['Time'].append(line[0])
+                data['Date'].append(date)
                 data['Driver'].append(car)
                 [data[index[i]].append(cars[car]['Channels'][i]) for i in index]
     return pd.DataFrame(data)
@@ -396,7 +400,7 @@ def position(path):
     Keep absolute reference.
 
     Useful columns:
-        - Time: pandas datetime of sample
+        - Date: pandas datetime of sample
         - Driver: driver identifier
         - X, Y, Z: Position coordinates
 
@@ -407,7 +411,7 @@ def position(path):
         pandas dataframe
     """
     index = {'Status': 'Status', 'X': 'X', 'Y': 'Y', 'Z': 'Z'}
-    data = {'Clock': [],'Time': [], 'Driver': []}
+    data = {'Date': [],'Time': [], 'Driver': []}
     [data.update({index[i]: []}) for i in index]
     logging.info("Fetching position") 
     raw = fetch_page(path, 'position')
@@ -417,8 +421,8 @@ def position(path):
             cars = entry['Entries']
             date = pd.to_datetime(entry['Timestamp'], format="%Y-%m-%dT%H:%M:%S.%f%z")
             for car in cars:
-                data['Clock'].append(line[0])
-                data['Time'].append(date)
+                data['Time'].append(line[0])
+                data['Date'].append(date)
                 data['Driver'].append(car)
                 [data[index[i]].append(cars[car][i]) for i in index]
     return pd.DataFrame(data)
