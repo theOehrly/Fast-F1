@@ -39,6 +39,8 @@ def get_session(year, gp, event=None):
 
 
 class Weekend:
+    """Weekend class
+    """
 
     def __init__(self, year, gp):
         self.year = year
@@ -90,6 +92,8 @@ class Weekend:
 
 
 class Session:
+    """Session class
+    """
 
     def __init__(self, weekend, session_name):
         self.weekend = weekend
@@ -111,34 +115,34 @@ class Session:
         data are downloaded and processed, but then laps will be 
         stored locally. Each dataframe entry has the following columns:
 
-            - 'Time' (timedelta): Time when the lap was recorded
-            - 'Driver' (string): Three letters driver identifier
-            - 'LapTime' (timedelta): Recorded lap time
-            - 'LapNumber' (int): Recorded lap number
-            - 'PitOutTime' (timedelta): Time when car exited the pit
-            - 'PitInTime' (timedelta): Time when car entered the pit
-            - 'Sector1Time' (timedelta): Sector 1 recorded time
-            - 'Sector2Time' (timedelta): Sector 2 recorded time
-            - 'Sector3Time' (timedelta): Sector 3 recorded time
-            - 'SpeedI1' (float): Speedtrap sector 1
-            - 'SpeedI2' (float): Speedtrap sector 2
-            - 'SpeedFL' (float): Speedtrap sector 3 (Not sure)
-            - 'SpeedST' (float): Speedtrap on longest straight (Not sure)
-            - 'Stint' (int): Indicates the stint number
-            - 'Compound' (str): Tyre compound name: SOFT, MEDIUM ..
-            - 'TyreLife' (int): Laps spent on that compound
-            - 'FreshTyre' (bool): Tyre had TyreLife=0 at stint start
-            - 'DriverNumber' (str): Car number
-            - 'Team' (str): Team name
-            - 'LapStartDate' (datetime): When the lap started
-            - 'telemetry': (pandas dataframe of lap telemetry)
-                - 'Time' (timedelta): Time axis (0 is start of lap)
-                - 'RPM' (int): Car RPM
-                - 'Speed' (float): Car speed
-                - 'nGear' (int): Car gear number
-                - 'Throttle' (float): 0-100 Throttle pedal pressure
-                - 'Brake' (float): 0-100 Brake pedal pressure
-                - 'DRS' (int): DRS indicator
+            - `Time` (timedelta): Time when the lap was recorded
+            - `Driver` (string): Three letters driver identifier
+            - `LapTime` (timedelta): Recorded lap time
+            - `LapNumber` (int): Recorded lap number
+            - `PitOutTime` (timedelta): Time when car exited the pit
+            - `PitInTime` (timedelta): Time when car entered the pit
+            - `Sector1Time` (timedelta): Sector 1 recorded time
+            - `Sector2Time` (timedelta): Sector 2 recorded time
+            - `Sector3Time` (timedelta): Sector 3 recorded time
+            - `SpeedI1` (float): Speedtrap sector 1
+            - `SpeedI2` (float): Speedtrap sector 2
+            - `SpeedFL` (float): Speedtrap sector 3 (Not sure)
+            - `SpeedST` (float): Speedtrap on longest straight (Not sure)
+            - `Stint` (int): Indicates the stint number
+            - `Compound` (str): Tyre compound name: SOFT, MEDIUM ..
+            - `TyreLife` (int): Laps spent on that compound
+            - `FreshTyre` (bool): Tyre had TyreLife=0 at stint start
+            - `DriverNumber` (str): Car number
+            - `Team` (str): Team name
+            - `LapStartDate` (datetime): When the lap started
+            - `telemetry`: (pandas dataframe of lap telemetry)
+                - `Time` (timedelta): Time axis (0 is start of lap)
+                - `RPM` (int): Car RPM
+                - `Speed` (float): Car speed
+                - `nGear` (int): Car gear number
+                - `Throttle` (float): 0-100 Throttle pedal pressure
+                - `Brake` (float): 0-100 Brake pedal pressure
+                - `DRS` (int): DRS indicator
 
         """
         logging.info(f"Loading laps for {self.weekend.name} {self.session_name}")
