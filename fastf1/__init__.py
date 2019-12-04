@@ -38,9 +38,10 @@ For some more advanced stuff, just a few more steps::
     from matplotlib import pyplot as plt
     from fastf1 import plots
 
-    leclerc = monza_quali.get_driver('LEC')
-    t = leclerc.car_data['Time']
-    vCar = leclerc.car_data['Speed']
+    laps = monza_quali.load_laps().laps
+    leclerc_lap = laps[laps['Driver'] == 'LEC'].iloc[4]
+    t = leclerc_lap.telemetry['Time']
+    vCar = leclerc_lap.telemetry['Speed']
 
     # The rest is just plotting
     fig, ax = plt.subplots()
