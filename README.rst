@@ -32,7 +32,7 @@ Hamilton from the Bahrain GP (weekend number 2) of 2019.
     from fastf1 import selectors as ect
     from matplotlib import pyplot as plt
 
-    race = ff1.get_session(2019, 'Baharain', 'R')
+    race = ff1.get_session(2019, 'Bahrain', 'R')
     laps = race.load_laps()
 
     lec = laps.sel(ect.driver('LEC'))
