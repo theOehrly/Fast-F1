@@ -45,15 +45,7 @@ class Weekend:
     def __init__(self, year, gp):
         self.year = year
         self.gp = gp
-        self._loaded = False
-
-    def init(self):
-        """Load web data
-        """
-        if not self._loaded:
-            self.data = ergast.fetch_weekend(self.year, self.gp)
-            self._loaded = True
-        return self
+        self.data = ergast.fetch_weekend(self.year, self.gp)
 
     def get_practice(self, number):
         """
@@ -98,14 +90,9 @@ class Session:
     def __init__(self, weekend, session_name):
         self.weekend = weekend
         self.session_name = session_name
-
-    def init(self):
-        """Load web data or cache if available and populate object
-        """
-        w, s = self.weekend.init(), self.session_name
+        w, s = self.weekend, self.session_name
         self.api_path = api.make_path(w.name, w.date, s)
         self.results = ergast.load(w.year, w.gp, s)
-        return self
 
     @utils._cached_laps
     def load_laps(self):
@@ -151,7 +138,7 @@ class Session:
         self.laps['LapStartDate'] = lap_start_date
         self.laps['telemetry'] = telemetry
         logging.info(f"Laps loaded and saved!")
-        return self
+        return self.laps
 
     def get_driver(self, identifier):
         if type(identifier) is str:

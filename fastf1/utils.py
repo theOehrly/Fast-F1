@@ -42,13 +42,17 @@ def _cached_laps(func):
         if not CACHE_ENABLE:
             return func(*args, **kwargs)
         session = args[0]
-        path = session.api_path # api path used as session identifier
-        pkl = f"{CACHE_PATH}/{'_'.join(path.split('/')[-3:-1])}_laps.pkl"
+        pkl = os.path.join(CACHE_PATH, laps_file_name(session.api_path))
         if os.path.isfile(pkl):
             session.laps = pd.read_pickle(pkl)
         else:
-            session = func(*args, **kwargs)
+            laps = func(*args, **kwargs)
             os.makedirs(CACHE_PATH, exist_ok=True)
-            session.laps.to_pickle(pkl)
-        return session
+            laps.to_pickle(pkl)
+        return session.laps
     return decorator
+
+
+def laps_file_name(api_path):
+    # api path used as session identifier
+    return f"{'_'.join(api_path.split('/')[-3:-1])}_laps.pkl"
