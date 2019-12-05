@@ -8,8 +8,6 @@ import pandas as pd
 
 
 CACHE_PATH = os.environ['HOME'] + '/Documents/FF1Data'
-"""Path for cache, default location is ~/Documments/FF1Data
-"""
 
 CACHE_ENABLE = True
 """Boolean: Enable/Disable cache for parsed data (Everything under
