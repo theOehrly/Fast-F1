@@ -11,6 +11,8 @@ You can install this package using pip
 ::
     pip install git+https://github.com/Ax6/fast-f1.git
 
+Note that this package requires Python 3.8.
+
 Usage
 =====
 
