@@ -5,7 +5,7 @@
 import os
 import functools
 import pandas as pd
-
+from fastf1 import core
 
 CACHE_PATH = os.environ['HOME'] + '/Documents/FF1Data'
 
@@ -44,7 +44,7 @@ def _cached_laps(func):
         session = args[0]
         pkl = os.path.join(CACHE_PATH, laps_file_name(session.api_path))
         if os.path.isfile(pkl):
-            session.laps = pd.read_pickle(pkl)
+            session.laps = core.Laps(pd.read_pickle(pkl))
         else:
             laps = func(*args, **kwargs)
             os.makedirs(CACHE_PATH, exist_ok=True)

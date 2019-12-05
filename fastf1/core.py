@@ -5,10 +5,12 @@
 from fastf1 import utils
 from fastf1 import ergast
 from fastf1 import api
+from fuzzywuzzy import fuzz
 import pandas as pd
 import numpy as np
 import logging
 logging.basicConfig(level=logging.INFO)
+
 
 def get_session(year, gp, event=None):
     """Main core function, also the only to be exposed at package level.
@@ -17,13 +19,19 @@ def get_session(year, gp, event=None):
 
     Args:
         year: session year (Tested only with 2019)
-        gp: weekend number (1: Australia, ..., 21: Abu Dhabi)
+        gp: name or weekend number (1: Australia, ..., 21: Abu Dhabi)
+            if gp is a string, a fuzzy match will be performed on the
+            season rounds and the most likely will be selected.
+            'bahrain', 'australia', 'abudabi' are some of the examples
+            that you can pass and the correct week will be selected.
         event(=None): may be 'R' or 'Q', full weekend otherwise.
 
     Returns:
         :class:`Weekend` or :class:`Session`
 
     """
+    if type(gp) is str:
+        gp = get_round(year, gp)
     weekend = Weekend(year, gp)
     if event == 'R':
         return Session(weekend, 'Race')
@@ -36,6 +44,20 @@ def get_session(year, gp, event=None):
     if event == 'FP1':
         return Session(weekend, 'Practice 1')
     return weekend
+
+
+def get_round(year, match):
+    ratios = np.array([])
+    def build_string(d):
+        r = len('https://en.wikipedia.org/wiki/')
+        c, l = d['Circuit'], d['Circuit']['Location']
+        return (f"{d['url'][r:]} {d['raceName']} {c['circuitId']} "
+                + f"{c['url'][r:]} {c['circuitName']} {l['locality']} "
+                + f"{l['country']}")
+    races = ergast.fetch_season(year)
+    to_match = [build_string(block) for block in races]
+    ratios = np.array([fuzz.partial_ratio(match, ref) for ref in to_match])
+    return int(races[np.argmax(ratios)]['round'])
 
 
 class Weekend:
@@ -131,6 +153,9 @@ class Session:
                 - `Brake` (float): 0-100 Brake pedal pressure
                 - `DRS` (int): DRS indicator
 
+        Returns:
+            laps
+
         """
         logging.info(f"Loading laps for {self.weekend.name} {self.session_name}")
         self.laps = self._load_summary()
@@ -138,6 +163,7 @@ class Session:
         self.laps['LapStartDate'] = lap_start_date
         self.laps['telemetry'] = telemetry
         logging.info(f"Laps loaded and saved!")
+        self.laps = Laps(self.laps)
         return self.laps
 
     def get_driver(self, identifier):
@@ -272,6 +298,39 @@ class Session:
         return res.reset_index(drop=True), offset_date
 
 
+class Laps(pd.DataFrame):
+    """This class wraps :attr:`Session.laps` which is a classic pandas
+    DataFrame with the addition of the :meth:`sel` method.
+    """
+
+    def sel(self, _filter_):
+        """This method allows to simplify usage and code readability.
+        You can access useful lap entries quickly in combination with
+        :mod:`fastf1.selectors`.
+
+        If for example you want to get the fastest lap of Bottas you can
+        narrow it down like this::
+
+            import fastf1 as ff1
+            from fastf1 import selectors as ect    
+
+            laps = ff1.get_session(2019, 'Bahrain', 'Q').load_laps()
+            best_bottas = laps.sel(ect.driver('BOT')).sel(ect.fastest)
+
+            print(best_bottas['LapTime'])
+            # Timedelta('0 days 00:01:28.256000')
+
+        Args:
+            _filter_: selector function
+
+        Returns:
+            :class:`Laps` or pandas Series if only 1 entry is left
+    
+        """
+        res = _filter_(self)
+        return Laps(res) if isinstance(res, pd.DataFrame) else res
+
+
 class Driver:
 
     def __init__(self, session, info):
@@ -311,4 +370,5 @@ class Driver:
 
     def _filter(self, df):
         return df[df['Driver'] == self.number]
+
 

@@ -28,14 +28,15 @@ Hamilton from the Bahrain GP (weekend number 2) of 2019.
 .. code:: python
 
     import fastf1 as ff1
-    from fastf1 import plots
+    from fastf1 import plotting
+    from fastf1 import selectors as ect
     from matplotlib import pyplot as plt
 
-    race = ff1.get_session(2019, 2, 'R')
+    race = ff1.get_session(2019, 'Baharain', 'R')
     laps = race.load_laps()
 
-    lec = laps[laps['Driver'] == 'LEC']
-    ham = laps[laps['Driver'] == 'HAM']
+    lec = laps.sel(ect.driver('LEC'))
+    ham = laps.sel(ect.driver('HAM'))
 
 Once the session is loaded, and drivers are selected, you can plot the
 information

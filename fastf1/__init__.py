@@ -26,8 +26,7 @@ Setting up a running snippet is straightforward::
 
     import fastf1 as ff1
 
-    monza_quali = ff1.get_session(2019, 14, 'Q')
-    monza_quali = monza_quali.init()
+    monza_quali = ff1.get_session(2019, 'Monza', 'Q')
 
     vettel = monza_quali.get_driver('VET')
     print(f"Pronto {vettel.name}?")
@@ -36,12 +35,13 @@ Setting up a running snippet is straightforward::
 For some more advanced stuff, just a few more steps::
 
     from matplotlib import pyplot as plt
-    from fastf1 import plots
+    from fastf1 import plotting
+    from fastf1 import selectors as ect
 
-    laps = monza_quali.load_laps().laps
-    leclerc_lap = laps[laps['Driver'] == 'LEC'].iloc[4]
-    t = leclerc_lap.telemetry['Time']
-    vCar = leclerc_lap.telemetry['Speed']
+    laps = monza_quali.load_laps()
+    fast_leclerc = laps.sel(ect.driver('LEC')).sel(ect.fastest)
+    t = fast_leclerc.telemetry['Time']
+    vCar = fast_leclerc.telemetry['Speed']
 
     # The rest is just plotting
     fig, ax = plt.subplots()

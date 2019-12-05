@@ -12,12 +12,15 @@ def load(year, gp, session):
     """
     day = 'qualifying' if session == 'Qualifying' else 'results'
     sel = 'QualifyingResults' if session == 'Qualifying' else 'Results'
-    return _parse_ergast(fetch_day(year, gp, day))[sel]
+    return _parse_ergast(fetch_day(year, gp, day))[0][sel]
 
+def fetch_season(year):
+    url = f"{base_url}/{year}.json"
+    return _parse_ergast(_parse_json_response(requests.get(url)))
 
 def fetch_weekend(year, gp):
     url = f"{base_url}/{year}/{gp}.json"
-    data = _parse_ergast(_parse_json_response(requests.get(url)))
+    data = _parse_ergast(_parse_json_response(requests.get(url)))[0]
     url = ("https://www.mapcoordinates.net/admin/component/edit/"
            + "Vpc_MapCoordinates_Advanced_GoogleMapCoords_Component/"
            + "Component/json-get-elevation")
@@ -45,4 +48,4 @@ def _parse_json_response(r):
 
 
 def _parse_ergast(data):
-    return data['MRData']['RaceTable']['Races'][0]
+    return data['MRData']['RaceTable']['Races']
