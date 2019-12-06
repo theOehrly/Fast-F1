@@ -148,6 +148,8 @@ def _timing_data_stream(path, response=None):
     if response is None:
         response = fetch_page(path, 'timing_data')
     for entry in response:
+        if 'Lines' not in entry[1]:
+            continue
         for driver in entry[1]['Lines']:
             if driver not in data:
                 data[driver] = {'Time': [], 'Driver': [], 'Position': [],
@@ -193,6 +195,8 @@ def _timing_data_laps(path, response=None):
         response = fetch_page(path, 'timing_data')
     data, df = {}, None
     for entry in response:
+        if 'Lines' not in entry[1]:
+            continue
         for driver in entry[1]['Lines']:
             data = _timing_data_laps_entry(entry, driver, data)
     
