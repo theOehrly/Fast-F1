@@ -55,5 +55,13 @@ For some more advanced stuff, just a few more steps::
 .. image:: _static/gettingstarted.svg
     :target: _static/gettingstarted.svg
 
+Package functions
+=================
+Available functions directly accessible from fastf1 package
+
+.. autofunction:: fastf1.core.get_session
+.. autofunction:: fastf1.utils.clear_cache
+
 """
 from fastf1.core import get_session
+from fastf1.utils import clear_cache

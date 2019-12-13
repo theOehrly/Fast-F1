@@ -115,4 +115,3 @@ plt.rcParams['legend.fancybox'] = False
 plt.rcParams['legend.facecolor'] = (0.1, 0.1, 0.1, 0.7)
 plt.rcParams['legend.edgecolor'] = (0.1, 0.1, 0.1, 0.9)
 plt.rcParams['savefig.transparent'] = False
-

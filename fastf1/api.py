@@ -9,7 +9,6 @@ import base64
 import copy
 import zlib
 import requests
-import requests_cache
 import logging
 import pandas as pd
 import numpy as np
@@ -17,7 +16,6 @@ from fastf1 import utils
 
 
 base_url = 'https://livetiming.formula1.com'
-requests_cache.install_cache('formula1_cache', allowable_methods=('GET', 'POST'))
 
 headers = {
   'Host': 'livetiming.formula1.com',
@@ -52,16 +50,6 @@ pages = {
 }
 """Known requests
 """
-# Some notes on notation:
-# - line: driver position
-
-
-#def load(name, date, session):
-#    data = {}
-#    path = make_path(name, date, session)
-#    data['car_data'] = car_data(path)
-#    data['position'] = position(path)
-#    return data
 
 
 def make_path(wname, d, session):
@@ -116,6 +104,8 @@ def summary(path):
     for driver in laps_data['Driver'].unique():
         d1 = laps_data[laps_data['Driver'] == driver]
         d2 = useful[useful['Driver'] == driver]
+        d1 = d1.sort_values('Time')
+        d2 = d2.sort_values('Time')
         result = pd.merge_asof(d1, d2, on='Time', by='Driver')
         for stint in result['Stint'].unique():
             sel = result['Stint'] == stint
@@ -187,7 +177,7 @@ def _timing_data_stream(path, response=None):
     return df
 
 
-def _timing_data_laps(path, response=None):
+def _timing_data_laps(path, response=None, flags={}):
     """Path is mandatory to target cache file, but pre-fetched response
     can be fed if other functions parse the same raw data.
     """
@@ -198,8 +188,8 @@ def _timing_data_laps(path, response=None):
         if 'Lines' not in entry[1]:
             continue
         for driver in entry[1]['Lines']:
-            data = _timing_data_laps_entry(entry, driver, data)
-    
+            data, flags = _timing_data_laps_entry(entry, driver, data, flags)
+
     empty_check = [key for key in data[driver] if key not in ['Time', 'Driver']]
     for driver in data:
         _df = pd.DataFrame(data[driver])
@@ -219,7 +209,7 @@ def _timing_data_laps(path, response=None):
     return df
 
 
-def _timing_data_laps_entry(entry, driver, data={}):
+def _timing_data_laps_entry(entry, driver, data={}, flags={}):
     if driver not in data:
         data[driver] = {'Time': [], 'Driver': [], 'LastLapTime':[],
                         'NumberOfLaps':[], 'NumberOfPitStops': [],
@@ -227,24 +217,28 @@ def _timing_data_laps_entry(entry, driver, data={}):
                         'Sector1Time':[], 'Sector2Time': [], 'Sector3Time': [],
                         'SpeedI1': [], 'SpeedI2': [], 'SpeedFL': [], 'SpeedST':[]}
         [data[driver][key].append(None) for key in data[driver]]
-    time = entry[0]
-    block = entry[1]['Lines'][driver]
+    if driver not in flags:
+        flags[driver] = {'time_reference': [None], 'locked_times': [False]}
 
+    time = pd.to_timedelta(entry[0])
+    block = entry[1]['Lines'][driver]
     # i is the row index that this block has to populate. The
     # arrival of information is a bit randomic. It is assumed that
     # if something arrives 5s after a new record is created, it
     # still belongs to the lap before
     i = -1
     if len(data[driver]['Time']) > 1:
-        block_time = pd.to_timedelta(time) 
-        last_time = pd.to_timedelta(data[driver]['Time'][-2])
-        if block_time < (last_time + pd.to_timedelta('5s')):
+        last_time = data[driver]['Time'][-2]
+        if time < (last_time + pd.to_timedelta('5s')):
             i = -2
 
+    no_time_reference = flags[driver]['time_reference'][i] is None
+    no_locked_time = not flags[driver]['locked_times'][i]
     # Final word on time remains to NumberOfLaps, but this
     # keeps also the last entry populated (in quali can be inlap)
-    data[driver]['Time'][-1] = time
-    data[driver]['Driver'][-1] = driver
+    if no_locked_time:
+        data[driver]['Time'][i] = time
+    data[driver]['Driver'][i] = driver
 
     # The easy one
     if 'NumberOfPitStops' in block:
@@ -252,6 +246,7 @@ def _timing_data_laps_entry(entry, driver, data={}):
 
     # Sectors are flattened on three separated series
     if 'Sectors' in block:
+        # Sectors is a list only if all three are present
         for _n, sector in enumerate(block['Sectors']):
             if isinstance(block['Sectors'], dict):
                 # For this trip of pure consistency, we have that
@@ -260,6 +255,42 @@ def _timing_data_laps_entry(entry, driver, data={}):
                 sector = block['Sectors'][str(_n)]
             if 'Value' in sector:
                 data[driver][f'Sector{str(_n+1)}Time'][i] = sector['Value']
+            # Sectors are used to calculate the sacred time reference.
+            # Following block has the only purpose to find the time with
+            # minimum measure delay. Otherwise laps will be out of sync
+            has_measure = 'Value' in sector and sector['Value'] != ''
+            if _n == 0 and has_measure and no_time_reference:
+                sector_time = pd.to_timedelta('00:00:' + sector['Value'])
+                flags[driver]['time_reference'][i] = {'base': time,
+                                                      'delta': sector_time,
+                                                      'ts0': sector_time}
+            reference_has_ts0 = (not no_time_reference
+                                 and 'ts0' in flags[driver]['time_reference'][i])
+            if _n == 1 and has_measure and reference_has_ts0:
+                sector_time = pd.to_timedelta('00:00:' + sector['Value'])
+                old_reference = (flags[driver]['time_reference'][i]['base']
+                                 - flags[driver]['time_reference'][i]['delta'])
+                new_delta = (sector_time 
+                             + flags[driver]['time_reference'][i]['ts0'])
+                new_reference = time - new_delta
+                if new_reference < old_reference:
+                    flags[driver]['time_reference'][i]['base'] = time
+                    flags[driver]['time_reference'][i]['delta'] = new_delta
+                flags[driver]['time_reference'][i]['ts1'] = sector_time
+            reference_has_ts01 = (reference_has_ts0
+                                  and 'ts1' in flags[driver]['time_reference'][i])
+            if _n == 2 and has_measure and reference_has_ts01:
+                sector_time = pd.to_timedelta('00:00:' + sector['Value'])
+                old_reference = (flags[driver]['time_reference'][i]['base']
+                                 - flags[driver]['time_reference'][i]['delta'])
+                new_delta = (sector_time 
+                             + flags[driver]['time_reference'][i]['ts1']
+                             + flags[driver]['time_reference'][i]['ts0'])
+                new_reference = time - new_delta
+                if new_reference < old_reference:
+                    flags[driver]['time_reference'][i]['base'] = time
+                    flags[driver]['time_reference'][i]['delta'] = new_delta
+                flags[driver]['time_reference'][i]['ts2'] = sector_time
 
     # Same for speed traps
     if 'Speeds' in block:
@@ -277,19 +308,31 @@ def _timing_data_laps_entry(entry, driver, data={}):
 
     # Populate LastLapTime only if value is given sometimes it
     # tells it was personal best or something but nobody cares
-    # just use .min()
+    # just use .min() This is the last entry of a lap usually.
     if ('LastLapTime' in block
         and 'Value' in block['LastLapTime']
         and block['LastLapTime']['Value'] != ''):
             data[driver]['LastLapTime'][i] = block['LastLapTime']['Value']
+            # Tricky tricks to discover with 'accuracy'
+            # when lap time has been set
+            lap_time = pd.to_timedelta('00:' + block['LastLapTime']['Value'])
+            time_reference = flags[driver]['time_reference'][i]
+            if time_reference is not None: 
+                lap_start_time = time_reference['base'] - time_reference['delta']
+                data[driver]['Time'][i] = lap_start_time + lap_time 
+                flags[driver]['locked_times'][i] = True
 
     # Number of laps triggers a new entry it looks like always
-    # comes before LastLapTime, so is used as time reference
+    # comes before LastLapTime.
+    # Unless bottas qualifies under red flag in Monza but is later 
+    # convalidated, but we are bullet proof against that as well, apart
+    # pit stop time. sorry.
     if ('NumberOfLaps' in block):
-        data[driver]['Time'][-1] = time
         data[driver]['NumberOfLaps'][-1] = block['NumberOfLaps']
         [data[driver][key].append(None) for key in data[driver]]
-    return data
+        flags[driver]['time_reference'].append(None)
+        flags[driver]['locked_times'].append(False)
+    return data, flags
 
 
 def timing_app_data(path, response=None):

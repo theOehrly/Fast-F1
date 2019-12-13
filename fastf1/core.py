@@ -153,6 +153,12 @@ class Session:
                 - `Brake` (float): 0-100 Brake pedal pressure
                 - `DRS` (int): DRS indicator
 
+        .. note:: Absolute time is not super accurate. The moment a lap
+            is logged is not always the same and there will be some
+            jitter. At the moment absolute lap time reference is set to
+            when "Sector 1" time is fired. Expect an error of ±10m when 
+            overlapping telemetry data of different laps.
+
         Returns:
             laps
 
@@ -219,7 +225,7 @@ class Session:
         for _drv in self.laps['DriverNumber'].unique():
             to_pass = car_data[car_data['Driver'] == _drv] # 30 % time
             res[_drv] = self._resample(to_pass) # 70 % time
-        telemetry =  []
+        event_telemetry =  []
         lap_start_date = []
         for i in self.laps.index:
             row = self.laps.loc[i]
@@ -230,16 +236,24 @@ class Session:
                 offset_date = res[driver][1]
                 sel = ((car_data['Time'] < time)
                         & (car_data['Time'] >= (time - lap_time)))
-                lap = car_data[sel].copy()
+                telemetry = car_data[sel].copy()
                 # First calc lap start date
-                lap_start_date.append(offset_date + lap['Time'].iloc[0])
+                lap_start_date.append(offset_date + telemetry['Time'].iloc[0])
                 # Then shift time to 0 so laps can overlap
-                lap['Time'] += (lap_time - time)
-                telemetry.append(lap.drop(columns='Driver'))
+                telemetry['Time'] += (lap_time - time)
+                telemetry = telemetry.drop(columns='Driver')
+                def put_space(_telemetry):
+                    dt = _telemetry['Time'].dt.total_seconds().diff()
+                    dt.iloc[0] = _telemetry['Time'].iloc[0].total_seconds()
+                    ds = _telemetry['Speed'] / 3.6 * dt
+                    _telemetry['Space'] = ds.cumsum()
+                    return _telemetry
+                telemetry = put_space(telemetry)
+                event_telemetry.append(telemetry)
             else:
-                telemetry.append(None)
+                event_telemetry.append(None)
                 lap_start_date.append(None)
-        return telemetry, lap_start_date
+        return event_telemetry, lap_start_date
 
     def _resample(self, df):
         """`car_data` is aligned with main time reference (time used in
