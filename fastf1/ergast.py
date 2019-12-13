@@ -4,7 +4,6 @@ import requests_cache
 import warnings
 
 base_url = 'http://ergast.com/api/f1'
-requests_cache.install_cache('ergast_cache', allowable_methods=('GET', 'POST'))
 
 def load(year, gp, session):
     """session can be 'Qualifying' or 'Race'
