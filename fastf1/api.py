@@ -177,13 +177,13 @@ def _timing_data_stream(path, response=None):
     return df
 
 
-def _timing_data_laps(path, response=None, flags={}):
+def _timing_data_laps(path, response=None):
     """Path is mandatory to target cache file, but pre-fetched response
     can be fed if other functions parse the same raw data.
     """
     if response is None:
         response = fetch_page(path, 'timing_data')
-    data, df = {}, None
+    data, flags, df = {}, {}, None
     for entry in response:
         if 'Lines' not in entry[1]:
             continue
@@ -332,6 +332,7 @@ def _timing_data_laps_entry(entry, driver, data={}, flags={}):
         [data[driver][key].append(None) for key in data[driver]]
         flags[driver]['time_reference'].append(None)
         flags[driver]['locked_times'].append(False)
+
     return data, flags
 
 
