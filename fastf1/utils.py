@@ -21,9 +21,11 @@ requests_cache.install_cache(os.path.join(CACHE_PATH, 'fastf1_http_cache'),
                              allowable_methods=('GET', 'POST'))
 
 def clear_cache(deep=False):
-    """This function is exposed at package level. It removes from disk
-    cached data. Just in case you feel the need of a fresh start or you
-    have too much bytes laying around. Use it with parsimony.
+    """Removes from disk cached data. Just in case you feel the need of
+    a fresh start or you have too much bytes laying around.
+    Use it with parsimony. In case of major update you may want to call
+    this function, which will solve conflicts rising on unexpected data
+    structures.
 
     Args:
         deep (=False, optional): If true, going for removal of http

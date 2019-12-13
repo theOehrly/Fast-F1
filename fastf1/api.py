@@ -110,7 +110,7 @@ def summary(path):
         for stint in result['Stint'].unique():
             sel = result['Stint'] == stint
             result.loc[sel, 'TotalLaps'] += np.arange(0, sel.sum()) + 1
-        df = result if df is None else pd.concat([df, result])    
+        df = result if df is None else pd.concat([df, result], sort=False)    
     df.rename(columns={'TotalLaps': 'TyreLife', 'New': 'FreshTyre'}, inplace=True)
     return df.reset_index(drop=True)
 

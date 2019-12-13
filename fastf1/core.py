@@ -13,9 +13,9 @@ logging.basicConfig(level=logging.INFO)
 
 
 def get_session(year, gp, event=None):
-    """Main core function, also the only to be exposed at package level.
-    It will take care of crafting an object corresponding to the
-    requested session. If not specified, full weekend is returned.
+    """Main core function. It will take care of crafting an object
+    corresponding to the requested session.
+    If not specified, full weekend is returned.
 
     Args:
         year: session year (Tested only with 2019)
@@ -24,7 +24,8 @@ def get_session(year, gp, event=None):
             season rounds and the most likely will be selected.
             'bahrain', 'australia', 'abudabi' are some of the examples
             that you can pass and the correct week will be selected.
-        event(=None): may be 'R' or 'Q', full weekend otherwise.
+        event (=None): may be 'FP1', 'FP2', 'FP3', 'Q' or 'R', if not 
+                       specified you get the full :class:`Weekend`.
 
     Returns:
         :class:`Weekend` or :class:`Session`
