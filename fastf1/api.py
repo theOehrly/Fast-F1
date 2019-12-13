@@ -222,6 +222,7 @@ def _timing_data_laps_entry(entry, driver, data={}, flags={}):
 
     time = pd.to_timedelta(entry[0])
     block = entry[1]['Lines'][driver]
+
     # i is the row index that this block has to populate. The
     # arrival of information is a bit randomic. It is assumed that
     # if something arrives 5s after a new record is created, it
@@ -237,7 +238,7 @@ def _timing_data_laps_entry(entry, driver, data={}, flags={}):
     # Final word on time remains to NumberOfLaps, but this
     # keeps also the last entry populated (in quali can be inlap)
     if no_locked_time:
-        data[driver]['Time'][i] = time
+        data[driver]['Time'][-1] = time
     data[driver]['Driver'][i] = driver
 
     # The easy one
@@ -255,6 +256,7 @@ def _timing_data_laps_entry(entry, driver, data={}, flags={}):
                 sector = block['Sectors'][str(_n)]
             if 'Value' in sector:
                 data[driver][f'Sector{str(_n+1)}Time'][i] = sector['Value']
+
             # Sectors are used to calculate the sacred time reference.
             # Following block has the only purpose to find the time with
             # minimum measure delay. Otherwise laps will be out of sync
