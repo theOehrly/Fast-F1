@@ -146,8 +146,9 @@ class Session:
             - `LapStartDate` (datetime): When the lap started
             - `telemetry`: (pandas dataframe of lap telemetry)
                 - `Time` (timedelta): Time axis (0 is start of lap)
-                - `RPM` (int): Car RPM
+                - `Space` (float): Space in meters (from speed and time)
                 - `Speed` (float): Car speed
+                - `RPM` (int): Car RPM
                 - `nGear` (int): Car gear number
                 - `Throttle` (float): 0-100 Throttle pedal pressure
                 - `Brake` (float): 0-100 Brake pedal pressure
