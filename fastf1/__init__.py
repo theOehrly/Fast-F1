@@ -4,8 +4,8 @@ Introduction
 
 This package features two main online sources of data:
     - The official f1 data stream ->
-      `link <https://www.formula1.com/en/f1-live.html>`_
-    - Ergast web api -> `link <http://ergast.com/mrd/>`_
+      `f1-live <https://www.formula1.com/en/f1-live.html>`_
+    - Ergast web api -> `ergast.com <http://ergast.com/mrd/>`_
 
 Car position, speed traces, tyres, timings and weekend history are some
 of the many available resources. No formula1 account is needed.
@@ -60,7 +60,10 @@ Package functions
 Available functions directly accessible from fastf1 package
 
 .. autofunction:: fastf1.core.get_session
+    :noindex:
+
 .. autofunction:: fastf1.utils.clear_cache
+    :noindex:
 
 """
 from fastf1.core import get_session
