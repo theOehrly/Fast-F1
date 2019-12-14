@@ -19,7 +19,6 @@ For the passionate F1 nerds.
 
    fastf1
    core
-   selectors
    api
    utils
 
