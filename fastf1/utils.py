@@ -30,7 +30,6 @@ def clear_cache(deep=False):
     Args:
         deep (=False, optional): If true, going for removal of http
                                  cache as well.
-
     """
     file_names = os.listdir(CACHE_PATH)
     for file_name in file_names:
@@ -40,24 +39,9 @@ def clear_cache(deep=False):
         requests_cache.clear()
 
 
-_CACHED_PANDA_ENABLE = False
-def _cached_panda(func):
-    @functools.wraps(func)
-    def decorator(*args, **kwargs):
-        if not _CACHED_PANDA_ENABLE:
-            return func(*args, **kwargs)
-        path = args[0]
-        name = func.__name__
-        pkl = f"{CACHE_PATH}/{'_'.join(path.split('/')[-3:-1])}_{name}.pkl"
-        if os.path.isfile(pkl):
-            print(f"Hit cache for {pkl}")
-            df = pd.read_pickle(pkl)
-        else:
-            df = func(*args, **kwargs)
-            os.makedirs(CACHE_PATH, exist_ok=True)
-            df.to_pickle(pkl)
-        return df
-    return decorator
+def laps_file_name(api_path):
+    # api path used as session identifier
+    return f"{'_'.join(api_path.split('/')[-3:-1])}_laps.pkl"
 
 
 def _cached_laps(func):
@@ -75,8 +59,3 @@ def _cached_laps(func):
             laps.to_pickle(pkl)
         return session.laps
     return decorator
-
-
-def laps_file_name(api_path):
-    # api path used as session identifier
-    return f"{'_'.join(api_path.split('/')[-3:-1])}_laps.pkl"

@@ -9,6 +9,7 @@ from fuzzywuzzy import fuzz
 import pandas as pd
 import numpy as np
 import logging
+import functools
 logging.basicConfig(level=logging.INFO)
 
 
@@ -194,11 +195,42 @@ class Session:
         return lookup
 
     def _load_summary(self):
-        """Load summary data to be associated for each lap.
+        """From `timing_data` and `timing_app_data` a summary table is
+        built. Lap by lap, information on tyre, sectors and times are 
+        organised in an accessible pandas data frame.
+
+        Args:
+            path: path returned from :func:`make_path`
+
+        Returns:
+            pandas dataframe
+
         """
         logging.info("Getting summary...")
-        summary = api.summary(self.api_path)
+        laps_data, _ = api.timing_data(self.api_path)
+        laps_app_data = api.timing_app_data(self.api_path)
+        # Now we do some manipulation to make it beautiful
         logging.info("Formatting summary...")
+        df = None
+        laps_data['Stint'] = laps_data['NumberOfPitStops'] + 1
+        laps_data.drop(columns=['NumberOfPitStops'], inplace=True)
+        # Matching laps_data and laps_app_data. Not super straightworward
+        # Sometimes a car may enter the pit without changing tyres, so
+        # new compound is associated with the help of logging time.
+        useful = laps_app_data[['Driver', 'Time', 'Compound', 'TotalLaps', 'New']]
+        useful = useful[~useful['Compound'].isnull()]
+        for driver in laps_data['Driver'].unique():
+            d1 = laps_data[laps_data['Driver'] == driver]
+            d2 = useful[useful['Driver'] == driver]
+            d1 = d1.sort_values('Time')
+            d2 = d2.sort_values('Time')
+            result = pd.merge_asof(d1, d2, on='Time', by='Driver')
+            for stint in result['Stint'].unique():
+                sel = result['Stint'] == stint
+                result.loc[sel, 'TotalLaps'] += np.arange(0, sel.sum()) + 1
+            df = result if df is None else pd.concat([df, result], sort=False)    
+        df.rename(columns={'TotalLaps': 'TyreLife', 'New': 'FreshTyre'}, inplace=True)
+        summary = df.reset_index(drop=True)
         numbers = summary['Driver']
         summary['DriverNumber'] = numbers
         summary['Team'] = numbers.map(self._get_team_map())
@@ -206,15 +238,6 @@ class Session:
         summary.rename(columns={'LastLapTime': 'LapTime',
                                  'NumberOfLaps': 'LapNumber'},
                                  inplace=True)
-        def __time_formatter(x):
-            return x if x is None else '00:' + x
-        formatted_time = summary['LapTime'].apply(__time_formatter)
-        summary['LapTime'] = pd.to_timedelta(formatted_time)
-        for column in ['Time', 'PitOutTime', 'PitInTime']:
-            summary[column] = pd.to_timedelta(summary[column])
-        for column in ['Sector1Time','Sector2Time', 'Sector3Time']:
-            numeric = pd.to_numeric(summary[column])
-            summary[column] = pd.to_timedelta(numeric, unit='seconds')
         return summary
 
     def _load_telemetry(self):
@@ -223,7 +246,6 @@ class Session:
         logging.info("Getting telemetry data...")
         car_data, res = api.car_data(self.api_path), {}
         logging.info("Parsing temetry...")
-        car_data['Time'] = pd.to_timedelta(car_data['Time'])
         for _drv in self.laps['DriverNumber'].unique():
             to_pass = car_data[car_data['Driver'] == _drv] # 30 % time
             res[_drv] = self._resample(to_pass) # 70 % time
@@ -316,35 +338,70 @@ class Session:
 
 class Laps(pd.DataFrame):
     """This class wraps :attr:`Session.laps` which is a classic pandas
-    DataFrame with the addition of the :meth:`sel` method.
+    DataFrame with the addition of a few 'pick' methods to simplify lap
+    selection and filtering.
+
+    If for example you want to get the fastest lap of Bottas you can
+    narrow it down like this::
+
+        import fastf1 as ff1
+
+        laps = ff1.get_session(2019, 'Bahrain', 'Q').load_laps()
+        best_bottas = laps.pick_driver('BOT').pick_fastest()
+
+        print(best_bottas['LapTime'])
+        # Timedelta('0 days 00:01:28.256000')
+
+    Pick methods will return :class:`Laps` or pandas Series if only 1
+    entry is left.
     """
 
-    def sel(self, _filter_):
-        """This method allows to simplify usage and code readability.
-        You can access useful lap entries quickly in combination with
-        :mod:`fastf1.selectors`.
+    QUICKLAP_THRESHOLD = 1.07
 
-        If for example you want to get the fastest lap of Bottas you can
-        narrow it down like this::
+    def __pick_wrap(func):
+        @functools.wraps(func)
+        def decorator(*args, **kwargs):
+            res = func(*args, **kwargs)
+            return Laps(res) if isinstance(res, pd.DataFrame) else res
+        return decorator
 
-            import fastf1 as ff1
-            from fastf1 import selectors as ect    
-
-            laps = ff1.get_session(2019, 'Bahrain', 'Q').load_laps()
-            best_bottas = laps.sel(ect.driver('BOT')).sel(ect.fastest)
-
-            print(best_bottas['LapTime'])
-            # Timedelta('0 days 00:01:28.256000')
-
-        Args:
-            _filter_: selector function
-
-        Returns:
-            :class:`Laps` or pandas Series if only 1 entry is left
-    
+    @__pick_wrap
+    def pick_driver(self, name):
+        """Select driver given his three letters identifier
         """
-        res = _filter_(self)
-        return Laps(res) if isinstance(res, pd.DataFrame) else res
+        return self[self['Driver'] == name]
+
+    @__pick_wrap
+    def pick_drivers(names):
+        """Select drivers given a list of their three letters identifiers
+        """
+        return self[self['Driver'].isin(names)]
+
+    @__pick_wrap
+    def pick_team(name):
+        """Select team given its name
+        """
+        return self[self['Team'] == name]
+
+    @__pick_wrap
+    def pick_teams(names):
+        """Select teams given a list of names
+        """
+        return self[self['Team'].isin(names)]
+
+    @__pick_wrap
+    def pick_fastest(self):
+        """Select fastest lap time 
+        """
+        return self.loc[self['LapTime'].idxmin()]
+
+    @__pick_wrap
+    def pick_quicklaps(self):
+        """Select laps with lap time below :attr:`QUICKLAP_THRESHOLD`
+        (default 107%) of the fastest lap from the given laps set
+        """
+        time_threshold = self['LapTime'].min() * Laps.QUICKLAP_THRESHOLD
+        return self[self['LapTime'] < time_threshold]
 
 
 class Driver:
@@ -386,5 +443,3 @@ class Driver:
 
     def _filter(self, df):
         return df[df['Driver'] == self.number]
-
-

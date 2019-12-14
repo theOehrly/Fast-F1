@@ -74,47 +74,6 @@ def make_path(wname, d, session):
     return '/static/' + smooth_operator.replace(' ', '_')
 
 
-@utils._cached_panda
-def summary(path):
-    """From `timing_data` and `timing_app_data` a summary table is
-    built. Lap by lap, information on tyre, sectors and times are 
-    organised in an accessible pandas data frame.
-
-    Args:
-        path: path returned from :func:`make_path`
-
-    Returns:
-        pandas dataframe
-
-    """
-    laps_data, _ = timing_data(path)
-    laps_app_data = timing_app_data(path)
-
-    # Now we do some manipulation to make it beautiful
-    df = None
-    laps_data['Stint'] = laps_data['NumberOfPitStops'] + 1
-    laps_data.drop(columns=['NumberOfPitStops'], inplace=True)
-    laps_data['Time'] = pd.to_timedelta(laps_data['Time'])
-    # Matching laps_data and laps_app_data. Not super straightworward
-    # Sometimes a car may enter the pit without changing tyres, so
-    # new compound is associated with the help of log time.
-    useful = laps_app_data[['Driver', 'Time', 'Compound', 'TotalLaps', 'New']]
-    useful = useful[~useful['Compound'].isnull()]
-    useful['Time'] = pd.to_timedelta(useful['Time'])
-    for driver in laps_data['Driver'].unique():
-        d1 = laps_data[laps_data['Driver'] == driver]
-        d2 = useful[useful['Driver'] == driver]
-        d1 = d1.sort_values('Time')
-        d2 = d2.sort_values('Time')
-        result = pd.merge_asof(d1, d2, on='Time', by='Driver')
-        for stint in result['Stint'].unique():
-            sel = result['Stint'] == stint
-            result.loc[sel, 'TotalLaps'] += np.arange(0, sel.sum()) + 1
-        df = result if df is None else pd.concat([df, result], sort=False)    
-    df.rename(columns={'TotalLaps': 'TyreLife', 'New': 'FreshTyre'}, inplace=True)
-    return df.reset_index(drop=True)
-
-
 def timing_data(path):
     """Timing data is a mixed stream of information of each driver.
     At a given time a packet of data may indicate position, lap time,
@@ -131,8 +90,8 @@ def timing_data(path):
 
 
 def _timing_data_stream(path, response=None):
-    """Path is mandatory to target cache file, but pre-fetched response
-    can be fed if other functions parse the same raw data.
+    """pre-fetched response can be fed if other functions parse the same
+    raw data.
     """
     data, df = {}, None
     if response is None:
@@ -178,8 +137,8 @@ def _timing_data_stream(path, response=None):
 
 
 def _timing_data_laps(path, response=None):
-    """Path is mandatory to target cache file, but pre-fetched response
-    can be fed if other functions parse the same raw data.
+    """pre-fetched response can be fed if other functions parse the same
+    raw data.
     """
     if response is None:
         response = fetch_page(path, 'timing_data')
@@ -220,7 +179,7 @@ def _timing_data_laps_entry(entry, driver, data={}, flags={}):
     if driver not in flags:
         flags[driver] = {'time_reference': [None], 'locked_times': [False]}
 
-    time = pd.to_timedelta(entry[0])
+    time = __to_time(entry[0])
     block = entry[1]['Lines'][driver]
 
     # i is the row index that this block has to populate. The
@@ -230,7 +189,7 @@ def _timing_data_laps_entry(entry, driver, data={}, flags={}):
     i = -1
     if len(data[driver]['Time']) > 1:
         last_time = data[driver]['Time'][-2]
-        if time < (last_time + pd.to_timedelta('5s')):
+        if time < (last_time + __to_time('5.000')):
             i = -2
 
     no_time_reference = flags[driver]['time_reference'][i] is None
@@ -255,21 +214,20 @@ def _timing_data_laps_entry(entry, driver, data={}, flags={}):
                 _n = int(sector)
                 sector = block['Sectors'][str(_n)]
             if 'Value' in sector:
-                data[driver][f'Sector{str(_n+1)}Time'][i] = sector['Value']
+                sector_time = __to_time(sector['Value'])
+                data[driver][f'Sector{str(_n+1)}Time'][i] = sector_time
 
             # Sectors are used to calculate the sacred time reference.
             # Following block has the only purpose to find the time with
             # minimum measure delay. Otherwise laps will be out of sync
             has_measure = 'Value' in sector and sector['Value'] != ''
             if _n == 0 and has_measure and no_time_reference:
-                sector_time = pd.to_timedelta('00:00:' + sector['Value'])
                 flags[driver]['time_reference'][i] = {'base': time,
                                                       'delta': sector_time,
                                                       'ts0': sector_time}
             reference_has_ts0 = (not no_time_reference
                                  and 'ts0' in flags[driver]['time_reference'][i])
             if _n == 1 and has_measure and reference_has_ts0:
-                sector_time = pd.to_timedelta('00:00:' + sector['Value'])
                 old_reference = (flags[driver]['time_reference'][i]['base']
                                  - flags[driver]['time_reference'][i]['delta'])
                 new_delta = (sector_time 
@@ -282,7 +240,6 @@ def _timing_data_laps_entry(entry, driver, data={}, flags={}):
             reference_has_ts01 = (reference_has_ts0
                                   and 'ts1' in flags[driver]['time_reference'][i])
             if _n == 2 and has_measure and reference_has_ts01:
-                sector_time = pd.to_timedelta('00:00:' + sector['Value'])
                 old_reference = (flags[driver]['time_reference'][i]['base']
                                  - flags[driver]['time_reference'][i]['delta'])
                 new_delta = (sector_time 
@@ -314,10 +271,13 @@ def _timing_data_laps_entry(entry, driver, data={}, flags={}):
     if ('LastLapTime' in block
         and 'Value' in block['LastLapTime']
         and block['LastLapTime']['Value'] != ''):
-            data[driver]['LastLapTime'][i] = block['LastLapTime']['Value']
+            lap_time = __to_time(block['LastLapTime']['Value'])
+            # Pandas here is very smart (i guess?) because even if I 
+            # append None it will be guessed as NaT to keep datatype
+            # consistency. Very silent behaviour though.
+            data[driver]['LastLapTime'][i] = lap_time
             # Tricky tricks to discover with 'accuracy'
             # when lap time has been set
-            lap_time = pd.to_timedelta('00:' + block['LastLapTime']['Value'])
             time_reference = flags[driver]['time_reference'][i]
             if time_reference is not None: 
                 lap_start_time = time_reference['base'] - time_reference['delta']
@@ -350,7 +310,7 @@ def timing_app_data(path, response=None):
             'TyresNotChanged': [], 'Time': [], 'LapFlags': [],
             'LapCountTime': [], 'StartLaps': [], 'Outlap': []}
     for entry in response:
-        time = entry[0]
+        time = __to_time(entry[0])
         row = entry[1]
         for driver_number in row['Lines']:
             if 'Stints' in row['Lines'][driver_number]:
@@ -374,11 +334,8 @@ def timing_app_data(path, response=None):
     return pd.DataFrame(data)
 
 
-@utils._cached_panda
 def car_data(path):
-    """Fetch and create pandas dataframe for Telemetry. Cached data is
-    used if already fetched.
-
+    """Fetch and create pandas dataframe for Telemetry.
     Samples are not synchronised with the other dataframes and sampling
     time is not constant, usually 240ms but sometimes can be ~270ms.
     Keep absolute reference.
@@ -406,17 +363,15 @@ def car_data(path):
             cars = entry['Cars']
             date = pd.to_datetime(entry['Utc'], format="%Y-%m-%dT%H:%M:%S.%f%z")
             for car in cars:
-                data['Time'].append(line[0])
+                data['Time'].append(__to_time(line[0]))
                 data['Date'].append(date)
                 data['Driver'].append(car)
                 [data[index[i]].append(cars[car]['Channels'][i]) for i in index]
     return pd.DataFrame(data)
 
 
-@utils._cached_panda
 def position(path):
-    """Fetch and create pandas dataframe for Position. Cached data is
-    used if already fetched.
+    """Fetch and create pandas dataframe for Position.
 
     Samples are not synchronised with the other dataframes and sampling
     time is not constant, usually 300ms but sometimes can be ~200ms.
@@ -444,7 +399,7 @@ def position(path):
             cars = entry['Entries']
             date = pd.to_datetime(entry['Timestamp'], format="%Y-%m-%dT%H:%M:%S.%f%z")
             for car in cars:
-                data['Time'].append(line[0])
+                data['Time'].append(__to_time(line[0]))
                 data['Date'].append(date)
                 data['Driver'].append(car)
                 [data[index[i]].append(cars[car][i]) for i in index]
@@ -479,7 +434,6 @@ def fetch_page(path, name):
             return parse(raw, is_z)
     else:
         return None
-
 
 def parse(text, zipped=False):
     """Parse json and jsonStream as known from livetiming.formula1.com
@@ -523,3 +477,9 @@ def _json_inspector(obj, start=None):
             structure[key] = json_inspector(obj[key], start=structure[key])
         return structure
     return obj
+
+
+def __to_time(x):
+    if len(x) and isinstance(x, str):
+        return pd.to_timedelta('00:00:00.000'[:-len(x)] + x)
+    return pd.to_timedelta(x)
