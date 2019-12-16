@@ -74,6 +74,7 @@ def make_path(wname, d, session):
     return '/static/' + smooth_operator.replace(' ', '_')
 
 
+#@cache_to_disk(1)
 def timing_data(path):
     """Timing data is a mixed stream of information of each driver.
     At a given time a packet of data may indicate position, lap time,
@@ -298,6 +299,7 @@ def _timing_data_laps_entry(entry, driver, data={}, flags={}):
     return data, flags
 
 
+#@cache_to_disk(1)
 def timing_app_data(path, response=None):
     """Full parse of timing app data. This parsing is quite ignorant,
     with  minimum logic just to fix data structure inconsistencies. Tyre
@@ -334,8 +336,11 @@ def timing_app_data(path, response=None):
     return pd.DataFrame(data)
 
 
+#@cache_to_disk(1)
 def car_data(path):
-    """Fetch and create pandas dataframe for Telemetry.
+    """Fetch and create pandas dataframe for each driver containing
+    Telemetry data.
+
     Samples are not synchronised with the other dataframes and sampling
     time is not constant, usually 240ms but sometimes can be ~270ms.
     Keep absolute reference.
@@ -353,23 +358,29 @@ def car_data(path):
     """
     index = {'0': 'RPM', '2': 'Speed', '3': 'nGear',
              '4': 'Throttle', '5': 'Brake', '45': 'DRS'}
-    data = {'Date': [],'Time': [], 'Driver': []}
-    [data.update({index[i]: []}) for i in index]
+    data, main_structure = {}, {'Date': [],'Time': []}
+    [main_structure.update({index[i]: []}) for i in index]
     logging.info("Fetching car data") 
     raw = fetch_page(path, 'car_data')
     logging.info("Parsing car data") 
     for line in raw:
+        time = __to_time(line[0])
         for entry in line[1]['Entries']:
             cars = entry['Cars']
             date = pd.to_datetime(entry['Utc'], format="%Y-%m-%dT%H:%M:%S.%f%z")
-            for car in cars:
-                data['Time'].append(__to_time(line[0]))
-                data['Date'].append(date)
-                data['Driver'].append(car)
-                [data[index[i]].append(cars[car]['Channels'][i]) for i in index]
-    return pd.DataFrame(data)
+            for driver in cars:
+                if driver not in data:
+                    data[driver] = copy.deepcopy(main_structure)
+                data[driver]['Time'].append(time)
+                data[driver]['Date'].append(date)
+                for key in index:
+                    data[driver][index[key]].append(cars[driver]['Channels'][key])
+    for driver in data:
+        data[driver] = pd.DataFrame(data[driver])
+    return data
 
 
+#@cache_to_disk(1)
 def position(path):
     """Fetch and create pandas dataframe for Position.
 
@@ -389,21 +400,28 @@ def position(path):
         pandas dataframe
     """
     index = {'Status': 'Status', 'X': 'X', 'Y': 'Y', 'Z': 'Z'}
-    data = {'Date': [],'Time': [], 'Driver': []}
-    [data.update({index[i]: []}) for i in index]
+    data, main_structure = {}, {'Date': [],'Time': []}
+    [main_structure.update({index[i]: []}) for i in index]
     logging.info("Fetching position") 
     raw = fetch_page(path, 'position')
     logging.info("Parsing position") 
     for line in raw:
+        time = __to_time(line[0])
         for entry in line[1]['Position']:
             cars = entry['Entries']
-            date = pd.to_datetime(entry['Timestamp'], format="%Y-%m-%dT%H:%M:%S.%f%z")
-            for car in cars:
-                data['Time'].append(__to_time(line[0]))
-                data['Date'].append(date)
-                data['Driver'].append(car)
-                [data[index[i]].append(cars[car][i]) for i in index]
-    return pd.DataFrame(data)
+            date = pd.to_datetime(entry['Timestamp'][:-1],
+                                  format="%Y-%m-%dT%H:%M:%S.%f",
+                                  infer_datetime_format=True)
+            for driver in cars:
+                if driver not in data:
+                    data[driver] = copy.deepcopy(main_structure)
+                data[driver]['Time'].append(time)
+                data[driver]['Date'].append(date)
+                for key in index:
+                    data[driver][index[key]].append(cars[driver][key])
+    for driver in data:
+        data[driver] = pd.DataFrame(data[driver])
+    return data
 
 
 def fetch_page(path, name):

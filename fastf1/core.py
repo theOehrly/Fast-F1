@@ -242,42 +242,55 @@ class Session:
 
     def _load_telemetry(self):
         """Load telemetry data to be associated for each lap.
+
         """
+        rtel, rpos, event_telemetry, lap_start_date = {}, {}, [], []
         logging.info("Getting telemetry data...")
-        car_data, res = api.car_data(self.api_path), {}
+        car_data = api.car_data(self.api_path)
+        #logging.info("Getting position data...")
+        #position = api.position(self.api_path)
         logging.info("Parsing temetry...")
-        for _drv in self.laps['DriverNumber'].unique():
-            to_pass = car_data[car_data['Driver'] == _drv] # 30 % time
-            res[_drv] = self._resample(to_pass) # 70 % time
-        event_telemetry =  []
-        lap_start_date = []
+        for driver in car_data:
+            rtel[driver] = self._resample(car_data[driver])
+            #rpos[driver] = self._resample(position[driver])
         for i in self.laps.index:
-            row = self.laps.loc[i]
-            if str(lap_time := row['LapTime']) != 'NaT':
-                time = row['Time']
-                driver = row['DriverNumber']
-                car_data = res[driver][0]
-                offset_date = res[driver][1]
-                sel = ((car_data['Time'] < time)
-                        & (car_data['Time'] >= (time - lap_time)))
-                telemetry = car_data[sel].copy()
-                # First calc lap start date
-                lap_start_date.append(offset_date + telemetry['Time'].iloc[0])
-                # Then shift time to 0 so laps can overlap
-                telemetry['Time'] += (lap_time - time)
-                telemetry = telemetry.drop(columns='Driver')
-                def put_space(_telemetry):
-                    dt = _telemetry['Time'].dt.total_seconds().diff()
-                    dt.iloc[0] = _telemetry['Time'].iloc[0].total_seconds()
-                    ds = _telemetry['Speed'] / 3.6 * dt
-                    _telemetry['Space'] = ds.cumsum()
-                    return _telemetry
-                telemetry = put_space(telemetry)
+            lap = self.laps.loc[i]
+            if str(lap['LapTime']) != 'NaT':
+                time, driver = lap['Time'], lap['DriverNumber']
+                #full_tel, full_pos = rtel[driver][0], rpos[driver][0]
+                full_tel = rtel[driver][0]
+                telemetry = self.__slice_stream(full_tel, lap)
+                telemetry = self.__inject_space(telemetry)
+                #telemetry = self.__inject_position(full_pos, lap, telemetry)
                 event_telemetry.append(telemetry)
+                # Calc lap start date
+                lap_start_time = telemetry['SessionTime'].iloc[0]
+                lap_start_date.append(rtel[driver][1] + lap_start_time)
             else:
                 event_telemetry.append(None)
                 lap_start_date.append(None)
         return event_telemetry, lap_start_date
+
+    #def __inject_position(self, _telemetry, lap, position):
+    #    lap_position = self.__slice_stream(position, lap)
+    #    breakpoint()
+    #    return _telemetry
+
+    def __inject_space(self, _telemetry):
+        dt = _telemetry['Time'].dt.total_seconds().diff()
+        dt.iloc[0] = _telemetry['Time'].iloc[0].total_seconds()
+        ds = _telemetry['Speed'] / 3.6 * dt
+        _telemetry['Space'] = ds.cumsum()
+        return _telemetry
+
+    def __slice_stream(self, df, lap):
+        end_time, lap_time = lap['Time'], lap['LapTime']
+        sel = (df['Time'] < end_time) & (df['Time'] >= (end_time - lap_time))
+        lap_stream = df[sel].copy()
+        lap_stream['SessionTime'] = lap_stream['Time']
+        # Then shift time to 0 so laps can overlap
+        lap_stream['Time'] += lap_time - end_time
+        return lap_stream
 
     def _resample(self, df):
         """`car_data` is aligned with main time reference (time used in
@@ -305,8 +318,8 @@ class Session:
         Now data can be resampled on Time.
 
         """
-        if len(drivers := df['Driver'].unique()) > 1:
-            raise Exception("Cannot resample with multiple drivers")
+        if 'Driver' in df.columns and len(df['Driver'].unique()) > 1:
+                raise Exception("Cannot resample with multiple drivers")
         # Align:
         counter, last_val = 0, None
         for i, val in enumerate(df['Time'].values):
@@ -326,14 +339,31 @@ class Session:
         start_date, start_time = pre['Date'].iloc[0], pre['Time'].iloc[0]
         offset_date = start_date - start_time
         pre['Time'] = (pre['Date'] - start_date) + start_time
+        # Map non numeric
+        nnummap = {}
+        for column in pre.columns:
+            if pre[column].dtype == object:
+                backward = dict(enumerate(pre[column].unique()))
+                forward = {v: k for k, v in backward.items()}
+                pre[column] = pre[column].map(forward)
+                nnummap[column] = backward
         # Resample:
         # Date contains the corret time spacing information, so we use that
         # 90% of function time is spent in the next line
         res = pre.resample('0.1S', on='Time').mean().interpolate(method='linear')
-        res['Driver'] = drivers[0] # Populate and fix columns lost with resampling 
-        res[['nGear', 'DRS']] = res[['nGear', 'DRS']].round().astype(int)
+        if 'nGear' in res.columns and 'DRS' in res.columns:
+            res[['nGear', 'DRS']] = res[['nGear', 'DRS']].round().astype(int)
+        for column in nnummap:
+            res[column] = res[column].round().map(nnummap[column])
         res['Time'] = pd.to_timedelta(res.index, unit='s')
         return res.reset_index(drop=True), offset_date
+
+    def _inject_position(self, laps):
+        position = api.position(self.api_path)
+        for i in laps.index:
+            lap = laps.loc[i]
+            driver = lap['Driver']
+        return laps
 
 
 class Laps(pd.DataFrame):
