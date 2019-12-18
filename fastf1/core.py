@@ -155,6 +155,10 @@ class Session:
                 - `Throttle` (float): 0-100 Throttle pedal pressure
                 - `Brake` (float): 0-100 Brake pedal pressure
                 - `DRS` (int): DRS indicator
+                - `X` (float): GPS X position (normalized)
+                - `Y` (float): GPS X position (normalized)
+                - `Status` (string): flags OffTrack/OnTrack for GPS 
+                - `SessionTime` (timedelta): time elapsed from session start
 
         .. note:: Absolute time is not super accurate. The moment a lap
             is logged is not always the same and there will be some
@@ -247,21 +251,23 @@ class Session:
         rtel, rpos, event_telemetry, lap_start_date = {}, {}, [], []
         logging.info("Getting telemetry data...")
         car_data = api.car_data(self.api_path)
-        #logging.info("Getting position data...")
-        #position = api.position(self.api_path)
-        logging.info("Parsing temetry...")
+        logging.info("Getting position data...")
+        position = api.position(self.api_path)
+        logging.info("Resampling telemetry...")
         for driver in car_data:
             rtel[driver] = self._resample(car_data[driver])
-            #rpos[driver] = self._resample(position[driver])
+            rpos[driver] = self._resample(position[driver])
+        logging.info("Creating laps...")
         for i in self.laps.index:
+            _log_progress(i, len(self.laps.index))
             lap = self.laps.loc[i]
             if str(lap['LapTime']) != 'NaT':
                 time, driver = lap['Time'], lap['DriverNumber']
-                #full_tel, full_pos = rtel[driver][0], rpos[driver][0]
+                full_tel, full_pos = rtel[driver][0], rpos[driver][0]
                 full_tel = rtel[driver][0]
                 telemetry = self.__slice_stream(full_tel, lap)
                 telemetry = self.__inject_space(telemetry)
-                #telemetry = self.__inject_position(full_pos, lap, telemetry)
+                telemetry = self.__inject_position(full_pos, lap, telemetry)
                 event_telemetry.append(telemetry)
                 # Calc lap start date
                 lap_start_time = telemetry['SessionTime'].iloc[0]
@@ -271,10 +277,19 @@ class Session:
                 lap_start_date.append(None)
         return event_telemetry, lap_start_date
 
-    #def __inject_position(self, _telemetry, lap, position):
-    #    lap_position = self.__slice_stream(position, lap)
-    #    breakpoint()
-    #    return _telemetry
+    def __inject_position(self, position, lap, _telemetry):
+        lap_position = self.__slice_stream(position, lap, pad=1)
+        lap_position, unmap = self.__map_objects(lap_position)
+        ref_time = _telemetry['Time'].values
+        pos_time = lap_position['Time'].values
+        new_lap_position = {}
+        ref_x = pd.to_numeric(ref_time)
+        ref_xp = pd.to_numeric(pos_time)
+        for column in lap_position.columns:
+            if column not in _telemetry:
+                y = np.interp(ref_x, ref_xp, lap_position[column].values) 
+                _telemetry[column] = y
+        return unmap(_telemetry)
 
     def __inject_space(self, _telemetry):
         dt = _telemetry['Time'].dt.total_seconds().diff()
@@ -283,10 +298,12 @@ class Session:
         _telemetry['Space'] = ds.cumsum()
         return _telemetry
 
-    def __slice_stream(self, df, lap):
+    def __slice_stream(self, df, lap, pad=0):
+        pad = pd.to_timedelta(f'{pad*0.1}s')
         end_time, lap_time = lap['Time'], lap['LapTime']
-        sel = (df['Time'] < end_time) & (df['Time'] >= (end_time - lap_time))
-        lap_stream = df[sel].copy()
+        sel = ((df['Time'] < (end_time + pad))
+                & (df['Time'] >= (end_time - lap_time - pad)))
+        lap_stream = df.loc[sel].copy()
         lap_stream['SessionTime'] = lap_stream['Time']
         # Then shift time to 0 so laps can overlap
         lap_stream['Time'] += lap_time - end_time
@@ -340,23 +357,31 @@ class Session:
         offset_date = start_date - start_time
         pre['Time'] = (pre['Date'] - start_date) + start_time
         # Map non numeric
-        nnummap = {}
-        for column in pre.columns:
-            if pre[column].dtype == object:
-                backward = dict(enumerate(pre[column].unique()))
-                forward = {v: k for k, v in backward.items()}
-                pre[column] = pre[column].map(forward)
-                nnummap[column] = backward
+        mapped, unmap = self.__map_objects(pre)
         # Resample:
         # Date contains the corret time spacing information, so we use that
         # 90% of function time is spent in the next line
-        res = pre.resample('0.1S', on='Time').mean().interpolate(method='linear')
+        res = mapped.resample('0.1S', on='Time').mean().interpolate(method='linear')
         if 'nGear' in res.columns and 'DRS' in res.columns:
             res[['nGear', 'DRS']] = res[['nGear', 'DRS']].round().astype(int)
-        for column in nnummap:
-            res[column] = res[column].round().map(nnummap[column])
+        res = unmap(res)
         res['Time'] = pd.to_timedelta(res.index, unit='s')
         return res.reset_index(drop=True), offset_date
+        #return res, offset_date
+
+    def __map_objects(self, df):
+        nnummap = {}
+        for column in df.columns:
+            if df[column].dtype == object:
+                backward = dict(enumerate(df[column].unique()))
+                forward = {v: k for k, v in backward.items()}
+                df[column] = df[column].map(forward)
+                nnummap[column] = backward
+        def unmap(res):
+            for column in nnummap:
+                res[column] = res[column].round().map(nnummap[column])
+            return res
+        return df, unmap
 
     def _inject_position(self, laps):
         position = api.position(self.api_path)
@@ -473,3 +498,11 @@ class Driver:
 
     def _filter(self, df):
         return df[df['Driver'] == self.number]
+
+
+def _log_progress(i, length, c=30):
+    if (logging.root.level >= logging.INFO and i % int(length / (c-1)) == 0):
+        p = round((i / length) * c)
+        is_last = (p * (c+1)/c) > c
+        print(f"\r[{'+'*p}{'-'*(c-p)}] ({length if is_last else i}/{length})",
+              end="\n" if is_last else '')
