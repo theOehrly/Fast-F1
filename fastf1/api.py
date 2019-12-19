@@ -1,3 +1,5 @@
+from cache_to_disk import cache_to_disk
+print("Remove cache to disk")
 """
 :mod:`fastf1.api` - Api module
 ==============================
@@ -74,6 +76,7 @@ def make_path(wname, d, session):
     return '/static/' + smooth_operator.replace(' ', '_')
 
 
+@cache_to_disk(1)
 def timing_data(path):
     """Timing data is a mixed stream of information of each driver.
     At a given time a packet of data may indicate position, lap time,
@@ -298,6 +301,7 @@ def _timing_data_laps_entry(entry, driver, data={}, flags={}):
     return data, flags
 
 
+@cache_to_disk(1)
 def timing_app_data(path, response=None):
     """Full parse of timing app data. This parsing is quite ignorant,
     with  minimum logic just to fix data structure inconsistencies. Tyre
@@ -334,6 +338,7 @@ def timing_app_data(path, response=None):
     return pd.DataFrame(data)
 
 
+@cache_to_disk(1)
 def car_data(path):
     """Fetch and create pandas dataframe for each driver containing
     Telemetry data.
@@ -377,6 +382,7 @@ def car_data(path):
     return data
 
 
+@cache_to_disk(1)
 def position(path):
     """Fetch and create pandas dataframe for Position.
 

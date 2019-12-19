@@ -162,15 +162,16 @@ class Session:
 
         .. note:: Absolute time is not super accurate. The moment a lap
             is logged is not always the same and there will be some
-            jitter. At the moment absolute lap time reference is set to
-            when "Sector 1" time is fired. Expect an error of ±10m when 
-            overlapping telemetry data of different laps.
+            jitter. At the moment lap time reference is synchronised
+            on the sector time triggered with lowest latency.
+            Expect an error of around ±10m when overlapping telemetry
+            data of different laps.
 
         Returns:
             laps
 
         """
-        logging.info(f"Loading laps for {self.weekend.name} {self.session_name}")
+        logging.info(f"Loading {self.weekend.name} {self.session_name}")
         self.laps = self._load_summary()
         telemetry, lap_start_date = self._load_telemetry()
         self.laps['LapStartDate'] = lap_start_date
@@ -186,18 +187,6 @@ class Session:
                     return Driver(self, info)
         return None
 
-    def _get_driver_map(self):
-        lookup = {}
-        for block in self.results:
-            lookup[block['number']] = block['Driver']['code']
-        return lookup
-
-    def _get_team_map(self):
-        lookup = {}
-        for block in self.results:
-            lookup[block['number']] = block['Constructor']['name']
-        return lookup
-
     def _load_summary(self):
         """From `timing_data` and `timing_app_data` a summary table is
         built. Lap by lap, information on tyre, sectors and times are 
@@ -211,37 +200,35 @@ class Session:
 
         """
         logging.info("Getting summary...")
-        laps_data, _ = api.timing_data(self.api_path)
-        laps_app_data = api.timing_app_data(self.api_path)
+        data, _ = api.timing_data(self.api_path)
+        app_data = api.timing_app_data(self.api_path)
         # Now we do some manipulation to make it beautiful
         logging.info("Formatting summary...")
-        df = None
-        laps_data['Stint'] = laps_data['NumberOfPitStops'] + 1
-        laps_data.drop(columns=['NumberOfPitStops'], inplace=True)
-        # Matching laps_data and laps_app_data. Not super straightworward
+        # Matching data and app_data. Not super straightworward
         # Sometimes a car may enter the pit without changing tyres, so
         # new compound is associated with the help of logging time.
-        useful = laps_app_data[['Driver', 'Time', 'Compound', 'TotalLaps', 'New']]
+        useful = app_data[['Driver', 'Time', 'Compound', 'TotalLaps', 'New']]
         useful = useful[~useful['Compound'].isnull()]
-        for driver in laps_data['Driver'].unique():
-            d1 = laps_data[laps_data['Driver'] == driver]
+        for i, driver in enumerate(data['Driver'].unique()):
+            d1 = data[data['Driver'] == driver]
             d2 = useful[useful['Driver'] == driver]
-            d1 = d1.sort_values('Time')
-            d2 = d2.sort_values('Time')
             result = pd.merge_asof(d1, d2, on='Time', by='Driver')
-            for stint in result['Stint'].unique():
-                sel = result['Stint'] == stint
+            for npit in result['NumberOfPitStops'].unique():
+                sel = result['NumberOfPitStops'] == npit
                 result.loc[sel, 'TotalLaps'] += np.arange(0, sel.sum()) + 1
-            df = result if df is None else pd.concat([df, result], sort=False)    
-        df.rename(columns={'TotalLaps': 'TyreLife', 'New': 'FreshTyre'}, inplace=True)
+            df = result if i == 0 else pd.concat([df, result], sort=False)    
         summary = df.reset_index(drop=True)
-        numbers = summary['Driver']
-        summary['DriverNumber'] = numbers
-        summary['Team'] = numbers.map(self._get_team_map())
-        summary['Driver'] = numbers.map(self._get_driver_map())
-        summary.rename(columns={'LastLapTime': 'LapTime',
-                                 'NumberOfLaps': 'LapNumber'},
-                                 inplace=True)
+        summary.rename(columns={'TotalLaps': 'TyreLife',
+                                'LastLapTime': 'LapTime', 
+                                'NumberOfPitStops': 'Stint',
+                                'Driver': 'DriverNumber',
+                                'NumberOfLaps': 'LapNumber',
+                                'New': 'FreshTyre'}, inplace=True)
+        summary['Stint'] += 1 # counting stints from 1
+        t_map = {r['number']: r['Constructor']['name'] for r in self.results}
+        summary['Team'] = summary['DriverNumber'].map(t_map)
+        d_map = {r['number']: r['Driver']['code'] for r in self.results}
+        summary['Driver'] = summary['DriverNumber'].map(d_map)
         return summary
 
     def _load_telemetry(self):
@@ -265,9 +252,9 @@ class Session:
                 time, driver = lap['Time'], lap['DriverNumber']
                 full_tel, full_pos = rtel[driver][0], rpos[driver][0]
                 full_tel = rtel[driver][0]
-                telemetry = self.__slice_stream(full_tel, lap)
-                telemetry = self.__inject_space(telemetry)
-                telemetry = self.__inject_position(full_pos, lap, telemetry)
+                telemetry = self._slice_stream(full_tel, lap)
+                telemetry = self._inject_space(telemetry)
+                telemetry = self._inject_position(full_pos, lap, telemetry)
                 event_telemetry.append(telemetry)
                 # Calc lap start date
                 lap_start_time = telemetry['SessionTime'].iloc[0]
@@ -276,38 +263,6 @@ class Session:
                 event_telemetry.append(None)
                 lap_start_date.append(None)
         return event_telemetry, lap_start_date
-
-    def __inject_position(self, position, lap, _telemetry):
-        lap_position = self.__slice_stream(position, lap, pad=1)
-        lap_position, unmap = self.__map_objects(lap_position)
-        ref_time = _telemetry['Time'].values
-        pos_time = lap_position['Time'].values
-        new_lap_position = {}
-        ref_x = pd.to_numeric(ref_time)
-        ref_xp = pd.to_numeric(pos_time)
-        for column in lap_position.columns:
-            if column not in _telemetry:
-                y = np.interp(ref_x, ref_xp, lap_position[column].values) 
-                _telemetry[column] = y
-        return unmap(_telemetry)
-
-    def __inject_space(self, _telemetry):
-        dt = _telemetry['Time'].dt.total_seconds().diff()
-        dt.iloc[0] = _telemetry['Time'].iloc[0].total_seconds()
-        ds = _telemetry['Speed'] / 3.6 * dt
-        _telemetry['Space'] = ds.cumsum()
-        return _telemetry
-
-    def __slice_stream(self, df, lap, pad=0):
-        pad = pd.to_timedelta(f'{pad*0.1}s')
-        end_time, lap_time = lap['Time'], lap['LapTime']
-        sel = ((df['Time'] < (end_time + pad))
-                & (df['Time'] >= (end_time - lap_time - pad)))
-        lap_stream = df.loc[sel].copy()
-        lap_stream['SessionTime'] = lap_stream['Time']
-        # Then shift time to 0 so laps can overlap
-        lap_stream['Time'] += lap_time - end_time
-        return lap_stream
 
     def _resample(self, df):
         """`car_data` is aligned with main time reference (time used in
@@ -357,7 +312,7 @@ class Session:
         offset_date = start_date - start_time
         pre['Time'] = (pre['Date'] - start_date) + start_time
         # Map non numeric
-        mapped, unmap = self.__map_objects(pre)
+        mapped, unmap = self._map_objects(pre)
         # Resample:
         # Date contains the corret time spacing information, so we use that
         # 90% of function time is spent in the next line
@@ -369,7 +324,10 @@ class Session:
         return res.reset_index(drop=True), offset_date
         #return res, offset_date
 
-    def __map_objects(self, df):
+    def _build_track(self, position, tol=20):
+        pass
+
+    def _map_objects(self, df):
         nnummap = {}
         for column in df.columns:
             if df[column].dtype == object:
@@ -383,12 +341,38 @@ class Session:
             return res
         return df, unmap
 
-    def _inject_position(self, laps):
-        position = api.position(self.api_path)
-        for i in laps.index:
-            lap = laps.loc[i]
-            driver = lap['Driver']
-        return laps
+    def _inject_position(self, position, lap, _telemetry):
+        lap_position = self._slice_stream(position, lap, pad=1)
+        lap_position, unmap = self._map_objects(lap_position)
+        ref_time = _telemetry['Time'].values
+        pos_time = lap_position['Time'].values
+        new_lap_position = {}
+        ref_x = pd.to_numeric(ref_time)
+        ref_xp = pd.to_numeric(pos_time)
+        for column in lap_position.columns:
+            if column not in _telemetry:
+                y = np.interp(ref_x, ref_xp, lap_position[column].values) 
+                _telemetry[column] = y
+        return unmap(_telemetry)
+
+    def _inject_space(self, _telemetry):
+        dt = _telemetry['Time'].dt.total_seconds().diff()
+        dt.iloc[0] = _telemetry['Time'].iloc[0].total_seconds()
+        ds = _telemetry['Speed'] / 3.6 * dt
+        _telemetry['Space'] = ds.cumsum()
+        return _telemetry
+
+    def _slice_stream(self, df, lap, pad=0):
+        pad = pd.to_timedelta(f'{pad*0.1}s')
+        end_time, lap_time = lap['Time'], lap['LapTime']
+        sel = ((df['Time'] < (end_time + pad))
+                & (df['Time'] >= (end_time - lap_time - pad)))
+        lap_stream = df.loc[sel].copy()
+        lap_stream['SessionTime'] = lap_stream['Time']
+        # Then shift time to 0 so laps can overlap
+        lap_stream['Time'] += lap_time - end_time
+        return lap_stream
+
 
 
 class Laps(pd.DataFrame):

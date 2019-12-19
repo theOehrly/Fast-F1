@@ -56,10 +56,13 @@ matplotlib.axes.Axes.bar = _bar_sorted(matplotlib.axes.Axes.bar)
 matplotlib.axes.Axes.barh = _bar_sorted(matplotlib.axes.Axes.barh)
 
 def _nice_grid(ax):
-    ax.minorticks_on()
-    grid = getattr(ax, 'grid')
-    grid(b=True, which='major', color='#4f4845', linestyle='-', linewidth=1)
-    grid(b=True, which='minor', color='#3f3a38', linestyle='--', linewidth=0.5)
+    if isinstance(ax, np.ndarray):
+        [_nice_grid(_ax) for _ax in ax]
+    else:
+        ax.minorticks_on()
+        grid = getattr(ax, 'grid')
+        grid(b=True, which='major', color='#4f4845', linestyle='-', linewidth=1)
+        grid(b=True, which='minor', color='#3f3a38', linestyle='--', linewidth=0.5)
 
 _subplots_placeholder = plt.subplots
 def _subplots(*args, **kwargs):
