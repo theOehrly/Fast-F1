@@ -176,8 +176,9 @@ class Session:
         telemetry, lap_start_date = self._load_telemetry()
         self.laps['LapStartDate'] = lap_start_date
         self.laps['telemetry'] = telemetry
-        logging.info(f"Laps loaded and saved!")
         self.laps = Laps(self.laps)
+        self._augment_laps()
+        logging.info(f"Laps loaded and saved!")
         return self.laps
 
     def get_driver(self, identifier):
@@ -233,7 +234,6 @@ class Session:
 
     def _load_telemetry(self):
         """Load telemetry data to be associated for each lap.
-
         """
         rtel, rpos, event_telemetry, lap_start_date = {}, {}, [], []
         logging.info("Getting telemetry data...")
@@ -253,7 +253,6 @@ class Session:
                 full_tel, full_pos = rtel[driver][0], rpos[driver][0]
                 full_tel = rtel[driver][0]
                 telemetry = self._slice_stream(full_tel, lap)
-                telemetry = self._inject_space(telemetry)
                 telemetry = self._inject_position(full_pos, lap, telemetry)
                 event_telemetry.append(telemetry)
                 # Calc lap start date
@@ -316,16 +315,14 @@ class Session:
         # Resample:
         # Date contains the corret time spacing information, so we use that
         # 90% of function time is spent in the next line
-        res = mapped.resample('0.1S', on='Time').mean().interpolate(method='linear')
+        res = (mapped.resample('0.1S', on='Time').mean()
+                     .interpolate(method='linear'))
         if 'nGear' in res.columns and 'DRS' in res.columns:
             res[['nGear', 'DRS']] = res[['nGear', 'DRS']].round().astype(int)
         res = unmap(res)
         res['Time'] = pd.to_timedelta(res.index, unit='s')
         return res.reset_index(drop=True), offset_date
         #return res, offset_date
-
-    def _build_track(self, position, tol=20):
-        pass
 
     def _map_objects(self, df):
         nnummap = {}
@@ -355,13 +352,6 @@ class Session:
                 _telemetry[column] = y
         return unmap(_telemetry)
 
-    def _inject_space(self, _telemetry):
-        dt = _telemetry['Time'].dt.total_seconds().diff()
-        dt.iloc[0] = _telemetry['Time'].iloc[0].total_seconds()
-        ds = _telemetry['Speed'] / 3.6 * dt
-        _telemetry['Space'] = ds.cumsum()
-        return _telemetry
-
     def _slice_stream(self, df, lap, pad=0):
         pad = pd.to_timedelta(f'{pad*0.1}s')
         end_time, lap_time = lap['Time'], lap['LapTime']
@@ -373,6 +363,25 @@ class Session:
         lap_stream['Time'] += lap_time - end_time
         return lap_stream
 
+    def _augment_laps(self):
+        """Improves laps information content
+
+            - Adds 'Space' channel to telemetry
+            - Adds 'DistanceToCarAhead' channel to telemetry
+        """
+        for i in self.laps.index:
+            lap = self.laps.loc[i]
+            lap.telemetry = self._inject_space(lap.telemetry)
+
+    def _inject_space(self, _telemetry):
+        dt = _telemetry['Time'].dt.total_seconds().diff()
+        dt.iloc[0] = _telemetry['Time'].iloc[0].total_seconds()
+        ds = _telemetry['Speed'] / 3.6 * dt
+        _telemetry['Space'] = ds.cumsum()
+        return _telemetry
+
+    def _build_track(self, position, tol=20):
+        pass
 
 
 class Laps(pd.DataFrame):
