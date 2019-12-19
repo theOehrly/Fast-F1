@@ -234,6 +234,7 @@ class Session:
 
     def _load_telemetry(self):
         """Load telemetry data to be associated for each lap.
+
         """
         rtel, rpos, event_telemetry, lap_start_date = {}, {}, [], []
         logging.info("Getting telemetry data...")
@@ -324,20 +325,6 @@ class Session:
         return res.reset_index(drop=True), offset_date
         #return res, offset_date
 
-    def _map_objects(self, df):
-        nnummap = {}
-        for column in df.columns:
-            if df[column].dtype == object:
-                backward = dict(enumerate(df[column].unique()))
-                forward = {v: k for k, v in backward.items()}
-                df[column] = df[column].map(forward)
-                nnummap[column] = backward
-        def unmap(res):
-            for column in nnummap:
-                res[column] = res[column].round().map(nnummap[column])
-            return res
-        return df, unmap
-
     def _inject_position(self, position, lap, _telemetry):
         lap_position = self._slice_stream(position, lap, pad=1)
         lap_position, unmap = self._map_objects(lap_position)
@@ -351,6 +338,20 @@ class Session:
                 y = np.interp(ref_x, ref_xp, lap_position[column].values) 
                 _telemetry[column] = y
         return unmap(_telemetry)
+
+    def _map_objects(self, df):
+        nnummap = {}
+        for column in df.columns:
+            if df[column].dtype == object:
+                backward = dict(enumerate(df[column].unique()))
+                forward = {v: k for k, v in backward.items()}
+                df[column] = df[column].map(forward)
+                nnummap[column] = backward
+        def unmap(res):
+            for column in nnummap:
+                res[column] = res[column].round().map(nnummap[column])
+            return res
+        return df, unmap
 
     def _slice_stream(self, df, lap, pad=0):
         pad = pd.to_timedelta(f'{pad*0.1}s')
@@ -371,14 +372,14 @@ class Session:
         """
         for i in self.laps.index:
             lap = self.laps.loc[i]
-            lap.telemetry = self._inject_space(lap.telemetry)
+            if str(lap['LapTime']) != 'NaT':
+                self._add_space_channel(lap.telemetry)
 
-    def _inject_space(self, _telemetry):
+    def _add_space_channel(self, _telemetry):
         dt = _telemetry['Time'].dt.total_seconds().diff()
         dt.iloc[0] = _telemetry['Time'].iloc[0].total_seconds()
         ds = _telemetry['Speed'] / 3.6 * dt
         _telemetry['Space'] = ds.cumsum()
-        return _telemetry
 
     def _build_track(self, position, tol=20):
         pass
