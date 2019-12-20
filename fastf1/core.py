@@ -10,6 +10,8 @@ import pandas as pd
 import numpy as np
 import logging
 import functools
+import scipy
+from scipy import spatial
 logging.basicConfig(level=logging.INFO)
 
 
@@ -236,29 +238,29 @@ class Session:
         """Load telemetry data to be associated for each lap.
 
         """
-        rtel, rpos, event_telemetry, lap_start_date = {}, {}, [], []
+        tel, pos, date_offset = {}, {}, {}
+        event_telemetry, lap_start_date = [], []
         logging.info("Getting telemetry data...")
         car_data = api.car_data(self.api_path)
         logging.info("Getting position data...")
         position = api.position(self.api_path)
         logging.info("Resampling telemetry...")
         for driver in car_data:
-            rtel[driver] = self._resample(car_data[driver])
-            rpos[driver] = self._resample(position[driver])
+            tel[driver], date_offset[driver] = self._resample(car_data[driver])
+            pos[driver], _ = self._resample(position[driver])
+        self.car_data, self.position = tel, pos
         logging.info("Creating laps...")
         for i in self.laps.index:
             _log_progress(i, len(self.laps.index))
             lap = self.laps.loc[i]
             if str(lap['LapTime']) != 'NaT':
                 time, driver = lap['Time'], lap['DriverNumber']
-                full_tel, full_pos = rtel[driver][0], rpos[driver][0]
-                full_tel = rtel[driver][0]
-                telemetry = self._slice_stream(full_tel, lap)
-                telemetry = self._inject_position(full_pos, lap, telemetry)
+                telemetry = self._slice_stream(tel[driver], lap)
+                telemetry = self._inject_position(pos[driver], lap, telemetry)
                 event_telemetry.append(telemetry)
                 # Calc lap start date
                 lap_start_time = telemetry['SessionTime'].iloc[0]
-                lap_start_date.append(rtel[driver][1] + lap_start_time)
+                lap_start_date.append(date_offset[driver] + lap_start_time)
             else:
                 event_telemetry.append(None)
                 lap_start_date.append(None)
@@ -374,6 +376,7 @@ class Session:
             lap = self.laps.loc[i]
             if str(lap['LapTime']) != 'NaT':
                 self._add_space_channel(lap.telemetry)
+        trajectory = self._make_trajectory(self.laps.pick_fastest()) 
 
     def _add_space_channel(self, _telemetry):
         dt = _telemetry['Time'].dt.total_seconds().diff()
@@ -381,8 +384,36 @@ class Session:
         ds = _telemetry['Speed'] / 3.6 * dt
         _telemetry['Space'] = ds.cumsum()
 
-    def _build_track(self, position, tol=20):
-        pass
+    def _make_trajectory(self, lap):
+        telemetry = lap.telemetry
+        x = telemetry['X'].values
+        y = telemetry['Y'].values
+        s = telemetry['Space'].values
+
+        # Assuming constant speed in the last tenth
+        dt0_ = (lap['LapTime'] - telemetry['Time'].iloc[-1]).total_seconds()
+        ds0_ = (telemetry['Speed'].iloc[-1] / 3.6) * dt0_
+        total_s = s[-1] + ds0_
+
+        full_s = np.concatenate([s - total_s, s, s + total_s])
+        full_x = np.concatenate([x, x, x]) # To connect start and finish
+        full_y = np.concatenate([y, y, y])
+
+        reference_s = np.arange(0, total_s)
+        space = np.zeros((np.size(reference_s), 2))
+        reference_x = np.interp(reference_s, full_s, full_x)
+        reference_y = np.interp(reference_s, full_s, full_y)
+        space[:, 0] = reference_x
+        space[:, 1] = reference_y
+        mytree = scipy.spatial.cKDTree(space)
+        from code_time import probe
+        probe()
+        mytree = scipy.spatial.cKDTree(space)
+        probe("Tree")
+        mytree.query(space)
+        probe("Query")
+        breakpoint()  
+        # We have the elemets for s map
 
 
 class Laps(pd.DataFrame):
