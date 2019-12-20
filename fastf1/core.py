@@ -406,12 +406,10 @@ class Session:
         space[:, 0] = reference_x
         space[:, 1] = reference_y
         mytree = scipy.spatial.cKDTree(space)
-        from code_time import probe
-        probe()
         mytree = scipy.spatial.cKDTree(space)
-        probe("Tree")
-        mytree.query(space)
-        probe("Query")
+        for driver in self.position:
+            projection = mytree.query(self.position[driver][['X', 'Y']],
+                                      distance_upper_bound=100)[1]
         breakpoint()  
         # We have the elemets for s map
 

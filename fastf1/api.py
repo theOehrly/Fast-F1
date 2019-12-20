@@ -142,6 +142,7 @@ def _timing_data_stream(path, response=None):
 def _timing_data_laps(path, response=None):
     """pre-fetched response can be fed if other functions parse the same
     raw data.
+
     """
     if response is None:
         response = fetch_page(path, 'timing_data')
@@ -151,11 +152,10 @@ def _timing_data_laps(path, response=None):
             continue
         for driver in entry[1]['Lines']:
             data, flags = _timing_data_laps_entry(entry, driver, data, flags)
-
-    empty_check = [key for key in data[driver] if key not in ['Time', 'Driver']]
+    data_cols = [key for key in data[driver] if key not in ['Time', 'Driver']]
     for driver in data:
         _df = pd.DataFrame(data[driver])
-        if not _df.iloc[-1][empty_check].any():
+        if not _df.iloc[-1][data_cols].any():
             # Pop last row if all entries are empty
             _df = _df.iloc[:-1]
         # To increase pitstop count on next lap start and not end 
@@ -175,9 +175,9 @@ def _timing_data_laps_entry(entry, driver, data={}, flags={}):
     if driver not in data:
         data[driver] = {'Time': [], 'Driver': [], 'LastLapTime':[],
                         'NumberOfLaps':[], 'NumberOfPitStops': [],
-                        'PitOutTime': [], 'PitInTime': [],
-                        'Sector1Time':[], 'Sector2Time': [], 'Sector3Time': [],
-                        'SpeedI1': [], 'SpeedI2': [], 'SpeedFL': [], 'SpeedST':[]}
+                        'PitOutTime': [], 'PitInTime': [], 'Sector1Time':[],
+                        'Sector2Time': [], 'Sector3Time': [], 'SpeedI1': [],
+                        'SpeedI2': [], 'SpeedFL': [], 'SpeedST':[]}
         [data[driver][key].append(None) for key in data[driver]]
     if driver not in flags:
         flags[driver] = {'time_reference': [None], 'locked_times': [False]}
@@ -258,7 +258,8 @@ def _timing_data_laps_entry(entry, driver, data={}, flags={}):
     if 'Speeds' in block:
         for trap in block['Speeds']:
             if 'Value' in block['Speeds'][trap]:
-                data[driver][f'Speed{trap}'][i] = block['Speeds'][trap]['Value']
+                speedtrap_value = block['Speeds'][trap]['Value']
+                data[driver][f'Speed{trap}'][i] = speedtrap_value
 
     # F1 Reports start and end time of InPit and PitOut
     # To simplify these are reduced to a single pit in start
@@ -278,12 +279,13 @@ def _timing_data_laps_entry(entry, driver, data={}, flags={}):
             # Pandas here is very smart (i guess?) because even if I 
             # append None it will be guessed as NaT to keep datatype
             # consistency. Very silent behaviour though.
+            # UNLESS, no time has been set by this guy (shit #1)
             data[driver]['LastLapTime'][i] = lap_time
             # Tricky tricks to discover with 'accuracy'
             # when lap time has been set
-            time_reference = flags[driver]['time_reference'][i]
-            if time_reference is not None: 
-                lap_start_time = time_reference['base'] - time_reference['delta']
+            time_ref = flags[driver]['time_reference'][i]
+            if time_ref is not None: 
+                lap_start_time = time_ref['base'] - time_ref['delta']
                 data[driver]['Time'][i] = lap_start_time + lap_time 
                 flags[driver]['locked_times'][i] = True
 
@@ -295,6 +297,8 @@ def _timing_data_laps_entry(entry, driver, data={}, flags={}):
     if ('NumberOfLaps' in block):
         data[driver]['NumberOfLaps'][-1] = block['NumberOfLaps']
         [data[driver][key].append(None) for key in data[driver]]
+        # prevent shit #1 and put a NaT
+        data[driver]['LastLapTime'][-1] = __to_time('') 
         flags[driver]['time_reference'].append(None)
         flags[driver]['locked_times'].append(False)
 
