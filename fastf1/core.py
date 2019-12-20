@@ -395,6 +395,7 @@ class Session:
         ds0_ = (telemetry['Speed'].iloc[-1] / 3.6) * dt0_
         total_s = s[-1] + ds0_
 
+
         full_s = np.concatenate([s - total_s, s, s + total_s])
         full_x = np.concatenate([x, x, x]) # To connect start and finish
         full_y = np.concatenate([y, y, y])
