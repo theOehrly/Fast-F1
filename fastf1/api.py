@@ -264,7 +264,7 @@ def _timing_data_laps_entry(entry, driver, data={}, flags={}):
     # F1 Reports start and end time of InPit and PitOut
     # To simplify these are reduced to a single pit in start
     # and pit out end time
-    if 'PitOut' in block and block['PitOut'] == False:
+    if 'InPit' in block and block['InPit'] == False:
         data[driver]['PitOutTime'][i] = time
     if 'InPit' in block and block['InPit'] == True:
         data[driver]['PitInTime'][i] = time
@@ -425,6 +425,11 @@ def position(path):
                 data[driver]['Date'].append(date)
                 for key in index:
                     data[driver][index[key]].append(cars[driver][key])
+                if str(cars[driver]['Status']).isdigit():
+                    # Fallback on older api status mapping and convert
+                    int_val = data[driver]['Status'][-1] 
+                    new_map = 'OffTrack' if int_val else 'OnTrack'
+                    data[driver]['Status'][-1] = new_map
     for driver in data:
         data[driver] = pd.DataFrame(data[driver])
     return data
