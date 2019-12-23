@@ -159,8 +159,11 @@ class Session:
                 - `DRS` (int): DRS indicator
                 - `X` (float): GPS X position (normalized)
                 - `Y` (float): GPS X position (normalized)
+                - `Z` (float): GPS Z position (normalized)
                 - `Status` (string): flags OffTrack/OnTrack for GPS 
                 - `SessionTime` (timedelta): time elapsed from session start
+                - `DistanceToDriverAhead` (string): distance to next car
+                - `DriverAhead` (string): the car ahead
 
         .. note:: Absolute time is not super accurate. The moment a lap
             is logged is not always the same and there will be some
@@ -250,6 +253,7 @@ class Session:
             pos[driver], _ = self._resample(position[driver])
         self.car_data, self.position = tel, pos
         self._augment_position()
+        d_map = {r['number']: r['Driver']['code'] for r in self.results}
         logging.info("Creating laps...")
         for i in self.laps.index:
             _log_progress(i, len(self.laps.index))
@@ -259,6 +263,7 @@ class Session:
                 telemetry = self._slice_stream(tel[driver], lap)
                 telemetry = self._inject_position(pos[driver], lap, telemetry)
                 telemetry = self._inject_space(telemetry)
+                telemetry['DriverAhead'] = telemetry['DriverAhead'].map(d_map)
                 event_telemetry.append(telemetry)
                 # Calc lap start date
                 lap_start_time = telemetry['SessionTime'].iloc[0]
