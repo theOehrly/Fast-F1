@@ -150,6 +150,8 @@ def _timing_data_laps(path, response=None):
         for driver in entry[1]['Lines']:
             data, flags = _timing_data_laps_entry(entry, driver, data, flags)
     data_cols = [key for key in data[driver] if key not in ['Time', 'Driver']]
+    td_cols = ['LastLapTime', 'PitInTime', 'PitOutTime',
+               'Sector1Time', 'Sector2Time', 'Sector3Time']
     for driver in data:
         _df = pd.DataFrame(data[driver])
         if not _df.iloc[-1][data_cols].any():
@@ -164,6 +166,11 @@ def _timing_data_laps(path, response=None):
             # (Should always have 0 pitstops at start)
             _df.loc[_df.index <= lap, 'NumberOfPitStops'] = pit_stops
             pit_stops -= 1
+        for col in td_cols:
+            try:
+                _df[col] = _df[col].astype('timedelta64[ns]')
+            except:
+                continue
         df = _df if df is None else pd.concat([df, _df])
     return df
 

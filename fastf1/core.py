@@ -503,12 +503,16 @@ class Session:
             st = 'PitOutTime'
             timed_pit_out = ~laps[st].isnull()
             times.append(laps[st][timed_pit_out].values)
-            st = 'PitInTime'
-            timed_pit_in = ~laps[st].isnull() & (laps[st].values > times[0][0])
-            times.append(laps[st][timed_pit_in].values)
-            if len(times[0]) != len(times[1]):
-                print("NONONONO")
-                breakpoint()
+            if len(times[0]):
+                st = 'PitInTime'
+                after_out = laps[st].values > times[0][0]
+                timed_pit_in = ~laps[st].isnull() & after_out
+                times.append(laps[st][timed_pit_in].values)
+                if len(times[0]) != len(times[1]):
+                    print("NONONONO")
+                    breakpoint()
+            else:
+                times.append([])
             times = np.transpose(np.array(times))
             for inout in times:
                 out_of_pit = np.logical_and(time >= inout[0], time < inout[1])
