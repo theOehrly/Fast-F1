@@ -174,12 +174,11 @@ class Session:
 
         """
         logging.info(f"Loading {self.weekend.name} {self.session_name}")
-        self.laps = self._load_summary()
+        self.laps = Laps(self._load_summary())
         telemetry, lap_start_date = self._load_telemetry()
         self.laps['LapStartDate'] = lap_start_date
         self.laps['telemetry'] = telemetry
         self.laps = Laps(self.laps)
-        self._augment_laps()
         logging.info(f"Laps loaded and saved!")
         return self.laps
 
@@ -234,6 +233,7 @@ class Session:
         summary['Driver'] = summary['DriverNumber'].map(d_map)
         return summary
 
+
     def _load_telemetry(self):
         """Load telemetry data to be associated for each lap.
 
@@ -249,6 +249,7 @@ class Session:
             tel[driver], date_offset[driver] = self._resample(car_data[driver])
             pos[driver], _ = self._resample(position[driver])
         self.car_data, self.position = tel, pos
+        self._augment_position()
         logging.info("Creating laps...")
         for i in self.laps.index:
             _log_progress(i, len(self.laps.index))
@@ -257,6 +258,7 @@ class Session:
                 time, driver = lap['Time'], lap['DriverNumber']
                 telemetry = self._slice_stream(tel[driver], lap)
                 telemetry = self._inject_position(pos[driver], lap, telemetry)
+                telemetry = self._inject_space(telemetry)
                 event_telemetry.append(telemetry)
                 # Calc lap start date
                 lap_start_time = telemetry['SessionTime'].iloc[0]
@@ -265,6 +267,7 @@ class Session:
                 event_telemetry.append(None)
                 lap_start_date.append(None)
         return event_telemetry, lap_start_date
+
 
     def _resample(self, df):
         """`car_data` is aligned with main time reference (time used in
@@ -366,28 +369,43 @@ class Session:
         lap_stream['Time'] += lap_time - end_time
         return lap_stream
 
-    def _augment_laps(self):
+
+    def _augment_position(self):
         """Improves laps information content
 
-            - Adds 'Space' channel to telemetry
-            - Adds 'DistanceToCarAhead' channel to telemetry
+            - Adds 'DistanceToCarAhead' channel to driver position
         """
-        for i in self.laps.index:
-            lap = self.laps.loc[i]
-            if str(lap['LapTime']) != 'NaT':
-                self._add_space_channel(lap.telemetry)
-        trajectory = self._make_trajectory(self.laps.pick_fastest()) 
+        lap = self._get_reference_lap()
+        driver_ahead = self._make_trajectory(lap) 
+        for d in self.position:
+            self.position[d] = self.position[d].join(driver_ahead[d])
 
-    def _add_space_channel(self, _telemetry):
+
+    def _get_reference_lap(self):
+        lap = self.laps.loc[self.laps['LapTime'].idxmin()].copy()
+        time, driver = lap['Time'], lap['DriverNumber']
+        tele = self._slice_stream(self.car_data[driver], lap)
+        tele = self._inject_position(self.position[driver], lap, tele)
+        tele = self._inject_space(tele)
+        lap['telemetry'] = tele
+        return lap
+
+
+    def _inject_space(self, _telemetry):
         dt = _telemetry['Time'].dt.total_seconds().diff()
         dt.iloc[0] = _telemetry['Time'].iloc[0].total_seconds()
         ds = _telemetry['Speed'] / 3.6 * dt
         _telemetry['Space'] = ds.cumsum()
+        return _telemetry
+
 
     def _make_trajectory(self, lap):
+        """Create telemetry space
+        """
         telemetry = lap.telemetry
         x = telemetry['X'].values
         y = telemetry['Y'].values
+        z = telemetry['Z'].values
         s = telemetry['Space'].values
 
         # Assuming constant speed in the last tenth
@@ -395,23 +413,129 @@ class Session:
         ds0_ = (telemetry['Speed'].iloc[-1] / 3.6) * dt0_
         total_s = s[-1] + ds0_
 
+        # To prolong start and finish and have a correct linear interpolation 
         full_s = np.concatenate([s - total_s, s, s + total_s])
-        full_x = np.concatenate([x, x, x]) # To connect start and finish
+        full_x = np.concatenate([x, x, x]) 
         full_y = np.concatenate([y, y, y])
+        full_z = np.concatenate([z, z, z])
 
-        reference_s = np.arange(0, total_s)
-        space = np.zeros((np.size(reference_s), 2))
+        reference_s = np.arange(0, total_s, 0.667)
         reference_x = np.interp(reference_s, full_s, full_x)
         reference_y = np.interp(reference_s, full_s, full_y)
-        space[:, 0] = reference_x
-        space[:, 1] = reference_y
-        mytree = scipy.spatial.cKDTree(space)
-        mytree = scipy.spatial.cKDTree(space)
-        for driver in self.position:
-            projection = mytree.query(self.position[driver][['X', 'Y']],
-                                      distance_upper_bound=100)[1]
-        breakpoint()  
-        # We have the elemets for s map
+        reference_z = np.interp(reference_s, full_s, full_z)
+
+        ssize = len(reference_s)
+
+        """Build track map and project driver position to one trajectory 
+        """
+        def fix_suzuka(projection_index, _s):
+            """Yes, suzuka is bad
+            """
+            # For tracks like suzuka (therefore only suzuka) we have
+            # a beautiful crossing point. So, FOR F**K SAKE, sometimes
+            # shortest distance may fall below the bridge or viceversa
+            # gotta do some monotony sort of check. Not the cleanest
+            # solution.
+            def moving_average(a, n=3):
+                ret = np.cumsum(a, dtype=float)
+                ret[n:] = ret[n:] - ret[:-n]
+                ma = ret[n - 1:] / n
+                return np.concatenate([ma[0:n//2], ma, ma[-n//2:-1]])
+            ma_projection = moving_average(_s[projection_index], n=3)
+            spikes = np.absolute(_s[projection_index] - ma_projection)
+            # 1000 and 3000, very suzuka specific. Damn magic numbers
+            sel_bridge = np.logical_and(spikes > 1000, spikes < 3000)
+            unexpected = np.where(sel_bridge)[0]
+            max_length = _s[-1]
+            for p in unexpected:
+                # Just assuming linearity for this 2 or 3 samples
+                last_value = _s[projection_index[p - 1]]
+                last_step = last_value - _s[projection_index[p - 2]]
+                if (last_value + last_step) > max_length:
+                    # Over the finish line
+                    corrected_distance = -max_length + last_step + last_value 
+                else:
+                    corrected_distance = last_value + last_step 
+                corrected_index = np.argmin(np.abs(_s - corrected_distance))
+                projection_index[p] = corrected_index
+            return projection_index
+
+        track = np.empty((ssize, 3))
+        track[:, 0] = reference_x
+        track[:, 1] = reference_y
+        track[:, 2] = reference_z
+
+        track_tree = scipy.spatial.cKDTree(track)
+        drivers_list = np.array(list(self.position))
+        stream_length = len(self.position[drivers_list[0]])
+        dmap = np.empty((stream_length, len(drivers_list)), dtype=int)
+
+        fast_query = {'n_jobs': 2, 'distance_upper_bound': 500}
+        # fast_query < Increases speed
+        for index, driver in enumerate(self.position):
+            trajectory = self.position[driver][['X', 'Y', 'Z']].values
+            projection_index = track_tree.query(trajectory, **fast_query)[1]
+            # When tree cannot solve super far points means there is some
+            # pit shit shutdown. We can replace these index with 0
+            projection_index[projection_index == len(reference_s)] = 0
+            dmap[:, index] = fix_suzuka(projection_index.copy(), reference_s)
+
+        """Create transform matrix to change distance point of reference
+        """
+        t_matrix = np.empty((ssize, ssize))
+        for index in range(ssize):
+            rref = reference_s - reference_s[index]
+            rref[rref <= 0] = total_s + rref[rref <= 0]
+            t_matrix[index, :] = rref
+
+        """Create mask to remove distance elements when car is on track
+        """
+        time = self.position[drivers_list[0]]['Time'].values
+        pit_mask = np.zeros((stream_length, len(drivers_list)), dtype=bool)
+        for driver_index, driver_number in enumerate(drivers_list):
+            laps = self.laps.pick_driver_number(driver_number)
+            times = []
+            st = 'PitOutTime'
+            timed_pit_out = ~laps[st].isnull()
+            times.append(laps[st][timed_pit_out].values)
+            st = 'PitInTime'
+            timed_pit_in = ~laps[st].isnull() & (laps[st].values > times[0][0])
+            times.append(laps[st][timed_pit_in].values)
+            if len(times[0]) != len(times[1]):
+                print("NONONONO")
+                breakpoint()
+            times = np.transpose(np.array(times))
+            for inout in times:
+                out_of_pit = np.logical_and(time >= inout[0], time < inout[1])
+                pit_mask[:, driver_index] |= out_of_pit
+            on_track = (self.position[driver_number]['Status'] == 'OnTrack')
+            pit_mask[:, driver_index] &= on_track.values
+
+        """Calculate relative distances using transform matrix
+        """
+        driver_ahead = {}
+        stream_axis = np.arange(stream_length)
+        for my_di, my_d in enumerate(drivers_list):
+            rel_distance = np.empty(np.shape(dmap))
+            for his_di, his_d in enumerate(drivers_list):
+                my_pos_i = dmap[:, my_di]
+                his_pos_i = dmap[:, his_di]
+                rel_distance[:, his_di] = t_matrix[my_pos_i, his_pos_i]
+            his_in_pit = ~pit_mask.copy()
+            his_in_pit[:, my_di] = False
+            my_in_pit = ~pit_mask[:, drivers_list == my_d][:, 0]
+            rel_distance[his_in_pit] = np.nan
+
+            closest_index = np.nanargmin(rel_distance, axis=1)
+            closest_distance = rel_distance[stream_axis, closest_index]
+            closest_driver = drivers_list[closest_index].astype(object)
+            closest_distance[my_in_pit] = np.nan
+            closest_driver[my_in_pit] = None
+
+            data = {'DistanceToDriverAhead': closest_distance,
+                    'DriverAhead': closest_driver}
+            driver_ahead[my_d] = pd.DataFrame(data)
+        return driver_ahead
 
 
 class Laps(pd.DataFrame):
@@ -450,19 +574,31 @@ class Laps(pd.DataFrame):
         return self[self['Driver'] == name]
 
     @__pick_wrap
-    def pick_drivers(names):
+    def pick_drivers(self, names):
         """Select drivers given a list of their three letters identifiers
         """
         return self[self['Driver'].isin(names)]
 
     @__pick_wrap
-    def pick_team(name):
+    def pick_driver_number(self, number):
+        """Select driver given his car number
+        """
+        return self[self['DriverNumber'] == str(number)]
+
+    @__pick_wrap
+    def pick_driver_numbers(self, numbers):
+        """Select drivers given their car numbers
+        """
+        return self[self['DriverNumber'].isin([str(n) for n in numbers])]
+
+    @__pick_wrap
+    def pick_team(self, name):
         """Select team given its name
         """
         return self[self['Team'] == name]
 
     @__pick_wrap
-    def pick_teams(names):
+    def pick_teams(self, names):
         """Select teams given a list of names
         """
         return self[self['Team'].isin(names)]
@@ -521,6 +657,12 @@ class Driver:
 
     def _filter(self, df):
         return df[df['Driver'] == self.number]
+
+
+class ETL:
+
+    def __init__(self, api_path):
+        self.api_path = api_path
 
 
 def _log_progress(i, length, c=30):
