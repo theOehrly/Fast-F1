@@ -248,7 +248,7 @@ class Session:
         logging.info("Getting position data...")
         position = api.position(self.api_path)
         logging.info("Resampling telemetry...")
-        for driver in car_data:
+        for driver in self.laps['DriverNumber'].unique():
             tel[driver], date_offset[driver] = self._resample(car_data[driver])
             pos[driver], _ = self._resample(position[driver])
         self.car_data, self.position = tel, pos
@@ -512,7 +512,7 @@ class Session:
             if not in_pit:
                 # Car crashed, we put a time and 'Status' will take care
                 times[1].append(lap['Time'])
-            times = np.array(times)
+            times = np.transpose(np.array(times))
             for inout in times:
                 out_of_pit = np.logical_and(time >= inout[0], time < inout[1])
                 pit_mask[:, driver_index] |= out_of_pit
