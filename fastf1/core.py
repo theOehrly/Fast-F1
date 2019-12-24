@@ -495,25 +495,24 @@ class Session:
 
         """Create mask to remove distance elements when car is on track
         """
-        time = self.position[drivers_list[0]]['Time'].values
+        time = self.position[drivers_list[0]]['Time']
         pit_mask = np.zeros((stream_length, len(drivers_list)), dtype=bool)
         for driver_index, driver_number in enumerate(drivers_list):
             laps = self.laps.pick_driver_number(driver_number)
-            times = []
-            st = 'PitOutTime'
-            timed_pit_out = ~laps[st].isnull()
-            times.append(laps[st][timed_pit_out].values)
-            if len(times[0]):
-                st = 'PitInTime'
-                after_out = laps[st].values > times[0][0]
-                timed_pit_in = ~laps[st].isnull() & after_out
-                times.append(laps[st][timed_pit_in].values)
-                if len(times[0]) != len(times[1]):
-                    print("NONONONO")
-                    breakpoint()
-            else:
-                times.append([])
-            times = np.transpose(np.array(times))
+            in_pit = True
+            times = [[], []]
+            for lap_index in laps.index:
+                lap = laps.loc[lap_index]
+                if not pd.isnull(lap['PitInTime']) and not in_pit:
+                    times[1].append(lap['PitInTime'])
+                    in_pit = True
+                if not pd.isnull(lap['PitOutTime']) and in_pit:
+                    times[0].append(lap['PitOutTime'])
+                    in_pit = False
+            if not in_pit:
+                # Car crashed, we put a time and 'Status' will take care
+                times[1].append(lap['Time'])
+            times = np.array(times)
             for inout in times:
                 out_of_pit = np.logical_and(time >= inout[0], time < inout[1])
                 pit_mask[:, driver_index] |= out_of_pit

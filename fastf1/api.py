@@ -371,18 +371,20 @@ def car_data(path):
     logging.info("Fetching car data") 
     raw = fetch_page(path, 'car_data')
     logging.info("Parsing car data") 
+    date_format = "%Y-%m-%dT%H:%M:%S.%f%z"
     for line in raw:
         time = __to_time(line[0])
         for entry in line[1]['Entries']:
             cars = entry['Cars']
-            date = pd.to_datetime(entry['Utc'], format="%Y-%m-%dT%H:%M:%S.%f%z")
+            date = pd.to_datetime(entry['Utc'], format=date_format)
             for driver in cars:
                 if driver not in data:
                     data[driver] = copy.deepcopy(main_structure)
                 data[driver]['Time'].append(time)
                 data[driver]['Date'].append(date)
                 for key in index:
-                    data[driver][index[key]].append(cars[driver]['Channels'][key])
+                    value = cars[driver]['Channels'][key]
+                    data[driver][index[key]].append(value)
     for driver in data:
         data[driver] = pd.DataFrame(data[driver])
     return data
