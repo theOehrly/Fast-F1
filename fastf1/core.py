@@ -25,9 +25,10 @@ D_LOOKUP = [[44, 'HAM', 'Mercedes'], [77, 'BOT', 'Mercedes'],
             [11, 'PER', 'Racing Point'], [18, 'STR', 'Racing Point'],
             [3, 'RIC', 'Renault'], [31, 'OCO', 'Renault'],
             [26, 'KVY', 'Alpha Tauri'], [10, 'GAS', 'Alpha Tauri'],
-            [8, 'GRO', 'Haas F1 Team'], [20, 'GRO', 'Haas F1 Team'],
+            [8, 'GRO', 'Haas F1 Team'], [20, 'MAG', 'Haas F1 Team'],
             [7, 'RAI', 'Alfa Romeo'], [99, 'GIO', 'Alfa Romeo'],
-            [6, 'LAT', 'Williams'], [63, 'RUS', 'Williams']]
+            [6, 'LAT', 'Williams'], [63, 'RUS', 'Williams'],
+            [88, 'KUB', 'Alfa Romeo']]
 
 def _gen_results():
     results = []
