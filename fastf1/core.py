@@ -6,6 +6,7 @@ from fastf1 import utils
 from fastf1 import ergast
 from fastf1 import api
 from fuzzywuzzy import fuzz
+import warnings
 import pandas as pd
 import numpy as np
 import logging
@@ -14,6 +15,28 @@ import scipy
 from scipy import spatial
 logging.basicConfig(level=logging.INFO)
 
+TESTING_LOOKUP = {'2020': ['2020-02-19', '2020-02-20', '2020-02-21',
+                           '2020-02-26', '2020-02-27', '2020-02-28']}
+
+D_LOOKUP = [[44, 'HAM', 'Mercedes'], [77, 'BOT', 'Mercedes'],
+            [5, 'VET', 'Ferrari'], [16, 'LEC', 'Ferrari'],
+            [33, 'VER', 'Red Bull'], [23, 'ALB', 'Red Bull'],
+            [55, 'SAI', 'McLaren'], [4, 'NOR', 'McLaren'],
+            [11, 'PER', 'Racing Point'], [18, 'STR', 'Racing Point'],
+            [3, 'RIC', 'Renault'], [31, 'OCO', 'Renault'],
+            [26, 'KVY', 'Alpha Tauri'], [10, 'GAS', 'Alpha Tauri'],
+            [8, 'GRO', 'Haas F1 Team'], [20, 'GRO', 'Haas F1 Team'],
+            [7, 'RAI', 'Alfa Romeo'], [99, 'GIO', 'Alfa Romeo'],
+            [6, 'LAT', 'Williams'], [63, 'RUS', 'Williams']]
+
+def _gen_results():
+    results = []
+    for driver in D_LOOKUP:
+        results.append({
+            'number': str(driver[0]),
+            'Driver': {'code': driver[1]},
+            'Constructor': {'name': driver[2]}})
+    return results
 
 def get_session(year, gp, event=None):
     """Main core function. It will take care of crafting an object
@@ -27,13 +50,30 @@ def get_session(year, gp, event=None):
             season rounds and the most likely will be selected.
             'bahrain', 'australia', 'abudabi' are some of the examples
             that you can pass and the correct week will be selected.
+
+            Pass 'testing' to fetch barcelona tests.
+
         event (=None): may be 'FP1', 'FP2', 'FP3', 'Q' or 'R', if not 
                        specified you get the full :class:`Weekend`.
+                       If gp is 'testing' event is the test day (1 to 6)
 
     Returns:
         :class:`Weekend` or :class:`Session`
 
     """
+    if type(gp) is str and gp == 'testing':
+        #try:
+        event = int(event)
+        week = 1 if event < 4 else 2
+        gp = f'Pre-Season Test {week}'
+        event = f'Practice {event}'
+        print(gp, event)
+        weekend = Weekend(year, gp)
+        return Session(weekend, event)
+        #except:
+        #    msg = "Cannot fetch testing without correct event day."
+        #    raise Exception(msg)
+
     if type(gp) is str:
         gp = get_round(year, gp)
     weekend = Weekend(year, gp)
@@ -71,7 +111,13 @@ class Weekend:
     def __init__(self, year, gp):
         self.year = year
         self.gp = gp
-        self.data = ergast.fetch_weekend(self.year, self.gp)
+        if self.is_testing():
+            warnings.warn("Ergast api not supported for testing.")
+            self.data = {
+                'raceName': gp,
+                'date': TESTING_LOOKUP[str(year)][int(gp[-1]) * 3 - 1]}
+        else:
+            self.data = ergast.fetch_weekend(self.year, self.gp)
 
     def get_practice(self, number):
         """
@@ -96,6 +142,9 @@ class Weekend:
         """
         return Session(self, 'Race')
 
+    def is_testing(self):
+        return 'Test' in self.gp
+
     @property
     def name(self):
         """Weekend name, e.g. "British Grand Prix"
@@ -115,10 +164,20 @@ class Session:
 
     def __init__(self, weekend, session_name):
         self.weekend = weekend
-        self.session_name = session_name
-        w, s = self.weekend, self.session_name
-        self.api_path = api.make_path(w.name, w.date, s)
-        self.results = ergast.load(w.year, w.gp, s)
+        self.name = session_name
+        if self.weekend.is_testing():
+            self.date = TESTING_LOOKUP[str(weekend.year)][int(session_name[-1]) - 1]
+        elif session_name == 'Qualifying':
+            # Assuming that quali was one day before race... well not always
+            # Should check if also formula1 makes this assumption
+            offset_date = pd.to_datetime(weekend.date) + pd.DateOffset(-1)
+            self.date = offset_date.strftime('%Y-%m-%d')
+        w, s = self.weekend, self
+        self.api_path = api.make_path(w.name, w.date, s.name, s.date)
+        if not weekend.is_testing():
+            self.results = ergast.load(w.year, w.gp, s)
+        else:
+            self.results = _gen_results()
 
     @utils._cached_laps
     def load_laps(self):
@@ -176,7 +235,7 @@ class Session:
             laps
 
         """
-        logging.info(f"Loading {self.weekend.name} {self.session_name}")
+        logging.info(f"Loading {self.weekend.name} {self.name}")
         self.laps = Laps(self._load_summary())
         telemetry, lap_start_date = self._load_telemetry()
         self.laps['LapStartDate'] = lap_start_date
@@ -249,25 +308,41 @@ class Session:
         position = api.position(self.api_path)
         logging.info("Resampling telemetry...")
         for driver in self.laps['DriverNumber'].unique():
-            tel[driver], date_offset[driver] = self._resample(car_data[driver])
-            pos[driver], _ = self._resample(position[driver])
+            if driver in car_data:
+                tel[driver], date_offset[driver] = self._resample(car_data[driver])
+            else:
+                warnings.warn(f"Could not find telemetry data for driver {driver}")
+            if driver in position:
+                pos[driver], _ = self._resample(position[driver])
+            else:
+                warnings.warn(f"Could not find gps data for driver {driver}")
         self.car_data, self.position = tel, pos
-        self._augment_position()
+        can_find_reference = position != {}
+        if can_find_reference:
+            self._augment_position()
         d_map = {r['number']: r['Driver']['code'] for r in self.results}
         logging.info("Creating laps...")
         for i in self.laps.index:
             _log_progress(i, len(self.laps.index))
             lap = self.laps.loc[i]
-            if str(lap['LapTime']) != 'NaT':
-                time, driver = lap['Time'], lap['DriverNumber']
+            driver = lap['DriverNumber']
+            if str(lap['LapTime']) != 'NaT' and driver in tel:
                 telemetry = self._slice_stream(tel[driver], lap)
-                telemetry = self._inject_position(pos[driver], lap, telemetry)
-                telemetry = self._inject_space(telemetry)
-                telemetry['DriverAhead'] = telemetry['DriverAhead'].map(d_map)
-                event_telemetry.append(telemetry)
-                # Calc lap start date
-                lap_start_time = telemetry['SessionTime'].iloc[0]
-                lap_start_date.append(date_offset[driver] + lap_start_time)
+                if len(telemetry.index):
+                    if driver in pos:
+                        telemetry = self._inject_position(pos[driver], lap, telemetry)
+                    telemetry = self._inject_space(telemetry)
+                    if can_find_reference:
+                        telemetry['DriverAhead'] = telemetry['DriverAhead'].map(d_map)
+                    event_telemetry.append(telemetry)
+                    # Calc lap start date
+                    lap_start_time = telemetry['SessionTime'].iloc[0]
+                    lap_start_date.append(date_offset[driver] + lap_start_time)
+                else:
+                    warnings.warn("Empty telemetry slice from lap "
+                                  + f"{lap['LapNumber']} of driver {driver}")
+                    event_telemetry.append(None)
+                    lap_start_date.append(None)
             else:
                 event_telemetry.append(None)
                 lap_start_date.append(None)
@@ -624,6 +699,12 @@ class Laps(pd.DataFrame):
         """
         time_threshold = self['LapTime'].min() * Laps.QUICKLAP_THRESHOLD
         return self[self['LapTime'] < time_threshold]
+
+    @__pick_wrap
+    def pick_tyre(self, compound):
+        """Select tyres between "SOFT", "MEDIUM" and "HARD"
+        """
+        return self[self['Compound'] == compound]
 
 
 class Driver:

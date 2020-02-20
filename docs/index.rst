@@ -21,6 +21,7 @@ For the passionate F1 nerds.
    core
    api
    utils
+   known_bugs
 
 ==================
 Indices and tables

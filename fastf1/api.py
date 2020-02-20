@@ -52,25 +52,20 @@ pages = {
 """
 
 
-def make_path(wname, d, session):
+def make_path(wname, wdate, sname, sdate):
     """Create web path to append on livetiming.formula1.com for api
     requests.
 
     Args:
         wname: Weekend name (e.g. 'Italian Grand Prix')
-        d: Weekend date (e.g. '2019-09-08')
-        session: 'Qualifying' or 'Race'
+        wdate: Weekend date (e.g. '2019-09-08')
+        sname: Session name 'Qualifying' or 'Race'
+        sdate: Session date (formatted as wdate)
     
     Returns:
         string path
     """
-    if session == 'Qualifying':
-        # Assuming that quali was one day before race... well not always
-        # Should check if also formula1 makes this assumption
-        d_real = (pd.to_datetime(d) + pd.DateOffset(-1)).strftime('%Y-%m-%d')
-    else:
-        d_real = d
-    smooth_operator = f'{d[:4]}/{d} {wname}/{d_real} {session}/'
+    smooth_operator = f'{wdate[:4]}/{wdate} {wname}/{sdate} {sname}/'
     return '/static/' + smooth_operator.replace(' ', '_')
 
 
@@ -408,12 +403,15 @@ def position(path):
     Returns:
         pandas dataframe
     """
+
     index = {'Status': 'Status', 'X': 'X', 'Y': 'Y', 'Z': 'Z'}
     data, main_structure = {}, {'Date': [],'Time': []}
     [main_structure.update({index[i]: []}) for i in index]
     logging.info("Fetching position") 
     raw = fetch_page(path, 'position')
     logging.info("Parsing position") 
+    if raw is None:
+        return {}
     for line in raw:
         time = __to_time(line[0])
         for entry in line[1]['Position']:

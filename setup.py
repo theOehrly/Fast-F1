@@ -2,13 +2,13 @@ from distutils.core import setup
 
 info = {
     'name': 'fastf1',
-    'version': 'v1.4.3',
+    'version': 'v1.5.0',
     'author': 'Ax_6',
     'author_email': 'axolo6@gmail.com',
     'packages': ['fastf1'],
     'install_requires': [
         'numpy', 'pandas', 'requests', 'requests_cache', 'matplotlib',
-        'python-Levenshtein', 'fuzzywuzzy'
+        'python-Levenshtein', 'fuzzywuzzy', 'scipy'
     ],
     'license': 'MIT',
     'url': '',

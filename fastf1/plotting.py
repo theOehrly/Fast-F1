@@ -10,13 +10,15 @@ _TEAM_COLORS = {'MER': '#00d2be', 'FER': '#dc0000',
                'RBR': '#1e41ff', 'MCL': '#ff8700',
                'REN': '#fff500', 'RPT': '#f596c8',
                'ARR': '#9b0000', 'STR': '#469bff',
-               'HAA': '#bd9e57', 'WIL': '#ffffff'}
+               'HAA': '#7c7c7c', 'WIL': '#469bff',
+               'ALP': '#ffffff'}
 
 TEAM_TRANSLATE = {'MER': 'Mercedes', 'FER': 'Ferrari',
                   'RBR': 'Red Bull', 'MCL': 'McLaren',
                   'REN': 'Renault', 'RPT': 'Racing Point',
                   'ARR': 'Alfa Romeo', 'STR': 'Toro Rosso',
-                  'HAA': 'Haas F1 Team', 'WIL': 'Williams'}
+                  'HAA': 'Haas F1 Team', 'WIL': 'Williams',
+                  'ALP': 'Alpha Tauri'}
 
 TEAM_COLORS = {}
 for key in TEAM_TRANSLATE:
