@@ -10,7 +10,7 @@ _TEAM_COLORS = {'MER': '#00d2be', 'FER': '#dc0000',
                'RBR': '#1e41ff', 'MCL': '#ff8700',
                'REN': '#fff500', 'RPT': '#f596c8',
                'ARR': '#9b0000', 'STR': '#469bff',
-               'HAA': '#7c7c7c', 'WIL': '#469bff',
+               'HAA': '#7e7e7e', 'WIL': '#469bff',
                'ALP': '#ffffff'}
 
 TEAM_TRANSLATE = {'MER': 'Mercedes', 'FER': 'Ferrari',
@@ -27,7 +27,15 @@ for key in TEAM_TRANSLATE:
 COLOR_PALETTE = ['#FF79C6', '#50FA7B', '#8BE9FD', '#BD93F9',
                  '#FFB86C', '#FF5555', '#F1FA8C']
 
-alist = (list, pd.core.series.Series, np.ndarray)
+def laptime_axis(ax, axis='yaxis'):
+    def time_ticks(x, pos):
+        if not np.isnan(x):
+            pieces = f'{x - 60*int(x/60)}'.split('.')
+            pieces[0] = pieces[0].zfill(2)
+            x = f'{int(x/60)}:{".".join(pieces)}' 
+        return x
+    formatter = matplotlib.ticker.FuncFormatter(time_ticks)
+    getattr(ax, axis).set_major_formatter(formatter)
 
 def _bar_sorted(bar):
     def _bar_sorted_decorator(*args, **kwargs):
@@ -46,7 +54,9 @@ def _bar_sorted(bar):
                 _args.insert(0, args[0])
             args = _args
             for key in kwargs:
-                if isinstance(kwargs[key], alist):
+                if isinstance(kwargs[key], (pd.core.series.Series)):
+                    kwargs[key] = kwargs[key].to_numpy()
+                if isinstance(kwargs[key], (list, np.ndarray)):
                     kwargs[key] = [kwargs[key][i] for i in _ids]
             kwargs.pop('sort', None)
         return bar(*args, **kwargs)
@@ -73,25 +83,6 @@ def _subplots(*args, **kwargs):
     return fig, ax
 plt.subplots = _subplots
 
-def _timedelta_plot(func):
-    def plot(*args, **kwargs):
-        if len(args) > 2 and str(args[2].dtype) == 'timedelta64[ns]':
-            ax = args[0]
-            y = args[2].dt.total_seconds()
-            def time_ticks(x, pos):
-                if not np.isnan(x):
-                    pieces = f'{x - 60*int(x/60)}'.split('.')
-                    pieces[0] = pieces[0].zfill(2)
-                    x = f'{int(x/60)}:{".".join(pieces)}' 
-                return x
-            formatter = matplotlib.ticker.FuncFormatter(time_ticks)
-            ax.yaxis.set_major_formatter(formatter)
-            args = (ax, args[1], y)
-        return func(*args, **kwargs)
-    return plot
-matplotlib.axes.Axes.plot = _timedelta_plot(matplotlib.axes.Axes.plot)
-
-
 _savefig_placeholder = matplotlib.figure.Figure.savefig
 def _save(*args, **kwargs):
     if 'facecolor' not in kwargs:
@@ -108,6 +99,7 @@ plt.rcParams['xtick.color'] = '#f1f2f3'
 plt.rcParams['ytick.color'] = '#f1f2f3' 
 plt.rcParams['axes.labelcolor'] = '#F1f2f3'
 plt.rcParams['axes.facecolor'] = '#1e1c1b'
+#plt.rcParams['axes.facecolor'] = '#292625'
 plt.rcParams['axes.titlesize'] = 'x-large'
 plt.rcParams['font.family'] = 'Gravity'
 plt.rcParams['font.weight'] = 'medium'

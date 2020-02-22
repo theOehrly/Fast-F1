@@ -63,17 +63,16 @@ def get_session(year, gp, event=None):
 
     """
     if type(gp) is str and gp == 'testing':
-        #try:
-        event = int(event)
-        week = 1 if event < 4 else 2
+        try:
+            event = int(event)
+            week = 1 if event < 4 else 2
+        except:
+            msg = "Cannot fetch testing without correct event day."
+            raise Exception(msg)
         gp = f'Pre-Season Test {week}'
         event = f'Practice {event}'
-        print(gp, event)
         weekend = Weekend(year, gp)
         return Session(weekend, event)
-        #except:
-        #    msg = "Cannot fetch testing without correct event day."
-        #    raise Exception(msg)
 
     if type(gp) is str:
         gp = get_round(year, gp)
@@ -277,7 +276,26 @@ class Session:
         for i, driver in enumerate(data['Driver'].unique()):
             d1 = data[data['Driver'] == driver]
             d2 = useful[useful['Driver'] == driver]
-            result = pd.merge_asof(d1, d2, on='Time', by='Driver')
+            try:
+                result = pd.merge_asof(d1, d2, on='Time', by='Driver')
+            except:
+                # From 2018 to 2020 there is Vettel pre season 2020-02-21 who
+                # is not synchronised correctly. A manually patched file is loaded
+                if (driver == '5'
+                    and self.api_path == ('/static/2020/2020-02-21_Pre-Season_Test_1'
+                                        + '/2020-02-21_Practice_3/')):
+                        import pathlib, os
+                        path = pathlib.Path(__file__).parent.absolute()
+                        file_path = os.path.join(path, 'vettel_test_2020_21_03.csv')
+                        result = pd.read_csv(file_path)
+                        for col in result.columns:
+                            if 'Time' in col:
+                                result[col] = pd.to_timedelta(result[col])
+                        result['Driver'] = '5'
+                else:
+                    print("ERROR: Could not merge timing data with timing app data!")
+                    exit()
+
             for npit in result['NumberOfPitStops'].unique():
                 sel = result['NumberOfPitStops'] == npit
                 result.loc[sel, 'TotalLaps'] += np.arange(0, sel.sum()) + 1
@@ -463,9 +481,16 @@ class Session:
 
 
     def _get_reference_lap(self):
-        lap = self.laps.loc[self.laps['LapTime'].idxmin()].copy()
-        time, driver = lap['Time'], lap['DriverNumber']
-        tele = self._slice_stream(self.car_data[driver], lap)
+        valid_tele = False
+        times = self.laps['LapTime'].copy()
+        times = times.sort_values()
+        i = 0
+        while not valid_tele:
+            lap = self.laps.loc[times.index[i]].copy()
+            time, driver = lap['Time'], lap['DriverNumber']
+            tele = self._slice_stream(self.car_data[driver], lap)
+            valid_tele = np.all(tele['Speed'] > 0)
+            i += 1
         tele = self._inject_position(self.position[driver], lap, tele)
         tele = self._inject_space(tele)
         lap['telemetry'] = tele
@@ -691,14 +716,25 @@ class Laps(pd.DataFrame):
     def pick_fastest(self):
         """Select fastest lap time 
         """
-        return self.loc[self['LapTime'].idxmin()]
+        lap = self.loc[self['LapTime'].idxmin()]
+        if isinstance(lap, pd.DataFrame):
+            # More laps, same time
+            lap = lap.iloc[0] # take first clocked
+        return lap
 
     @__pick_wrap
-    def pick_quicklaps(self):
+    def pick_quicklaps(self, threshold=None):
         """Select laps with lap time below :attr:`QUICKLAP_THRESHOLD`
         (default 107%) of the fastest lap from the given laps set
+
+        Args:
+            threshold (optional, float): custom threshold coefficent
+                (e.g. 1.05 for 105%)
+
         """
-        time_threshold = self['LapTime'].min() * Laps.QUICKLAP_THRESHOLD
+        if threshold is None:
+            threshold = Laps.QUICKLAP_THRESHOLD
+        time_threshold = self['LapTime'].min() * threshold
         return self[self['LapTime'] < time_threshold]
 
     @__pick_wrap
