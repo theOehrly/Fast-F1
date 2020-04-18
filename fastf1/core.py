@@ -669,6 +669,10 @@ class Laps(pd.DataFrame):
 
     QUICKLAP_THRESHOLD = 1.07
 
+    @property
+    def _constructor(self):
+        return Laps
+
     def __pick_wrap(func):
         @functools.wraps(func)
         def decorator(*args, **kwargs):
