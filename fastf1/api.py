@@ -172,17 +172,20 @@ def _timing_data_laps(path, response=None):
 
 def _timing_data_laps_entry(entry, driver, data={}, flags={}):
     if driver not in data:
-        data[driver] = {'Time': [], 'Driver': [], 'LastLapTime':[],
-                        'NumberOfLaps':[], 'NumberOfPitStops': [],
-                        'PitOutTime': [], 'PitInTime': [], 'Sector1Time':[],
+        # create empty dictionary for driver
+        data[driver] = {'Time': [], 'Driver': [], 'LastLapTime': [],
+                        'NumberOfLaps': [], 'NumberOfPitStops': [],
+                        'PitOutTime': [], 'PitInTime': [], 'Sector1Time': [],
                         'Sector2Time': [], 'Sector3Time': [], 'SpeedI1': [],
-                        'SpeedI2': [], 'SpeedFL': [], 'SpeedST':[]}
-        [data[driver][key].append(None) for key in data[driver]]
+                        'SpeedI2': [], 'SpeedFL': [], 'SpeedST': []}
+        [data[driver][key].append(None) for key in data[driver]]  # append None to all lists in the dictionary
+
+    # add flag for driver if driver is not yet in flags
     if driver not in flags:
         flags[driver] = {'time_reference': [None], 'locked_times': [False]}
 
-    time = __to_time(entry[0])
-    block = entry[1]['Lines'][driver]
+    time = __to_timedelta(entry[0])  # entry[0] is session time; convert string to pandas timedelta
+    block = entry[1]['Lines'][driver]  # contains data
 
     # i is the row index that this block has to populate. The
     # arrival of information is a bit randomic. It is assumed that
@@ -191,7 +194,7 @@ def _timing_data_laps_entry(entry, driver, data={}, flags={}):
     i = -1
     if len(data[driver]['Time']) > 1:
         last_time = data[driver]['Time'][-2]
-        if time < (last_time + __to_time('5.000')):
+        if time < (last_time + __to_timedelta('5.000')):
             i = -2
 
     no_time_reference = flags[driver]['time_reference'][i] is None
@@ -216,19 +219,22 @@ def _timing_data_laps_entry(entry, driver, data={}, flags={}):
                 _n = int(sector)
                 sector = block['Sectors'][str(_n)]
             if 'Value' in sector:
-                sector_time = __to_time(sector['Value'])
+                sector_time = __to_timedelta(sector['Value'])
                 data[driver][f'Sector{str(_n+1)}Time'][i] = sector_time
 
             # Sectors are used to calculate the sacred time reference.
             # Following block has the only purpose to find the time with
             # minimum measure delay. Otherwise laps will be out of sync
             has_measure = 'Value' in sector and sector['Value'] != ''
+
+            # Sector 1
             if _n == 0 and has_measure and no_time_reference:
                 flags[driver]['time_reference'][i] = {'base': time,
                                                       'delta': sector_time,
                                                       'ts0': sector_time}
-            reference_has_ts0 = (not no_time_reference
-                                 and 'ts0' in flags[driver]['time_reference'][i])
+
+            # Sector 2
+            reference_has_ts0 = (not no_time_reference) and ('ts0' in flags[driver]['time_reference'][i])
             if _n == 1 and has_measure and reference_has_ts0:
                 old_reference = (flags[driver]['time_reference'][i]['base']
                                  - flags[driver]['time_reference'][i]['delta'])
@@ -239,8 +245,9 @@ def _timing_data_laps_entry(entry, driver, data={}, flags={}):
                     flags[driver]['time_reference'][i]['base'] = time
                     flags[driver]['time_reference'][i]['delta'] = new_delta
                 flags[driver]['time_reference'][i]['ts1'] = sector_time
-            reference_has_ts01 = (reference_has_ts0
-                                  and 'ts1' in flags[driver]['time_reference'][i])
+
+            # Sector 3
+            reference_has_ts01 = reference_has_ts0 and ('ts1' in flags[driver]['time_reference'][i])
             if _n == 2 and has_measure and reference_has_ts01:
                 old_reference = (flags[driver]['time_reference'][i]['base']
                                  - flags[driver]['time_reference'][i]['delta'])
@@ -274,7 +281,7 @@ def _timing_data_laps_entry(entry, driver, data={}, flags={}):
     if ('LastLapTime' in block
         and 'Value' in block['LastLapTime']
         and block['LastLapTime']['Value'] != ''):
-            lap_time = __to_time(block['LastLapTime']['Value'])
+            lap_time = __to_timedelta(block['LastLapTime']['Value'])
             # Pandas here is very smart (i guess?) because even if I 
             # append None it will be guessed as NaT to keep datatype
             # consistency. Very silent behaviour though.
@@ -297,7 +304,7 @@ def _timing_data_laps_entry(entry, driver, data={}, flags={}):
         data[driver]['NumberOfLaps'][-1] = block['NumberOfLaps']
         [data[driver][key].append(None) for key in data[driver]]
         # prevent shit #1 and put a NaT
-        data[driver]['LastLapTime'][-1] = __to_time('') 
+        data[driver]['LastLapTime'][-1] = __to_timedelta('')
         flags[driver]['time_reference'].append(None)
         flags[driver]['locked_times'].append(False)
 
@@ -316,7 +323,7 @@ def timing_app_data(path, response=None):
             'TyresNotChanged': [], 'Time': [], 'LapFlags': [],
             'LapCountTime': [], 'StartLaps': [], 'Outlap': []}
     for entry in response:
-        time = __to_time(entry[0])
+        time = __to_timedelta(entry[0])
         row = entry[1]
         for driver_number in row['Lines']:
             if 'Stints' in row['Lines'][driver_number]:
@@ -368,7 +375,7 @@ def car_data(path):
     logging.info("Parsing car data") 
     date_format = "%Y-%m-%dT%H:%M:%S.%f%z"
     for line in raw:
-        time = __to_time(line[0])
+        time = __to_timedelta(line[0])
         for entry in line[1]['Entries']:
             cars = entry['Cars']
             date = pd.to_datetime(entry['Utc'], format=date_format)
@@ -413,7 +420,7 @@ def position(path):
     if raw is None:
         return {}
     for line in raw:
-        time = __to_time(line[0])
+        time = __to_timedelta(line[0])
         for entry in line[1]['Position']:
             cars = entry['Entries']
             date = pd.to_datetime(entry['Timestamp'][:-1],
@@ -465,6 +472,7 @@ def fetch_page(path, name):
     else:
         return None
 
+
 def parse(text, zipped=False):
     """Parse json and jsonStream as known from livetiming.formula1.com
     """
@@ -509,7 +517,7 @@ def _json_inspector(obj, start=None):
     return obj
 
 
-def __to_time(x):
+def __to_timedelta(x):
     if len(x) and isinstance(x, str):
         return pd.to_timedelta('00:00:00.000'[:-len(x)] + x)
     return pd.to_timedelta(x)
