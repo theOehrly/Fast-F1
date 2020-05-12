@@ -146,7 +146,8 @@ def _timing_data_laps(path, response=None):
             data, flags = _timing_data_laps_entry(entry, driver, data, flags)
     data_cols = [key for key in data[driver] if key not in ['Time', 'Driver']]
     td_cols = ['LastLapTime', 'PitInTime', 'PitOutTime',
-               'Sector1Time', 'Sector2Time', 'Sector3Time']
+               'Sector1Time', 'Sector2Time', 'Sector3Time',
+               'Sector1SessionTime', 'Sector2SessionTime', 'Sector3SessionTime']
     for driver in data:
         _df = pd.DataFrame(data[driver])
         if not _df.iloc[-1][data_cols].any():
@@ -176,7 +177,8 @@ def _timing_data_laps_entry(entry, driver, data={}, flags={}):
         data[driver] = {'Time': [], 'Driver': [], 'LastLapTime': [],
                         'NumberOfLaps': [], 'NumberOfPitStops': [],
                         'PitOutTime': [], 'PitInTime': [], 'Sector1Time': [],
-                        'Sector2Time': [], 'Sector3Time': [], 'SpeedI1': [],
+                        'Sector2Time': [], 'Sector3Time': [], 'Sector1SessionTime': [],
+                        'Sector2SessionTime': [], 'Sector3SessionTime': [], 'SpeedI1': [],
                         'SpeedI2': [], 'SpeedFL': [], 'SpeedST': []}
         [data[driver][key].append(None) for key in data[driver]]  # append None to all lists in the dictionary
 
@@ -221,6 +223,7 @@ def _timing_data_laps_entry(entry, driver, data={}, flags={}):
             if 'Value' in sector:
                 sector_time = __to_timedelta(sector['Value'])
                 data[driver][f'Sector{str(_n+1)}Time'][i] = sector_time
+                data[driver][f'Sector{str(_n+1)}SessionTime'][i] = time
 
             # Sectors are used to calculate the sacred time reference.
             # Following block has the only purpose to find the time with
