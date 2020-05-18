@@ -242,6 +242,81 @@ class TrackMap:
         print("Number of points: {}".format(len(self.sorted_points)))
         print("Excluded points: {}".format(len(self.excluded_points)))
 
+    def get_closest_point(self, point):
+        # this assumes that the track is made up of all possible points
+        # this assumption is valid within the scope of the data from which the track was calculated.
+        # see disclaimer for track map class in general
+
+        distances = list()
+        for track_point in self.sorted_points:
+            distances.append(track_point.get_sqr_dist(point))
+
+        return self.sorted_points[distances.index(min(distances))]
+
+    def get_points_between(self, point1, point2, short=True, include_ref=True):
+        i1 = self.sorted_points.index(point1)
+        i2 = self.sorted_points.index(point2)
+
+        # n_in = i1 - i2  # number of points between 1 and 2 in list
+        # n_out = len(self.sorted_points) - n_in  # number of point around, i.e. beginning and end of list to 1 and 2
+
+        if short:
+            # the easy way, simply slice between the two indices
+            pnt_range = self.sorted_points[min(i1, i2)+1: max(i1, i2)]
+            if include_ref:
+                if i1 < i2:
+                    pnt_range.insert(0, point1)
+                    pnt_range.append(point2)
+                else:
+                    pnt_range.insert(0, point2)
+                    pnt_range.append(point1)
+        else:
+            first = self.sorted_points[:min(i1, i2)]
+            second = self.sorted_points[max(i1, i2)+1:]
+            pnt_range = second + first
+            if include_ref:
+                if i1 < i2:
+                    pnt_range.insert(0, point2)
+                    pnt_range.append(point1)
+                else:
+                    pnt_range.insert(0, point1)
+                    pnt_range.append(point2)
+
+        return pnt_range
+
+    def get_second_coord(self, val, ref_point_1, ref_point_2, from_coord='x'):
+        p_range = self.get_points_between(ref_point_1, ref_point_2)
+
+        # find the closest point in this range; only valid if the range is approximately straight
+        # because we're only checking against one coordinate
+        distances = list()
+        for p in p_range:
+            distances.append(abs(p[from_coord] - val))
+
+        min_i = min_index(distances)
+        p_a = p_range[min_index(distances)]  # closest point
+        # second closest point (with edge cases if closest point is first or last point in list)
+        if min_i == 0:
+            p_b = p_range[1] if distances[1] < distances[-1] else p_range[-1]
+        elif min_i == len(distances) - 1:
+            p_b = p_range[0] if distances[0] < distances[-2] else p_range[-2]
+        else:
+            p_b = p_range[min_i+1] if distances[min_i+1] < distances[min_i-1] else p_range[min_i-1]
+
+        # do interpolation
+        delta_x = p_b.x - p_a.x
+        delta_y = p_b.y - p_a.y
+
+        if from_coord == 'x':
+            interp_delta_x = val - p_a.x
+            interp_y = p_a.y + delta_y * interp_delta_x / delta_x
+            return Point(val, interp_y)
+        else:
+            interp_delta_y = val - p_a.y
+            interp_x = p_a.x + delta_x * interp_delta_y / delta_y
+            return Point(interp_x, val)
+
+
 
 def round_date(ser, freq):
     ser['Date'] = ser['Date'].round(freq)
