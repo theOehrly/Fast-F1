@@ -213,6 +213,9 @@ class TrackMap:
             # Get a new _next_point. The new point is the one which was closest to the last one.
             self._next_point = self.unsorted_points.pop(index_min)
 
+        # append the last point if it is not an outlier
+        if self._next_point.get_sqr_dist(self.sorted_points[-1]) <= 200:
+            self.sorted_points.append(self._next_point)
 
     def generate_track(self):
         """Generate a track map from the raw points.
