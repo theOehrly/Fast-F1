@@ -3,6 +3,7 @@
 
 from fastf1 import core, api
 from matplotlib import pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import pandas as pd
 import numpy as np
 import datetime
@@ -13,6 +14,7 @@ import multiprocessing as mp
 from itertools import product
 import sys
 import time
+import statistics
 from scipy import stats
 
 # core.utils.CACHE_PATH = 'D:\\Dateien\\FF1Data'  # set the correct cache path
@@ -629,3 +631,270 @@ def time_to_date(t, start_date):
     return start_date + t
 
 
+if __name__ == '__main__':
+    # dump_track_points_to_csv(csv_name)
+    # track_points = track_points_from_csv(csv_name)
+    # track_map = TrackMap(points=track_points, visualization_frequency=250)
+    # track_map.generate_track()
+    # pickle.dump(track_map, open("var_dumps/track_map", "wb"))
+    # sys.exit()
+
+    track_map = pickle.load(open("var_dumps/track_map", "rb"))
+    plt.clf()  # in case track map was generated with visualization on ... yeah
+
+    session = pickle.load(open("var_dumps/session", "rb"))
+    pos = pickle.load(open("var_dumps/pos", "rb"))
+    tel = pickle.load(open("var_dumps/tel", "rb"))
+    laps_data = pickle.load(open("var_dumps/laps_data", "rb"))
+    stream_data = pickle.load(open("var_dumps/stream_data", "rb"))
+    mad_x_stats = pickle.load(open("var_dumps/mad_x_stats", "rb"))
+    mad_y_stats = pickle.load(open("var_dumps/mad_y_stats", "rb"))
+    mean_x_stats = pickle.load(open("var_dumps/mean_x_stats", "rb"))
+    mean_y_stats = pickle.load(open("var_dumps/mean_y_stats", "rb"))
+    oor_stats = pickle.load(open("var_dumps/oor_stats", "rb"))
+
+    track_x, track_y = list(), list()
+    for tp in track_map.sorted_points:
+        track_x.append(tp.x)
+        track_y.append(tp.y)
+
+    mean_x_stats = np.array(mean_x_stats)
+    mean_y_stats = np.array(mean_y_stats)
+    mad_x_stats = np.array(mad_x_stats)
+    mad_y_stats = np.array(mad_y_stats)
+
+    x_minima = np.r_[True, mad_x_stats[1:] < mad_x_stats[:-1]] & np.r_[mad_x_stats[:-1] < mad_x_stats[1:], True]
+    y_minima = np.r_[True, mad_y_stats[1:] < mad_y_stats[:-1]] & np.r_[mad_y_stats[:-1] < mad_y_stats[1:], True]
+
+    x_minima[-1] = False
+    y_minima[-1] = False
+
+    print(x_minima)
+    print(y_minima)
+
+    ax_main = plt.subplot(label='Track Map')
+    plt.plot(track_x, track_y)
+    ax_main.set_aspect('equal')
+    ax_main.set_xlabel('X')
+    ax_main.set_ylabel('Y')
+    ax_main.yaxis.set_tick_params(labelleft=False, labelright=True)
+    ax_main.yaxis.set_label_position("right")
+
+    # x deviation minima
+    for x_min in mean_x_stats[x_minima]:
+        ax_main.axvline(x_min, color='r')
+
+    # y deviation minima
+    for y_min in mean_y_stats[y_minima]:
+        ax_main.axhline(y_min, color='r')
+
+    divider = make_axes_locatable(ax_main)
+    ax_mad_x = divider.append_axes("top", 1.2, pad=0.1, sharex=ax_main)
+    ax_mad_y = divider.append_axes("left", 1.2, pad=0.1, sharey=ax_main)
+
+    ax_mad_x.plot(mean_x_stats, mad_x_stats)
+    ax_mad_x.set_ylabel('Y MAD')
+    ax_mad_x.xaxis.set_tick_params(labelbottom=False)
+
+    ax_mad_y.plot(mad_y_stats, mean_y_stats)
+    ax_mad_y.invert_xaxis()
+    ax_mad_y.set_xlabel('X MAD')
+    ax_mad_y.yaxis.set_tick_params(labelleft=False)
+
+    plt.show()
+
+    sys.exit()
+
+    # ### Data Synchronization ###
+    # assumptions
+    #   - a session is alway started on a full minute
+    #       --> should be able to do without but it is easier for now
+    #
+    # conditions for syncing data
+    #   - the start/finish line needs to be in a fixed place (x/y coordinates)
+    #   - last lap start time + lap duration = current lap start time
+    #
+    # possible issues
+    #   - lap and sector times are reported with what seems to be a +-0.5s accuracy
+    #       with no further information about this process, it has to be assumed that a lap/sector time can be reported with
+    #       an earlier or later time than its correct time (correct time = the time it was actually set at)
+    #   - inaccuracies due to only ms precision --> max error ~50ms after the race; probably not that critical
+    #   - laps with pit stops --> skip laps with pit in or pit out for now; only add the lap times
+    #   - there is no fixed start time which is the sme for every driver --> maybe use race end timing?
+    #
+    # possible further sources of data
+    #   - race result time between drivers for fixed values at the end too
+    #
+    # approach for now
+    #   - get min/max values for start finish position from the first coarse synchronization
+    #   - iterate over this range in small increments
+    #       - always skip first lap
+    #       - from selected position, interpolate a lap start time
+    #       - add all lap times up to get a lap start time for each
+    #       - interpolate start/finish x/y for each lap which does not have pit in or pit out
+    #   - calculate metrics after each pass
+    #       - arithmetic mean of x and y
+    #       - standard deviation of x and y
+    #       --> plot metrics
+
+    # print("Generating Track...")
+    # unsorted_points = extract_track_points(pos)
+    # track_map = TrackMap(points=unsorted_points)
+    # track_map.generate_track()
+
+    print("Lap synchronization...")
+    drivers = list(tel.keys())
+
+    print("Processing {} drivers".format(len(drivers)))
+
+    # calculate the start date (incl. time) at which the session was started
+    some_driver = drivers[0]  # TODO to be sure this should be done with multiple drivers
+    start_date = pos[some_driver].head(1).Date.squeeze().round('min')
+
+    # find the highest and lowest x/y values for current start/finish
+    approx_x = list()
+    approx_y = list()
+    usable_laps = 0  # for logging purpose
+
+    for drv in drivers:
+        is_drv = (laps_data.Driver == drv)
+        drv_last_lap = laps_data[is_drv].NumberOfLaps.max()  # get the last lap of this driver
+
+        for _, lap in laps_data[is_drv].iterrows():
+            # first lap, last lap, in-lap, out-lap and laps with no lap number are skipped
+            if (pd.isnull(lap.NumberOfLaps) or
+                    lap.NumberOfLaps in (1, drv_last_lap) or
+                    not pd.isnull(lap.PitInTime) or
+                    not pd.isnull(lap.PitOutTime)):
+
+                continue
+
+            else:
+                approx_date = start_date + lap.Time
+                pnt = interpolate_pos_from_time(drv, pos, approx_date)
+                approx_x.append(pnt.x)
+                approx_y.append(pnt.y)
+                usable_laps += 1
+
+    print("{} usable laps".format(usable_laps))
+
+    # there will still be some outliers; it's only very few though
+    # so... statistics to the rescue then but allow for very high deviation as we want a long range of possible points for now
+    # we only want to sort out the really far away stuff
+    approx_x = np.array(approx_x)
+    approx_y = np.array(approx_y)
+    approx_x, approx_y = reject_outliers(approx_x, approx_y, m=100.0)
+    print("Rejected {} outliers".format(usable_laps - len(approx_x)))
+
+    # calculate mean absolute deviation after outlier rejection (for logging purpose)
+    mad_x = pd.Series(approx_x).mad()
+    mad_y = pd.Series(approx_y).mad()
+    print("Mean absolute deviation of preliminary lap starting position:\n\t x={} y={}".format(round(mad_x), round(mad_y)))
+
+    # start the heavy calculations
+    # TODO should not always use x as reference
+
+    # get range start and end
+    x_range_start = min(approx_x)
+    x_range_end = max(approx_x)
+    i_start, = np.where(approx_x == x_range_start)
+    i_end, = np.where(approx_x == x_range_end)
+    y_range_start = approx_y[i_start]
+    y_range_end = approx_y[i_end]
+
+    print("Synchronizing on start/finish line in range x from {} to {}".format(x_range_start, x_range_end))
+
+    mad_x_stats, mad_y_stats = list(), list()
+    mean_x_stats, mean_y_stats = list(), list()
+    oor_stats = list()
+
+    print("Calculating {} steps".format(x_range_end - x_range_start))
+    cnt = 0
+
+    # processing range in steps of one for now
+    for test_x in range(int(x_range_start), int(x_range_end), 15):
+        test_y = y_range_start + (y_range_end - y_range_start) * (test_x - x_range_start) / (x_range_end - x_range_start)
+        test_point = Point(test_x, test_y)
+
+        cnt += 1
+        print(cnt)
+        res_x, res_y = list(), list()
+        out_of_range = 0
+
+        for drv in drivers:
+            is_drv = (laps_data.Driver == drv)
+            drv_last_lap = laps_data[is_drv].NumberOfLaps.max()  # get the last lap of this driver
+
+            for _, lap in laps_data[is_drv].iterrows():
+                # first lap, last lap, in-lap, out-lap and laps with no lap number are skipped
+                if (pd.isnull(lap.NumberOfLaps) or
+                        lap.NumberOfLaps in (1, drv_last_lap) or
+                        not pd.isnull(lap.PitInTime) or
+                        not pd.isnull(lap.PitOutTime)):
+
+                    continue
+
+                else:
+                    approx_time = start_date + lap.Time
+                    # now we have an approximate time for the end of the lap and we have test_x/test_y which is not unique track point
+                    # to get an exact time at which the car was at test_point, define a window of +-delta_t around approx_time
+                    delta_t = pd.to_timedelta(10, "s")
+                    t_start = approx_time - delta_t
+                    t_end = approx_time + delta_t
+                    pos_range = pos[drv].query("@t_start < Date < @t_end")
+                    # search the two points in this range which are closest to test_point
+                    pos_distances = list()
+                    neg_distances = list()
+                    pos_points = list()
+                    neg_points = list()
+                    for _, row in pos_range.iterrows():
+                        pnt = Point(row.X, row.Y, row.Date)
+                        dist = test_point.get_sqr_dist(pnt)
+                        if pnt.x < test_point.x:
+                            pos_distances.append(dist)
+                            pos_points.append(pnt)
+                        else:
+                            neg_distances.append(dist)
+                            neg_points.append(pnt)
+
+                    # make sure that there are points before and after this one
+                    if (not neg_distances) or (not pos_distances):
+                        out_of_range += 1
+                        continue
+
+                    # distances, points = zip(*sorted(zip(distances, points)))  # sort distances and sort point_range exactly the same way
+                    p_a = pos_points[min_index(pos_distances)]
+                    p_b = neg_points[min_index(neg_distances)]
+
+                    # interpolate the time for test_point from those two points
+                    test_date = p_a.date + (p_b.date - p_a.date) * (test_point.x - p_a.x) / (p_b.x - p_a.x)
+                    # calculate start date for last lap and get position for that date
+                    last_lap_start = test_date - lap.LastLapTime
+                    lap_start_point = interpolate_pos_from_time(drv, pos, last_lap_start)
+                    # add point coordinates to list of results for this pass
+                    res_x.append(lap_start_point.x)
+                    res_y.append(lap_start_point.y)
+
+        x_series = pd.Series(res_x)
+        y_series = pd.Series(res_y)
+        mad_x_stats.append(x_series.mad())
+        mad_y_stats.append(y_series.mad())
+        mean_x_stats.append(x_series.mean())
+        mean_y_stats.append(y_series.mean())
+        oor_stats.append(out_of_range)
+
+        print('#########################')
+        print(out_of_range)
+        print(mad_x_stats)
+        print(mad_y_stats)
+        print(mean_x_stats)
+        print(mean_y_stats)
+
+    pickle.dump(mad_x_stats, open("var_dumps/mad_x_stats", "wb"))
+    pickle.dump(mad_y_stats, open("var_dumps/mad_y_stats", "wb"))
+    pickle.dump(mean_x_stats, open("var_dumps/mean_x_stats", "wb"))
+    pickle.dump(mean_y_stats, open("var_dumps/mean_y_stats", "wb"))
+    pickle.dump(oor_stats, open("var_dumps/oor_stats", "wb"))
+
+    plt.plot(mean_x_stats, mad_x_stats)
+    plt.show()
