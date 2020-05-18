@@ -476,37 +476,21 @@ def s3_to_start_finish_v1():
     pickle.dump(start_vals_y, open("var_dumps/start_vals_y_{}".format(sample_freq), "wb"))
 
 
-if __name__ == '__main__':
-    # dump_track_points_to_csv(csv_name)
+def dump_raw_data():
+    session = core.get_session(YEAR, GP, EVENT)
+    pos = api.position(session.api_path)
+    tel = api.car_data(session.api_path)
+    laps_data, stream_data = api.timing_data(session.api_path)
+
+    for var, fname in zip((session, pos, tel, laps_data, stream_data), ('session', 'pos', 'tel', 'laps_data', 'stream_data')):
+        with open("var_dumps/" + fname, "wb") as fout:
+            pickle.dump(var, fout)
+
+
+def visualize_track_and_distribution():
     track_points = track_points_from_csv(csv_name)
     track_map = TrackMap(points=track_points, visualization_frequency=0)
     track_map.generate_track()
-
-    # session = core.get_session(YEAR, GP, EVENT)
-    # pos = api.position(session.api_path)
-    # tel = api.car_data(session.api_path)
-    # laps_data, stream_data = api.timing_data(session.api_path)
-    #
-    # for var, fname in zip((session, pos, tel, laps_data, stream_data), ('session', 'pos', 'tel', 'laps_data', 'stream_data')):
-    #     with open("var_dumps/" + fname, "wb") as fout:
-    #         pickle.dump(var, fout)
-    # sys.exit()
-
-    # session, pos, tel, laps_data, stream_data = None, None, None, None, None
-    # for var, fname in zip((session, pos, tel, laps_data, stream_data), ('session', 'pos', 'tel', 'laps_data', 'stream_data')):
-    #     with open("var_dumps" + fname, "rb") as fin:
-    #         var = pickle.load(fin)
-
-    session = pickle.load(open("var_dumps/session", "rb"))
-    pos = pickle.load(open("var_dumps/pos", "rb"))
-    tel = pickle.load(open("var_dumps/tel", "rb"))
-    laps_data = pickle.load(open("var_dumps/laps_data", "rb"))
-    # stream_data = pickle.load(open("var_dumps/stream_data", "rb"))
-
-    # end_vals_x = pickle.load(open("var_dumps/end_vals_x_2ms", "rb"))
-    # n = pickle.load(open("var_dumps/n_2ms", "rb"))
-
-    # s3_to_start_finish_v1()
 
     end_vals_x = pickle.load(open("var_dumps/end_vals_x_10ms", "rb"))
     end_vals_y = pickle.load(open("var_dumps/end_vals_y_10ms", "rb"))
