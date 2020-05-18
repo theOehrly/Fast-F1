@@ -57,9 +57,18 @@ def track_points_from_csv(name):
 class Point:
     """Simple point class
     offers x and y paramters as a function for calculating distance to other points (the square of the distance is returned) """
-    def __init__(self, x, y):
+    def __init__(self, x, y, date=None):
         self.x = x
         self.y = y
+        self.date = date
+
+    def __getitem__(self, key):
+        if key == 'x':
+            return self.x
+        elif key == 'y':
+            return self.y
+        else:
+            raise KeyError
 
     def get_sqr_dist(self, other):
         dist = abs(other.x - self.x) + abs(other.y - self.y)
