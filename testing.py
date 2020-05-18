@@ -317,6 +317,10 @@ class TrackMap:
             return Point(interp_x, val)
 
 
+def min_index(_iterable):
+    """Return the index of the minimum value"""
+    return _iterable.index(min(_iterable))
+
 
 def round_date(ser, freq):
     ser['Date'] = ser['Date'].round(freq)
