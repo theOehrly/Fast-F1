@@ -29,6 +29,10 @@ def dump_track_points_to_csv(name):
     session = core.get_session(YEAR, GP, EVENT)
     pos = api.position(session.api_path)
 
+    data = extract_track_points(pos)
+    data.to_csv(name, index=False)
+
+def extract_track_points(pos):
     numbers = list(pos.keys())
     # create combined data frame with all column names but without data
     combined = pd.DataFrame(columns=['index', *pos[numbers[0]].columns])
