@@ -199,7 +199,7 @@ class TrackMap:
 
             # get the next closest point and its index
             min_dst = min(distances)
-            min_index = distances.index(min_dst)
+            index_min = distances.index(min_dst)
 
             # Check if the closest point is within a reasonable distance. There are some outliers which are very clearly not on track.
             # The limit value was determined experimentally. Usually the distance between to points is approx. 100.
@@ -211,7 +211,8 @@ class TrackMap:
                 self.sorted_points.append(self._next_point)
 
             # Get a new _next_point. The new point is the one which was closest to the last one.
-            self._next_point = self.unsorted_points.pop(min_index)
+            self._next_point = self.unsorted_points.pop(index_min)
+
 
     def generate_track(self):
         """Generate a track map from the raw points.
