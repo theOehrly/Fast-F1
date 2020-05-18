@@ -76,7 +76,27 @@ class Point:
 
 
 class TrackMap:
-    """Track map class; does all track map related processing."""
+    # TODO check: can it somehow be that specifically the last poitn of the unsorted points is corrupted?!
+    #  missing value specifically there in 2019-10-R
+    """Track map class; does all track map related processing.
+
+    Although there are more than one hundred thousand points of position data per session, the number of
+    unique points on track is limited. Typically there is about one unique point per meter of track length.
+    This does not mean that the points have a fixed distance though. In slow corners they are closer together than
+    on straights. A typical track has between 5000 and 7000 unique points.
+    When generating the track map, all duplicate points are removed from the points so that only unique points are left.
+    Then those points are sorted so they have the correct order.
+    Not all unique points of a given track are necessarily present in each session. There is simply a chance that position
+    data from no car is ever sent from a point. In this case we can't know that this point exist. This is not a problem
+    though. But the following needs to be kept in mind:
+
+    A track map is only a valid representation for the data it was calculated from.
+    E.g. do not use a track map for race data when it was calculated from qualifying data.
+
+    Sharing a track map between multiple sessions may be possible if the all points from all of these
+    sessions where joined before and the track map was therefore calculated from both sessions at the same time.
+    Although this may be possible, it is neither tested, nor intended or recommended.
+    """
 
     def __init__(self, points, visualization_frequency=0):
         """Create a new track map object.
