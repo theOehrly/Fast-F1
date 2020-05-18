@@ -43,8 +43,7 @@ def dump_track_points_to_csv(name):
 
     no_dupl_combined = combined.reset_index().filter(items=('X', 'Y')).drop_duplicates()
 
-    no_dupl_combined.to_csv(name, index=False)
-
+    return no_dupl_combined
 
 def track_points_from_csv(name):
     df = pd.read_csv(name)
