@@ -586,4 +586,46 @@ def visualize_track_and_distribution():
 
     plt.show()
 
-    pass
+
+def get_time_from_pos(drv, pos_data, x, y, track, time_range_start, time_range_end):
+    drv_pos = pos_data[drv]  # get DataFrame for driver
+
+    # calculate closest point in DataFrame (a track map contains all points from the DataFrame)
+    pnt = Point(x, y)
+    closest_track_pnt = track.get_closest_point(pnt)
+
+    # create an array of boolean values for filtering points which exactly match the given coordinates
+    is_x = drv_pos.X = closest_track_pnt.X
+    is_y = drv_pos.Y = closest_track_pnt.Y
+    is_closest_pnt = is_x and is_y
+
+    # there may be multiple points from different laps with the given coordinates
+    # therefore an estimated time range needs to be provided
+    res_pnts = drv_pos[is_closest_pnt]
+    for p in res_pnts:
+        if time_range_start <= p.Date <= time_range_end:
+            return p.Date
+    else:
+        return None
+
+
+def interpolate_pos_from_time(drv, pos_data, query_date):
+    # use linear interpolation to determine position at arbitrary time
+    drv_pos = pos_data[drv]  # get DataFrame for driver
+
+    closest = drv_pos.iloc[(drv_pos['Date'] - query_date).abs().argsort()[:2]]
+    delta_t = closest.iloc[1]['Date'] - closest.iloc[0]['Date']
+    delta_x = closest.iloc[1]['X'] - closest.iloc[0]['X']
+    delta_y = closest.iloc[1]['Y'] - closest.iloc[0]['Y']
+    interp_delta_t = query_date - closest.iloc[0]['Date']
+
+    interp_x = closest.iloc[0]['X'] + delta_x * interp_delta_t / delta_t
+    interp_y = closest.iloc[0]['Y'] + delta_y * interp_delta_t / delta_t
+
+    return Point(interp_x, interp_y)
+
+
+def time_to_date(t, start_date):
+    return start_date + t
+
+
