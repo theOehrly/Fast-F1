@@ -51,6 +51,8 @@ class TrackPoint:
 class TrackMap:
     # TODO check: can it somehow be that specifically the last poitn of the unsorted points is corrupted?!
     #  missing value specifically there in 2019-10-R
+    # TODO determine track direction
+    # TODO reorder points when start finish line position is known
     """Track map class; does all track map related processing.
 
     Although there are more than one hundred thousand points of position data per session, the number of
@@ -185,6 +187,7 @@ class TrackMap:
             self.distances_normalized.append(dist / self.distances[-1])
 
     def _sort_points(self):
+        # TODO remove outliers before sorting!!!
         """Does the actual sorting of points."""
         # sort points
         # Get the first point as a starting point. Any point could be used as starting point. Later the next closest point is used as next point.
@@ -233,7 +236,7 @@ class TrackMap:
         self._vis_freq = visualization_frequency
 
         self._sort_points()
-        self._integrate_distance()
+        self._integrate_distance()  # TODO this should not be done before determining track direction and start/finish line position
 
         xvals = list()
         yvals = list()
