@@ -633,10 +633,6 @@ def interpolate_pos_from_time(drv, pos_data, query_date):
     return Point(interp_x, interp_y)
 
 
-def time_to_date(t, start_date):
-    return start_date + t
-
-
 if __name__ == '__main__':
     # dump_track_points_to_csv(csv_name)
     # track_points = track_points_from_csv(csv_name)
