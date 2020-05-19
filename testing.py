@@ -34,22 +34,6 @@ def dump_track_points_to_csv(name):
     data = extract_track_points(pos)
     data.to_csv(name, index=False)
 
-def extract_track_points(pos):
-    numbers = list(pos.keys())
-    # create combined data frame with all column names but without data
-    combined = pd.DataFrame(columns=['index', *pos[numbers[0]].columns])
-
-    for n in numbers:
-        tmp = pos[n].reset_index()
-        combined = combined.append(tmp)
-
-    # filter out data points where the car is not on track
-    is_on_track = combined['Status'] == 'OnTrack'
-    combined = combined[is_on_track]
-
-    no_dupl_combined = combined.reset_index().filter(items=('X', 'Y')).drop_duplicates()
-
-    return no_dupl_combined
 
 def track_points_from_csv(name):
     df = pd.read_csv(name)
@@ -128,8 +112,26 @@ class TrackMap:
         self._vis_counter = 0
         self._fig = None
 
+        # extract point from position data frame
+        self._unsorted_points_from_pos_data()
+
+    def _unsorted_points_from_pos_data(self):
+        numbers = list(self._raw_pos_data.keys())
+        # create combined data frame with all column names but without data
+        combined = pd.DataFrame(columns=['index', *self._raw_pos_data[numbers[0]].columns])
+
+        for n in numbers:
+            tmp = self._raw_pos_data[n].reset_index()
+            combined = combined.append(tmp)
+
+        # filter out data points where the car is not on track
+        is_on_track = combined['Status'] == 'OnTrack'
+        combined = combined[is_on_track]
+
+        no_dupl_combined = combined.reset_index().filter(items=('X', 'Y')).drop_duplicates()
+
         # create a points object for each point
-        for index, data in points.iterrows():
+        for index, data in no_dupl_combined.iterrows():
             self.unsorted_points.append(Point(data['X'], data['Y']))
 
     def _init_viusualization(self):
