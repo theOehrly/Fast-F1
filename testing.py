@@ -27,7 +27,7 @@ EVENT = 'R'
 csv_name = '2019-10-5_track_map.csv'
 
 
-class Point:
+class TrackPoint:
     """Simple point class
     offers x and y paramters as a function for calculating distance to other points (the square of the distance is returned) """
     def __init__(self, x, y, date=None):
@@ -118,7 +118,7 @@ class TrackMap:
 
         # create a points object for each point
         for index, data in no_dupl_combined.iterrows():
-            self.unsorted_points.append(Point(data['X'], data['Y']))
+            self.unsorted_points.append(TrackPoint(data['X'], data['Y']))
 
     def _init_viusualization(self):
         self._vis_counter = 0
@@ -318,11 +318,11 @@ class TrackMap:
         if from_coord == 'x':
             interp_delta_x = val - p_a.x
             interp_y = p_a.y + delta_y * interp_delta_x / delta_x
-            return Point(val, interp_y)
+            return TrackPoint(val, interp_y)
         else:
             interp_delta_y = val - p_a.y
             interp_x = p_a.x + delta_x * interp_delta_y / delta_y
-            return Point(interp_x, val)
+            return TrackPoint(interp_x, val)
 
 
 def min_index(_iterable):
@@ -599,7 +599,7 @@ def get_time_from_pos(drv, pos_data, x, y, track, time_range_start, time_range_e
     drv_pos = pos_data[drv]  # get DataFrame for driver
 
     # calculate closest point in DataFrame (a track map contains all points from the DataFrame)
-    pnt = Point(x, y)
+    pnt = TrackPoint(x, y)
     closest_track_pnt = track.get_closest_point(pnt)
 
     # create an array of boolean values for filtering points which exactly match the given coordinates
@@ -630,7 +630,7 @@ def interpolate_pos_from_time(drv, pos_data, query_date):
     interp_x = closest.iloc[0]['X'] + delta_x * interp_delta_t / delta_t
     interp_y = closest.iloc[0]['Y'] + delta_y * interp_delta_t / delta_t
 
-    return Point(interp_x, interp_y)
+    return TrackPoint(interp_x, interp_y)
 
 
 if __name__ == '__main__':
