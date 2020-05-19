@@ -134,6 +134,7 @@ class TrackMap:
             self.unsorted_points.append(Point(data['X'], data['Y']))
 
     def _init_viusualization(self):
+        self._vis_counter = 0
         plt.ion()
         self._fig = plt.figure()
         self._ax = self._fig.add_subplot(111)
@@ -232,12 +233,17 @@ class TrackMap:
 
         self._cleanup_visualization()
 
-    def generate_track(self):
+    def generate_track(self, visualization_frequency=0):
         """Generate a track map from the raw points.
 
         Sorts all points. Then determines the correct direction and starting point.
         Finally the lap distance is calculated by integrating over all points.
-        The distance since start is saved for each point. Additionally, the lap distance is saved normalized to a range of 0 to 1."""
+        The distance since start is saved for each point. Additionally, the lap distance is saved normalized to a range of 0 to 1.
+        :param visualization_frequency: (optional) specify  after how many calculated points the plot should be updated.
+            Set to zero for never (default: never). Plotting is somewhat slow. A visualization frequency greater than 50 is recommended.
+        :type visualization_frequency: int
+        """
+        self._vis_freq = visualization_frequency
 
         self._sort_points()
         self._integrate_distance()
