@@ -358,10 +358,6 @@ def remove_duplicates(l_ref, l2):
     return l_ref_out, l2_out
 
 
-def get_closest_time_to(frame, t):
-    return frame.iloc[abs((frame.index - t)).argsort()[0]]
-
-
 def reject_outliers(data, *secondary, m=2.):
     d = np.abs(data - np.median(data))
     mdev = np.median(d)
