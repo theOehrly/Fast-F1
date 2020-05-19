@@ -27,14 +27,6 @@ EVENT = 'R'
 csv_name = '2019-10-5_track_map.csv'
 
 
-def dump_track_points_to_csv(name):
-    session = core.get_session(YEAR, GP, EVENT)
-    pos = api.position(session.api_path)
-
-    data = extract_track_points(pos)
-    data.to_csv(name, index=False)
-
-
 class Point:
     """Simple point class
     offers x and y paramters as a function for calculating distance to other points (the square of the distance is returned) """
