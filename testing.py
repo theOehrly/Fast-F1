@@ -35,11 +35,6 @@ def dump_track_points_to_csv(name):
     data.to_csv(name, index=False)
 
 
-def track_points_from_csv(name):
-    df = pd.read_csv(name)
-    return df
-
-
 class Point:
     """Simple point class
     offers x and y paramters as a function for calculating distance to other points (the square of the distance is returned) """
