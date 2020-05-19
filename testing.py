@@ -172,7 +172,7 @@ class TrackMap:
             self._fig.canvas.flush_events()
 
     def _integrate_distance(self):
-        """Integrate distance over all points and save distance since start for each point."""
+        """Integrate distance over all points and save distance from start/finish line for each point."""
         self.distances.append(0)  # distance is obviously zero at the starting point
 
         distance_covered = 0  # distance since first point
