@@ -126,25 +126,35 @@ class TrackMap:
 
         self._vis_freq = visualization_frequency
         self._vis_counter = 0
+        self._fig = None
 
         # create a points object for each point
         for index, data in points.iterrows():
             self.unsorted_points.append(Point(data['X'], data['Y']))
 
-        if self._vis_freq:
-            plt.ion()
-            self._fig = plt.figure()
-            self._ax = self._fig.add_subplot(111)
-            self._ax.axis('equal')
-            self._line2, = self._ax.plot((), (), 'r-')
-            self._line1, = self._ax.plot((), (), 'b-')
+    def _init_viusualization(self):
+        plt.ion()
+        self._fig = plt.figure()
+        self._ax = self._fig.add_subplot(111)
+        self._ax.axis('equal')
+        self._line2, = self._ax.plot((), (), 'r-')
+        self._line1, = self._ax.plot((), (), 'b-')
+
+    def _cleanup_visualization(self):
+        if self._fig:
+            plt.ioff()
+            plt.clf()
+            self._fig = None
 
     def _visualize_sorting_progress(self):
         """Do a visualization of the current progress.
         Updates the plot with the current data.
         """
         if not self._vis_freq:
-            return
+            return  # don't do visualization if _vis_freq is zero
+
+        if not self._fig:
+            self._init_viusualization()  # first call, setup the plot
 
         self._vis_counter += 1
 
@@ -218,6 +228,8 @@ class TrackMap:
         # append the last point if it is not an outlier
         if self._next_point.get_sqr_dist(self.sorted_points[-1]) <= 200:
             self.sorted_points.append(self._next_point)
+
+        self._cleanup_visualization()
 
     def generate_track(self):
         """Generate a track map from the raw points.
