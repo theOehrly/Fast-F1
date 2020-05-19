@@ -113,3 +113,103 @@ def s3_to_start_finish_v1():
     pickle.dump(end_vals_y, open("var_dumps/end_vals_y_{}".format(sample_freq), "wb"))
     pickle.dump(start_vals_x, open("var_dumps/start_vals_x_{}".format(sample_freq), "wb"))
     pickle.dump(start_vals_y, open("var_dumps/start_vals_y_{}".format(sample_freq), "wb"))
+
+
+def visualize_track_and_distribution():
+    track_points = track_points_from_csv(csv_name)
+    track_map = TrackMap(points=track_points, visualization_frequency=0)
+    track_map.generate_track()
+
+    end_vals_x = pickle.load(open("var_dumps/end_vals_x_10ms", "rb"))
+    end_vals_y = pickle.load(open("var_dumps/end_vals_y_10ms", "rb"))
+    start_vals_x = pickle.load(open("var_dumps/start_vals_x_10ms", "rb"))
+    start_vals_y = pickle.load(open("var_dumps/start_vals_y_10ms", "rb"))
+
+    assert len(start_vals_x) == len(end_vals_x)
+
+    end_vals_x = np.array(end_vals_x)
+    end_vals_y = np.array(end_vals_y)
+    start_vals_x = np.array(start_vals_x)
+    start_vals_y = np.array(start_vals_y)
+
+    print("Number of Data Points:", len(end_vals_x))
+    # reject outliers based on end values; most probably cuased by incorrect sector times
+    end_vals_x, start_vals_x, start_vals_y, end_vals_y = reject_outliers(end_vals_x, start_vals_x, start_vals_y, end_vals_y)
+
+    print("Dividing data into classes")
+    min_start_x = min(start_vals_x)
+    max_start_x = max(start_vals_x)
+    min_end_x = min(end_vals_x)
+    max_end_x = max(end_vals_x)
+    min_end_y = min(end_vals_y)
+    max_end_y = max(end_vals_y)
+    n_classes = 150
+
+    step_start_x = (max_start_x - min_start_x) / n_classes
+    step_end_x = (max_end_x - min_end_x) / n_classes
+    step_end_y = (max_end_y - min_end_y) / n_classes
+
+    classified_start_x = list()
+    classified_end_x = list()
+    classified_end_y = list()
+    classified_n = list()
+
+    end_x_range_0 = min_end_x
+    end_y_range_0 = min_end_y
+    start_x_range_0 = min_start_x
+
+    for _ in range(n_classes):
+        start_x_range_1 = start_x_range_0 + step_start_x
+        end_x_range_1 = end_x_range_0 + step_end_x
+        end_y_range_1 = end_y_range_0 + step_end_y
+
+        classified_start_x.append((start_x_range_1 + start_x_range_0) / 2)
+        classified_end_x.append((end_x_range_1 + end_x_range_0) / 2)
+        classified_end_y.append((end_y_range_1 + end_y_range_0) / 2)
+
+        counter = 0
+        for i in range(len(end_vals_x)):
+            if (start_x_range_0 <= start_vals_x[i] < start_x_range_1) and (end_x_range_0 <= end_vals_x[i] < end_x_range_1):
+                counter += 1
+        classified_n.append(counter)
+
+        start_x_range_0 += step_start_x
+        end_x_range_0 += step_end_x
+        end_y_range_0 += step_end_y
+
+    bottom = np.zeros_like(classified_n)
+
+    # generating graphs
+    print('Generating plots')
+    fig = plt.figure()
+
+    ax1 = fig.add_subplot(2, 2, 1, projection='3d')
+    ax1.bar3d(classified_start_x, classified_end_x, bottom, 10, 10, classified_n, shade=True)
+    ax1.set_xlabel("Start X")
+    ax1.set_ylabel("End X")
+    ax1.set_zlabel("N")
+
+    ax2 = fig.add_subplot(2, 2, 2)
+    ax2.bar(classified_end_x, classified_n)
+    ax2.set_xlabel("End X")
+    ax2.set_ylabel("N")
+
+    x_guess = classified_end_x[classified_n.index(max(classified_n))]
+    y_guess = classified_end_y[classified_n.index(max(classified_n))]
+    ax3 = fig.add_subplot(2, 2, 3)
+    ax3.scatter(start_vals_y, start_vals_x, color='r')
+    ax3.scatter(end_vals_y, end_vals_x, color='y')
+    ax3.plot(track_map.track.Y, track_map.track.X, color='g')
+    ax3.axhline(x_guess, min(classified_end_y), max(classified_end_y))
+    ax3.axvline(y_guess, min(classified_end_x), max(classified_end_x))
+    ax3.set_xlabel("Y")
+    ax3.set_ylabel("X")
+    ax3.axis('equal')
+    ax3.invert_yaxis()
+
+    ax4 = fig.add_subplot(2, 2, 4)
+    ax4.bar(classified_end_y, classified_n)
+    ax4.set_xlabel("End Y")
+    ax4.set_ylabel("N")
+
+    plt.show()
