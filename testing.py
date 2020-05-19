@@ -84,18 +84,17 @@ class TrackMap:
     Although this may be possible, it is neither tested, nor intended or recommended.
     """
 
-    def __init__(self, points, visualization_frequency=0):
+    def __init__(self, pos_frame):
         """Create a new track map object.
 
         The unit (if any) of F1's coordinate system is unknown to me. Approx.: value / 3,61 = value in meters
         There seems to be one data point per meter of track length.
 
-        :param points: Pandas DataFrame with columns 'X' and 'Y' for point coordinates
-        :type points: pandas.DataFrame
-        :param visualization_frequency: (optional) specify  after how many calculated points the plot should be updated.
-            Set to zero for never (default: never)
-        :type visualization_frequency: int
+        :param pos_frame: Pandas DataFrame with position data for all cars (as returned by fastf1.api.position)
+        :type pos_frame: pandas.DataFrame
         """
+
+        self._raw_pos_data = pos_frame
 
         self.unsorted_points = list()
         self.sorted_points = list()
@@ -108,7 +107,7 @@ class TrackMap:
 
         self._next_point = None
 
-        self._vis_freq = visualization_frequency
+        self._vis_freq = 0
         self._vis_counter = 0
         self._fig = None
 
