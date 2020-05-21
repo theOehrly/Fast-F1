@@ -26,6 +26,19 @@ EVENT = 'R'
 
 csv_name = '2019-10-5_track_map.csv'
 
+"""
+Distinction between "Time" and "Date":
+
+Time:   A time stamp counting up from the start of the session.
+        Might sometimes be called session time for sake of clarity.
+        Format: HH:MM:SS.000
+        
+Date:   The actual date and time at which something happened.
+        Timezone is UTC I think.
+        Format: YYYY-MM-DD HH:MM:SS.000
+        
+The terms time and date will be used consistently with this meaning.
+"""
 
 class TrackPoint:
     """Simple point class
