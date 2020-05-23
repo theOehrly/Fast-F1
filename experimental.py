@@ -6,16 +6,12 @@ from matplotlib import pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import pandas as pd
 import numpy as np
-import datetime
 from math import sqrt
 import pickle
 import IPython
-import multiprocessing as mp
-from itertools import product
+from multiprocessing import Process, Manager
 import sys
 import time
-import statistics
-from scipy import stats
 
 # core.utils.CACHE_PATH = 'D:\\Dateien\\FF1Data'  # set the correct cache path
 
@@ -463,23 +459,34 @@ class AdvancedSyncSolver:
               - standard deviation of x and y
               --> plot metrics
         """
-    def __init__(self, track, telemetry_data, position_data, laps_data):
+    def __init__(self, track, telemetry_data, position_data, laps_data, processes=2):
         self.track = track
-        self.d_tel = telemetry_data
-        self.d_pos = position_data
-        self.d_laps = laps_data
+        self.tel = telemetry_data
+        self.pos = position_data
+        self.laps = laps_data
+
+        self.results = dict()
+
+        self.conditions = list()
+
+        self.manager = None
+        self.tasks = None
+        self.idling = None
+        self.resume = None
+        self.number_of_processes = processes
+        self.subprocesses = list()
 
         self.drivers = None
         self.session_start_date = None
         self.x_range = [0, 0]
         self.y_range = [0, 0]
 
-    def self_setup(self):
-        self.drivers = list(self.d_tel.keys())
+    def setup(self):
+        self.drivers = list(self.tel.keys())
 
         # calculate the start date of the session
         some_driver = self.drivers[0]  # TODO to be sure this should be done with multiple drivers
-        self.session_start_date = self.d_pos[some_driver].head(1).Date.squeeze().round('min')
+        self.session_start_date = self.pos[some_driver].head(1).Date.squeeze().round('min')
 
         # get all current start/finish line positions
         x_coords, y_coords = self._get_start_line_range()
@@ -488,7 +495,7 @@ class AdvancedSyncSolver:
         self.x_range[0] = min(x_coords)
         self.x_range[1] = max(x_coords)
         i_start, = np.where(x_coords == self.x_range[0])
-        i_end, = np.where(x_coords == self.x_range[0])
+        i_end, = np.where(x_coords == self.x_range[1])
         self.y_range[0] = y_coords[i_start]
         self.y_range[1] = y_coords[i_end]
 
@@ -496,18 +503,112 @@ class AdvancedSyncSolver:
         print("Number of Drivers: {}".format(len(self.drivers)))
         print("Start/Finish Line in Range x={},{} | y={},{}".format(*self.x_range, *self.y_range))
 
+    def wait_for_idle(self):
+        idle_count = 0
+        results = dict()
+
+        while idle_count != self.number_of_processes:
+            res = self.idling.get()
+            for key in list(res.keys()):
+                if key in results:
+                    for i in range(len(results[key])):
+                        results[key][i].extend(res[key][i])
+                else:
+                    results[key] = res[key]
+
+            idle_count += 1
+
+        return results
+
+    def queue_idle_command(self):
+        for _ in range(self.number_of_processes):
+            self.tasks.put('idle')
+
+    def exit_all(self):
+        for _ in range(self.number_of_processes):
+            self.resume.put('exit')
+
+    def resume_all(self):
+        for _ in range(self.number_of_processes):
+            self.resume.put('resume')
+
+    def join_all(self):
+        for process in self.subprocesses:
+            process.join()
+
     def solve(self):
+        shared_data = {'track': self.track,
+                       'laps': self.laps,
+                       'pos': self.pos,
+                       'session_start_date': self.session_start_date}
+
+        for cond in self.conditions:
+            cond.set_data(shared_data)
+
+        # each condition needs to be calculated for each driver
+        # create a queue and populate it with (condition, driver) pairs
+        self.manager = Manager()
+        self.tasks = self.manager.Queue()
+        self.idling = self.manager.Queue()
+        self.resume = self.manager.Queue()
+        self.subprocesses = list()
+
+        print("Starting processes...")
+        # start the processes
+        for _ in range(self.number_of_processes):
+            sp = SolverSubprocess(self.tasks, self.idling, self.resume, self.conditions)
+            sp.start()
+            self.subprocesses.append(sp)
+
+        self.results = {'mean_x': list(), 'mean_y': list(), 'mad_x': list(), 'mad_y': list(), 'tx': list(), 'ty': list()}
+
+        print("Starting calculations...")
+        start_time = time.time()
+
+        cnt = 0
         for test_x in range(int(self.x_range[0]), int(self.x_range[1]), 15):
+            cnt += 1
+            print(cnt)
             # interpolate y
             test_y = self.y_range[0] + (self.y_range[1] - self.y_range[0]) * (test_x - self.x_range[0]) / (self.x_range[1] - self.x_range[0])
             test_point = TrackPoint(test_x, test_y)
 
-            for drv in self.drivers:
-                # delegate work to subprocesses
-                pass
+            for condition in self.conditions:
+                for driver in self.drivers:
+                    c_index = self.conditions.index(condition)
+                    self.tasks.put((c_index, driver, test_point))
+                    # each process can now fetch an item from the queue and calculate the condition for the specified driver
 
-    def add_condition(self):
-        pass
+            self.queue_idle_command()  # add idle commands to task queue so that all processes will go into idle state when all tasks are processed
+            res = self.wait_for_idle()  # wait until all processes have finished processing the tasks
+
+            # print(res)
+            # print(len(res[0][0]), len(res[0][1]))
+
+            # process results
+            x_series = pd.Series(res[0][0])
+            y_series = pd.Series(res[0][1])
+            print(x_series.mad())
+            self.results['mean_x'].append(x_series.mean())
+            self.results['mean_y'].append(y_series.mean())
+            self.results['mad_x'].append(x_series.mad())
+            self.results['mad_y'].append(y_series.mad())
+            self.results['tx'].append(test_x)
+            self.results['ty'].append(test_y)
+
+            self.resume_all()
+
+        print('Finished')
+        print('Took:', time.time() - start_time)
+
+        self.queue_idle_command()
+        self.exit_all()  # send exit command to all processes
+        self.join_all()  # wait for all processes to actually exit
+
+    def add_condition(self, condition, *args, **kwargs):
+        idx = len(self.conditions)  # index if this condition in self.conditions; later used for assigning data from the subprocesses
+        cond_inst = condition(idx, *args, **kwargs)  # create an instance of the condition and add it to the list of solver conditions
+        self.conditions.append(cond_inst)
 
     def _get_start_line_range(self):
         # find the highest and lowest x/y coordinates for the current start/finish line positions
@@ -517,10 +618,10 @@ class AdvancedSyncSolver:
         usable_laps = 0  # for logging purpose
 
         for drv in self.drivers:
-            is_drv = (self.d_laps.Driver == drv)  # create a list of booleans for filtering laps_data by current driver
-            drv_total_laps = self.d_laps[is_drv].NumberOfLaps.max()  # get the current drivers total number of laps in this session
+            is_drv = (self.laps.Driver == drv)  # create a list of booleans for filtering laps_data by current driver
+            drv_total_laps = self.laps[is_drv].NumberOfLaps.max()  # get the current drivers total number of laps in this session
 
-            for _, lap in self.d_laps[is_drv].iterrows():
+            for _, lap in self.laps[is_drv].iterrows():
                 # first lap, last lap, in-lap, out-lap and laps with no lap number are skipped
                 # data of these might be unreliable or imprecise
                 if (pd.isnull(lap.NumberOfLaps) or
@@ -556,39 +657,91 @@ class AdvancedSyncSolver:
         return x_coords, y_coords
 
 
+class SolverSubprocess:
+    def __init__(self, task_queue, idle_queue, resume_queue, conditions):
+        # use a dictionary to hold all results from processed conditions
+        # multiple processes can process the same condition for different drivers simultaneously
+        # therefore it is not safe to immediately save the results in the condition class
+        # instead, the subprocess collects all results from the calculations from one run (one iteration)
+        # they are stored in the dictionary and teh condition's index is used as a key
+        # when all subprocesses are finished, the results are collected and the conditions are updated
+        self.task_queue = task_queue
+        self.idle_queue = idle_queue
+        self.resume_queue = resume_queue
+        self.conditions = conditions
+        self.results = dict()
+
+        self.process = Process(target=self.run)
+
+    def start(self):
+        self.process.start()
+
+    def join(self):
+        self.process.join()
+
+    def add_result(self, index, data):
+        if index not in self.results.keys():
+            self.results[index] = data
+        else:
+            for i in range(len(data)):
+                self.results[index][i].extend(data[i])
+
+    def run(self):
+        while True:
+            task = self.task_queue.get()
+
+            if task == 'idle':
+                # print('Going into idle', self)
+                # notify the main process that we are now idling by putting a value into the idle queue
+                self.idle_queue.put(self.results)
+                self.results = dict()
+                # now wait for the main process to send a notification through the resume queue
+                cmd = self.resume_queue.get()
+                if cmd == 'exit':
+                    print("Exiting", self)
+                    return
+
+                elif cmd == 'resume':
+                    # print("Resuming", self)
+                    continue
+
+            if task == 'exit':
+                return
+
+            # print('New task', self)
+
+            # process the received task
+            c_index, drv, point = task
+            condition = self.conditions[c_index]
+            res = condition.for_driver(drv, point)
+            self.add_result(c_index, res)
+
+
 class BaseCondition:
-    def __init__(self, solver):
-        self.solver = solver
+    def __init__(self, idx):
+        self.index = idx
 
-        self.result_mean = list()
-        self.result_mad = list()
-        self.errors = 0
+        self.data = None
 
-    def get_mean(self):
-        return self.result_mean
+    def set_data(self, data):
+        self.data = data
 
-    def get_mad(self):
-        return self.result_mad
-
-    def get_errors(self):
-        return self.errors
+    def for_driver(self, drv, test_point):
+        pass
 
 
 class StartFinishCondition(BaseCondition):
-    def __init__(self, *args):
-        super().__init__(*args)
-
-        self.result_mean = [list(), list()]
-        self.result_mad = [list(), list()]
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def for_driver(self, drv, test_point):
-        is_drv = (self.solver.d_laps.Driver == drv)
-        drv_last_lap = self.solver.d_laps[is_drv].NumberOfLaps.max()  # get the last lap of this driver
+        is_drv = (self.data['laps'].Driver == drv)
+        drv_last_lap = self.data['laps'][is_drv].NumberOfLaps.max()  # get the last lap of this driver
 
         res_x = list()
         res_y = list()
 
-        for _, lap in self.solver.d_laps[is_drv].iterrows():
+        for _, lap in self.data['laps'][is_drv].iterrows():
             # first lap, last lap, in-lap, out-lap and laps with no lap number are skipped
             if (pd.isnull(lap.NumberOfLaps) or
                     lap.NumberOfLaps in (1, drv_last_lap) or
@@ -598,13 +751,13 @@ class StartFinishCondition(BaseCondition):
                 continue
 
             else:
-                approx_time = self.solver.session_start_date + lap.Time
+                approx_time = self.data['session_start_date'] + lap.Time
                 # now we have an approximate time for the end of the lap and we have test_x/test_y which is not unique track point
                 # to get an exact time at which the car was at test_point, define a window of +-delta_t around approx_time
                 delta_t = pd.to_timedelta(10, "s")
                 t_start = approx_time - delta_t
                 t_end = approx_time + delta_t
-                pos_range = self.solver.d_pos[drv].query("@t_start < Date < @t_end")
+                pos_range = self.data['pos'][drv].query("@t_start < Date < @t_end")
                 # search the two points in this range which are closest to test_point
                 pos_distances = list()
                 neg_distances = list()
@@ -622,7 +775,6 @@ class StartFinishCondition(BaseCondition):
 
                 # make sure that there are points before and after this one
                 if (not neg_distances) or (not pos_distances):
-                    self.errors += 1
                     continue
 
                 # distances, points = zip(*sorted(zip(distances, points)))  # sort distances and sort point_range exactly the same way
@@ -633,18 +785,12 @@ class StartFinishCondition(BaseCondition):
                 test_date = p_a.date + (p_b.date - p_a.date) * (test_point.x - p_a.x) / (p_b.x - p_a.x)
                 # calculate start date for last lap and get position for that date
                 last_lap_start = test_date - lap.LastLapTime
-                lap_start_point = self.solver.track.interpolate_pos_from_time()
+                lap_start_point = self.data['track'].interpolate_pos_from_time(drv, last_lap_start)
                 # add point coordinates to list of results for this pass
                 res_x.append(lap_start_point.x)
                 res_y.append(lap_start_point.y)
 
-        x_series = pd.Series(res_x)
-        y_series = pd.Series(res_y)
-
-        self.result_mad[0].append(x_series.mad())
-        self.result_mad[1].append(y_series.mad())
-        self.result_mean[0].append(x_series.mean())
-        self.result_mean[1].append(y_series.mean())
+        return [res_x, res_y]
 
 
 if __name__ == '__main__':
@@ -655,13 +801,26 @@ if __name__ == '__main__':
     # pickle.dump(track_map, open("var_dumps/track_map", "wb"))
     # sys.exit()
     #
+    # pickle.dump(track, open("var_dumps/track_map", "wb"))
     # track_map = pickle.load(open("var_dumps/track_map", "rb"))
     # plt.clf()  # in case track map was generated with visualization on ... yeah
     #
-    # session = pickle.load(open("var_dumps/session", "rb"))
-    # pos = pickle.load(open("var_dumps/pos", "rb"))
-    # tel = pickle.load(open("var_dumps/tel", "rb"))
-    # laps_data = pickle.load(open("var_dumps/laps_data", "rb"))
+    session = pickle.load(open("var_dumps/session", "rb"))
+    pos = pickle.load(open("var_dumps/pos", "rb"))
+    tel = pickle.load(open("var_dumps/tel", "rb"))
+    laps_data = pickle.load(open("var_dumps/laps_data", "rb"))
+    track = pickle.load(open("var_dumps/track_map", "rb"))
+
+    solver = AdvancedSyncSolver(track, tel, pos, laps_data, processes=6)
+    solver.setup()
+    solver.log_setup_stats()
+    solver.add_condition(StartFinishCondition)
+    solver.solve()
+
+    IPython.embed()
+
+    sys.exit()
+
     # stream_data = pickle.load(open("var_dumps/stream_data", "rb"))
     # mad_x_stats = pickle.load(open("var_dumps/mad_x_stats", "rb"))
     # mad_y_stats = pickle.load(open("var_dumps/mad_y_stats", "rb"))
