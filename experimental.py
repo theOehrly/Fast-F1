@@ -498,7 +498,7 @@ class AdvancedSyncSolver:
         self.y_range = [0, 0]
 
     def setup(self):
-        """Do some one-off calculations. This needs to be called before solve() can be run."""
+        """Do some one-off calculations. This needs to be called before solve() can be _run."""
         self.drivers = list(self.tel.keys())
 
         # calculate the start date of the session
@@ -550,7 +550,7 @@ class AdvancedSyncSolver:
 
     def _queue_return_command(self):
         """Queue as many 'return' commands as there are processes. When a process receives this commands, it will return its calculation
-        results and go into an idle state. During idle it will wait for further commands passed through the command_queue."""
+        results and go into an idle state. During idle it will wait for further commands passed through the result_queue."""
         for _ in range(self.number_of_processes):
             self.task_queue.put('return')
 
@@ -600,7 +600,7 @@ class AdvancedSyncSolver:
         self.results = {'mean_x': list(), 'mean_y': list(), 'mad_x': list(), 'mad_y': list(), 'tx': list(), 'ty': list()}
 
         print("Starting calculations...")
-        start_time = time.time()  # start time for measuring run time
+        start_time = time.time()  # start time for measuring _run time
 
         cnt = 0
         for test_x in range(int(self.x_range[0]), int(self.x_range[1]), 15):
@@ -612,8 +612,8 @@ class AdvancedSyncSolver:
             test_point = TrackPoint(test_x, test_y)
 
             # Create tasks: one task consists of a condition, driver and test point
-            # Do one calculation run per test point. The results for this point are then collected and the next run for teh next point is done.
-            # Per calculation run 'number of conditions' * 'number of drivers' = 'number of tasks'
+            # Do one calculation _run per test point. The results for this point are then collected and the next _run for teh next point is done.
+            # Per calculation _run 'number of conditions' * 'number of drivers' = 'number of tasks'
 
             for condition in self.conditions:
                 for driver in self.drivers:
@@ -710,45 +710,65 @@ class AdvancedSyncSolver:
 
 
 class SolverSubprocess:
-    def __init__(self, task_queue, idle_queue, resume_queue, conditions):
+    """This class represents a single subprocess/worker.
+    It will store all calculation results until the main process request them. The results will then be send
+    trough a queue to the main process. The main process will join all results from all subprocesses."""
+    def __init__(self, task_queue, result_queue, command_queue, conditions):
+        """Initiate the subprocess.
+
+        :param task_queue: main -> subprocess: tasks and command for returning data
+        :type task_queue: multiprocessing.Queue
+        :param result_queue: subprocess -> main: return calculation results
+        :type result_queue: multiprocessing.Queue
+        :param command_queue: main -> subprocess: commands for resume or exit; process will block on this queue while idling
+        :type command_queue: multiprocessing.Queue
+        :param conditions: List of all conditions added to the solver. Each task will contain an index which references a condition from this list.
+        :type conditions: list
+        """
         # use a dictionary to hold all results from processed conditions
         # multiple processes can process the same condition for different drivers simultaneously
         # therefore it is not safe to immediately save the results in the condition class
-        # instead, the subprocess collects all results from the calculations from one run (one iteration)
+        # instead, the subprocess collects all results from the calculations from one _run (one iteration)
         # they are stored in the dictionary and teh condition's index is used as a key
         # when all subprocesses are finished, the results are collected and the conditions are updated
-        self.task_queue = task_queue
-        self.idle_queue = idle_queue
-        self.resume_queue = resume_queue
-        self.conditions = conditions
-        self.results = dict()
+        self._task_queue = task_queue
+        self._result_queue = result_queue
+        self._command_queue = command_queue
+        self._conditions = conditions
+        self._results = dict()
 
-        self.process = Process(target=self.run)
+        self._process = Process(target=self._run)
 
     def start(self):
-        self.process.start()
+        """Start the process. Wraps multiprocessing.Process.start"""
+        self._process.start()
 
     def join(self):
-        self.process.join()
+        """Wait for this process to join. Wraps multiprocessing.Process.join"""
+        self._process.join()
 
-    def add_result(self, index, data):
-        if index not in self.results.keys():
-            self.results[index] = data
+    def _add_result(self, index, data):
+        """Add a single calculation result."""
+        if index not in self._results.keys():
+            self._results[index] = data
         else:
             for i in range(len(data)):
-                self.results[index][i].extend(data[i])
+                self._results[index][i].extend(data[i])
 
-    def run(self):
+    def _run(self):
+        """This is the main function which will loop for the lifetime of the process.
+        It receives tasks and commands from the main process and calculates the results."""
+
         while True:
-            task = self.task_queue.get()
+            task = self._task_queue.get()
 
             if task == 'return':
                 # print('Going into idle', self)
-                # notify the main process that we are now idling by putting a value into the idle queue
-                self.idle_queue.put(self.results)
-                self.results = dict()
-                # now wait for the main process to send a notification through the resume queue
-                cmd = self.resume_queue.get()
+                # return the calculation results and wait for commands ("idle")
+                self._result_queue.put(self._results)
+                self._results = dict()  # delete all results after they have been returned
+
+                cmd = self._command_queue.get()
                 if cmd == 'exit':
                     print("Exiting", self)
                     return
@@ -757,16 +777,15 @@ class SolverSubprocess:
                     # print("Resuming", self)
                     continue
 
-            if task == 'exit':
-                return
-
             # print('New task', self)
 
             # process the received task
+            # a task consists of a condition which is to be calculated, a driver to calculate if for and a test point for
+            # a probable start/finish line position
             c_index, drv, point = task
-            condition = self.conditions[c_index]
-            res = condition.for_driver(drv, point)
-            self.add_result(c_index, res)
+            condition = self._conditions[c_index]  # get the condition from its index
+            res = condition.for_driver(drv, point)  # calculate the condition and store the results
+            self._add_result(c_index, res)
 
 
 class BaseCondition:
