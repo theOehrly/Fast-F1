@@ -793,17 +793,6 @@ class StartFinishCondition(BaseCondition):
 
 
 if __name__ == '__main__':
-    # dump_track_points_to_csv(csv_name)
-    # track_points = track_points_from_csv(csv_name)
-    # track_map = TrackMap(points=track_points, visualization_frequency=250)
-    # track_map.generate_track()
-    # pickle.dump(track_map, open("var_dumps/track_map", "wb"))
-    # sys.exit()
-    #
-    # pickle.dump(track, open("var_dumps/track_map", "wb"))
-    # track_map = pickle.load(open("var_dumps/track_map", "rb"))
-    # plt.clf()  # in case track map was generated with visualization on ... yeah
-    #
     session = pickle.load(open("var_dumps/session", "rb"))
     pos = pickle.load(open("var_dumps/pos", "rb"))
     tel = pickle.load(open("var_dumps/tel", "rb"))
