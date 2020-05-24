@@ -813,10 +813,28 @@ class BaseCondition:
 
 
 class StartFinishCondition(BaseCondition):
+    """Solver condition for constant start/finish line position.
+
+    How this condition works:
+    Subtract the last lap time from the test point. (Yes subtract time from position... fancy shit going on here)
+    If the test point is the actual start finish line position, this should result in the same point again. And this should
+    be the case for each lap and driver.
+    If the test point is not the actual start/finish line position the variation in driving between laps should cause
+    a variation of the result.
+    The test point at which there is the least variance in the result is deemed the correct position (simplified).
+    """
     def __init__(self, *args, **kwargs):
         super().__init__()
 
     def for_driver(self, drv, test_point):
+        """ Calculate the condition for a driver and test point.
+
+        :param drv: The driver for which to calculate the condition (driver number as a string)
+        :type drv: string
+        :param test_point: Start/finsih line position (test) for which to calculate the condition
+        :type test_point: TrackPoint
+        :return: [results x, results y] where results_* is a list of values containing the results for each lap
+        """
         is_drv = (self.data['laps'].Driver == drv)
         drv_last_lap = self.data['laps'][is_drv].NumberOfLaps.max()  # get the last lap of this driver
 
