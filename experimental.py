@@ -1,6 +1,3 @@
-# import os
-# os.environ['HOME'] = ''  # create HOME so we don't crash on import
-
 from fastf1 import core, api
 from matplotlib import pyplot as plt
 import pandas as pd
@@ -9,10 +6,8 @@ from math import sqrt
 import pickle
 import IPython
 from multiprocessing import Process, Manager
-import sys
 import time
 
-# core.utils.CACHE_PATH = 'D:\\Dateien\\FF1Data'  # set the correct cache path
 
 # Event selection
 YEAR = 2019
@@ -34,6 +29,7 @@ Date:   The actual date and time at which something happened.
         
 The terms time and date will be used consistently with this meaning.
 """
+
 
 class TrackPoint:
     """Simple point class
@@ -373,36 +369,17 @@ class TrackMap:
 
 
 def min_index(_iterable):
-    """Return the index of the minimum value"""
+    """Return the index of the minimum value in an iterable"""
     return _iterable.index(min(_iterable))
 
 
-def round_date(ser, freq):
-    ser['Date'] = ser['Date'].round(freq)
-    return ser
-
-
-def round_coordinates(ser):
-    ser['X'] = round(ser['X'], 3)
-    ser['Y'] = round(ser['Y'], 3)
-    ser['Z'] = round(ser['Z'], 3)
-    return ser
-
-
-def remove_duplicates(l_ref, l2):
-    l_ref_out = list()
-    l2_out = list()
-    while l_ref:
-        itm_ref = l_ref.pop(0)
-        itm_2 = l2.pop(0)
-        if not itm_ref in l_ref_out:
-            l_ref_out.append(itm_ref)
-            l2_out.append(itm_2)
-
-    return l_ref_out, l2_out
-
-
 def reject_outliers(data, *secondary, m=2.):
+    """Reject outliers from a numpy array.
+
+    Calculates the deviation of each value from the median of the arrays values. Then calculates the median of
+    all deviations. If a values deviation is greater than m times the median deviation, it is removed.
+    An arbitrary number of additional arrays can be passed to this function. For each value that is removed
+    from the reference array, the value at the corresponding index is removed from the other arryays."""
     d = np.abs(data - np.median(data))
     mdev = np.median(d)
     s = d/mdev if mdev else 0.
