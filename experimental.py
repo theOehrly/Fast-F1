@@ -32,9 +32,23 @@ The terms time and date will be used consistently with this meaning.
 
 
 class TrackPoint:
-    """Simple point class
-    offers x and y paramters as a function for calculating distance to other points (the square of the distance is returned) """
+    """Simple point class.
+
+    A point has an x and y coordinate and an optional date.
+    A function for calculating the square of the distance to another point is also provided.
+
+    For convenience reasons point.x and point.y can also be accessed as point['x'] and point['y'] (get only).
+    Only use this implementation when necessary because it lacks clarity. It's not quite obvious then that poitn is a
+    separate class (could be a dictionary for example)
+    """
     def __init__(self, x, y, date=None):
+        """
+        :param x: x coordinate
+        :type x: int or float
+        :param y: y coordinate
+        :type y: int or float
+        :param date: optional: A pandas datetime (compatible) object
+        """
         self.x = x
         self.y = y
         self.date = date
@@ -48,6 +62,12 @@ class TrackPoint:
             raise KeyError
 
     def get_sqr_dist(self, other):
+        """Calculate the square of the distance to another point.
+
+        :param other: Another point
+        :type other: TrackPoint
+        :return: distance^2
+        """
         dist = abs(other.x - self.x) + abs(other.y - self.y)
         return dist
 
