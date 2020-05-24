@@ -458,7 +458,24 @@ class AdvancedSyncSolver:
               - standard deviation of x and y
               --> plot metrics
         """
-    def __init__(self, track, telemetry_data, position_data, laps_data, processes=2):
+    def __init__(self, track, telemetry_data, position_data, laps_data, processes=1):
+        """Initiate the solver.
+
+        :param track: Track class for this session. The track map needs to be generated beforehand!
+        :type track: TrackMap
+        :param telemetry_data: Car telemetry data from the fastf1 api as returned by api.car_data
+        :type telemetry_data: dict
+        :param position_data: Car position data from the fastf1 api as returned by api.position
+        :type position_data: dict
+        :param laps_data: Lap data from the fastf1 api as returned by api.timing_data
+        :type laps_data: pandas.DataFrame
+        :param processes: Specifies the number of worker subprocesses where the actual data processing takes place.
+            The total number of python processes will be higher but the worker processes will be the only ones which
+            create significant cpu usage. One worker will approximately utilize one cpu core to 100%. Never specify
+            the use of more processes than you have (virtual) cores in your system. Recommended is one or two processes
+            less than the number of cores.
+        :type processes: int
+        """
         self.track = track
         self.tel = telemetry_data
         self.pos = position_data
@@ -469,9 +486,9 @@ class AdvancedSyncSolver:
         self.conditions = list()
 
         self.manager = None
-        self.tasks = None
-        self.idling = None
-        self.resume = None
+        self.task_queue = None
+        self.result_queue = None
+        self.command_queue = None
         self.number_of_processes = processes
         self.subprocesses = list()
 
@@ -481,6 +498,7 @@ class AdvancedSyncSolver:
         self.y_range = [0, 0]
 
     def setup(self):
+        """Do some one-off calculations. This needs to be called before solve() can be run."""
         self.drivers = list(self.tel.keys())
 
         # calculate the start date of the session
@@ -499,19 +517,30 @@ class AdvancedSyncSolver:
         self.y_range[1] = y_coords[i_end]
 
     def log_setup_stats(self):
+        """Print some very broad statistics from the setup"""
         print("Number of Drivers: {}".format(len(self.drivers)))
         print("Start/Finish Line in Range x={},{} | y={},{}".format(*self.x_range, *self.y_range))
 
-    def wait_for_idle(self):
+    def _wait_for_results(self):
+        """Wait for all processes to send their results through the result queue.
+        Then results are then joined together and returned. This function blocks until all results have been received.
+        This also means that all processes are guaranteed to be in an idle state when it returns."""
+
         idle_count = 0
         results = dict()
 
         while idle_count != self.number_of_processes:
-            res = self.idling.get()
+            res = self.result_queue.get()
+
+            # res is a dictionary containing multiple {key: [list(), list(), ...]} pairs
+            # join all lists together per key
             for key in list(res.keys()):
+                # this key exists in the joined results; extend all the existing lists with the new values
                 if key in results:
                     for i in range(len(results[key])):
                         results[key][i].extend(res[key][i])
+
+                # this key does not yet exist; create it
                 else:
                     results[key] = res[key]
 
@@ -519,23 +548,31 @@ class AdvancedSyncSolver:
 
         return results
 
-    def queue_idle_command(self):
+    def _queue_return_command(self):
+        """Queue as many 'return' commands as there are processes. When a process receives this commands, it will return its calculation
+        results and go into an idle state. During idle it will wait for further commands passed through the command_queue."""
         for _ in range(self.number_of_processes):
-            self.tasks.put('idle')
+            self.task_queue.put('return')
 
-    def exit_all(self):
+    def _exit_all(self):
+        """Queue as many exit commands on the command queue as there are processes."""
         for _ in range(self.number_of_processes):
-            self.resume.put('exit')
+            self.command_queue.put('exit')
 
-    def resume_all(self):
+    def _resume_all(self):
+        """Queue as many resume commands on the command queue as there are processes."""
         for _ in range(self.number_of_processes):
-            self.resume.put('resume')
+            self.command_queue.put('resume')
 
-    def join_all(self):
+    def _join_all(self):
+        """Join all processes."""
         for process in self.subprocesses:
             process.join()
 
     def solve(self):
+        """Main solver function which starts all the processing."""
+
+        # data which the processes need
         shared_data = {'track': self.track,
                        'laps': self.laps,
                        'pos': self.pos,
@@ -547,42 +584,49 @@ class AdvancedSyncSolver:
         # each condition needs to be calculated for each driver
         # create a queue and populate it with (condition, driver) pairs
         self.manager = Manager()
-        self.tasks = self.manager.Queue()
-        self.idling = self.manager.Queue()
-        self.resume = self.manager.Queue()
+        self.task_queue = self.manager.Queue()  # main -> subprocess: holds all tasks and the commands for returning the results
+        self.result_queue = self.manager.Queue()  # subprocess -> main: return results
+        self.command_queue = self.manager.Queue()  # main -> subprocess: processes block on this queue while idle waiting for a command
+
         self.subprocesses = list()
 
         print("Starting processes...")
-        # start the processes
+        # create and start the processes
         for _ in range(self.number_of_processes):
-            sp = SolverSubprocess(self.tasks, self.idling, self.resume, self.conditions)
-            sp.start()
-            self.subprocesses.append(sp)
+            p = SolverSubprocess(self.task_queue, self.result_queue, self.command_queue, self.conditions)
+            p.start()
+            self.subprocesses.append(p)
 
         self.results = {'mean_x': list(), 'mean_y': list(), 'mad_x': list(), 'mad_y': list(), 'tx': list(), 'ty': list()}
 
         print("Starting calculations...")
-        start_time = time.time()
+        start_time = time.time()  # start time for measuring run time
 
         cnt = 0
         for test_x in range(int(self.x_range[0]), int(self.x_range[1]), 15):
             cnt += 1
-            print(cnt)
+            print(cnt)  # simplified progress report
+
             # interpolate y
             test_y = self.y_range[0] + (self.y_range[1] - self.y_range[0]) * (test_x - self.x_range[0]) / (self.x_range[1] - self.x_range[0])
             test_point = TrackPoint(test_x, test_y)
 
+            # Create tasks: one task consists of a condition, driver and test point
+            # Do one calculation run per test point. The results for this point are then collected and the next run for teh next point is done.
+            # Per calculation run 'number of conditions' * 'number of drivers' = 'number of tasks'
+
             for condition in self.conditions:
                 for driver in self.drivers:
+                    # the list of conditions is passed to the process when it is created; only pass the index for a condition because sending whole
+                    # classes through the queue is inefficient
                     c_index = self.conditions.index(condition)
-                    self.tasks.put((c_index, driver, test_point))
+                    self.task_queue.put((c_index, driver, test_point))
                     # each process can now fetch an item from the queue and calculate the condition for the specified driver
 
-            self.queue_idle_command()  # add idle commands to task queue so that all processes will go into idle state when all tasks are processed
-            res = self.wait_for_idle()  # wait until all processes have finished processing the tasks
-
-            # print(res)
-            # print(len(res[0][0]), len(res[0][1]))
+            # add return commands to task queue so that all processes will return their results and go to idle when the end of the queue is reached
+            self._queue_return_command()
+            # wait until all processes have finished processing the tasks and have returned their results
+            res = self._wait_for_results()
 
             # process results
             x_series = pd.Series(res[0][0])
@@ -595,21 +639,30 @@ class AdvancedSyncSolver:
             self.results['tx'].append(test_x)
             self.results['ty'].append(test_y)
 
-            self.resume_all()
+            self._resume_all()  # send a resume command to all processes; they will block on the empty task queue until task are added
 
+        # all tasks have been calculated
         print('Finished')
         print('Took:', time.time() - start_time)
 
-        self.queue_idle_command()
-        self.exit_all()  # send exit command to all processes
-        self.join_all()  # wait for all processes to actually exit
+        self._queue_return_command()  # queue a return command; processes currently only take exit commands while in idle state
+        self._wait_for_results()  # wait for the processes to go to idle state
+        self._exit_all()  # send exit command to all processes
+        self._join_all()  # wait for all processes to actually exit
 
     def add_condition(self, condition, *args, **kwargs):
+        """Add a condition class to the solver. Currently there is no check against adding duplicate conditions. Conditions can also not
+        be removed again."""
         idx = len(self.conditions)  # index if this condition in self.conditions; later used for assigning data from the subprocesses
         cond_inst = condition(idx, *args, **kwargs)  # create an instance of the condition and add it to the list of solver conditions
         self.conditions.append(cond_inst)
 
     def _get_start_line_range(self):
+        """Calculate a range of coordinates for a possible position of the start/finish line. This is done based
+        on the existing lap data from the api. Extreme outliers are removed from the range of coordinates.
+
+        :return: Two numpy arrays of x and y coordinates respectively
+        """
         # find the highest and lowest x/y coordinates for the current start/finish line positions
         # positions in plural; the preliminary synchronization is not perfect
         x_coords = list()
@@ -689,7 +742,7 @@ class SolverSubprocess:
         while True:
             task = self.task_queue.get()
 
-            if task == 'idle':
+            if task == 'return':
                 # print('Going into idle', self)
                 # notify the main process that we are now idling by putting a value into the idle queue
                 self.idle_queue.put(self.results)
