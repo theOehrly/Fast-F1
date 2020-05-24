@@ -9,13 +9,6 @@ from multiprocessing import Process, Manager
 import time
 
 
-# Event selection
-YEAR = 2019
-GP = 10
-EVENT = 'R'
-
-csv_name = '2019-10-5_track_map.csv'
-
 """
 Distinction between "Time" and "Date":
 
@@ -411,8 +404,8 @@ def reject_outliers(data, *secondary, m=2.):
     return data[s < m], *ret_secondary
 
 
-def dump_raw_data():
-    session = core.get_session(YEAR, GP, EVENT)
+def dump_raw_data(year, gp, event):
+    session = core.get_session(year, gp, event)
     pos = api.position(session.api_path)
     tel = api.car_data(session.api_path)
     laps_data, stream_data = api.timing_data(session.api_path)
