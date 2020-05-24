@@ -653,8 +653,7 @@ class AdvancedSyncSolver:
     def add_condition(self, condition, *args, **kwargs):
         """Add a condition class to the solver. Currently there is no check against adding duplicate conditions. Conditions can also not
         be removed again."""
-        idx = len(self.conditions)  # index if this condition in self.conditions; later used for assigning data from the subprocesses
-        cond_inst = condition(idx, *args, **kwargs)  # create an instance of the condition and add it to the list of solver conditions
+        cond_inst = condition(*args, **kwargs)  # create an instance of the condition and add it to the list of solver conditions
         self.conditions.append(cond_inst)
 
     def _get_start_line_range(self):
@@ -789,21 +788,33 @@ class SolverSubprocess:
 
 
 class BaseCondition:
-    def __init__(self, idx):
-        self.index = idx
+    """A base class for all solver conditions.
 
+    This class cannot be used directly but needs to be subclassed by and actual condition class."""
+    def __init__(self):
         self.data = None
 
     def set_data(self, data):
+        """
+        :param data: Dictionary containing data which needs to be accessible when a subprocess calculates the condition.
+        :type data: dict
+        """
         self.data = data
 
     def for_driver(self, drv, test_point):
+        """This function needs to be reimplemented by the subclass.
+
+        :param drv: The number of the driver (as a string) for which the condition is to be calculated.
+        :type drv: string
+        :param test_point: A point for a possible start/finish line position
+        :type test_point: TrackPoint
+        """
         pass
 
 
 class StartFinishCondition(BaseCondition):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__()
 
     def for_driver(self, drv, test_point):
         is_drv = (self.data['laps'].Driver == drv)
