@@ -3,7 +3,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 import pickle
 
-from experimental import TrackMap, TrackPoint  # necessary for pickle
+from experimental import Track, TrackPoint  # necessary for pickle
 
 
 def show_deviation_minima_on_track():
