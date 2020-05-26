@@ -65,42 +65,43 @@ class TrackPoint:
         return dist
 
 
-class TrackMap:
+class Track:
     # TODO check: can it somehow be that specifically the last poitn of the unsorted points is corrupted?!
     #  missing value specifically there in 2019-10-R
     # TODO determine track direction
     # TODO reorder points when start finish line position is known
-    """Track map class; does all track map related processing.
+    """Track position related data processing.
+
+    The unit (if any) of F1's coordinate system is unknown to me. Approx.: value / 3,61 = value in meters
 
     Although there are more than one hundred thousand points of position data per session, the number of
     unique points on track is limited. Typically there is about one unique point per meter of track length.
     This does not mean that the points have a fixed distance though. In slow corners they are closer together than
     on straights. A typical track has between 5000 and 7000 unique points.
-    When generating the track map, all duplicate points are removed from the points so that only unique points are left.
-    Then those points are sorted so they have the correct order.
+    When generating the track map, all duplicate points are removed from the raw data so that only unique points are left.
+    Then those points are sorted into the correct order.
     Not all unique points of a given track are necessarily present in each session. There is simply a chance that position
-    data from no car is ever sent from a point. In this case we can't know that this point exist. This is not a problem
-    though. But the following needs to be kept in mind:
+    data from no car is ever sent from a point. In this case we can't know that this point exist.
+    This is not a problem, but the following needs to be kept in mind:
 
-    A track map is only a valid representation for the data it was calculated from.
+    The track class and its track map are only a valid representation of the data they were calculated from.
     E.g. do not use a track map for race data when it was calculated from qualifying data.
 
     Sharing a track map between multiple sessions may be possible if the all points from all of these
     sessions where joined before and the track map was therefore calculated from both sessions at the same time.
-    Although this may be possible, it is neither tested, nor intended or recommended.
+    Although this may be possible, it is neither tested, nor intended, recommended or implemented (yet). If consistency
+    of position data between sessions can be validated, this might be a way of getting more data and thereby increased accuracy of
+    some statistically computed values.
     """
 
     def __init__(self, pos_frame):
         """Create a new track map object.
 
-        The unit (if any) of F1's coordinate system is unknown to me. Approx.: value / 3,61 = value in meters
-        There seems to be one data point per meter of track length.
-
-        :param pos_frame: Pandas DataFrame with position data for all cars (as returned by fastf1.api.position)
-        :type pos_frame: pandas.DataFrame
+        :param pos_frame: Dictionary containing a pandas.DataFrame with position data per car (as returned by fastf1.api.position)
+        :type pos_frame: dict
         """
 
-        self._raw_pos_data = pos_frame
+        self._pos_data = pos_frame
 
         self.unsorted_points = list()
         self.sorted_points = list()
@@ -121,25 +122,30 @@ class TrackMap:
         self._unsorted_points_from_pos_data()
 
     def _unsorted_points_from_pos_data(self):
-        numbers = list(self._raw_pos_data.keys())
-        # create combined data frame with all column names but without data
-        combined = pd.DataFrame(columns=['index', *self._raw_pos_data[numbers[0]].columns])
+        """Extract all unique track points from the position data."""
+        # get all driver numbers
+        drivers = list(self._pos_data.keys())
 
-        for n in numbers:
-            tmp = self._raw_pos_data[n].reset_index()
-            combined = combined.append(tmp)
+        # create a combined data frame with all column names but without data; use the data of the first driver to get the column names
+        combined = pd.DataFrame(columns=[*self._pos_data[drivers[0]].columns])
+
+        # add the data of all drivers
+        for n in drivers:
+            combined = combined.append(self._pos_data[n])
 
         # filter out data points where the car is not on track
         is_on_track = combined['Status'] == 'OnTrack'
         combined = combined[is_on_track]
 
-        no_dupl_combined = combined.reset_index().filter(items=('X', 'Y')).drop_duplicates()
+        # filter out anything but X and Y coordinates and drop duplicate values
+        no_dupl_combined = combined.filter(items=('X', 'Y')).drop_duplicates()
 
-        # create a points object for each point
+        # create a point object for each point
         for index, data in no_dupl_combined.iterrows():
             self.unsorted_points.append(TrackPoint(data['X'], data['Y']))
 
     def _init_viusualization(self):
+        """Initiate the plot for visualizing the progress of sorting the track points."""
         self._vis_counter = 0
         plt.ion()
         self._fig = plt.figure()
@@ -149,14 +155,18 @@ class TrackMap:
         self._line1, = self._ax.plot((), (), 'b-')
 
     def _cleanup_visualization(self):
+        """Clean up the sorting visualization plot and 'reset' matplotlib so following plots are not influenced."""
         if self._fig:
+            plt.close()
             plt.ioff()
             plt.clf()
             self._fig = None
 
     def _visualize_sorting_progress(self):
-        """Do a visualization of the current progress.
-        Updates the plot with the current data.
+        """Visualize the current progress of sorting of the track points.
+
+        Updates the plot with the current data. The plot is created first if this is
+        the first call to this function.
         """
         if not self._vis_freq:
             return  # don't do visualization if _vis_freq is zero
@@ -190,6 +200,7 @@ class TrackMap:
 
     def _integrate_distance(self):
         """Integrate distance over all points and save distance from start/finish line for each point."""
+        # TODO this is currently not implemented; need start/finish line position and direction. Maybe then save results per point in point object
         self.distances.append(0)  # distance is obviously zero at the starting point
 
         distance_covered = 0  # distance since first point
@@ -206,7 +217,6 @@ class TrackMap:
     def _sort_points(self):
         # TODO remove outliers before sorting!!!
         """Does the actual sorting of points."""
-        # sort points
         # Get the first point as a starting point. Any point could be used as starting point. Later the next closest point is used as next point.
         self._next_point = self.unsorted_points.pop(0)
 
@@ -243,8 +253,8 @@ class TrackMap:
     def generate_track(self, visualization_frequency=0):
         """Generate a track map from the raw points.
 
-        Sorts all points. Then determines the correct direction and starting point.
-        Finally the lap distance is calculated by integrating over all points.
+        Sorts all points. Then determines the correct direction and starting point (both not implemented yet).
+        Finally the lap distance is calculated by integrating over all points (implemented partially, not enabled, depending on previous).
         The distance since start is saved for each point. Additionally, the lap distance is saved normalized to a range of 0 to 1.
         :param visualization_frequency: (optional) specify  after how many calculated points the plot should be updated.
             Set to zero for never (default: never). Plotting is somewhat slow. A visualization frequency greater than 50 is recommended.
@@ -253,27 +263,33 @@ class TrackMap:
         self._vis_freq = visualization_frequency
 
         self._sort_points()
-        self._integrate_distance()  # TODO this should not be done before determining track direction and start/finish line position
+        # self._integrate_distance()  # TODO this should not be done before determining track direction and start/finish line position
 
-        xvals = list()
-        yvals = list()
-        for point in self.sorted_points:
-            xvals.append(point.x)
-            yvals.append(point.y)
-
-        self.track = pd.DataFrame({'X': xvals,
-                                   'Y': yvals,
-                                   'Distance': self.distances,
-                                   'Normalized': self.distances_normalized})
-
-    def print_stats(self):
-        print("Number of points: {}".format(len(self.sorted_points)))
-        print("Excluded points: {}".format(len(self.excluded_points)))
+        # xvals = list()  # TODO rethink this
+        # yvals = list()
+        # for point in self.sorted_points:
+        #     xvals.append(point.x)
+        #     yvals.append(point.y)
+        #
+        # self.track = pd.DataFrame({'X': xvals,
+        #                            'Y': yvals,
+        #                            'Distance': self.distances,
+        #                            'Normalized': self.distances_normalized})
 
     def get_closest_point(self, point):
-        # this assumes that the track is made up of all possible points
-        # this assumption is valid within the scope of the data from which the track was calculated.
-        # see disclaimer for track map class in general
+        """Find the closest unique track point to any given point.
+
+        'point' can be an arbitrary point anywhere. If 'point' is one of the unique track points
+        the same point will be returned as no point is closer to it than itself.
+
+        This function assumes that the track is made up of all possible points.
+        This assumption is valid within the scope of the data from which the track was calculated.
+        See disclaimer for track map class in general
+
+        :param point: A point with arbitrary coordinates
+        :type point: TrackPoint
+        :return: A single TrackPoint
+        """
 
         distances = list()
         for track_point in self.sorted_points:
@@ -282,12 +298,25 @@ class TrackMap:
         return self.sorted_points[distances.index(min(distances))]
 
     def get_points_between(self, point1, point2, short=True, include_ref=True):
+        """Returns all unique track points between two points.
+
+        'point1' and 'point2' must be unique track points. The cannot be points with random coordinates.
+        If you want to use any given point, call .get_closest_point() first to get the unique track point
+        which is closest to your point. You can then pass it as reference point to this function.
+
+        :param point1: First boundary point
+        :type point1: TrackPoint
+        :param point2: Second boundary point
+        :type point2: TrackPoint
+        :param short: Whether you want to have the result going the long or the short distance between the boundary points.
+        :param include_ref: Whether to include the given boundary points in the returned list of points
+        :return: List of TrackPoints
+        """
+
         i1 = self.sorted_points.index(point1)
         i2 = self.sorted_points.index(point2)
 
-        # n_in = i1 - i2  # number of points between 1 and 2 in list
-        # n_out = len(self.sorted_points) - n_in  # number of point around, i.e. beginning and end of list to 1 and 2
-
+        # TODO this doesn't work correctly! Short is not necessarily simply slicing between the two indices
         if short:
             # the easy way, simply slice between the two indices
             pnt_range = self.sorted_points[min(i1, i2)+1: max(i1, i2)]
@@ -313,6 +342,29 @@ class TrackMap:
         return pnt_range
 
     def get_second_coord(self, val, ref_point_1, ref_point_2, from_coord='x'):
+        """Calculate the second coordinate if either x or y are known.
+
+        The known coordinate does not need to be the coordinate of a unique track point. The result
+        will be interpolated.
+        This requires two reference points between which the point your interested in is located.
+        This is somewhat unstable. If the range between the two points is to long, there might be
+        multiple possible results for your value. In this case this function will fail silently!
+        One of the results will be returned.
+        The track between the two given points should be approximtely straight for this function to
+        work correctly. If the value you're interested in is in a corner, the corner segment between
+        ref_point_1 and ref_point_2 should be sufficiently short.
+        The reference points need to be unique track points.
+
+        :param val: known x or y coordinate
+        :type val: int or float
+        :param ref_point_1: First boundary point
+        :type ref_point_1: TrackPoint
+        :param ref_point_2: Second boundary point
+        :type ref_point_2: TrackPoint
+        :param from_coord: Specify whether the given value is the x or y coordinate; one of 'x', 'y'
+        :type from_coord: str
+        :return: TrackPoint
+        """
         p_range = self.get_points_between(ref_point_1, ref_point_2)
 
         # find the closest point in this range; only valid if the range is approximately straight
@@ -324,6 +376,8 @@ class TrackMap:
         min_i = min_index(distances)
         p_a = p_range[min_index(distances)]  # closest point
         # second closest point (with edge cases if closest point is first or last point in list)
+        # This works because the points returned by get_points_between() are sorted. The second
+        # closest point therefore needs to be the one before or after the closest point.
         if min_i == 0:
             p_b = p_range[1] if distances[1] < distances[-1] else p_range[-1]
         elif min_i == len(distances) - 1:
@@ -344,12 +398,26 @@ class TrackMap:
             interp_x = p_a.x + delta_x * interp_delta_y / delta_y
             return TrackPoint(interp_x, val)
 
-    def get_time_from_pos(self, drv, x, y, time_range_start, time_range_end):
-        drv_pos = self._raw_pos_data[drv]  # get DataFrame for driver
+    def get_time_from_pos(self, drv, point, time_range_start, time_range_end):
+        """Calculate the time at which a driver was at a specific coordinate.
+
+        The point can be any point. It does not need to be a unique track point.
+        A time range needs to be specified because of course a driver passes all parts of the track
+        once every lap (surprise there...). The specified time range should therefore be no longer
+        than one lap so that there are not multiple possible solutions.
+        But shorter is faster in terms of calculating the result. So keep it as short as possible.
+        :param drv: Number of the driver as a string
+        :type drv: str
+        :param point: The point you're interested in
+        :type point: TrackPoint
+        :param time_range_start: A pandas.Timestamp compatible date
+        :param time_range_end: A pandas.Timestamp compatible date
+        :return: pandas.Timestamp or None
+        """
+        drv_pos = self._pos_data[drv]  # get DataFrame for driver
 
         # calculate closest point in DataFrame (a track map contains all points from the DataFrame)
-        pnt = TrackPoint(x, y)
-        closest_track_pnt = self.get_closest_point(pnt)
+        closest_track_pnt = self.get_closest_point(point)
 
         # create an array of boolean values for filtering points which exactly match the given coordinates
         is_x = drv_pos.X = closest_track_pnt.X
@@ -362,12 +430,19 @@ class TrackMap:
         for p in res_pnts:
             if time_range_start <= p.Date <= time_range_end:
                 return p.Date
-        else:
-            return None
+
+        return None
 
     def interpolate_pos_from_time(self, drv, query_date):
+        """Calculate the position of a driver at any given date.
+
+        :param drv: The number of the driver as a string
+        :type drv: str
+        :param query_date: The date you're interested in (pandas.Timestamp compatible)
+        :return: TrackPoint
+        """
         # use linear interpolation to determine position at arbitrary time
-        drv_pos = self._raw_pos_data[drv]  # get DataFrame for driver
+        drv_pos = self._pos_data[drv]  # get DataFrame for driver
 
         closest = drv_pos.iloc[(drv_pos['Date'] - query_date).abs().argsort()[:2]]
         delta_t = closest.iloc[1]['Date'] - closest.iloc[0]['Date']
@@ -452,7 +527,7 @@ class AdvancedSyncSolver:
         """Initiate the solver.
 
         :param track: Track class for this session. The track map needs to be generated beforehand!
-        :type track: TrackMap
+        :type track: Track
         :param telemetry_data: Car telemetry data from the fastf1 api as returned by api.car_data
         :type telemetry_data: dict
         :param position_data: Car position data from the fastf1 api as returned by api.position
@@ -888,7 +963,10 @@ if __name__ == '__main__':
     pos = pickle.load(open("var_dumps/pos", "rb"))
     tel = pickle.load(open("var_dumps/tel", "rb"))
     laps_data = pickle.load(open("var_dumps/laps_data", "rb"))
-    track = pickle.load(open("var_dumps/track_map", "rb"))
+    # track = pickle.load(open("var_dumps/track_map", "rb"))
+
+    track = Track(pos)
+    track.generate_track(visualization_frequency=250)
 
     solver = AdvancedSyncSolver(track, tel, pos, laps_data, processes=6)
     solver.setup()
