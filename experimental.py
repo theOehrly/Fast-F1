@@ -246,6 +246,8 @@ class Track:
         # append the last point if it is not an outlier
         if self._next_point.get_sqr_dist(self.sorted_points[-1]) <= 200:
             self.sorted_points.append(self._next_point)
+        else:
+            self.excluded_points.append(self._next_point)
 
         self._cleanup_visualization()
 
