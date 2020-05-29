@@ -215,7 +215,6 @@ class Track:
             self.distances_normalized.append(dist / self.distances[-1])
 
     def _sort_points(self):
-        # TODO remove outliers before sorting!!!
         """Does the actual sorting of points."""
         # Get the first point as a starting point. Any point could be used as starting point. Later the next closest point is used as next point.
         self._next_point = self.unsorted_points.pop(0)
