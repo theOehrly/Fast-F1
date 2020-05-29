@@ -316,8 +316,12 @@ class Track:
         i1 = self.sorted_points.index(point1)
         i2 = self.sorted_points.index(point2)
 
-        # TODO this doesn't work correctly! Short is not necessarily simply slicing between the two indices
-        if short:
+        if abs(i1 - i2) < 0.5 * len(self.sorted_points):
+            short_is_inner = True
+        else:
+            short_is_inner = False
+
+        if (short and short_is_inner) or (not short and not short_is_inner):
             # the easy way, simply slice between the two indices
             pnt_range = self.sorted_points[min(i1, i2)+1: max(i1, i2)]
             if include_ref:
@@ -327,17 +331,25 @@ class Track:
                 else:
                     pnt_range.insert(0, point2)
                     pnt_range.append(point1)
+
         else:
+            # the harder way; we need the first and last part of the list but not the middle
             first = self.sorted_points[:min(i1, i2)]
             second = self.sorted_points[max(i1, i2)+1:]
-            pnt_range = second + first
-            if include_ref:
-                if i1 < i2:
-                    pnt_range.insert(0, point2)
-                    pnt_range.append(point1)
-                else:
-                    pnt_range.insert(0, point1)
-                    pnt_range.append(point2)
+
+            # add the reference points correctly
+            # also reverse if necessary to keep a consistent returned order. the first reference point should also be first in the result
+            if i1 > i2:
+                if include_ref:
+                    second.insert(0, point1)
+                    first.append(point2)
+                pnt_range = second + first
+            else:
+                if include_ref:
+                    second.insert(0, point2)
+                    first.append(point1)
+                pnt_range = second + first
+                pnt_range.reverse()
 
         return pnt_range
 
