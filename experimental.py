@@ -1018,9 +1018,6 @@ if __name__ == '__main__':
     track = Track(pos)
     track.generate_track(visualization_frequency=250)
 
-    import sys
-    sys.exit()
-
     solver = AdvancedSyncSolver(track, tel, pos, laps_data, processes=6)
     solver.setup()
     solver.log_setup_stats()
