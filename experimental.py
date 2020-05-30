@@ -66,8 +66,6 @@ class TrackPoint:
 
 
 class Track:
-    # TODO check: can it somehow be that specifically the last poitn of the unsorted points is corrupted?!
-    #  missing value specifically there in 2019-10-R
     # TODO reorder points when start finish line position is known
     """Track position related data processing.
 
