@@ -68,7 +68,6 @@ class TrackPoint:
 class Track:
     # TODO check: can it somehow be that specifically the last poitn of the unsorted points is corrupted?!
     #  missing value specifically there in 2019-10-R
-    # TODO determine track direction
     # TODO reorder points when start finish line position is known
     """Track position related data processing.
 
@@ -214,6 +213,45 @@ class Track:
         for dist in self.distances:
             self.distances_normalized.append(dist / self.distances[-1])
 
+    def _determine_track_direction(self):
+        """Check if the track direction is correct and if not reverse the list of sorted points to correct it.
+
+        This is done by getting two arbitrary points from the position (telemetry) data. Then it is checked that the first
+        of these two points is also first in the list of sorted points. If not, the list is reversed.
+        """
+        drivers = list(self._pos_data.keys())
+        n = 0
+        while True:
+            drv = drivers[n]  # select a driver
+            on_track = self._pos_data[drv][self._pos_data[drv].Status == "OnTrack"]  # use 2nd lap as a sample lap
+
+            if on_track.empty:
+                n += 1  # this driver was never on track; try the next driver
+                continue
+
+            try:
+                p1 = on_track.iloc[100]  # get two points; doesn't really matter which points are used
+                p2 = on_track.iloc[101]
+            except IndexError:
+                n += 1  # driver wasn't on track very long apparently; try the next driver
+                continue
+
+            point1 = self.get_closest_point(TrackPoint(p1.X, p1.Y))  # the resulting point will have the same coordinates but the exact instance
+            point2 = self.get_closest_point(TrackPoint(p2.X, p2.Y))  # is required to get its index in the next step
+
+            idx1 = self.sorted_points.index(point1)
+            idx2 = self.sorted_points.index(point2)
+
+            if idx1 > idx2 and not (idx1 - idx2) > 0.9 * len(self.sorted_points):
+                # first part of this check: The point with the higher index is the one which is later in the lap. This should be the second point.
+                #                           If this is not the case, the list needs to be reversed.
+                # second part: The exception is, if the list divides the track between these two points. In this case the first point would have
+                #               a higher index because it right at the end of the list while the second point is at the beginning. In case that
+                #               more than 90% of the list are between these two points this edge case is assumed. The list will not be reversed.
+                self.sorted_points.reverse()
+
+            break
+
     def _sort_points(self):
         """Does the actual sorting of points."""
         # Get the first point as a starting point. Any point could be used as starting point. Later the next closest point is used as next point.
@@ -264,6 +302,7 @@ class Track:
         self._vis_freq = visualization_frequency
 
         self._sort_points()
+        self._determine_track_direction()
         # self._integrate_distance()  # TODO this should not be done before determining track direction and start/finish line position
 
         # xvals = list()  # TODO rethink this
@@ -980,6 +1019,9 @@ if __name__ == '__main__':
 
     track = Track(pos)
     track.generate_track(visualization_frequency=250)
+
+    import sys
+    sys.exit()
 
     solver = AdvancedSyncSolver(track, tel, pos, laps_data, processes=6)
     solver.setup()
