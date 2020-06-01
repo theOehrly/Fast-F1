@@ -647,17 +647,17 @@ class AdvancedSyncSolver:
         while idle_count != self.number_of_processes:
             res = self.result_queue.get()
 
-            # res is a dictionary containing multiple {key: [list(), list(), ...]} pairs
+            # res is a dictionary containing {name: {key: list(), key: list(), ...}, name: ...}
             # join all lists together per key
-            for key in list(res.keys()):
+            for name in res.keys():
                 # this key exists in the joined results; extend all the existing lists with the new values
-                if key in results:
-                    for i in range(len(results[key])):
-                        results[key][i].extend(res[key][i])
+                if name in results.keys():
+                    for key in res[name].keys():
+                        results[name][key].extend(res[name][key])
 
                 # this key does not yet exist; create it
                 else:
-                    results[key] = res[key]
+                    results[name] = res[name]
 
             idle_count += 1
 
@@ -712,7 +712,8 @@ class AdvancedSyncSolver:
             p.start()
             self.subprocesses.append(p)
 
-        self.results = {'mean_x': list(), 'mean_y': list(), 'mad_x': list(), 'mad_y': list(), 'tx': list(), 'ty': list()}
+        for condition in self.conditions:
+            self.results[condition.name] = dict()
 
         print("Starting calculations...")
         start_time = time.time()  # start time for measuring _run time
@@ -743,16 +744,16 @@ class AdvancedSyncSolver:
             # wait until all processes have finished processing the tasks and have returned their results
             res = self._wait_for_results()
 
-            # process results
-            x_series = pd.Series(res[0][0])
-            y_series = pd.Series(res[0][1])
-            print(x_series.mad())
-            self.results['mean_x'].append(x_series.mean())
-            self.results['mean_y'].append(y_series.mean())
-            self.results['mad_x'].append(x_series.mad())
-            self.results['mad_y'].append(y_series.mad())
-            self.results['tx'].append(test_x)
-            self.results['ty'].append(test_y)
+            for condition in self.conditions:
+                c_index = self.conditions.index(condition)
+
+                proc_res = condition.generate_results(res[c_index], test_point)
+
+                for key in proc_res.keys():
+                    if key in self.results[condition.name].keys():
+                        self.results[condition.name][key].append(proc_res[key])
+                    else:
+                        self.results[condition.name][key] = [proc_res[key], ]
 
             self._resume_all()  # send a resume command to all processes; they will block on the empty task queue until task are added
 
@@ -861,13 +862,13 @@ class SolverSubprocess:
         """Wait for this process to join. Wraps multiprocessing.Process.join"""
         self._process.join()
 
-    def _add_result(self, index, data):
+    def _add_result(self, name, data):
         """Add a single calculation result."""
-        if index not in self._results.keys():
-            self._results[index] = data
+        if name not in self._results.keys():
+            self._results[name] = data
         else:
-            for i in range(len(data)):
-                self._results[index][i].extend(data[i])
+            for key in data.keys():
+                self._results[name][key].extend(data[key])
 
     def _run(self):
         """This is the main function which will loop for the lifetime of the process.
