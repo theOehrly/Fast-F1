@@ -927,8 +927,70 @@ class BaseCondition:
         """
         pass
 
+    def generate_results(self, results, test_point):
+        pass
 
-class StartFinishCondition(BaseCondition):
+
+class SectorBorderCondition(BaseCondition):
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+
+    def _get_test_date(self, lap, drv, test_point):
+        approx_time = self.data['session_start_date'] + lap.Time
+        # now we have an approximate time for the end of the lap and we have test_x/test_y which is not unique track point
+        # to get an exact time at which the car was at test_point, define a window of +-delta_t around approx_time
+        delta_t = pd.to_timedelta(10, "s")
+        t_start = approx_time - delta_t
+        t_end = approx_time + delta_t
+        pos_range = self.data['pos'][drv].query("@t_start < Date < @t_end")
+        # search the two points in this range which are closest to test_point
+        pos_distances = list()
+        neg_distances = list()
+        pos_points = list()
+        neg_points = list()
+        for _, row in pos_range.iterrows():
+            pnt = TrackPoint(row.X, row.Y, row.Date)
+            dist = test_point.get_sqr_dist(pnt)
+            if pnt.x < test_point.x:
+                pos_distances.append(dist)
+                pos_points.append(pnt)
+            else:
+                neg_distances.append(dist)
+                neg_points.append(pnt)
+
+        # make sure that there are points before and after this one
+        if (not neg_distances) or (not pos_distances):
+            return None
+
+        # distances, points = zip(*sorted(zip(distances, points)))  # sort distances and sort point_range exactly the same way
+        p_a = pos_points[min_index(pos_distances)]
+        p_b = neg_points[min_index(neg_distances)]
+
+        # interpolate the time for test_point from those two points
+        test_date = p_a.date + (p_b.date - p_a.date) * (test_point.x - p_a.x) / (p_b.x - p_a.x)
+        return test_date
+
+    def for_driver(self, drv, test_point):
+        pass
+
+    def generate_results(self, data, test_point):
+        # process results
+        x_series = pd.Series(data['x'])
+        y_series = pd.Series(data['y'])
+
+        result = {
+            'mean_x': x_series.mean(),
+            'mean_y': y_series.mean(),
+            'mad_x': x_series.mad(),
+            'mad_y': y_series.mad(),
+            'tx': test_point.x,
+            'ty': test_point.y
+        }
+
+        return result
+
+
+class StartFinishCondition(SectorBorderCondition):
     """Solver condition for constant start/finish line position.
 
     How this condition works:
@@ -939,6 +1001,8 @@ class StartFinishCondition(BaseCondition):
     a variation of the result.
     The test point at which there is the least variance in the result is deemed the correct position (simplified).
     """
+    name = "StartFinish"
+
     def __init__(self, *args, **kwargs):
         super().__init__()
 
@@ -967,38 +1031,10 @@ class StartFinishCondition(BaseCondition):
                 continue
 
             else:
-                approx_time = self.data['session_start_date'] + lap.Time
-                # now we have an approximate time for the end of the lap and we have test_x/test_y which is not unique track point
-                # to get an exact time at which the car was at test_point, define a window of +-delta_t around approx_time
-                delta_t = pd.to_timedelta(10, "s")
-                t_start = approx_time - delta_t
-                t_end = approx_time + delta_t
-                pos_range = self.data['pos'][drv].query("@t_start < Date < @t_end")
-                # search the two points in this range which are closest to test_point
-                pos_distances = list()
-                neg_distances = list()
-                pos_points = list()
-                neg_points = list()
-                for _, row in pos_range.iterrows():
-                    pnt = TrackPoint(row.X, row.Y, row.Date)
-                    dist = test_point.get_sqr_dist(pnt)
-                    if pnt.x < test_point.x:
-                        pos_distances.append(dist)
-                        pos_points.append(pnt)
-                    else:
-                        neg_distances.append(dist)
-                        neg_points.append(pnt)
-
-                # make sure that there are points before and after this one
-                if (not neg_distances) or (not pos_distances):
+                test_date = self._get_test_date(lap, drv, test_point)
+                if not test_date:
                     continue
 
-                # distances, points = zip(*sorted(zip(distances, points)))  # sort distances and sort point_range exactly the same way
-                p_a = pos_points[min_index(pos_distances)]
-                p_b = neg_points[min_index(neg_distances)]
-
-                # interpolate the time for test_point from those two points
-                test_date = p_a.date + (p_b.date - p_a.date) * (test_point.x - p_a.x) / (p_b.x - p_a.x)
                 # calculate start date for last lap and get position for that date
                 last_lap_start = test_date - lap.LastLapTime
                 lap_start_point = self.data['track'].interpolate_pos_from_time(drv, last_lap_start)
@@ -1006,7 +1042,250 @@ class StartFinishCondition(BaseCondition):
                 res_x.append(lap_start_point.x)
                 res_y.append(lap_start_point.y)
 
-        return [res_x, res_y]
+        return {'x': res_x, 'y': res_y}
+
+    def generate_results(self, data, test_point):
+        # process results
+        x_series = pd.Series(data['x'])
+        y_series = pd.Series(data['y'])
+
+        result = {
+            'mean_x': x_series.mean(),
+            'mean_y': y_series.mean(),
+            'mad_x': x_series.mad(),
+            'mad_y': y_series.mad(),
+            'tx': test_point.x,
+            'ty': test_point.y
+        }
+
+        return result
+
+
+class Sector23Condition(SectorBorderCondition):
+    """Solver condition for constant sector2/sector3 border position.
+
+    How this condition works:
+    Subtract the last 3rd sector time from the test point.
+    If the test point is the actual start finish line position, the sector border should be the same for each lap and driver.
+    Basically the same as StartFinishCondition.
+    """
+    name = "Sector23"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+
+    def for_driver(self, drv, test_point):
+        """ Calculate the condition for a driver and test point.
+
+        :param drv: The driver for which to calculate the condition (driver number as a string)
+        :type drv: string
+        :param test_point: Start/finish line position (test) for which to calculate the condition
+        :type test_point: TrackPoint
+        :return: [results x, results y] where results_* is a list of values containing the results for each lap
+        """
+        is_drv = (self.data['laps'].Driver == drv)
+        drv_last_lap = self.data['laps'][is_drv].NumberOfLaps.max()  # get the last lap of this driver
+
+        res_x = list()
+        res_y = list()
+
+        for _, lap in self.data['laps'][is_drv].iterrows():
+            # first lap, last lap, in-lap, out-lap and laps with no lap number are skipped
+            if (pd.isnull(lap.NumberOfLaps) or
+                    lap.NumberOfLaps in (1, drv_last_lap) or
+                    not pd.isnull(lap.PitInTime) or
+                    not pd.isnull(lap.PitOutTime)):
+
+                continue
+
+            else:
+                test_date = self._get_test_date(lap, drv, test_point)
+                if not test_date:
+                    continue
+
+                # calculate start date for last sector 3 and get position for that date
+                last_sector3_start = test_date - lap.Sector3Time
+                lap_sector3_point = self.data['track'].interpolate_pos_from_time(drv, last_sector3_start)
+                # add point coordinates to list of results for this pass
+                res_x.append(lap_sector3_point.x)
+                res_y.append(lap_sector3_point.y)
+
+        return {'x': res_x, 'y': res_y}
+
+    def generate_results(self, data, test_point):
+        # process results
+        x_series = pd.Series(data['x'])
+        y_series = pd.Series(data['y'])
+
+        result = {
+            'mean_x': x_series.mean(),
+            'mean_y': y_series.mean(),
+            'mad_x': x_series.mad(),
+            'mad_y': y_series.mad(),
+            'tx': test_point.x,
+            'ty': test_point.y
+        }
+
+        return result
+
+
+class Sector12Condition(SectorBorderCondition):
+    """Solver condition for constant sector1/sector2 border position.
+
+    How this condition works:
+    Subtract the last 3rd sector time and 2nd sector time from the test point.
+    If the test point is the actual start finish line position, the sector border should be the same for each lap and driver.
+    Basically the same as StartFinishCondition.
+    """
+    name = "Sector12"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+
+    def for_driver(self, drv, test_point):
+        """ Calculate the condition for a driver and test point.
+
+        :param drv: The driver for which to calculate the condition (driver number as a string)
+        :type drv: string
+        :param test_point: Start/finish line position (test) for which to calculate the condition
+        :type test_point: TrackPoint
+        :return: [results x, results y] where results_* is a list of values containing the results for each lap
+        """
+        is_drv = (self.data['laps'].Driver == drv)
+        drv_last_lap = self.data['laps'][is_drv].NumberOfLaps.max()  # get the last lap of this driver
+
+        res_x = list()
+        res_y = list()
+
+        for _, lap in self.data['laps'][is_drv].iterrows():
+            # first lap, last lap, in-lap, out-lap and laps with no lap number are skipped
+            if (pd.isnull(lap.NumberOfLaps) or
+                    lap.NumberOfLaps in (1, drv_last_lap) or
+                    not pd.isnull(lap.PitInTime) or
+                    not pd.isnull(lap.PitOutTime)):
+
+                continue
+
+            else:
+                test_date = self._get_test_date(lap, drv, test_point)
+                if not test_date:
+                    continue
+
+                # calculate start date for last sector 2 and get position for that date
+                last_sector2_start = test_date - lap.Sector3Time - lap.Sector2Time
+                lap_sector2_point = self.data['track'].interpolate_pos_from_time(drv, last_sector2_start)
+                # add point coordinates to list of results for this pass
+                res_x.append(lap_sector2_point.x)
+                res_y.append(lap_sector2_point.y)
+
+        return {'x': res_x, 'y': res_y}
+
+    def generate_results(self, data, test_point):
+        # process results
+        x_series = pd.Series(data['x'])
+        y_series = pd.Series(data['y'])
+
+        result = {
+            'mean_x': x_series.mean(),
+            'mean_y': y_series.mean(),
+            'mad_x': x_series.mad(),
+            'mad_y': y_series.mad(),
+            'tx': test_point.x,
+            'ty': test_point.y
+        }
+
+        return result
+
+
+class AllSectorBordersCondition(SectorBorderCondition):
+    """Solver condition for constant sector1/sector2 border position.
+
+    How this condition works:
+    Subtract the last 3rd sector time and 2nd sector time from the test point.
+    If the test point is the actual start finish line position, the sector border should be the same for each lap and driver.
+    Basically the same as StartFinishCondition.
+    """
+    name = "AllSectors"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+
+    def for_driver(self, drv, test_point):
+        """ Calculate the condition for a driver and test point.
+
+        :param drv: The driver for which to calculate the condition (driver number as a string)
+        :type drv: string
+        :param test_point: Start/finish line position (test) for which to calculate the condition
+        :type test_point: TrackPoint
+        :return: [results x, results y] where results_* is a list of values containing the results for each lap
+        """
+        is_drv = (self.data['laps'].Driver == drv)
+        drv_last_lap = self.data['laps'][is_drv].NumberOfLaps.max()  # get the last lap of this driver
+
+        res = {'x1': list(), 'y1': list(), 'x2': list(), 'y2': list(), 'x3': list(), 'y3': list()}
+
+        for _, lap in self.data['laps'][is_drv].iterrows():
+            # first lap, last lap, in-lap, out-lap and laps with no lap number are skipped
+            if (pd.isnull(lap.NumberOfLaps) or
+                    lap.NumberOfLaps in (1, drv_last_lap) or
+                    not pd.isnull(lap.PitInTime) or
+                    not pd.isnull(lap.PitOutTime)):
+
+                continue
+
+            else:
+                test_date = self._get_test_date(lap, drv, test_point)
+                if not test_date:
+                    continue
+
+                # sector 1/2
+                last_sector2_start = test_date - lap.Sector3Time - lap.Sector2Time
+                lap_sector2_point = self.data['track'].interpolate_pos_from_time(drv, last_sector2_start)
+                # add point coordinates to list of results for this pass
+                res['x2'].append(lap_sector2_point.x)
+                res['y2'].append(lap_sector2_point.y)
+
+                # sector 2/3
+                last_sector3_start = test_date - lap.Sector3Time
+                lap_sector3_point = self.data['track'].interpolate_pos_from_time(drv, last_sector3_start)
+                res['x3'].append(lap_sector3_point.x)
+                res['y3'].append(lap_sector3_point.y)
+
+                # start/finish
+                last_lap_start = test_date - lap.LastLapTime
+                lap_start_point = self.data['track'].interpolate_pos_from_time(drv, last_lap_start)
+                res['x1'].append(lap_start_point.x)
+                res['y1'].append(lap_start_point.y)
+
+        return res
+
+    def generate_results(self, data, test_point):
+        # process results
+        x1_series = pd.Series(data['x1'])
+        y1_series = pd.Series(data['y1'])
+        x2_series = pd.Series(data['x2'])
+        y2_series = pd.Series(data['y2'])
+        x3_series = pd.Series(data['x3'])
+        y3_series = pd.Series(data['y3'])
+
+        result = {
+            'mean_x1': x1_series.mean(),
+            'mean_y1': y1_series.mean(),
+            'mad_x1': x1_series.mad(),
+            'mad_y1': y1_series.mad(),
+            'mean_x2': x2_series.mean(),
+            'mean_y2': y2_series.mean(),
+            'mad_x2': x2_series.mad(),
+            'mad_y2': y2_series.mad(),
+            'mean_x3': x3_series.mean(),
+            'mean_y3': y3_series.mean(),
+            'mad_x3': x3_series.mad(),
+            'mad_y3': y3_series.mad(),
+            'tx': test_point.x,
+            'ty': test_point.y
+        }
+
+        return result
 
 
 if __name__ == '__main__':
