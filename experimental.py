@@ -514,6 +514,13 @@ class Track:
         drv_pos = self._pos_data[drv]  # get DataFrame for driver
 
         closest = drv_pos.iloc[(drv_pos['Date'] - query_date).abs().argsort()[:2]]
+
+        # verify both points are valid unique track points
+        if not (self.lazy_is_track_point(closest.iloc[0]['X'], closest.iloc[0]['Y']) and
+                self.lazy_is_track_point(closest.iloc[1]['X'], closest.iloc[1]['Y'])):
+
+            return None
+
         delta_t = closest.iloc[1]['Date'] - closest.iloc[0]['Date']
         delta_x = closest.iloc[1]['X'] - closest.iloc[0]['X']
         delta_y = closest.iloc[1]['Y'] - closest.iloc[0]['Y']
