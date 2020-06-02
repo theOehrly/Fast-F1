@@ -104,6 +104,9 @@ class Track:
         self.sorted_points = list()
         self.excluded_points = list()
 
+        self.sorted_x = list()  # list of sorted coordinates for easy plotting and lazy coordinate validation
+        self.sorted_y = list()
+
         self.distances = list()
         self.distances_normalized = list()
 
@@ -301,6 +304,11 @@ class Track:
 
         self._sort_points()
         self._determine_track_direction()
+
+        for point in self.sorted_points:
+            self.sorted_x.append(point.x)
+            self.sorted_y.append(point.y)
+
         # self._integrate_distance()  # TODO this should not be done before determining track direction and start/finish line position
 
         # xvals = list()  # TODO rethink this
@@ -313,6 +321,17 @@ class Track:
         #                            'Y': yvals,
         #                            'Distance': self.distances,
         #                            'Normalized': self.distances_normalized})
+
+    def lazy_is_track_point(self, x, y):
+        """Lazy check for whether two coordinates are the coordinates of a unique track point.
+
+        This function only checks both coordinates independently. But it does not verify that the
+        combination of both coordinates is a valid unique track point (therefore "lazy" check).
+        This is an intentional measure for saving time.
+        """
+        if x in self.sorted_x and y in self.sorted_y:
+            return True
+        return False
 
     def get_closest_point(self, point):
         """Find the closest unique track point to any given point.
