@@ -640,8 +640,7 @@ class AdvancedSyncSolver:
 
         self.drivers = None
         self.session_start_date = None
-        self.x_range = [0, 0]
-        self.y_range = [0, 0]
+        self.point_range = list()
 
     def setup(self):
         """Do some one-off calculations. This needs to be called before solve() can be _run."""
@@ -652,20 +651,7 @@ class AdvancedSyncSolver:
         self.session_start_date = self.pos[some_driver].head(1).Date.squeeze().round('min')
 
         # get all current start/finish line positions
-        x_coords, y_coords = self._get_start_line_range()
-
-        # get range start and end
-        self.x_range[0] = min(x_coords)
-        self.x_range[1] = max(x_coords)
-        i_start, = np.where(x_coords == self.x_range[0])
-        i_end, = np.where(x_coords == self.x_range[1])
-        self.y_range[0] = y_coords[i_start]
-        self.y_range[1] = y_coords[i_end]
-
-    def log_setup_stats(self):
-        """Print some very broad statistics from the setup"""
-        print("Number of Drivers: {}".format(len(self.drivers)))
-        print("Start/Finish Line in Range x={},{} | y={},{}".format(*self.x_range, *self.y_range))
+        self.point_range = self._get_start_line_range()
 
     def _wait_for_results(self):
         """Wait for all processes to send their results through the result queue.
@@ -750,13 +736,10 @@ class AdvancedSyncSolver:
         start_time = time.time()  # start time for measuring _run time
 
         cnt = 0
-        for test_x in range(int(self.x_range[0]), int(self.x_range[1]), 15):
+        print(len(self.point_range))
+        for test_point in self.point_range[0::3]:
             cnt += 1
             print(cnt)  # simplified progress report
-
-            # interpolate y
-            test_y = self.y_range[0] + (self.y_range[1] - self.y_range[0]) * (test_x - self.x_range[0]) / (self.x_range[1] - self.x_range[0])
-            test_point = TrackPoint(test_x, test_y)
 
             # Create tasks: one task consists of a condition, driver and test point
             # Do one calculation _run per test point. The results for this point are then collected and the next _run for teh next point is done.
@@ -847,12 +830,21 @@ class AdvancedSyncSolver:
         x_coords, y_coords = reject_outliers(x_coords, y_coords, m=100.0)  # m defines the threshold for outliers; very high here
         print("Rejected {} outliers".format(usable_laps - len(x_coords)))
 
-        # calculate mean absolute deviation after outlier rejection (for logging purpose)
-        mad_x = pd.Series(x_coords).mad()
-        mad_y = pd.Series(y_coords).mad()
-        print("Mean absolute deviation of preliminary lap starting position:\n\t x={} y={}".format(round(mad_x), round(mad_y)))
+        points = list()
+        index_on_track = list()
+        for x, y in zip(x_coords, y_coords):
+            point = track.get_closest_point(TrackPoint(x, y))
+            points.append(point)
+            index_on_track.append(track.sorted_points.index(point))
 
-        return x_coords, y_coords
+        point_a = points[min_index(index_on_track)]
+        point_b = points[max_index(index_on_track)]
+
+        point_range = track.get_points_between(point_a, point_b, short=True, include_ref=True)
+
+        print("Searching for start/finish line in range x={},y={} | x={}, y={}".format(point_a.x, point_a.y, point_b.x, point_b.y))
+
+        return point_range
 
 
 class SolverSubprocess:
