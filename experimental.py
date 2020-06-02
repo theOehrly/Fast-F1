@@ -863,8 +863,13 @@ class AdvancedSyncSolver:
                     continue
 
                 else:
-                    approx_lap_end_date = self.session_start_date + lap.Time  # start of the session plus time at which the lap was registered (approximately end of lap)
+                    # start of the session plus time at which the lap was registered (approximately end of lap)
+                    approx_lap_end_date = self.session_start_date + lap.Time
+
                     end_pnt = self.track.interpolate_pos_from_time(drv, approx_lap_end_date)
+                    if not end_pnt:
+                        continue  # coordinates for the given date were not valid
+
                     x_coords.append(end_pnt.x)
                     y_coords.append(end_pnt.y)
 
@@ -1114,6 +1119,10 @@ class StartFinishCondition(SectorBorderCondition):
                 # calculate start date for last lap and get position for that date
                 last_lap_start = test_date - lap.LastLapTime
                 lap_start_point = self.data['track'].interpolate_pos_from_time(drv, last_lap_start)
+
+                if not lap_start_point:
+                    continue  # coordinates for the given date were not valid
+
                 # add point coordinates to list of results for this pass
                 res_x.append(lap_start_point.x)
                 res_y.append(lap_start_point.y)
@@ -1182,6 +1191,10 @@ class Sector23Condition(SectorBorderCondition):
                 # calculate start date for last sector 3 and get position for that date
                 last_sector3_start = test_date - lap.Sector3Time
                 lap_sector3_point = self.data['track'].interpolate_pos_from_time(drv, last_sector3_start)
+
+                if not lap_sector3_point:
+                    continue  # coordinates for the given date were not valid
+
                 # add point coordinates to list of results for this pass
                 res_x.append(lap_sector3_point.x)
                 res_y.append(lap_sector3_point.y)
@@ -1250,6 +1263,10 @@ class Sector12Condition(SectorBorderCondition):
                 # calculate start date for last sector 2 and get position for that date
                 last_sector2_start = test_date - lap.Sector3Time - lap.Sector2Time
                 lap_sector2_point = self.data['track'].interpolate_pos_from_time(drv, last_sector2_start)
+
+                if not lap_sector2_point:
+                    continue  # coordinates for the given date were not valid
+
                 # add point coordinates to list of results for this pass
                 res_x.append(lap_sector2_point.x)
                 res_y.append(lap_sector2_point.y)
@@ -1317,21 +1334,23 @@ class AllSectorBordersCondition(SectorBorderCondition):
                 # sector 1/2
                 last_sector2_start = test_date - lap.Sector3Time - lap.Sector2Time
                 lap_sector2_point = self.data['track'].interpolate_pos_from_time(drv, last_sector2_start)
-                # add point coordinates to list of results for this pass
-                res['x2'].append(lap_sector2_point.x)
-                res['y2'].append(lap_sector2_point.y)
-
                 # sector 2/3
                 last_sector3_start = test_date - lap.Sector3Time
                 lap_sector3_point = self.data['track'].interpolate_pos_from_time(drv, last_sector3_start)
-                res['x3'].append(lap_sector3_point.x)
-                res['y3'].append(lap_sector3_point.y)
-
                 # start/finish
                 last_lap_start = test_date - lap.LastLapTime
                 lap_start_point = self.data['track'].interpolate_pos_from_time(drv, last_lap_start)
+
+                if not (lap_sector2_point and lap_sector3_point and lap_start_point):
+                    continue  # coordinates for at least one of the given dates were not valid
+
+                # add point coordinates to list of results for this pass
                 res['x1'].append(lap_start_point.x)
                 res['y1'].append(lap_start_point.y)
+                res['x2'].append(lap_sector2_point.x)
+                res['y2'].append(lap_sector2_point.y)
+                res['x3'].append(lap_sector3_point.x)
+                res['y3'].append(lap_sector3_point.y)
 
         return res
 
