@@ -511,6 +511,11 @@ def min_index(_iterable):
     return _iterable.index(min(_iterable))
 
 
+def max_index(_iterable):
+    """Return the index of the minimum value in an iterable"""
+    return _iterable.index(max(_iterable))
+
+
 def reject_outliers(data, *secondary, m=2.):
     """Reject outliers from a numpy array.
 
