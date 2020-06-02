@@ -780,6 +780,56 @@ class AdvancedSyncSolver:
         self._exit_all()  # send exit command to all processes
         self._join_all()  # wait for all processes to actually exit
 
+    def solve_one_condition_single_process(self):
+        """Alternative way for solving the condition (usage not recommended!)
+
+        This function will do all processing inside the main thread. Additionally, only one condition can
+        be solved. If conditions were added, only the one which was added first will be considered.
+
+        This function is not intended for productive use, but rather for debugging or profiling!
+        """
+
+        # data which the processes need
+        shared_data = {'track': self.track,
+                       'laps': self.laps,
+                       'pos': self.pos,
+                       'session_start_date': self.session_start_date}
+
+        self.conditions[0].set_data(shared_data)
+
+        self.results = dict()
+
+        print("Starting calculations...")
+        start_time = time.time()  # start time for measuring _run time
+
+        cnt = 0
+        print(len(self.point_range))
+        for test_point in self.point_range[0::3]:
+            cnt += 1
+            print(cnt)  # simplified progress report
+
+            values = dict()
+            for driver in self.drivers:
+                data = self.conditions[0].for_driver(driver, test_point)
+                if not values:
+                    values = data
+                else:
+                    for key in data.keys():
+                        values[key].extend(data[key])
+
+            proc_res = self.conditions[0].generate_results(values, test_point)
+
+            name = self.conditions[0].name
+            for key in proc_res.keys():
+                if key in self.results.keys():
+                    self.results[key].append(proc_res[key])
+                else:
+                    self.results[key] = [proc_res[key], ]
+
+        # all tasks have been calculated
+        print('Finished')
+        print('Took:', time.time() - start_time)
+
     def add_condition(self, condition, *args, **kwargs):
         """Add a condition class to the solver. Currently there is no check against adding duplicate conditions. Conditions can also not
         be removed again."""
