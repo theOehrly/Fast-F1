@@ -971,8 +971,11 @@ class SectorBorderCondition(BaseCondition):
         p_a = pos_points[min_index(pos_distances)]
         p_b = neg_points[min_index(neg_distances)]
 
+        dist_a_b = sqrt(p_a.get_sqr_dist(p_b))
+        dist_test_a = sqrt(p_a.get_sqr_dist(test_point))
+
         # interpolate the time for test_point from those two points
-        test_date = p_a.date + (p_b.date - p_a.date) * (test_point.x - p_a.x) / (p_b.x - p_a.x)
+        test_date = p_a.date + (p_b.date - p_a.date) * dist_test_a / dist_a_b
         return test_date
 
     def for_driver(self, drv, test_point):
