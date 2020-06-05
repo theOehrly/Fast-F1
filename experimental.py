@@ -333,6 +333,65 @@ class Track:
             return True
         return False
 
+    def direction_to_point(self, ref_point, other, rel_max=0.49):
+        """Check if a point is behind or in front of a reference point on track.
+
+        Do not use this function in long iterations as it is comparably slow!
+
+        :param ref_point: The reference point
+        :type ref_point: TrackPoint
+        :param other: The second point
+        :type other: TrackPoint
+        :param rel_max: (optional) maximum relative distance on track for checking if the point is before or after.
+            If a value is more than this relative distance away zero is returned. Distance is measured in points here which is
+            exactly equal to actual distance here.
+            This value needs to be 0.49 or smaller. (Default is 0.49)
+        :return: -1 -> behind; 1 -> in front; 0 -> outside of max relative distance or could not be determined
+        """
+        ref_u = self.get_closest_point(ref_point)  # get the closest unique track points
+        other_u = self.get_closest_point(other)
+
+        ref_i = self.sorted_points.index(ref_u)  # get the indices for the unique points
+        other_i = self.sorted_points.index(other_u)
+        delta_i = other_i - ref_i
+
+        if delta_i < -(1 - rel_max) * len(self.sorted_points):
+            return 1  # edge case; point is before but the end of the list is in between
+
+        if abs(delta_i) > rel_max*len(self.sorted_points):
+            return 0  # point is too far away
+
+        if delta_i > 0:
+            return 1  # point is in front
+
+        elif delta_i < 0:
+            return -1  # point is behind
+
+        else:
+            # point is so close that the unique points are the same
+            # check based on vector direction from point to point; for very short distances (like here) this is a sufficient criteria.
+            # For longer distances this is not even a necessary criteria though!
+            dx_q = other.x - ref_point.x  # (dx_q, dy_q) form the vector from ref to other (q for query)
+            dy_q = other.y - ref_point.y
+
+            if ref_i + 1 < len(self.sorted_points):  # get the next point (with edge case handling for current point is last point in list)
+                next_u = self.sorted_points[ref_i + 1]
+            else:
+                next_u = self.sorted_points[0]
+
+            dx_t = next_u.x - ref_u.x  # (dx_t, dy_t) form the vector from unique ref to next on track (t for track)
+            dy_t = next_u.y - ref_u.y
+
+            # test if the vectors point in the same direction by calculating the dot product
+            # the dot product is greater than zero if the angle between the vectors is less than 90 degree
+            dp = dx_q * dx_t + dy_q * dy_t
+            if dp > 0:
+                return 1
+            elif dp < 0:
+                return -1
+            else:
+                return 0
+
     def get_closest_point(self, point):
         """Find the closest unique track point to any given point.
 
