@@ -1,0 +1,9 @@
+**/__pycache__/
+.idea/
+build/
+solver_results/
+reference/
+var_dumps/
+tracks/
+**.xlsx
+**.csv
