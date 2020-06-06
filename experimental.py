@@ -1081,29 +1081,21 @@ class SectorBorderCondition(BaseCondition):
         t_end = approx_time + delta_t
         pos_range = self.data['pos'][drv].query("@t_start < Date < @t_end")
         # search the two points in this range which are closest to test_point
-        pos_distances = list()
-        neg_distances = list()
-        pos_points = list()
-        neg_points = list()
+        dists_points = list()
         for _, row in pos_range.iterrows():
             pnt = TrackPoint(row.X, row.Y, row.Date)
             dist = test_point.get_sqr_dist(pnt)
-            if pnt.x < test_point.x:
-                pos_distances.append(dist)
-                pos_points.append(pnt)
-            else:
-                neg_distances.append(dist)
-                neg_points.append(pnt)
+            dists_points.append((dist, pnt))
 
-        # make sure that there are points before and after this one
-        if (not neg_distances) or (not pos_distances):
-            return None
+        dists_points.sort(key=lambda itm: itm[0])  # sort the list by first value of each tuple (distance)
 
-        # distances, points = zip(*sorted(zip(distances, points)))  # sort distances and sort point_range exactly the same way
-        p_a = pos_points[min_index(pos_distances)]
-        p_b = neg_points[min_index(neg_distances)]
+        p_a = dists_points[0][1]  # closest point
+        p_b = dists_points[1][1]  # second closest point
 
         dist_a_b = sqrt(p_a.get_sqr_dist(p_b))
+        if dist_a_b == 0:
+            return None  # I have no idea how this is even possible, looks like an error in the data retrieved from the api
+
         dist_test_a = sqrt(p_a.get_sqr_dist(test_point))
 
         # interpolate the time for test_point from those two points
