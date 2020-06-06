@@ -1076,7 +1076,7 @@ class SectorBorderCondition(BaseCondition):
         approx_time = self.data['session_start_date'] + lap.Time
         # now we have an approximate time for the end of the lap and we have test_x/test_y which is not unique track point
         # to get an exact time at which the car was at test_point, define a window of +-delta_t around approx_time
-        delta_t = pd.to_timedelta(10, "s")
+        delta_t = pd.to_timedelta(5, "s")
         t_start = approx_time - delta_t
         t_end = approx_time + delta_t
         pos_range = self.data['pos'][drv].query("@t_start < Date < @t_end")
