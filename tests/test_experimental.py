@@ -1,5 +1,5 @@
 from unittest import TestCase
-from experimental import TrackPoint, Track
+from fastf1.track import TrackPoint, Track
 
 
 class TestTrackGetPointsBetween(TestCase):
