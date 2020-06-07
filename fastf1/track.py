@@ -584,24 +584,28 @@ class Track:
         :param time_range_end: A pandas.Timestamp compatible date
         :return: pandas.Timestamp or None
         """
-        drv_pos = self._pos_data[drv]  # get DataFrame for driver
+        pos = self._pos_data[drv].query("@time_range_start < Date < @time_range_end")  # get DataFrame for driver
 
-        # calculate closest point in DataFrame (a track map contains all points from the DataFrame)
-        closest_track_pnt = self.get_closest_point(point)
+        dists_points = list()
+        for _, row in pos.iterrows():
+            pnt = TrackPoint(row.X, row.Y, row.Date)
+            dist = point.get_sqr_dist(pnt)
+            dists_points.append((dist, pnt))
 
-        # create an array of boolean values for filtering points which exactly match the given coordinates
-        is_x = drv_pos.X = closest_track_pnt.X
-        is_y = drv_pos.Y = closest_track_pnt.Y
-        is_closest_pnt = is_x and is_y
+        dists_points.sort(key=lambda itm: itm[0])  # sort the list by first value of each tuple (distance)
 
-        # there may be multiple points from different laps with the given coordinates
-        # therefore an estimated time range needs to be provided
-        res_pnts = drv_pos[is_closest_pnt]
-        for p in res_pnts:
-            if time_range_start <= p.Date <= time_range_end:
-                return p.Date
+        p_a = dists_points[0][1]  # closest point
+        p_b = dists_points[1][1]  # second closest point
 
-        return None
+        if p_a.x == p_b.x and p_a.y == p_b.y:
+            return None  # I have no idea how this is even possible, looks like an error in the data retrieved from the api
+
+        if abs(p_a.x - p_b.x) > abs(p_a.y - p_b.y):  # use the one with a bigger delta for higher accuracy
+            date = p_a.date + (p_b.date - p_a.date) * (point.x - p_a.x) / (p_b.x - p_a.x)
+        else:
+            date = p_a.date + (p_b.date - p_a.date) * (point.y - p_a.y) / (p_b.y - p_a.y)
+
+        return date
 
     def interpolate_pos_from_time(self, drv, query_date):
         """Calculate the position of a driver at any given date.
