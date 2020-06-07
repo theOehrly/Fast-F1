@@ -101,6 +101,8 @@ class Track:
         self.sorted_x = list()  # list of sorted coordinates for easy plotting and lazy coordinate validation
         self.sorted_y = list()
 
+        self.finish_line = None
+
         self.distances = list()
         self.distances_normalized = list()
 
@@ -283,6 +285,52 @@ class Track:
             self.excluded_points.append(self._next_point)
 
         self._cleanup_visualization()
+
+    def set_finish_line(self, x, y):
+        """Set coordinates for the finish line position.
+
+        Internally the next closest unique track point will be used!
+        :param x: coordinate x
+        :type x: int or float
+        :param y: coordinate y
+        :type y: int or float
+        """
+        point = self.get_closest_point(TrackPoint(x, y))
+        self.finish_line = point
+
+    def resync_lap_times(self, laps_data):
+        """Synchronize the lap data to the set finish line position.
+
+        A new column 'Date' will be added to the DataFrame. The original values in 'Time'
+        will be left unchanged. The values in 'Date' are synchronized with telemetry and
+        position data IF the finish line position is correct.
+
+        :param laps_data: DataFrame containing lap data as returned by api.timing_data
+        :type laps_data: pandas.DataFrame
+        :returns: The original Data Frame with a new column 'Date'"""
+        drivers = list(self._pos_data.keys())
+
+        # calculate the start date of the session
+        some_driver = drivers[0]  # TODO to be sure this should be done with multiple drivers
+        session_start_date = self._pos_data[some_driver].head(1).Date.squeeze().round('min')
+
+        dates = list()
+        for _, lap in laps_data.iterrows():
+            approx_lap_end_date = session_start_date + lap.Time
+
+            range_start = approx_lap_end_date - pd.Timedelta(10, "s")
+            range_end = approx_lap_end_date + pd.Timedelta(10, "s")
+
+            if type(lap.Driver) != str:
+                dates.append(None)
+                continue
+
+            date = self.get_time_from_pos(lap.Driver, self.finish_line, range_start, range_end)
+            dates.append(date)
+
+        laps_data.insert(2, "Date", dates)
+
+        return laps_data
 
     def generate_track(self, visualization_frequency=0):
         """Generate a track map from the raw points.
