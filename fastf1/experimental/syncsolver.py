@@ -86,8 +86,12 @@ class AdvancedSyncSolver:
         some_driver = self.drivers[0]  # TODO to be sure this should be done with multiple drivers
         self.session_start_date = self.pos[some_driver].head(1).Date.squeeze().round('min')
 
+    def auto_range(self):
         # get all current start/finish line positions
         self.point_range = self._get_start_line_range()
+
+    def manual_range(self, point_a, point_b):
+        self.point_range = self.track.get_points_between(point_a, point_b, short=True, include_ref=True)
 
     def _wait_for_results(self):
         """Wait for all processes to send their results through the result queue.
