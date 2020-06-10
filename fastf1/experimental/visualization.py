@@ -1,8 +1,7 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
-import pickle
-from experimental import TrackPoint, Track  # necessary for pickle
+import os
 
 
 def show_deviation_minima_on_track(res, track):
@@ -18,9 +17,6 @@ def show_deviation_minima_on_track(res, track):
 
     x_minima = np.r_[True, mad_x_stats[1:] < mad_x_stats[:-1]] & np.r_[mad_x_stats[:-1] < mad_x_stats[1:], True]
     y_minima = np.r_[True, mad_y_stats[1:] < mad_y_stats[:-1]] & np.r_[mad_y_stats[:-1] < mad_y_stats[1:], True]
-
-    print(x_minima)
-    print(y_minima)
 
     ax_main = plt.subplot(label='Track Map')
     plt.plot(track.sorted_x, track.sorted_y)
@@ -52,28 +48,115 @@ def show_deviation_minima_on_track(res, track):
     ax_mad_y.yaxis.set_tick_params(labelleft=False)
 
 
-if __name__ == '__main__':
-    GP = 9
+def plot_lap_time_integrity(laps_data):
+    drivers_series = laps_data.Driver
+    drivers = list(drivers_series.drop_duplicates())
 
-    solver_res = pickle.load(open("solver_results/gp{}".format(GP), "rb"))
-    r = solver_res['AllSectors']
-    track = pickle.load(open("tracks/gp{}".format(GP), "rb"))
+    deltas = list()
+    ref = list()  # scatter plots need an x and y value therefore ref is created by counting up
+    n = 0
 
-    plt.figure()
+    if 'Date' in laps_data.columns:
+        for driver in drivers:
+            i_max = len(laps_data[laps_data.Driver == driver])
+            for i in range(1, i_max):
+                delta = (laps_data.iloc[i].Date - laps_data.iloc[i].LastLapTime - laps_data.iloc[i-1].Date).total_seconds()
+                deltas.append(delta)
+                ref.append(n)
+                n += 1
+    else:
+        for driver in drivers:
+            i_max = len(laps_data[laps_data.Driver == driver])
+            for i in range(1, i_max):
+                delta = (laps_data.iloc[i].Time - laps_data.iloc[i].LastLapTime - laps_data.iloc[i-1].Time).total_seconds()
+                deltas.append(delta)
+                ref.append(n)
+                n += 1
+
+    fig1 = plt.figure()
+    fig1.suptitle("Lap Time Scatter")
+    plt.scatter(ref, deltas)
+
+    fig2 = plt.figure()
+    fig2.suptitle("Lap Time Histogram")
+    plt.hist(deltas, bins=50)
+
+
+def plot_lap_position_integrity(laps_data, track):
+    x_vals = list()
+    y_vals = list()
+
+    if 'Date' in laps_data.columns:
+        for _, lap in laps_data.iterrows():
+            if type(lap.Driver) != str:
+                continue
+            p = track.interpolate_pos_from_time(lap.Driver, lap.Date)
+            if not p:
+                continue
+            x_vals.append(p.x)
+            y_vals.append(p.y)
+    else:
+        drivers = list(track._pos_data.keys())
+        # calculate the start date of the session
+        some_driver = drivers[0]  # TODO to be sure this should be done with multiple drivers
+        session_start_date = track._pos_data[some_driver].head(1).Date.squeeze().round('min')
+        for _, lap in laps_data.iterrows():
+            if type(lap.Driver) != str:
+                continue
+            p = track.interpolate_pos_from_time(lap.Driver, session_start_date + lap.Time)
+            if not p:
+                continue
+
+            x_vals.append(p.x)
+            y_vals.append(p.y)
+
+    fig1 = plt.figure()
+    fig1.suptitle("Position Scatter")
+    plt.scatter(x_vals, y_vals)
+
+    fig2 = plt.figure()
+    fig2 .suptitle("Position X Histogram")
+    plt.hist(x_vals, bins=30)
+
+    fig3 = plt.figure()
+    fig3.suptitle("Position Y Histogram")
+    plt.hist(y_vals, bins=30)
+
+
+def all_sectors_result_plots(result, track, suffix, workdir=None):
+    r = result
+
+    # mean absolute deviation x
+    plt.figure(figsize=(15, 8))
+    plt.suptitle('MAD X | {}'.format(suffix))
     plt.plot(r['mad_x1'], label="mad_x1")
     plt.plot(r['mad_x2'], label="mad_x2")
     plt.plot(r['mad_x3'], label="mad_x3")
     plt.legend()
+    plt.grid(which='both')
+    if workdir:
+        plt.savefig(os.path.join(workdir, 'mad_x_{}.png'.format(suffix)), dpi=300)
 
-    plt.figure()
+    # mean absolute deviation y
+    plt.figure(figsize=(15, 8))
+    plt.suptitle('MAD Y | {}'.format(suffix))
     plt.plot(r['mad_y1'], label="mad_y1")
     plt.plot(r['mad_y2'], label="mad_y2")
     plt.plot(r['mad_y3'], label="mad_y3")
     plt.legend()
+    plt.grid(which='both')
+    if workdir:
+        plt.savefig(os.path.join(workdir, 'mad_y_{}.png'.format(suffix)), dpi=300)
 
-    plt.figure()
+    # track + mad plot
+    plt.figure(figsize=(15, 8))
+    plt.suptitle('Track + MAD | {}'.format(suffix))
     show_deviation_minima_on_track(r, track)
+    plt.grid(which='both')
+    if workdir:
+        plt.savefig(os.path.join(workdir, 'track_plus_mad_{}.png'.format(suffix)), dpi=300)
 
+    # delta between test value and mean result
     dx = list()
     for test, tres in zip(r['tx'], r['mean_x1']):
         dx.append(test-tres)
@@ -82,9 +165,13 @@ if __name__ == '__main__':
     for test, tres in zip(r['ty'], r['mean_y1']):
         dy.append(test-tres)
 
-    plt.figure()
+    plt.figure(figsize=(15, 8))
+    plt.suptitle('Difference In - Out Coordinate | {}'.format(suffix))
     plt.plot(dx, label='dx')
     plt.plot(dy, label='dy')
     plt.legend()
+    plt.grid(which='both')
+    if workdir:
+        plt.savefig(os.path.join(workdir, 'coord_diff.png'.format(suffix)), dpi=300)
 
     plt.show()
