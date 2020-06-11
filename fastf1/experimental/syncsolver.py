@@ -157,8 +157,17 @@ class AdvancedSyncSolver:
         for process in self.subprocesses:
             process.join()
 
-    def solve(self):
-        """Main solver function which starts all the processing."""
+    def solve(self, step_size=1):
+        """Main solver function which starts all the heavy processing.
+
+        Before calling this function it is necessary to .setup() the solver.
+        The range for the solver needs to be set and condition(s) need to be added.
+
+        This function will create the requested number of subprocesses (default: 1) and start processing the data.
+
+        :param step_size: (optional) Step size for iterating through the range of points. (default: 1)
+        :type step_size: int
+        """
 
         # data which the processes need
         shared_data = {'track': self.track,
@@ -192,8 +201,8 @@ class AdvancedSyncSolver:
         start_time = time.time()  # start time for measuring _run time
 
         cnt = 0
-        print(len(self.point_range))
-        for test_point in self.point_range[0::3]:
+        print("total: {} | step size: {} | processing: {}".format(len(self.point_range), step_size, int(len(self.point_range) / step_size)))
+        for test_point in self.point_range[0::step_size]:
             cnt += 1
             print(cnt)  # simplified progress report
 
@@ -260,7 +269,7 @@ class AdvancedSyncSolver:
 
         cnt = 0
         print(len(self.point_range))
-        for test_point in self.point_range[0::3]:
+        for test_point in self.point_range:
             cnt += 1
             print(cnt)  # simplified progress report
 
