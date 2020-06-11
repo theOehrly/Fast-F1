@@ -87,10 +87,26 @@ class AdvancedSyncSolver:
         self.session_start_date = self.pos[some_driver].head(1).Date.squeeze().round('min')
 
     def auto_range(self):
-        # get all current start/finish line positions
+        """Automatically determine the range of points for the solver.
+
+        This is done by calculating all current points at which a lap time is set.
+        Very far outliers are removed and all remaining points are added to self.point_range.
+        The solver will later iterate over these points."""
         self.point_range = self._get_start_line_range()
 
     def manual_range(self, point_a, point_b):
+        """Manually set the range of points for the solver.
+
+        The closest unique track points will be calculated and all points between those two
+        will be added to self.point_range.
+        The solver will later iterate over these points.
+
+        :param point_a: First point
+        :type point_a: TrackPoint
+        :param point_b: Last point
+        :type point_b: TrackPoint"""
+        point_a = self.track.get_closest_point(point_a)
+        point_b = self.track.get_closest_point(point_b)
         self.point_range = self.track.get_points_between(point_a, point_b, short=True, include_ref=True)
 
     def _wait_for_results(self):
