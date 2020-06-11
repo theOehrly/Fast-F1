@@ -4,11 +4,11 @@ import numpy as np
 import os
 
 
-def show_deviation_minima_on_track(res, track):
-    mad_x_stats = res['mad_x1']
-    mad_y_stats = res['mad_y1']
-    mean_x_stats = res['mean_x1']
-    mean_y_stats = res['mean_y1']
+def show_deviation_minima_on_track(res, track, sector_number):
+    mad_x_stats = res['mad_x{}'.format(sector_number)]
+    mad_y_stats = res['mad_y{}'.format(sector_number)]
+    mean_x_stats = res['mean_x{}'.format(sector_number)]
+    mean_y_stats = res['mean_y{}'.format(sector_number)]
 
     mean_x_stats = np.array(mean_x_stats)
     mean_y_stats = np.array(mean_y_stats)
@@ -39,12 +39,14 @@ def show_deviation_minima_on_track(res, track):
     ax_mad_y = divider.append_axes("left", 1.2, pad=0.1, sharey=ax_main)
 
     ax_mad_x.plot(mean_x_stats, mad_x_stats)
-    ax_mad_x.set_ylabel('Y MAD')
+    ax_mad_x.grid(which='both')
+    ax_mad_x.set_ylabel('Y MAD {}'.format(sector_number))
     ax_mad_x.xaxis.set_tick_params(labelbottom=False)
 
     ax_mad_y.plot(mad_y_stats, mean_y_stats)
+    ax_mad_y.grid(which='both')
     ax_mad_y.invert_xaxis()
-    ax_mad_y.set_xlabel('X MAD')
+    ax_mad_y.set_xlabel('X MAD {}'.format(sector_number))
     ax_mad_y.yaxis.set_tick_params(labelleft=False)
 
 
@@ -135,7 +137,7 @@ def all_sectors_result_plots(result, track, suffix, workdir=None):
     plt.legend()
     plt.grid(which='both')
     if workdir:
-        plt.savefig(os.path.join(workdir, 'mad_x_{}.png'.format(suffix)), dpi=300)
+        plt.savefig(os.path.join(workdir, 'mad x {}.png'.format(suffix)), dpi=300)
 
     # mean absolute deviation y
     plt.figure(figsize=(15, 8))
@@ -146,15 +148,26 @@ def all_sectors_result_plots(result, track, suffix, workdir=None):
     plt.legend()
     plt.grid(which='both')
     if workdir:
-        plt.savefig(os.path.join(workdir, 'mad_y_{}.png'.format(suffix)), dpi=300)
+        plt.savefig(os.path.join(workdir, 'mad y {}.png'.format(suffix)), dpi=300)
 
-    # track + mad plot
+    # track + mad plot one for each sector
     plt.figure(figsize=(15, 8))
-    plt.suptitle('Track + MAD | {}'.format(suffix))
-    show_deviation_minima_on_track(r, track)
-    plt.grid(which='both')
+    plt.suptitle('Track + MAD 1 | {}'.format(suffix))
+    show_deviation_minima_on_track(r, track, 1)
     if workdir:
-        plt.savefig(os.path.join(workdir, 'track_plus_mad_{}.png'.format(suffix)), dpi=300)
+        plt.savefig(os.path.join(workdir, 'track plus mad 1 {}.png'.format(suffix)), dpi=300)
+
+    plt.figure(figsize=(15, 8))
+    plt.suptitle('Track + MAD 2 | {}'.format(suffix))
+    show_deviation_minima_on_track(r, track, 2)
+    if workdir:
+        plt.savefig(os.path.join(workdir, 'track plus mad 2 {}.png'.format(suffix)), dpi=300)
+
+    plt.figure(figsize=(15, 8))
+    plt.suptitle('Track + MAD 3 | {}'.format(suffix))
+    show_deviation_minima_on_track(r, track, 3)
+    if workdir:
+        plt.savefig(os.path.join(workdir, 'track plus mad 3 {}.png'.format(suffix)), dpi=300)
 
     # delta between test value and mean result
     dx = list()
@@ -172,6 +185,6 @@ def all_sectors_result_plots(result, track, suffix, workdir=None):
     plt.legend()
     plt.grid(which='both')
     if workdir:
-        plt.savefig(os.path.join(workdir, 'coord_diff.png'.format(suffix)), dpi=300)
+        plt.savefig(os.path.join(workdir, 'coord diff {}.png'.format(suffix)), dpi=300)
 
     plt.show()
