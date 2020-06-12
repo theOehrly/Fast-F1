@@ -10,15 +10,18 @@ import logging
 from fastf1 import core
 
 CACHE_ENABLE = False
-"""Boolean: Enable/Disable cache for parsed data (Everything under
-./F1_Data). Note that raw http requests are still cached, data is quite
-fixed and shouldn't really change..
-"""
-
 CACHE_PATH = ""
 
 
 def enable_cache(path):
+    """Enable cache for parsed data.
+
+    If not enabled, raw http requests are still cached, data is quite
+    fixed and shouldn't really change.
+
+    :param path: Path to a folder which to use as cache directory
+    :type path: str
+    """
     global CACHE_ENABLE, CACHE_PATH
     requests_cache.install_cache(os.path.join(path, 'fastf1_http_cache'), allowable_methods=('GET', 'POST'))
 
