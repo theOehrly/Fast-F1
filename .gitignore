@@ -1,5 +1,6 @@
 **/__pycache__/
 .idea/
+docs/_build/
 build/
 solver_results/
 reference/

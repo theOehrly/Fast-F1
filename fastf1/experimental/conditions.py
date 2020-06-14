@@ -1,3 +1,8 @@
+"""
+:mod:`fastf1.experimental.conditions` - Solver conditions
+=========================================================
+"""
+
 from fastf1.track import TrackPoint
 import pandas as pd
 from math import sqrt

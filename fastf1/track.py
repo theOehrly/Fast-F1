@@ -1,3 +1,8 @@
+"""
+:mod:`fastf1.track` - Track module
+==================================
+"""
+
 from fastf1.func import min_index
 from matplotlib import pyplot as plt
 import pandas as pd
@@ -290,6 +295,7 @@ class Track:
         """Set coordinates for the finish line position.
 
         Internally the next closest unique track point will be used!
+
         :param x: coordinate x
         :type x: int or float
         :param y: coordinate y
@@ -339,7 +345,7 @@ class Track:
         Finally the lap distance is calculated by integrating over all points (implemented partially, not enabled, depending on previous).
         The distance since start is saved for each point. Additionally, the lap distance is saved normalized to a range of 0 to 1.
         :param visualization_frequency: (optional) specify  after how many calculated points the plot should be updated.
-            Set to zero for never (default: never). Plotting is somewhat slow. A visualization frequency greater than 50 is recommended.
+        Set to zero for never (default: never). Plotting is somewhat slow. A visualization frequency greater than 50 is recommended.
         :type visualization_frequency: int
         """
         self._vis_freq = visualization_frequency
@@ -370,6 +376,12 @@ class Track:
         This function only checks both coordinates independently. But it does not verify that the
         combination of both coordinates is a valid unique track point (therefore "lazy" check).
         This is an intentional measure for saving time.
+
+        :param x: x coordinate
+        :type x: int or float
+        :param y: x coordinate
+        :type y: int or float
+        :return: True or False
         """
         if x in self.sorted_x and y in self.sorted_y:
             return True

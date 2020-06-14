@@ -11,7 +11,7 @@ For the passionate F1 nerds.
 
 
 .. toctree::
-   ← Back to Github <https://github.com/Ax6/Fast-F1>
+   ← Back to Github <https://github.com/theOehrly/Fast-F1>
 
 .. toctree::
    :maxdepth: 2
@@ -21,7 +21,15 @@ For the passionate F1 nerds.
    core
    api
    utils
+   track
+   func
+
+   experimental
+   conditions
+   syncsolver
+
    known_bugs
+   changelog
 
 ==================
 Indices and tables

@@ -35,6 +35,7 @@ def clear_cache(deep=False):
     Use it with parsimony. In case of major update you may want to call
     this function, which will solve conflicts rising on unexpected data
     structures.
+    The cache needs to be enabled first, so that the cache path is known.
 
     Args:
         deep (=False, optional): If true, going for removal of http

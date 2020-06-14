@@ -1,3 +1,8 @@
+"""
+:mod:`fastf1.experimental.syncsolver` - Multicore solver for advanced synchronization
+=====================================================================================
+"""
+
 from fastf1.track import Track, TrackPoint
 from fastf1.func import reject_outliers, min_index, max_index
 from matplotlib import pyplot as plt
@@ -9,36 +14,40 @@ import time
 
 class AdvancedSyncSolver:
     """Advanced Data Synchronization and Determination of Sectors and Start/Finish Line Position
-        assumptions
-          - a session is always started on a full minute
-              --> should be able to do without but it is easier for now
 
-        conditions for syncing data
-          - the start/finish line needs to be in a fixed place (x/y coordinates)
-          - last lap start time + lap duration = current lap start time
+    This class is called a 'solver' because the plan was (is, maybe) to make this fully automated. As it is, the results need a fair
+    amount of analysis and interpretation, taking into account the shape of the track and so on. I do currently deem it impossible to
+    automate this process. So the solver is only doing calculations. It is not actually returning a simple solution though.
+
+        assumptions
+            - a session is always started on a full minute: should be possible to do without but it is easier for now
+
+        data is synchronized based on the following conditions
+            - the finish line needs to be in a fixed place (x/y coordinates): minimum variation in lap-to-lap position
+            - last lap start time + lap duration = current lap start time
 
         possible issues
-          - lap and sector times are reported with what seems to be a +-0.5s accuracy
-              with no further information about this process, it has to be assumed that a lap/sector time can be reported with
-              an earlier or later time than its correct time (correct time = the time it was actually set at)
-          - inaccuracies due to only ms precision --> max error ~50ms after the race; probably not that critical
-          - laps with pit stops --> skip laps with pit in or pit out for now; only add the lap times
-          - there is no fixed start time which is the sme for every driver --> maybe use race end timing?
+            - lap and sector times are reported with what seems to be a +-0.5s accuracy
+                with no further information about this process, it has to be assumed that a lap/sector time can be reported with
+                an earlier or later time than its correct time (correct time = the time it was actually set at)
+            - inaccuracies due to only ms precision --> max rounding error (if any) ~50ms after the race; probably not that critical
+            - laps with pit stops --> skip laps with pit in or pit out for now; only add the lap times
+            - there is no fixed start time which is the same for every driver --> maybe use race end timing?
 
         possible further sources of data
-          - race result time between drivers for fixed values at the end too
+            - race result time between drivers for fixed values at the end too
 
         approach for now
-          - get min/max values for start finish position from the first coarse synchronization
-          - iterate over this range in small increments
+            - get min/max values for start finish position from the first coarse synchronization
+            - iterate over this range in small increments
               - always skip first lap
               - from selected position, interpolate a lap start time
-              - add all lap times up to get a lap start time for each
-              - interpolate start/finish x/y for each lap which does not have pit in or pit out
-          - calculate metrics after each pass
+              - subtract the last lap time from the current lap start time to get the previous lap start time
+              - interpolate start/finish x/y for each calculated lap start time which does not have pit in or pit out
+            - calculate metrics after each pass
               - arithmetic mean of x and y
               - standard deviation of x and y
-              --> plot metrics
+              - plot metrics
         """
     def __init__(self, track, telemetry_data, position_data, laps_data, processes=1):
         """Initiate the solver.
@@ -297,7 +306,11 @@ class AdvancedSyncSolver:
 
     def add_condition(self, condition, *args, **kwargs):
         """Add a condition class to the solver. Currently there is no check against adding duplicate conditions. Conditions can also not
-        be removed again."""
+        be removed again.
+        Additionally passed arguments and keyword arguments will be passed on to the condition when it is initialized.
+        """
+        # Adding conditions is done in this somewhat convoluted way as there are scenarios which may require multiple instances of a
+        # condition. If this ever is necessary, it can now be done without changing how interaction with this class works.
         cond_inst = condition(*args, **kwargs)  # create an instance of the condition and add it to the list of solver conditions
         self.conditions.append(cond_inst)
 
