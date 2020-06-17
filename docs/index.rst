@@ -14,7 +14,7 @@ For the passionate F1 nerds.
    ← Back to Github <https://github.com/theOehrly/Fast-F1>
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
    fastf1
@@ -23,13 +23,16 @@ For the passionate F1 nerds.
    utils
    track
    func
+   known_bugs
+   changelog
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Experimental:
 
    experimental
    conditions
    syncsolver
-
-   known_bugs
-   changelog
 
 ==================
 Indices and tables
@@ -38,3 +41,7 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+
+For questions feel free to contact me:
+oehrly@mailbox.org

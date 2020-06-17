@@ -2,9 +2,9 @@ from distutils.core import setup
 
 info = {
     'name': 'fastf1',
-    'version': 'v1.5.1',
-    'author': 'Ax_6',
-    'author_email': 'axolo6@gmail.com',
+    'version': 'v2.0.0',
+    'author': 'Oehrly',
+    'author_email': 'oehrly@mailbox.org',
     'packages': ['fastf1'],
     'install_requires': [
         'numpy', 'pandas', 'requests', 'requests_cache', 'matplotlib',
@@ -12,13 +12,13 @@ info = {
     ],
     'license': 'MIT',
     'url': '',
-    'descritpion': 'Wrapper library for F1 data and telemetry',
+    'descritpion': 'Wrapper library for F1 data and telemetry with additional data processing capabilities.',
     'zip_safe': False
 }
 
 if __name__ == '__main__':
     import sys
-    if sys.version_info < (3,8):
+    if sys.version_info < (3, 8):
         sys.exit('Sorry, Python < 3.8 is not supported,'
                  + ' please update to install.')
     else:
