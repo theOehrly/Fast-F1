@@ -19,12 +19,19 @@ information is stored locally as cached requests (be aware).
 
 Have fun!
 
+This module was originally developed by Ax6.
+
+This fork is maintained by theOehrly.
+I'm very grateful for all the work that was done previously by Ax6!
+
 Getting started
 ===============
 
 Setting up a running snippet is straightforward::
 
     import fastf1 as ff1
+
+    ff1.utils.enable_cache('path/to/folder/for/cache')  # optional but recommended
 
     monza_quali = ff1.get_session(2019, 'Monza', 'Q')
 
@@ -53,6 +60,11 @@ For some more advanced stuff, just a few more steps::
 
 .. image:: _static/gettingstarted.svg
     :target: _static/gettingstarted.svg
+
+
+It is not necessary to enable the usage of a cache but it is recommended. Simply provide
+the path to some empty folder on your system.
+
 
 Package functions
 =================

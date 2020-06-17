@@ -1,3 +1,3 @@
-.. automodule:: fastf1.utils
+.. automodule:: fastf1.func
     :members:
     :show-inheritance:

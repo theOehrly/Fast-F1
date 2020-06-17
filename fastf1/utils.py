@@ -9,16 +9,25 @@ import pandas as pd
 import logging
 from fastf1 import core
 
-CACHE_PATH = os.environ['HOME'] + '/Documents/FF1Data'
+CACHE_ENABLE = False
+CACHE_PATH = ""
 
-CACHE_ENABLE = True
-"""Boolean: Enable/Disable cache for parsed data (Everything under
-./F1_Data). Note that raw http requests are still cached, data is quite
-fixed and shouldn't really change..
-"""
 
-requests_cache.install_cache(os.path.join(CACHE_PATH, 'fastf1_http_cache'),
-                             allowable_methods=('GET', 'POST'))
+def enable_cache(path):
+    """Enable cache for parsed data.
+
+    If not enabled, raw http requests are still cached, data is quite
+    fixed and shouldn't really change.
+
+    :param path: Path to a folder which to use as cache directory
+    :type path: str
+    """
+    global CACHE_ENABLE, CACHE_PATH
+    requests_cache.install_cache(os.path.join(path, 'fastf1_http_cache'), allowable_methods=('GET', 'POST'))
+
+    CACHE_PATH = path
+    CACHE_ENABLE = True
+
 
 def clear_cache(deep=False):
     """Removes from disk cached data. Just in case you feel the need of
@@ -26,6 +35,7 @@ def clear_cache(deep=False):
     Use it with parsimony. In case of major update you may want to call
     this function, which will solve conflicts rising on unexpected data
     structures.
+    The cache needs to be enabled first, so that the cache path is known.
 
     Args:
         deep (=False, optional): If true, going for removal of http

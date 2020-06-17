@@ -11,17 +11,28 @@ For the passionate F1 nerds.
 
 
 .. toctree::
-   ← Back to Github <https://github.com/Ax6/Fast-F1>
+   ← Back to Github <https://github.com/theOehrly/Fast-F1>
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
    fastf1
    core
    api
    utils
+   track
+   func
    known_bugs
+   changelog
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Experimental:
+
+   experimental
+   conditions
+   syncsolver
 
 ==================
 Indices and tables
@@ -30,3 +41,7 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+
+For questions feel free to contact me:
+oehrly@mailbox.org

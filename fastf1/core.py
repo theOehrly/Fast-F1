@@ -143,7 +143,10 @@ class Weekend:
         return Session(self, 'Race')
 
     def is_testing(self):
-        return 'Test' in self.gp
+        if type(self.gp) is str:
+            return 'Test' in self.gp
+        else:
+            return False
 
     @property
     def name(self):
@@ -167,11 +170,18 @@ class Session:
         self.name = session_name
         if self.weekend.is_testing():
             self.date = TESTING_LOOKUP[str(weekend.year)][int(session_name[-1]) - 1]
-        elif session_name == 'Qualifying':
-            # Assuming that quali was one day before race... well not always
-            # Should check if also formula1 makes this assumption
+        elif session_name == 'Race':
+            self.date = weekend.date
+
+        # Assuming  date offsets here which is not always correct
+        # Should check if also formula1 makes this assumption
+        elif session_name in ('Qualifying', 'Practice 3'):
             offset_date = pd.to_datetime(weekend.date) + pd.DateOffset(-1)
             self.date = offset_date.strftime('%Y-%m-%d')
+        elif session_name in ('Practice 1', 'Practice 2'):
+            offset_date = pd.to_datetime(weekend.date) + pd.DateOffset(-2)
+            self.date = offset_date.strftime('%Y-%m-%d')
+
         w, s = self.weekend, self
         self.api_path = api.make_path(w.name, w.date, s.name, s.date)
         if not weekend.is_testing():
