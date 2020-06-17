@@ -50,7 +50,7 @@ def show_deviation_minima_on_track(res, track, sector_number):
     ax_mad_y.yaxis.set_tick_params(labelleft=False)
 
 
-def plot_lap_time_integrity(laps_data):
+def plot_lap_time_integrity(laps_data, suffix=''):
     drivers_series = laps_data.Driver
     drivers = list(drivers_series.drop_duplicates())
 
@@ -76,15 +76,15 @@ def plot_lap_time_integrity(laps_data):
                 n += 1
 
     fig1 = plt.figure()
-    fig1.suptitle("Lap Time Scatter")
+    fig1.suptitle("Lap Time Scatter {}".format(suffix))
     plt.scatter(ref, deltas)
 
     fig2 = plt.figure()
-    fig2.suptitle("Lap Time Histogram")
+    fig2.suptitle("Lap Time Histogram {}".format(suffix))
     plt.hist(deltas, bins=50)
 
 
-def plot_lap_position_integrity(laps_data, track):
+def plot_lap_position_integrity(laps_data, track, suffix=''):
     x_vals = list()
     y_vals = list()
 
@@ -113,15 +113,15 @@ def plot_lap_position_integrity(laps_data, track):
             y_vals.append(p.y)
 
     fig1 = plt.figure()
-    fig1.suptitle("Position Scatter")
+    fig1.suptitle("Position Scatter {}".format(suffix))
     plt.scatter(x_vals, y_vals)
 
     fig2 = plt.figure()
-    fig2 .suptitle("Position X Histogram")
+    fig2 .suptitle("Position X Histogram {}".format(suffix))
     plt.hist(x_vals, bins=30)
 
     fig3 = plt.figure()
-    fig3.suptitle("Position Y Histogram")
+    fig3.suptitle("Position Y Histogram {}".format(suffix))
     plt.hist(y_vals, bins=30)
 
 
