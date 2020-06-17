@@ -334,6 +334,8 @@ class Track:
             date = self.get_time_from_pos(lap.Driver, self.finish_line, range_start, range_end)
             dates.append(date)
 
+        # create a copy of the data frame because insert works inplace and I think that's not intuitive here
+        laps_data = pd.DataFrame(laps_data, copy=True)
         laps_data.insert(2, "Date", dates)
 
         return laps_data
