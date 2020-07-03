@@ -185,7 +185,10 @@ class Session:
         w, s = self.weekend, self
         self.api_path = api.make_path(w.name, w.date, s.name, s.date)
         if not weekend.is_testing():
-            self.results = ergast.load(w.year, w.gp, s)
+            try:
+                self.results = ergast.load(w.year, w.gp, s)
+            except:
+                logging.warning("Ergast lookup failed")
         else:
             self.results = _gen_results()
 
