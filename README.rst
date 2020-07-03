@@ -60,6 +60,10 @@ the path to some empty folder on your system.
 Compatibility
 =============
 
+Starting with the Austrian GP 2020 the API provides the position data in a
+somewhat different format. This currently breaks ALL functionality of the track class.
+Maybe also other functionality.
+
 Library is fully compatible with 2018 and 2019 season.
 While previous seasons are still accessible and it is possible to obtain
 general weekend information (basically what you can get from
