@@ -1,4 +1,5 @@
 requests
+requests-cache
 pandas
 numpy
 scipy

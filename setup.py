@@ -5,7 +5,7 @@ info = {
     'version': 'v2.0.0',
     'author': 'Oehrly',
     'author_email': 'oehrly@mailbox.org',
-    'packages': ['fastf1'],
+    'packages': ['fastf1', 'fastf1.experimental'],
     'install_requires': [
         'numpy', 'pandas', 'requests', 'requests_cache', 'matplotlib',
         'python-Levenshtein', 'fuzzywuzzy', 'scipy'
