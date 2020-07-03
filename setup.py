@@ -2,7 +2,7 @@ from distutils.core import setup
 
 info = {
     'name': 'fastf1',
-    'version': 'v2.0.0',
+    'version': 'v2.0.1',
     'author': 'Oehrly',
     'author_email': 'oehrly@mailbox.org',
     'packages': ['fastf1', 'fastf1.experimental'],
