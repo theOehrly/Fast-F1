@@ -41,12 +41,17 @@ Hamilton from the Bahrain GP (weekend number 2) of 2019.
 
 Once the session is loaded, and drivers are selected, you can plot the
 information.
+
+:code:`fastf1.plotting` provides some special axis formatting and data type conversion. This is required
+for generating a correct plot.
+
 It is not necessary to enable the usage of a cache but it is recommended. Simply provide
 the path to some empty folder on your system.
 
 .. code:: python
 
     fig, ax = plt.subplots()
+    plotting.laptime_axis(ax)
     ax.plot(lec['LapNumber'], lec['LapTime'], color='red')
     ax.plot(ham['LapNumber'], ham['LapTime'], color='cyan')
     ax.set_title("LEC vs HAM")
