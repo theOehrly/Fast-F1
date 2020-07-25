@@ -2,7 +2,7 @@
 :mod:`fastf1.api` - Api module
 ==============================
 
-This module contains the main interfaces to the f1 web api
+A collection of functions to interface with the F1 web api.
 """
 import json
 import base64
@@ -11,8 +11,6 @@ import zlib
 import requests
 import logging
 import pandas as pd
-import numpy as np
-from fastf1 import utils
 
 
 base_url = 'https://livetiming.formula1.com'
@@ -226,8 +224,9 @@ def _timing_data_laps_entry(entry, driver, data={}, flags={}):
                 data[driver][f'Sector{str(_n+1)}SessionTime'][i] = time
 
             # Sectors are used to calculate the sacred time reference.
-            # Following block has the only purpose to find the time with
-            # minimum measure delay. Otherwise laps will be out of sync
+            # The following block of code has the only purpose to find the
+            # time with the minimum measuring delay.
+            # Otherwise laps will be out of sync (by a lot)!
             has_measure = 'Value' in sector and sector['Value'] != ''
 
             # Sector 1
@@ -282,28 +281,29 @@ def _timing_data_laps_entry(entry, driver, data={}, flags={}):
     # tells it was personal best or something but nobody cares
     # just use .min() This is the last entry of a lap usually.
     if ('LastLapTime' in block
-        and 'Value' in block['LastLapTime']
-        and block['LastLapTime']['Value'] != ''):
-            lap_time = __to_timedelta(block['LastLapTime']['Value'])
-            # Pandas here is very smart (i guess?) because even if I 
-            # append None it will be guessed as NaT to keep datatype
-            # consistency. Very silent behaviour though.
-            # UNLESS, no time has been set by this guy (shit #1)
-            data[driver]['LastLapTime'][i] = lap_time
-            # Tricky tricks to discover with 'accuracy'
-            # when lap time has been set
-            time_ref = flags[driver]['time_reference'][i]
-            if time_ref is not None: 
-                lap_start_time = time_ref['base'] - time_ref['delta']
-                data[driver]['Time'][i] = lap_start_time + lap_time 
-                flags[driver]['locked_times'][i] = True
+            and 'Value' in block['LastLapTime']
+            and block['LastLapTime']['Value'] != ''):
+
+        lap_time = __to_timedelta(block['LastLapTime']['Value'])
+        # Pandas here is very smart (i guess?) because even if I
+        # append None it will be guessed as NaT to keep datatype
+        # consistency. Very silent behaviour though.
+        # UNLESS, no time has been set by this guy (shit #1)
+        data[driver]['LastLapTime'][i] = lap_time
+        # Tricky tricks to discover with 'accuracy'
+        # when lap time has been set
+        time_ref = flags[driver]['time_reference'][i]
+        if time_ref is not None:
+            lap_start_time = time_ref['base'] - time_ref['delta']
+            data[driver]['Time'][i] = lap_start_time + lap_time
+            flags[driver]['locked_times'][i] = True
 
     # Number of laps triggers a new entry it looks like always
     # comes before LastLapTime.
     # Unless bottas qualifies under red flag in Monza but is later 
     # convalidated, but we are bullet proof against that as well, apart
     # pit stop time. sorry.
-    if ('NumberOfLaps' in block):
+    if 'NumberOfLaps' in block:
         data[driver]['NumberOfLaps'][-1] = block['NumberOfLaps']
         [data[driver][key].append(None) for key in data[driver]]
         # prevent shit #1 and put a NaT
@@ -321,7 +321,7 @@ def timing_app_data(path, response=None):
     """
     if response is None:
         response = fetch_page(path, 'timing_app_data')
-    data = {'LapNumber': [],'Driver': [], 'LapTime': [], 'Stint': [],
+    data = {'LapNumber': [], 'Driver': [], 'LapTime': [], 'Stint': [],
             'TotalLaps': [], 'Compound': [], 'New': [],
             'TyresNotChanged': [], 'Time': [], 'LapFlags': [],
             'LapCountTime': [], 'StartLaps': [], 'Outlap': []}
@@ -371,7 +371,7 @@ def car_data(path):
     """
     index = {'0': 'RPM', '2': 'Speed', '3': 'nGear',
              '4': 'Throttle', '5': 'Brake', '45': 'DRS'}
-    data, main_structure = {}, {'Date': [],'Time': []}
+    data, main_structure = {}, {'Date': [], 'Time': []}
     [main_structure.update({index[i]: []}) for i in index]
     logging.info("Fetching car data") 
     raw = fetch_page(path, 'car_data')
@@ -413,30 +413,32 @@ def position(path):
     Returns:
         pandas dataframe
     """
-
-    index = {'Status': 'Status', 'X': 'X', 'Y': 'Y', 'Z': 'Z'}
-    data, main_structure = {}, {'Date': [],'Time': []}
-    [main_structure.update({index[i]: []}) for i in index]
+    tl = 12  # length of timestamp: len('00:00:00:000')
+    index = ['Status', 'X', 'Y', 'Z']
+    data, main_structure = {}, {'Date': [], 'Time': []}
+    [main_structure.update({i: []}) for i in index]
     logging.info("Fetching position") 
     raw = fetch_page(path, 'position')
     logging.info("Parsing position") 
+
     if raw is None:
         return {}
-    for line in raw:
-        time = __to_timedelta(line[0])
-        for entry in line[1]['Position']:
-            cars = entry['Entries']
-            date = pd.to_datetime(entry['Timestamp'][:-1],
+    for record in raw:
+        time = __to_timedelta(record[:tl])
+        jrecord = parse(record[tl:], zipped=True)
+        for sample in jrecord['Position']:
+            date = pd.to_datetime(sample['Timestamp'],
                                   format="%Y-%m-%dT%H:%M:%S.%f",
                                   infer_datetime_format=True)
-            for driver in cars:
+            entries = sample['Entries']
+            for driver in entries:
                 if driver not in data:
                     data[driver] = copy.deepcopy(main_structure)
                 data[driver]['Time'].append(time)
                 data[driver]['Date'].append(date)
                 for key in index:
-                    data[driver][index[key]].append(cars[driver][key])
-                if str(cars[driver]['Status']).isdigit():
+                    data[driver][key].append(entries[driver][key])
+                if str(entries[driver]['Status']).isdigit():
                     # Fallback on older api status mapping and convert
                     int_val = data[driver]['Status'][-1] 
                     new_map = 'OffTrack' if int_val else 'OnTrack'
@@ -467,9 +469,13 @@ def fetch_page(path, name):
     if r.status_code == 200:
         raw = r.content.decode('utf-8-sig')
         if is_stream:
-            tl = len('00:00:00:000')
-            entries = raw.split('\r\n')[:-1] # last split is empty
-            return [[e[:tl], parse(e[tl:], zipped=is_z)] for e in entries]
+            records = raw.split('\r\n')[:-1]  # last split is empty
+            if name == 'position':
+                # Special case to improve memory efficency
+                return records
+            else:
+                tl = 12  # length of timestamp: len('00:00:00:000')
+                return [[e[:tl], parse(e[tl:], zipped=is_z)] for e in records]
         else:
             return parse(raw, is_z)
     else:
