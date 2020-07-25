@@ -1,6 +1,8 @@
 """
 :mod:`fastf1.core` - Core module
 ================================
+
+Contains the main classes and functions.
 """
 from fastf1 import utils
 from fastf1 import ergast
@@ -15,8 +17,8 @@ import scipy
 from scipy import spatial
 logging.basicConfig(level=logging.INFO)
 
-TESTING_LOOKUP = {'2020': ['2020-02-19', '2020-02-20', '2020-02-21',
-                           '2020-02-26', '2020-02-27', '2020-02-28']}
+TESTING_LOOKUP = {'2020': [['2020-02-19', '2020-02-20', '2020-02-21'],
+                           ['2020-02-26', '2020-02-27', '2020-02-28']]}
 
 D_LOOKUP = [[44, 'HAM', 'Mercedes'], [77, 'BOT', 'Mercedes'],
             [5, 'VET', 'Ferrari'], [16, 'LEC', 'Ferrari'],
@@ -30,14 +32,12 @@ D_LOOKUP = [[44, 'HAM', 'Mercedes'], [77, 'BOT', 'Mercedes'],
             [6, 'LAT', 'Williams'], [63, 'RUS', 'Williams'],
             [88, 'KUB', 'Alfa Romeo']]
 
-def _gen_results():
-    results = []
-    for driver in D_LOOKUP:
-        results.append({
-            'number': str(driver[0]),
-            'Driver': {'code': driver[1]},
-            'Constructor': {'name': driver[2]}})
-    return results
+REFERENCE_LAP_RESOLUTION = 0.667
+"""A distance in meters which indicates the resolution of the reference
+lap. This reference is used to project car positions and calculate
+things like distance between cars.
+"""
+
 
 def get_session(year, gp, event=None):
     """Main core function. It will take care of crafting an object
@@ -45,14 +45,19 @@ def get_session(year, gp, event=None):
     If not specified, full weekend is returned.
 
     Args:
-        year: session year (Tested only with 2019)
-        gp: name or weekend number (1: Australia, ..., 21: Abu Dhabi)
-            if gp is a string, a fuzzy match will be performed on the
-            season rounds and the most likely will be selected.
-            'bahrain', 'australia', 'abudabi' are some of the examples
-            that you can pass and the correct week will be selected.
+        year (number): Session year
+        gp (number or string): Name or weekend number (1: Australia,
+                               ..., 21: Abu Dhabi). If gp is a string,
+                               a fuzzy match will be performed on the
+                               season rounds and the most likely will be
+                               selected.
 
-            Pass 'testing' to fetch barcelona tests.
+                               Some examples that will be correctly
+                               interpreted: 'bahrain', 'australia',
+                               'abudabi', 'monza'.
+            
+                               Pass 'testing' to fetch Barcelona winter
+                               tests.
 
         event (=None): may be 'FP1', 'FP2', 'FP3', 'Q' or 'R', if not 
                        specified you get the full :class:`Weekend`.
@@ -63,17 +68,10 @@ def get_session(year, gp, event=None):
 
     """
     if type(gp) is str and gp == 'testing':
-        try:
-            event = int(event)
-            week = 1 if event < 4 else 2
-        except:
-            msg = "Cannot fetch testing without correct event day."
-            raise Exception(msg)
-        gp = f'Pre-Season Test {week}'
-        event = f'Practice {event}'
-        weekend = Weekend(year, gp)
+        pre_season_week, event = _solve_testing(year, event)
+        print(pre_season_week, event)
+        weekend = Weekend(year, pre_season_week)
         return Session(weekend, event)
-
     if type(gp) is str:
         gp = get_round(year, gp)
     weekend = Weekend(year, gp)
@@ -91,6 +89,17 @@ def get_session(year, gp, event=None):
 
 
 def get_round(year, match):
+    """From the year and a text to match, will try to find the most
+    likely week number of the event.
+
+    Args:
+        year (int): Year of the event
+        match (string): Name of the race or gp (e.g. 'Bahrain')
+
+    Returns:
+        The round number. (2019, 'Bahrain') -> 2
+
+    """
     ratios = np.array([])
     def build_string(d):
         r = len('https://en.wikipedia.org/wiki/')
@@ -104,8 +113,34 @@ def get_round(year, match):
     return int(races[np.argmax(ratios)]['round'])
 
 
+def _solve_testing(year, day):
+    """Solve from year and testing day the corresponding weekend/event
+    elements.
+    """
+    try:
+        day = int(day)
+        week = 1 if day < 4 else 2 # Probably will change from 2021
+    except:
+        msg = "Cannot fetch testing without correct event day."
+        raise Exception(msg)
+    week_day = ((day - 1) % 3) + 1 # Probably will change from 2021
+    pre_season_week = f'Pre-Season Test {week}'
+    event = f'Practice {week_day}'
+    return pre_season_week, event
+
+
 class Weekend:
-    """Weekend class
+    """If you want to handle multiple sessions from the same race event
+    you can use a :class:Weekend instance. 
+
+    For example you could do the following::
+
+        import fastf1 as ff1
+
+        weekend = ff1.get_session(2019, 'Monza')
+        quali = weekend.get_quali() # Q Session
+        race = weekend.get_race() # R Session
+
     """
 
     def __init__(self, year, gp):
@@ -115,7 +150,7 @@ class Weekend:
             warnings.warn("Ergast api not supported for testing.")
             self.data = {
                 'raceName': gp,
-                'date': TESTING_LOOKUP[str(year)][int(gp[-1]) * 3 - 1]}
+                'date': TESTING_LOOKUP[str(year)][int(gp[-1]) - 1][-1]}
         else:
             self.data = ergast.fetch_weekend(self.year, self.gp)
 
@@ -126,7 +161,7 @@ class Weekend:
         Returns:
             :class:`Session` instance
         """
-        return Session(self, 'Qualifying')
+        return Session(self, f'Practice {number}')
 
     def get_quali(self):
         """
@@ -143,10 +178,7 @@ class Weekend:
         return Session(self, 'Race')
 
     def is_testing(self):
-        if type(self.gp) is str:
-            return 'Test' in self.gp
-        else:
-            return False
+        return 'Test' in str(self.gp)
 
     @property
     def name(self):
@@ -162,65 +194,94 @@ class Weekend:
 
 
 class Session:
-    """Session class
+    """The session class usually will be your starting point. This
+    object will have various information about the event such `name` and
+    `date`. To get the session laps use :meth:`Session.load_laps`.
     """
 
     def __init__(self, weekend, session_name):
         self.weekend = weekend
         self.name = session_name
-        if self.weekend.is_testing():
-            self.date = TESTING_LOOKUP[str(weekend.year)][int(session_name[-1]) - 1]
-        elif session_name == 'Race':
-            self.date = weekend.date
-
-        # Assuming  date offsets here which is not always correct
-        # Should check if also formula1 makes this assumption
-        elif session_name in ('Qualifying', 'Practice 3'):
-            offset_date = pd.to_datetime(weekend.date) + pd.DateOffset(-1)
-            self.date = offset_date.strftime('%Y-%m-%d')
-        elif session_name in ('Practice 1', 'Practice 2'):
-            offset_date = pd.to_datetime(weekend.date) + pd.DateOffset(-2)
-            self.date = offset_date.strftime('%Y-%m-%d')
-
-        w, s = self.weekend, self
-        self.api_path = api.make_path(w.name, w.date, s.name, s.date)
-        if not weekend.is_testing():
-            try:
-                self.results = ergast.load(w.year, w.gp, s)
-            except:
-                logging.warning("Ergast lookup failed")
+        self.date = self._get_session_date()
+        self.api_path = api.make_path(self.weekend.name,
+                                      self.weekend.date,
+                                      self.name, self.date)
+        if not self.weekend.is_testing():
+            self.results = ergast.load(self.weekend.year,
+                                       self.weekend.gp,
+                                       self.name)
         else:
-            self.results = _gen_results()
+            # Ergast has no data on testing
+            # So, emulate ergast basic structure for later use
+            self.results = []
+            for driver in D_LOOKUP:
+               self.results.append({
+                    'number': str(driver[0]),
+                    'Driver': {'code': driver[1]},
+                    'Constructor': {'name': driver[2]}})
+
+
+    def _get_session_date(self):
+        """Session date formatted as '%Y-%m-%d' (e.g. '2019-03-12')
+        """
+        if self.weekend.is_testing():
+            year = str(self.weekend.year)
+            week_index = int(self.weekend.name[-1]) - 1
+            day_index = int(self.name[-1]) - 1
+            date = TESTING_LOOKUP[year][week_index][day_index]
+        elif self.name == 'Qualifying' or self.name == 'Practice 3':
+            # Assuming that quali was one day before race... well not always
+            # Should check if also formula1 makes this assumption
+            offset_date = pd.to_datetime(self.weekend.date) + pd.DateOffset(-1)
+            date = offset_date.strftime('%Y-%m-%d')
+        elif self.name == 'Practice 2' or self.name == 'Practice 1':
+            # Again, assuming that practice 1/2 are the day before quali
+            # Except Monaco
+            _ = -3 if self.weekend.name == 'Monaco Grand Prix' else -2
+            offset_date = pd.to_datetime(self.weekend.date) + pd.DateOffset(_) 
+            date = offset_date.strftime('%Y-%m-%d')
+        else:
+            date = self.weekend.date
+        return date
+
 
     @utils._cached_laps
     def load_laps(self):
         """With load laps all the timing information is merged in a
-        single pandas dataframe. The first time you run the method on
-        a session it may take a while to load, some megabytes are of
-        data are downloaded and processed, but then laps will be 
-        stored locally. Each dataframe entry has the following columns:
+        single pandas dataframe. The first time you run this method it
+        may take a while to load. Megabytes of data have to be downloaded
+        and processed. After, laps will be stored locally and execution
+        will be seamless.
 
-            - `Time` (timedelta): Time when the lap was recorded
-            - `Driver` (string): Three letters driver identifier
-            - `LapTime` (timedelta): Recorded lap time
-            - `LapNumber` (int): Recorded lap number
-            - `PitOutTime` (timedelta): Time when car exited the pit
-            - `PitInTime` (timedelta): Time when car entered the pit
-            - `Sector1Time` (timedelta): Sector 1 recorded time
-            - `Sector2Time` (timedelta): Sector 2 recorded time
-            - `Sector3Time` (timedelta): Sector 3 recorded time
-            - `SpeedI1` (float): Speedtrap sector 1
-            - `SpeedI2` (float): Speedtrap sector 2
-            - `SpeedFL` (float): Speedtrap sector 3 (Not sure)
-            - `SpeedST` (float): Speedtrap on longest straight (Not sure)
-            - `Stint` (int): Indicates the stint number
-            - `Compound` (str): Tyre compound name: SOFT, MEDIUM ..
-            - `TyreLife` (int): Laps spent on that compound
-            - `FreshTyre` (bool): Tyre had TyreLife=0 at stint start
-            - `DriverNumber` (str): Car number
-            - `Team` (str): Team name
-            - `LapStartDate` (datetime): When the lap started
-            - `telemetry`: (pandas dataframe of lap telemetry)
+        The returned :class:`Laps` instance can be used just like a
+        pandas DataFrame with some additional enhancements.
+
+        The dataframe columns, therefore, each lap, has the following
+        properties:
+
+            - **Time** (timedelta): Time when the lap was recorded
+            - **Driver** (string): Three letters driver identifier
+            - **LapTime** (timedelta): Recorded lap time
+            - **LapNumber** (int): Recorded lap number
+            - **PitOutTime** (timedelta): Time when car exited the pit
+            - **PitInTime** (timedelta): Time when car entered the pit
+            - **Sector1Time** (timedelta): Sector 1 recorded time
+            - **Sector2Time** (timedelta): Sector 2 recorded time
+            - **Sector3Time** (timedelta): Sector 3 recorded time
+            - **SpeedI1** (float): Speedtrap sector 1
+            - **SpeedI2** (float): Speedtrap sector 2
+            - **SpeedFL** (float): Speedtrap sector 3 (Not sure)
+            - **SpeedST** (float): Speedtrap on longest straight (Not sure)
+            - **Stint** (int): Indicates the stint number
+            - **Compound** (str): Tyre compound name: SOFT, MEDIUM ..
+            - **TyreLife** (int): Laps spent on that compound
+            - **FreshTyre** (bool): Tyre had TyreLife=0 at stint start
+            - **DriverNumber** (str): Car number
+            - **Team** (str): Team name
+            - **LapStartDate** (datetime): When the lap started
+            - **telemetry** (pandas.DataFrame): Telemetry with the \
+                                                following channels:
+
                 - `Time` (timedelta): Time axis (0 is start of lap)
                 - `Space` (float): Space in meters (from speed and time)
                 - `Speed` (float): Car speed
@@ -234,7 +295,7 @@ class Session:
                 - `Z` (float): GPS Z position (normalized)
                 - `Status` (string): flags OffTrack/OnTrack for GPS 
                 - `SessionTime` (timedelta): time elapsed from session start
-                - `DistanceToDriverAhead` (string): distance to next car
+                - `DistanceToDriverAhead` (string): distance to next car in m
                 - `DriverAhead` (string): the car ahead
 
         .. note:: Absolute time is not super accurate. The moment a lap
@@ -245,7 +306,7 @@ class Session:
             data of different laps.
 
         Returns:
-            laps
+            :class:`Laps`
 
         """
         logging.info(f"Loading {self.weekend.name} {self.name}")
@@ -294,17 +355,24 @@ class Session:
             except:
                 # From 2018 to 2020 there is Vettel pre season 2020-02-21 who
                 # is not synchronised correctly. A manually patched file is loaded
-                if (driver == '5'
-                    and self.api_path == ('/static/2020/2020-02-21_Pre-Season_Test_1'
-                                        + '/2020-02-21_Practice_3/')):
+                vet_path = ('/static/2020/2020-02-21_Pre-Season_Test_1'
+                            + '/2020-02-21_Practice_3/')
+                bot_path = ('/static/2020/2020-02-28_Pre-Season_Test_2'
+                            + '/2020-02-28_Practice_3/')
+                if ((driver == '5' and self.api_path == vet_path)
+                    or (driver == '77' and self.api_path == bot_path)):
                         import pathlib, os
                         path = pathlib.Path(__file__).parent.absolute()
-                        file_path = os.path.join(path, 'vettel_test_2020_21_03.csv')
+                        if self.api_path == vet_path:
+                            file_name = 'vettel_test_2020_21_03.csv'
+                        if self.api_path == bot_path:
+                            file_name = 'bottas_test_2020_02_28.csv'
+                        file_path = os.path.join(path, file_name)
                         result = pd.read_csv(file_path)
                         for col in result.columns:
                             if 'Time' in col:
                                 result[col] = pd.to_timedelta(result[col])
-                        result['Driver'] = '5'
+                        result['Driver'] = driver
                 else:
                     print("ERROR: Could not merge timing data with timing app data!")
                     exit()
@@ -538,7 +606,8 @@ class Session:
         full_y = np.concatenate([y, y, y])
         full_z = np.concatenate([z, z, z])
 
-        reference_s = np.arange(0, total_s, 0.667)
+        reference_s = np.arange(0, total_s, REFERENCE_LAP_RESOLUTION)
+        
         reference_x = np.interp(reference_s, full_s, full_x)
         reference_y = np.interp(reference_s, full_s, full_y)
         reference_z = np.interp(reference_s, full_s, full_z)
@@ -612,7 +681,7 @@ class Session:
         time = self.position[drivers_list[0]]['Time']
         pit_mask = np.zeros((stream_length, len(drivers_list)), dtype=bool)
         for driver_index, driver_number in enumerate(drivers_list):
-            laps = self.laps.pick_driver_number(driver_number)
+            laps = self.laps.pick_driver(driver_number)
             in_pit = True
             times = [[], []]
             for lap_index in laps.index:
@@ -682,10 +751,6 @@ class Laps(pd.DataFrame):
 
     QUICKLAP_THRESHOLD = 1.07
 
-    @property
-    def _constructor(self):
-        return Laps
-
     def __pick_wrap(func):
         @functools.wraps(func)
         def decorator(*args, **kwargs):
@@ -694,44 +759,55 @@ class Laps(pd.DataFrame):
         return decorator
 
     @__pick_wrap
-    def pick_driver(self, name):
-        """Select driver given his three letters identifier
+    def pick_driver(self, identifier):
+        """Select driver given his three letters identifier or its car
+        number::
+
+            perez_laps = ff1.pick_driver('PER')
+            bottas_laps = ff1.pick_driver(77)
+            kimi_laps = ff1.pick_driver('RAI')
+
         """
-        return self[self['Driver'] == name]
+        identifier = str(identifier)
+        if identifier.isdigit():
+            return self[self['DriverNumber'] == identifier]
+        else:
+            return self[self['Driver'] == identifier]
 
     @__pick_wrap
-    def pick_drivers(self, names):
-        """Select drivers given a list of their three letters identifiers
-        """
-        return self[self['Driver'].isin(names)]
+    def pick_drivers(self, identifiers):
+        """Select drivers given a list of their identifiers. Same as
+        :meth:`Laps.pick_driver` but for lists::
 
-    @__pick_wrap
-    def pick_driver_number(self, number):
-        """Select driver given his car number
-        """
-        return self[self['DriverNumber'] == str(number)]
+            some_drivers_laps = ff1.pick_drivers([5, 'BOT', 7])
 
-    @__pick_wrap
-    def pick_driver_numbers(self, numbers):
-        """Select drivers given their car numbers
         """
-        return self[self['DriverNumber'].isin([str(n) for n in numbers])]
+        names = [n for n in identifiers if not str(n).isdigit()]
+        numbers = [str(n) for n in identifiers if str(n).isdigit()]
+        drv, num = self['Driver'], self['DriverNumber']
+        return self[(drv.isin(names) | num.isin(numbers))]
 
     @__pick_wrap
     def pick_team(self, name):
-        """Select team given its name
+        """Select team given its name::
+
+            mercedes = ff1.pick_team('Mercedes')
+            alfa_romeo = ff1.pick_team('Alfa Romeo')
+
+        Have a look to :attr:`fastf1.plotting.TEAM_COLORS` for a quick
+        reference on team names.
         """
         return self[self['Team'] == name]
 
     @__pick_wrap
     def pick_teams(self, names):
-        """Select teams given a list of names
+        """Same as :meth:`Laps.pick_team` but for a list of teams.
         """
         return self[self['Team'].isin(names)]
 
     @__pick_wrap
     def pick_fastest(self):
-        """Select fastest lap time 
+        """Get lap with best `LapTime`.
         """
         lap = self.loc[self['LapTime'].idxmin()]
         if isinstance(lap, pd.DataFrame):
@@ -741,8 +817,8 @@ class Laps(pd.DataFrame):
 
     @__pick_wrap
     def pick_quicklaps(self, threshold=None):
-        """Select laps with lap time below :attr:`QUICKLAP_THRESHOLD`
-        (default 107%) of the fastest lap from the given laps set
+        """Select laps with `LapTime` faster than a certain limit.
+        By default 107% of the best `LapTime` of the given laps set.
 
         Args:
             threshold (optional, float): custom threshold coefficent
@@ -756,7 +832,11 @@ class Laps(pd.DataFrame):
 
     @__pick_wrap
     def pick_tyre(self, compound):
-        """Select tyres between "SOFT", "MEDIUM" and "HARD"
+        """Get laps done on a specific compound.
+
+        Args:
+            compound (string): may be "SOFT", "MEDIUM" or "HARD"
+
         """
         return self[self['Compound'] == compound]
 

@@ -1,7 +1,0 @@
-requests
-requests-cache
-pandas
-numpy
-scipy
-fuzzywuzzy
-matplotlib

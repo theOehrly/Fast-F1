@@ -11,7 +11,7 @@ Car position, speed traces, tyres, timings and weekend history are some
 of the many available resources. No formula1 account is needed.
 
 The library is designed to be interfaced with matplotlib (although you
-can use whatever you want) but there is a neat :mod:`plots` module which
+can use whatever you want) but there is a neat :mod:`plotting` module which
 you can import and gives some color to your graphs. 
 
 Modules handle big chunks of data (~30mb per session) so most of the
@@ -19,19 +19,12 @@ information is stored locally as cached requests (be aware).
 
 Have fun!
 
-This module was originally developed by Ax6.
-
-This fork is maintained by theOehrly.
-I'm very grateful for all the work that was done previously by Ax6!
-
 Getting started
 ===============
 
 Setting up a running snippet is straightforward::
 
     import fastf1 as ff1
-
-    ff1.utils.enable_cache('path/to/folder/for/cache')  # optional but recommended
 
     monza_quali = ff1.get_session(2019, 'Monza', 'Q')
 
@@ -51,7 +44,8 @@ For some more advanced stuff, just a few more steps::
 
     # The rest is just plotting
     fig, ax = plt.subplots()
-    ax.plot(t, vCar, label='Fast')
+    plotting.laptime_axis(ax, axis='xaxis')
+    ax.plot(t.dt.total_seconds(), vCar, label='Fast')
     ax.set_xlabel('Time')
     ax.set_ylabel('Speed [Km/h]')
     ax.set_title('Leclerc is')
@@ -61,11 +55,6 @@ For some more advanced stuff, just a few more steps::
 .. image:: _static/gettingstarted.svg
     :target: _static/gettingstarted.svg
 
-
-It is not necessary to enable the usage of a cache but it is recommended. Simply provide
-the path to some empty folder on your system.
-
-
 Package functions
 =================
 Available functions directly accessible from fastf1 package
@@ -73,9 +62,7 @@ Available functions directly accessible from fastf1 package
 .. autofunction:: fastf1.core.get_session
     :noindex:
 
-.. autofunction:: fastf1.utils.clear_cache
-    :noindex:
-
 """
 from fastf1.core import get_session
-from fastf1.utils import clear_cache
+import fastf1.utils as utils
+import fastf1.plotting as plotting

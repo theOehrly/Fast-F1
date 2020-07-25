@@ -1,3 +1,9 @@
+"""
+:mod:`fastf1.plotting` - Plotting module
+========================================
+
+Helpers for charming graphs.
+"""
 import matplotlib
 from matplotlib import pyplot as plt
 from matplotlib import cycler
@@ -6,48 +12,35 @@ import numpy as np
 from pandas.plotting import register_matplotlib_converters
 register_matplotlib_converters()
 
-_TEAM_COLORS = {'MER': '#00d2be', 'FER': '#dc0000',
-               'RBR': '#1e41ff', 'MCL': '#ff8700',
-               'REN': '#fff500', 'RPT': '#f596c8',
-               'ARR': '#9b0000', 'STR': '#469bff',
-               'HAA': '#7e7e7e', 'WIL': '#469bff',
-               'ALP': '#ffffff'}
-
-TEAM_TRANSLATE = {'MER': 'Mercedes', 'FER': 'Ferrari',
-                  'RBR': 'Red Bull', 'MCL': 'McLaren',
-                  'REN': 'Renault', 'RPT': 'Racing Point',
-                  'ARR': 'Alfa Romeo', 'STR': 'Toro Rosso',
-                  'HAA': 'Haas F1 Team', 'WIL': 'Williams',
-                  'ALP': 'Alpha Tauri'}
-
-TEAM_COLORS = {}
-for key in TEAM_TRANSLATE:
-    TEAM_COLORS[TEAM_TRANSLATE[key]] = _TEAM_COLORS[key]
+TEAM_COLORS = {'Mercedes': '#00d2be', 'Ferrari': '#dc0000',
+                'Red Bull': '#1e41ff', 'McLaren': '#ff8700',
+                'Renault': '#fff500', 'Racing Point': '#f596c8',
+                'Alfa Romeo': '#9b0000', 'Toro Rosso': '#469bff',
+                'Haas F1 Team': '#7e7e7e', 'Williams': '#469bff',
+                'Alpha Tauri': '#ffffff'}
+"""Dictionary mapping teams with their colors.
+"""
 
 COLOR_PALETTE = ['#FF79C6', '#50FA7B', '#8BE9FD', '#BD93F9',
                  '#FFB86C', '#FF5555', '#F1FA8C']
 
-
-def timedelta_converter(x):
-    """Special data type converter for laptime axis.
-
-    Create an array for the axis' data where `NaT` values are masked.
-    Other data types but `np.ndarray` are left unchanged."""
-    if isinstance(x, np.ndarray):
-        return np.ma.masked_where(np.isnat(x), x)
-    return x
-
-
 def laptime_axis(ax, axis='yaxis'):
+    """Convert axis to change time formatting from seconds to "mm:ss.ms"
+
+    Args:
+        ax: matplotlib axis
+        axis (='yaxis', optional): can be 'xaxis' or 'yaxis'
+
+    """
     def time_ticks(x, pos):
         if not np.isnan(x):
             pieces = f'{x - 60*int(x/60)}'.split('.')
             pieces[0] = pieces[0].zfill(2)
-            x = f'{int(x/60/1e9)}:{".".join(pieces)}'
+            x = f'{int(x/60)}:{".".join(pieces)}' 
         return x
     formatter = matplotlib.ticker.FuncFormatter(time_ticks)
     getattr(ax, axis).set_major_formatter(formatter)
-    getattr(ax, axis).convert_units = timedelta_converter  # replace the converter for this axis (and only this one)
+    return ax
 
 
 def _bar_sorted(bar):
@@ -75,12 +68,10 @@ def _bar_sorted(bar):
         return bar(*args, **kwargs)
     return _bar_sorted_decorator
 
-
 plt.bar = _bar_sorted(plt.bar)
 plt.barh = _bar_sorted(plt.barh)
 matplotlib.axes.Axes.bar = _bar_sorted(matplotlib.axes.Axes.bar)
 matplotlib.axes.Axes.barh = _bar_sorted(matplotlib.axes.Axes.barh)
-
 
 def _nice_grid(ax):
     if isinstance(ax, np.ndarray):
@@ -91,29 +82,20 @@ def _nice_grid(ax):
         grid(b=True, which='major', color='#4f4845', linestyle='-', linewidth=1)
         grid(b=True, which='minor', color='#3f3a38', linestyle='--', linewidth=0.5)
 
-
 _subplots_placeholder = plt.subplots
-
-
 def _subplots(*args, **kwargs):
     fig, ax = _subplots_placeholder(*args, **kwargs)
     _nice_grid(ax)
     return fig, ax
-
-
 plt.subplots = _subplots
 
 _savefig_placeholder = matplotlib.figure.Figure.savefig
-
-
 def _save(*args, **kwargs):
     if 'facecolor' not in kwargs:
         kwargs['facecolor'] = args[0].get_facecolor()
     if 'edgecolors' not in kwargs:
         kwargs['edgecolor'] = 'none'
     return _savefig_placeholder(*args, **kwargs)
-
-
 matplotlib.figure.Figure.savefig = _save
 
 
@@ -123,7 +105,7 @@ plt.rcParams['xtick.color'] = '#f1f2f3'
 plt.rcParams['ytick.color'] = '#f1f2f3' 
 plt.rcParams['axes.labelcolor'] = '#F1f2f3'
 plt.rcParams['axes.facecolor'] = '#1e1c1b'
-# plt.rcParams['axes.facecolor'] = '#292625'
+#plt.rcParams['axes.facecolor'] = '#292625'
 plt.rcParams['axes.titlesize'] = 'x-large'
 plt.rcParams['font.family'] = 'Gravity'
 plt.rcParams['font.weight'] = 'medium'
