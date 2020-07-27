@@ -15,6 +15,8 @@ import logging
 import functools
 import scipy
 from scipy import spatial
+import pathlib
+import os
 logging.basicConfig(level=logging.INFO)
 
 TESTING_LOOKUP = {'2020': [['2020-02-19', '2020-02-20', '2020-02-21'],
@@ -37,6 +39,10 @@ REFERENCE_LAP_RESOLUTION = 0.667
 lap. This reference is used to project car positions and calculate
 things like distance between cars.
 """
+
+
+MANUAL_PATCHES = {'5': {'/static/2020/2020-02-21_Pre-Season_Test_1/2020-02-21_Practice_3/': 'vettel_test_2020_02_21.csv'},
+                  '77': {'/static/2020/2020-02-28_Pre-Season_Test_2/2020-02-28_Practice_3/': 'bottas_test_2020_02_28.csv'}}
 
 
 def get_session(year, gp, event=None):
@@ -365,19 +371,19 @@ class Session:
             try:
                 result = pd.merge_asof(d1, d2, on='Time', by='Driver')
             except:
-                # From 2018 to 2020 there is Vettel pre season 2020-02-21 who
-                # is not synchronised correctly. A manually patched file is loaded
-                if (driver == '5'
-                    and self.api_path == ('/static/2020/2020-02-21_Pre-Season_Test_1'
-                                        + '/2020-02-21_Practice_3/')):
-                        import pathlib, os
+                print('loading manual patch')
+                # For some not correctly synchronised sessions there are manually patched files
+                if driver in MANUAL_PATCHES.keys():
+                    if self.api_path in MANUAL_PATCHES[driver].keys():
+                        file_name = os.path.join('patched_sessions', MANUAL_PATCHES[driver][self.api_path])
                         path = pathlib.Path(__file__).parent.absolute()
-                        file_path = os.path.join(path, 'vettel_test_2020_21_03.csv')
+                        file_path = os.path.join(path, file_name)
+
                         result = pd.read_csv(file_path)
                         for col in result.columns:
                             if 'Time' in col:
                                 result[col] = pd.to_timedelta(result[col])
-                        result['Driver'] = '5'
+                        result['Driver'] = driver
                 else:
                     print("ERROR: Could not merge timing data with timing app data!")
                     exit()
