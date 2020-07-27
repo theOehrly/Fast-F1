@@ -132,7 +132,17 @@ def _get_testing_week_event(year, day):
 
 
 class Weekend:
-    """Weekend class
+    """If you want to handle multiple sessions from the same race event
+    you can use a :class:Weekend instance.
+
+    For example you could do the following::
+
+        import fastf1 as ff1
+
+        weekend = ff1.get_session(2019, 'Monza')
+        quali = weekend.get_quali() # Q Session
+        race = weekend.get_race() # R Session
+
     """
 
     def __init__(self, year, gp):
@@ -142,7 +152,7 @@ class Weekend:
             warnings.warn("Ergast api not supported for testing.")
             self.data = {
                 'raceName': gp,
-                'date': TESTING_LOOKUP[str(year)][int(gp[-1]) * 3 - 1]}
+                'date': TESTING_LOOKUP[str(year)][int(gp[-1]) - 1][-1]}
         else:
             self.data = ergast.fetch_weekend(self.year, self.gp)
 
@@ -153,7 +163,7 @@ class Weekend:
         Returns:
             :class:`Session` instance
         """
-        return Session(self, 'Qualifying')
+        return Session(self, f'Practice {number}')
 
     def get_quali(self):
         """
