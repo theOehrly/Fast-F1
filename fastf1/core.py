@@ -15,8 +15,8 @@ import scipy
 from scipy import spatial
 logging.basicConfig(level=logging.INFO)
 
-TESTING_LOOKUP = {'2020': ['2020-02-19', '2020-02-20', '2020-02-21',
-                           '2020-02-26', '2020-02-27', '2020-02-28']}
+TESTING_LOOKUP = {'2020': [['2020-02-19', '2020-02-20', '2020-02-21'],
+                           ['2020-02-26', '2020-02-27', '2020-02-28']]}
 
 D_LOOKUP = [[44, 'HAM', 'Mercedes'], [77, 'BOT', 'Mercedes'],
             [5, 'VET', 'Ferrari'], [16, 'LEC', 'Ferrari'],
@@ -30,14 +30,12 @@ D_LOOKUP = [[44, 'HAM', 'Mercedes'], [77, 'BOT', 'Mercedes'],
             [6, 'LAT', 'Williams'], [63, 'RUS', 'Williams'],
             [88, 'KUB', 'Alfa Romeo']]
 
-def _gen_results():
-    results = []
-    for driver in D_LOOKUP:
-        results.append({
-            'number': str(driver[0]),
-            'Driver': {'code': driver[1]},
-            'Constructor': {'name': driver[2]}})
-    return results
+REFERENCE_LAP_RESOLUTION = 0.667
+"""A distance in meters which indicates the resolution of the reference
+lap. This reference is used to project car positions and calculate
+things like distance between cars.
+"""
+
 
 def get_session(year, gp, event=None):
     """Main core function. It will take care of crafting an object
@@ -162,65 +160,101 @@ class Weekend:
 
 
 class Session:
-    """Session class
+    """The session class usually will be your starting point. This
+    object will have various information about the event such as `name` and
+    `date`. To get the sessions laps use :meth:`Session.load_laps`.
     """
 
     def __init__(self, weekend, session_name):
         self.weekend = weekend
         self.name = session_name
-        if self.weekend.is_testing():
-            self.date = TESTING_LOOKUP[str(weekend.year)][int(session_name[-1]) - 1]
-        elif session_name == 'Race':
-            self.date = weekend.date
-
-        # Assuming  date offsets here which is not always correct
-        # Should check if also formula1 makes this assumption
-        elif session_name in ('Qualifying', 'Practice 3'):
-            offset_date = pd.to_datetime(weekend.date) + pd.DateOffset(-1)
-            self.date = offset_date.strftime('%Y-%m-%d')
-        elif session_name in ('Practice 1', 'Practice 2'):
-            offset_date = pd.to_datetime(weekend.date) + pd.DateOffset(-2)
-            self.date = offset_date.strftime('%Y-%m-%d')
-
-        w, s = self.weekend, self
-        self.api_path = api.make_path(w.name, w.date, s.name, s.date)
-        if not weekend.is_testing():
+        self.date = self._get_session_date()
+        self.api_path = api.make_path(self.weekend.name,
+                                      self.weekend.date,
+                                      self.name, self.date)
+        if not self.weekend.is_testing():
             try:
-                self.results = ergast.load(w.year, w.gp, s)
+                self.results = ergast.load(self.weekend.year,
+                                           self.weekend.gp,
+                                           self.name)
             except:
-                logging.warning("Ergast lookup failed")
+                # Ergast will take some time after a session until the data is available
+                # while the data is not yet available, an error will be raised
+                # TODO improve the very broad except at least for the pupose of better logging
+                self._create_empty_ergast_result()
+
         else:
-            self.results = _gen_results()
+            self._create_empty_ergast_result()
+
+    def _create_empty_ergast_result(self):
+        """In case Ergast has no data, this function creates an empty result
+        to emulate the structure."""
+        self.results = []
+        for driver in D_LOOKUP:
+            self.results.append({
+                'number': str(driver[0]),
+                'Driver': {'code': driver[1]},
+                'Constructor': {'name': driver[2]}})
+
+    def _get_session_date(self):
+        """Session date formatted as '%Y-%m-%d' (e.g. '2019-03-12')
+        """
+        if self.weekend.is_testing():
+            year = str(self.weekend.year)
+            week_index = int(self.weekend.name[-1]) - 1
+            day_index = int(self.name[-1]) - 1
+            date = TESTING_LOOKUP[year][week_index][day_index]
+        elif self.name in ('Qualifying', 'Practice 3'):
+            # Assuming that quali was one day before race which is not always correct
+            # TODO Should check if also formula1 makes this assumption
+            offset_date = pd.to_datetime(self.weekend.date) + pd.DateOffset(-1)
+            date = offset_date.strftime('%Y-%m-%d')
+        elif self.name in ('Practice 1', 'Practice 2'):
+            # Again, assuming that practice 1/2 are the day before quali (except Monaco)
+            _ = -3 if self.weekend.name == 'Monaco Grand Prix' else -2
+            offset_date = pd.to_datetime(self.weekend.date) + pd.DateOffset(_)
+            date = offset_date.strftime('%Y-%m-%d')
+        else:  # Race
+            date = self.weekend.date
+        return date
 
     @utils._cached_laps
     def load_laps(self):
-        """With load laps all the timing information is merged in a
-        single pandas dataframe. The first time you run the method on
-        a session it may take a while to load, some megabytes are of
-        data are downloaded and processed, but then laps will be 
-        stored locally. Each dataframe entry has the following columns:
+        """With load laps all the timing information is merged into a
+        single pandas dataframe. The first time you run this method on
+        a session it may take a while to load. Multiple megabytes of
+        data have to be downloaded and processed. After that, laps will
+        be stored locally and execution will be much faster.
 
-            - `Time` (timedelta): Time when the lap was recorded
-            - `Driver` (string): Three letters driver identifier
-            - `LapTime` (timedelta): Recorded lap time
-            - `LapNumber` (int): Recorded lap number
-            - `PitOutTime` (timedelta): Time when car exited the pit
-            - `PitInTime` (timedelta): Time when car entered the pit
-            - `Sector1Time` (timedelta): Sector 1 recorded time
-            - `Sector2Time` (timedelta): Sector 2 recorded time
-            - `Sector3Time` (timedelta): Sector 3 recorded time
-            - `SpeedI1` (float): Speedtrap sector 1
-            - `SpeedI2` (float): Speedtrap sector 2
-            - `SpeedFL` (float): Speedtrap sector 3 (Not sure)
-            - `SpeedST` (float): Speedtrap on longest straight (Not sure)
-            - `Stint` (int): Indicates the stint number
-            - `Compound` (str): Tyre compound name: SOFT, MEDIUM ..
-            - `TyreLife` (int): Laps spent on that compound
-            - `FreshTyre` (bool): Tyre had TyreLife=0 at stint start
-            - `DriverNumber` (str): Car number
-            - `Team` (str): Team name
-            - `LapStartDate` (datetime): When the lap started
-            - `telemetry`: (pandas dataframe of lap telemetry)
+        The returned :class:`Laps` instance can be used just like a
+        pandas DataFrame with some additional enhancements.
+
+        The dataframe columns, therefore, each lap, has the following
+        properties:
+
+            - **Time** (timedelta): Time when the lap was recorded
+            - **Driver** (string): Three letters driver identifier
+            - **LapTime** (timedelta): Recorded lap time
+            - **LapNumber** (int): Recorded lap number
+            - **PitOutTime** (timedelta): Time when car exited the pit
+            - **PitInTime** (timedelta): Time when car entered the pit
+            - **Sector1Time** (timedelta): Sector 1 recorded time
+            - **Sector2Time** (timedelta): Sector 2 recorded time
+            - **Sector3Time** (timedelta): Sector 3 recorded time
+            - **SpeedI1** (float): Speedtrap sector 1
+            - **SpeedI2** (float): Speedtrap sector 2
+            - **SpeedFL** (float): Speedtrap sector 3 (Not sure)
+            - **SpeedST** (float): Speedtrap on longest straight (Not sure)
+            - **Stint** (int): Indicates the stint number
+            - **Compound** (str): Tyre compound name: SOFT, MEDIUM ..
+            - **TyreLife** (int): Laps spent on that compound
+            - **FreshTyre** (bool): Tyre had TyreLife=0 at stint start
+            - **DriverNumber** (str): Car number
+            - **Team** (str): Team name
+            - **LapStartDate** (datetime): When the lap started
+            - **telemetry** (pandas.DataFrame): Telemetry with the \
+                                                following channels:
+
                 - `Time` (timedelta): Time axis (0 is start of lap)
                 - `Space` (float): Space in meters (from speed and time)
                 - `Speed` (float): Car speed
@@ -234,7 +268,7 @@ class Session:
                 - `Z` (float): GPS Z position (normalized)
                 - `Status` (string): flags OffTrack/OnTrack for GPS 
                 - `SessionTime` (timedelta): time elapsed from session start
-                - `DistanceToDriverAhead` (string): distance to next car
+                - `DistanceToDriverAhead` (string): distance to next car in m
                 - `DriverAhead` (string): the car ahead
 
         .. note:: Absolute time is not super accurate. The moment a lap
@@ -245,7 +279,7 @@ class Session:
             data of different laps.
 
         Returns:
-            laps
+            :class:`Laps`
 
         """
         logging.info(f"Loading {self.weekend.name} {self.name}")
@@ -538,7 +572,8 @@ class Session:
         full_y = np.concatenate([y, y, y])
         full_z = np.concatenate([z, z, z])
 
-        reference_s = np.arange(0, total_s, 0.667)
+        reference_s = np.arange(0, total_s, REFERENCE_LAP_RESOLUTION)
+
         reference_x = np.interp(reference_s, full_s, full_x)
         reference_y = np.interp(reference_s, full_s, full_y)
         reference_z = np.interp(reference_s, full_s, full_z)
