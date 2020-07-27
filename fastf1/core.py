@@ -612,7 +612,7 @@ class Session:
         time = self.position[drivers_list[0]]['Time']
         pit_mask = np.zeros((stream_length, len(drivers_list)), dtype=bool)
         for driver_index, driver_number in enumerate(drivers_list):
-            laps = self.laps.pick_driver_number(driver_number)
+            laps = self.laps.pick_driver(driver_number)
             in_pit = True
             times = [[], []]
             for lap_index in laps.index:
@@ -694,44 +694,55 @@ class Laps(pd.DataFrame):
         return decorator
 
     @__pick_wrap
-    def pick_driver(self, name):
-        """Select driver given his three letters identifier
+    def pick_driver(self, identifier):
+        """Select driver given his three letters identifier or its car
+        number::
+
+            perez_laps = ff1.pick_driver('PER')
+            bottas_laps = ff1.pick_driver(77)
+            kimi_laps = ff1.pick_driver('RAI')
+
         """
-        return self[self['Driver'] == name]
+        identifier = str(identifier)
+        if identifier.isdigit():
+            return self[self['DriverNumber'] == identifier]
+        else:
+            return self[self['Driver'] == identifier]
 
     @__pick_wrap
-    def pick_drivers(self, names):
-        """Select drivers given a list of their three letters identifiers
-        """
-        return self[self['Driver'].isin(names)]
+    def pick_drivers(self, identifiers):
+        """Select drivers given a list of their identifiers. Same as
+        :meth:`Laps.pick_driver` but for lists::
 
-    @__pick_wrap
-    def pick_driver_number(self, number):
-        """Select driver given his car number
-        """
-        return self[self['DriverNumber'] == str(number)]
+            some_drivers_laps = ff1.pick_drivers([5, 'BOT', 7])
 
-    @__pick_wrap
-    def pick_driver_numbers(self, numbers):
-        """Select drivers given their car numbers
         """
-        return self[self['DriverNumber'].isin([str(n) for n in numbers])]
+        names = [n for n in identifiers if not str(n).isdigit()]
+        numbers = [str(n) for n in identifiers if str(n).isdigit()]
+        drv, num = self['Driver'], self['DriverNumber']
+        return self[(drv.isin(names) | num.isin(numbers))]
 
     @__pick_wrap
     def pick_team(self, name):
-        """Select team given its name
+        """Select team given its name::
+
+            mercedes = ff1.pick_team('Mercedes')
+            alfa_romeo = ff1.pick_team('Alfa Romeo')
+
+        Have a look to :attr:`fastf1.plotting.TEAM_COLORS` for a quick
+        reference on team names.
         """
         return self[self['Team'] == name]
 
     @__pick_wrap
     def pick_teams(self, names):
-        """Select teams given a list of names
+        """Same as :meth:`Laps.pick_team` but for a list of teams.
         """
         return self[self['Team'].isin(names)]
 
     @__pick_wrap
     def pick_fastest(self):
-        """Select fastest lap time 
+        """Get lap with best `LapTime`.
         """
         lap = self.loc[self['LapTime'].idxmin()]
         if isinstance(lap, pd.DataFrame):
@@ -741,8 +752,8 @@ class Laps(pd.DataFrame):
 
     @__pick_wrap
     def pick_quicklaps(self, threshold=None):
-        """Select laps with lap time below :attr:`QUICKLAP_THRESHOLD`
-        (default 107%) of the fastest lap from the given laps set
+        """Select laps with `LapTime` faster than a certain limit.
+        By default 107% of the best `LapTime` of the given laps set.
 
         Args:
             threshold (optional, float): custom threshold coefficent
@@ -756,7 +767,11 @@ class Laps(pd.DataFrame):
 
     @__pick_wrap
     def pick_tyre(self, compound):
-        """Select tyres between "SOFT", "MEDIUM" and "HARD"
+        """Get laps done on a specific compound.
+
+        Args:
+            compound (string): may be "SOFT", "MEDIUM" or "HARD"
+
         """
         return self[self['Compound'] == compound]
 
