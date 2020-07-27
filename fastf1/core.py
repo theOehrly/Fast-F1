@@ -1,6 +1,8 @@
 """
 :mod:`fastf1.core` - Core module
 ================================
+
+Contains the main classes and functions.
 """
 from fastf1 import utils
 from fastf1 import ergast
@@ -43,14 +45,19 @@ def get_session(year, gp, event=None):
     If not specified, full weekend is returned.
 
     Args:
-        year: session year (Tested only with 2019)
-        gp: name or weekend number (1: Australia, ..., 21: Abu Dhabi)
-            if gp is a string, a fuzzy match will be performed on the
-            season rounds and the most likely will be selected.
-            'bahrain', 'australia', 'abudabi' are some of the examples
-            that you can pass and the correct week will be selected.
+        year (number): Session year
+        gp (number or string): Name or weekend number (1: Australia,
+                               ..., 21: Abu Dhabi). If gp is a string,
+                               a fuzzy match will be performed on the
+                               season rounds and the most likely will be
+                               selected.
 
-            Pass 'testing' to fetch barcelona tests.
+                               Some examples that will be correctly
+                               interpreted: 'bahrain', 'australia',
+                               'abudabi', 'monza'.
+
+                               Pass 'testing' to fetch Barcelona winter
+                               tests.
 
         event (=None): may be 'FP1', 'FP2', 'FP3', 'Q' or 'R', if not 
                        specified you get the full :class:`Weekend`.
@@ -61,15 +68,9 @@ def get_session(year, gp, event=None):
 
     """
     if type(gp) is str and gp == 'testing':
-        try:
-            event = int(event)
-            week = 1 if event < 4 else 2
-        except:
-            msg = "Cannot fetch testing without correct event day."
-            raise Exception(msg)
-        gp = f'Pre-Season Test {week}'
-        event = f'Practice {event}'
-        weekend = Weekend(year, gp)
+        pre_season_week, event = _get_testing_week_event(year, event)
+        print(pre_season_week, event)
+        weekend = Weekend(year, pre_season_week)
         return Session(weekend, event)
 
     if type(gp) is str:
@@ -89,9 +90,21 @@ def get_session(year, gp, event=None):
 
 
 def get_round(year, match):
+    """From the year and a text to match, will try to find the most
+    likely week number of the event.
+
+    Args:
+        year (int): Year of the event
+        match (string): Name of the race or gp (e.g. 'Bahrain')
+
+    Returns:
+        The round number. (2019, 'Bahrain') -> 2
+
+    """
     ratios = np.array([])
+
     def build_string(d):
-        r = len('https://en.wikipedia.org/wiki/')
+        r = len('https://en.wikipedia.org/wiki/')  # TODO what the hell is this
         c, l = d['Circuit'], d['Circuit']['Location']
         return (f"{d['url'][r:]} {d['raceName']} {c['circuitId']} "
                 + f"{c['url'][r:]} {c['circuitName']} {l['locality']} "
@@ -100,6 +113,22 @@ def get_round(year, match):
     to_match = [build_string(block) for block in races]
     ratios = np.array([fuzz.partial_ratio(match, ref) for ref in to_match])
     return int(races[np.argmax(ratios)]['round'])
+
+
+def _get_testing_week_event(year, day):
+    """Get the correct weekend and event for testing from the
+    year and day of the test. (where day is 1, 2, 3, ...)
+    """
+    try:
+        day = int(day)
+        week = 1 if day < 4 else 2  # TODO Probably will change from 2021
+    except:
+        msg = "Cannot fetch testing without correct event day."
+        raise Exception(msg)
+    week_day = ((day - 1) % 3) + 1  # TODO Probably will change from 2021
+    pre_season_week = f'Pre-Season Test {week}'
+    event = f'Practice {week_day}'
+    return pre_season_week, event
 
 
 class Weekend:
