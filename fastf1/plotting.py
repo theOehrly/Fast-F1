@@ -12,12 +12,13 @@ import numpy as np
 from pandas.plotting import register_matplotlib_converters
 register_matplotlib_converters()
 
-_TEAM_COLORS = {'MER': '#00d2be', 'FER': '#dc0000',
-               'RBR': '#1e41ff', 'MCL': '#ff8700',
-               'REN': '#fff500', 'RPT': '#f596c8',
-               'ARR': '#9b0000', 'STR': '#469bff',
-               'HAA': '#7e7e7e', 'WIL': '#469bff',
-               'ALP': '#ffffff'}
+
+TEAM_COLORS = {'Mercedes': '#00d2be', 'Ferrari': '#dc0000',
+               'Red Bull': '#1e41ff', 'McLaren': '#ff8700',
+               'Renault': '#fff500', 'Racing Point': '#f596c8',
+               'Alfa Romeo': '#9b0000', 'Toro Rosso': '#469bff',
+               'Haas F1 Team': '#7e7e7e', 'Williams': '#469bff',
+               'Alpha Tauri': '#ffffff'}
 
 TEAM_TRANSLATE = {'MER': 'Mercedes', 'FER': 'Ferrari',
                   'RBR': 'Red Bull', 'MCL': 'McLaren',
@@ -26,12 +27,27 @@ TEAM_TRANSLATE = {'MER': 'Mercedes', 'FER': 'Ferrari',
                   'HAA': 'Haas F1 Team', 'WIL': 'Williams',
                   'ALP': 'Alpha Tauri'}
 
-TEAM_COLORS = {}
-for key in TEAM_TRANSLATE:
-    TEAM_COLORS[TEAM_TRANSLATE[key]] = _TEAM_COLORS[key]
 
 COLOR_PALETTE = ['#FF79C6', '#50FA7B', '#8BE9FD', '#BD93F9',
                  '#FFB86C', '#FF5555', '#F1FA8C']
+
+
+def team_color(identifier):
+    """Get a teams color.
+
+    Args:
+        identifier (str): Abbreviation or full name of the team.
+            For example "RBR" or "Red Bull" would both return the same result.
+
+    Returns:
+        str: hex color code
+    """
+    if identifier in TEAM_COLORS.keys():
+        return TEAM_COLORS[identifier]
+    elif identifier in TEAM_TRANSLATE:
+        return TEAM_COLORS[TEAM_TRANSLATE[identifier]]
+    else:
+        return None
 
 
 def timedelta_converter(x):
