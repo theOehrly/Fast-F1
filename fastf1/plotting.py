@@ -74,9 +74,12 @@ def laptime_axis(ax, axis='yaxis'):
             pieces[0] = pieces[0].zfill(2)
             x = f'{int(x/60/1e9)}:{".".join(pieces)}'
         return x
+
     formatter = matplotlib.ticker.FuncFormatter(time_ticks)
     getattr(ax, axis).set_major_formatter(formatter)
     getattr(ax, axis).convert_units = timedelta_converter  # replace the converter for this axis (and only this one)
+
+    return ax
 
 
 def _bar_sorted(bar):
