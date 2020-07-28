@@ -1,3 +1,9 @@
+"""
+:mod:`fastf1.plotting` - Plotting module
+========================================
+
+Helpers for charming graphs.
+"""
 import matplotlib
 from matplotlib import pyplot as plt
 from matplotlib import cycler
@@ -39,6 +45,13 @@ def timedelta_converter(x):
 
 
 def laptime_axis(ax, axis='yaxis'):
+    """Convert axis to change time formatting from seconds to "mm:ss.ms"
+
+    Args:
+        ax: matplotlib axis
+        axis (='yaxis', optional): can be 'xaxis' or 'yaxis'
+
+    """
     def time_ticks(x, pos):
         if not np.isnan(x):
             pieces = f'{x - 60*int(x/60)}'.split('.')
