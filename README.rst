@@ -7,11 +7,11 @@ A python package for accessible F1 historical data and telemetry.
 Installation
 ============
 
-You can install this package using pip
+You can install and update this package using the following command
 ::
     pip install git+https://github.com/theOehrly/Fast-F1.git
 
-Note that this package requires Python 3.8.
+Note that Python 3.8 is required.
 
 Usage
 =====
@@ -69,8 +69,7 @@ Starting with the Austrian GP 2020 the API provides the position data in a
 somewhat different format. This currently breaks ALL functionality of the track class.
 Maybe also other functionality.
 
-Library is fully compatible with 2018 and 2019 season.
-While previous seasons are still accessible and it is possible to obtain
-general weekend information (basically what you can get from
-`Ergast web api <http://ergast.com/mrd/>`_) live timing and telemetry
-data is only available starting from 2018.
+The library is fully compatible with 2018 and 2019 season.  Older seasons are still
+accessible and it is possible to obtain general weekend information (limited to
+`Ergast web api <http://ergast.com/mrd/>`_). Live timing and telemetry is only
+available starting from 2018.
