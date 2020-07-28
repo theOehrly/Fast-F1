@@ -4,6 +4,7 @@
 
 Contains the main classes and functions.
 """
+
 from fastf1 import utils
 from fastf1 import ergast
 from fastf1 import api
@@ -17,6 +18,7 @@ import scipy
 from scipy import spatial
 import pathlib
 import os
+
 logging.basicConfig(level=logging.INFO)
 
 TESTING_LOOKUP = {'2020': [['2020-02-19', '2020-02-20', '2020-02-21'],
@@ -39,7 +41,6 @@ REFERENCE_LAP_RESOLUTION = 0.667
 lap. This reference is used to project car positions and calculate
 things like distance between cars.
 """
-
 
 MANUAL_PATCHES = {'5': {'/static/2020/2020-02-21_Pre-Season_Test_1/2020-02-21_Practice_3/': 'vettel_test_2020_02_21.csv'},
                   '77': {'/static/2020/2020-02-28_Pre-Season_Test_2/2020-02-28_Practice_3/': 'bottas_test_2020_02_28.csv'}}
@@ -115,9 +116,11 @@ def get_round(year, match):
         return (f"{d['url'][r:]} {d['raceName']} {c['circuitId']} "
                 + f"{c['url'][r:]} {c['circuitName']} {l['locality']} "
                 + f"{l['country']}")
+
     races = ergast.fetch_season(year)
     to_match = [build_string(block) for block in races]
     ratios = np.array([fuzz.partial_ratio(match, ref) for ref in to_match])
+
     return int(races[np.argmax(ratios)]['round'])
 
 
@@ -134,6 +137,7 @@ def _get_testing_week_event(year, day):
     week_day = ((day - 1) % 3) + 1  # TODO Probably will change from 2021
     pre_season_week = f'Pre-Season Test {week}'
     event = f'Practice {week_day}'
+
     return pre_season_week, event
 
 
@@ -231,6 +235,8 @@ class Session:
         else:
             self._create_empty_ergast_result()
 
+        self.laps = Laps(pd.DataFrame())
+
     def _create_empty_ergast_result(self):
         """In case Ergast has no data, this function creates an empty result
         to emulate the structure."""
@@ -261,6 +267,7 @@ class Session:
             date = offset_date.strftime('%Y-%m-%d')
         else:  # Race
             date = self.weekend.date
+
         return date
 
     @utils._cached_laps
@@ -334,6 +341,7 @@ class Session:
         self.laps['telemetry'] = telemetry
         self.laps = Laps(self.laps)
         logging.info(f"Laps loaded and saved!")
+
         return self.laps
 
     def get_driver(self, identifier):
@@ -341,15 +349,13 @@ class Session:
             for info in self.results:
                 if info['Driver']['code'] == identifier:
                     return Driver(self, info)
+
         return None
 
     def _load_summary(self):
         """From `timing_data` and `timing_app_data` a summary table is
         built. Lap by lap, information on tyre, sectors and times are 
         organised in an accessible pandas data frame.
-
-        Args:
-            path: path returned from :func:`make_path`
 
         Returns:
             pandas dataframe
@@ -360,14 +366,17 @@ class Session:
         app_data = api.timing_app_data(self.api_path)
         # Now we do some manipulation to make it beautiful
         logging.info("Formatting summary...")
-        # Matching data and app_data. Not super straightworward
+
+        # Matching data and app_data. Not super straightforward
         # Sometimes a car may enter the pit without changing tyres, so
         # new compound is associated with the help of logging time.
         useful = app_data[['Driver', 'Time', 'Compound', 'TotalLaps', 'New']]
         useful = useful[~useful['Compound'].isnull()]
+
         for i, driver in enumerate(data['Driver'].unique()):
             d1 = data[data['Driver'] == driver]
             d2 = useful[useful['Driver'] == driver]
+
             try:
                 result = pd.merge_asof(d1, d2, on='Time', by='Driver')
             except:
@@ -391,25 +400,25 @@ class Session:
             for npit in result['NumberOfPitStops'].unique():
                 sel = result['NumberOfPitStops'] == npit
                 result.loc[sel, 'TotalLaps'] += np.arange(0, sel.sum()) + 1
-            df = result if i == 0 else pd.concat([df, result], sort=False)    
+            df = result if i == 0 else pd.concat([df, result], sort=False)
+
         summary = df.reset_index(drop=True)
         summary.rename(columns={'TotalLaps': 'TyreLife',
-                                'LastLapTime': 'LapTime', 
+                                'LastLapTime': 'LapTime',
                                 'NumberOfPitStops': 'Stint',
                                 'Driver': 'DriverNumber',
                                 'NumberOfLaps': 'LapNumber',
                                 'New': 'FreshTyre'}, inplace=True)
-        summary['Stint'] += 1 # counting stints from 1
+        summary['Stint'] += 1  # counting stints from 1
         t_map = {r['number']: r['Constructor']['name'] for r in self.results}
         summary['Team'] = summary['DriverNumber'].map(t_map)
         d_map = {r['number']: r['Driver']['code'] for r in self.results}
         summary['Driver'] = summary['DriverNumber'].map(d_map)
-        return summary
 
+        return summary
 
     def _load_telemetry(self):
         """Load telemetry data to be associated for each lap.
-
         """
         tel, pos, date_offset = {}, {}, {}
         event_telemetry, lap_start_date = [], []
@@ -418,6 +427,7 @@ class Session:
         logging.info("Getting position data...")
         position = api.position(self.api_path)
         logging.info("Resampling telemetry...")
+
         for driver in self.laps['DriverNumber'].unique():
             if driver in car_data:
                 tel[driver], date_offset[driver] = self._resample(car_data[driver])
@@ -427,12 +437,15 @@ class Session:
                 pos[driver], _ = self._resample(position[driver])
             else:
                 warnings.warn(f"Could not find gps data for driver {driver}")
+
         self.car_data, self.position = tel, pos
         can_find_reference = position != {}
         if can_find_reference:
             self._augment_position()
+
         d_map = {r['number']: r['Driver']['code'] for r in self.results}
         logging.info("Creating laps...")
+
         for i in self.laps.index:
             _log_progress(i, len(self.laps.index))
             lap = self.laps.loc[i]
@@ -442,13 +455,17 @@ class Session:
                 if len(telemetry.index):
                     if driver in pos:
                         telemetry = self._inject_position(pos[driver], lap, telemetry)
+
                     telemetry = self._inject_space(telemetry)
+
                     if can_find_reference:
                         telemetry['DriverAhead'] = telemetry['DriverAhead'].map(d_map)
+
                     event_telemetry.append(telemetry)
                     # Calc lap start date
                     lap_start_time = telemetry['SessionTime'].iloc[0]
                     lap_start_date.append(date_offset[driver] + lap_start_time)
+
                 else:
                     warnings.warn("Empty telemetry slice from lap "
                                   + f"{lap['LapNumber']} of driver {driver}")
@@ -457,8 +474,8 @@ class Session:
             else:
                 event_telemetry.append(None)
                 lap_start_date.append(None)
-        return event_telemetry, lap_start_date
 
+        return event_telemetry, lap_start_date
 
     def _resample(self, df):
         """`car_data` is aligned with main time reference (time used in
@@ -487,7 +504,8 @@ class Session:
 
         """
         if 'Driver' in df.columns and len(df['Driver'].unique()) > 1:
-                raise Exception("Cannot resample with multiple drivers")
+            raise Exception("Cannot resample with multiple drivers")
+
         # Align:
         counter, last_val = 0, None
         for i, val in enumerate(df['Time'].values):
@@ -495,10 +513,11 @@ class Session:
                 counter += 1
             elif counter > 2:
                 i -= 1
-                break # found align point at sample i
+                break  # found align point at sample i
             else:
                 counter = 0
             last_val = val
+
         # Disclaimer: In the alignment process some samples are lost :(
         # Just because it is easier then to resample, but shouldn't really
         # matter, recordings start quite early and we don't loose
@@ -507,32 +526,36 @@ class Session:
         start_date, start_time = pre['Date'].iloc[0], pre['Time'].iloc[0]
         offset_date = start_date - start_time
         pre['Time'] = (pre['Date'] - start_date) + start_time
+
         # Map non numeric
         mapped, unmap = self._map_objects(pre)
+
         # Resample:
         # Date contains the corret time spacing information, so we use that
         # 90% of function time is spent in the next line
-        res = (mapped.resample('0.1S', on='Time').mean()
-                     .interpolate(method='linear'))
+        res = (mapped.resample('0.1S', on='Time').mean().interpolate(method='linear'))
+
         if 'nGear' in res.columns and 'DRS' in res.columns:
             res[['nGear', 'DRS']] = res[['nGear', 'DRS']].round().astype(int)
+
         res = unmap(res)
         res['Time'] = pd.to_timedelta(res.index, unit='s')
+
         return res.reset_index(drop=True), offset_date
-        #return res, offset_date
 
     def _inject_position(self, position, lap, _telemetry):
         lap_position = self._slice_stream(position, lap, pad=1)
         lap_position, unmap = self._map_objects(lap_position)
         ref_time = _telemetry['Time'].values
         pos_time = lap_position['Time'].values
-        new_lap_position = {}
         ref_x = pd.to_numeric(ref_time)
         ref_xp = pd.to_numeric(pos_time)
+
         for column in lap_position.columns:
             if column not in _telemetry:
-                y = np.interp(ref_x, ref_xp, lap_position[column].values) 
+                y = np.interp(ref_x, ref_xp, lap_position[column].values)
                 _telemetry[column] = y
+
         return unmap(_telemetry)
 
     def _map_objects(self, df):
@@ -543,23 +566,26 @@ class Session:
                 forward = {v: k for k, v in backward.items()}
                 df[column] = df[column].map(forward)
                 nnummap[column] = backward
+
         def unmap(res):
             for column in nnummap:
                 res[column] = res[column].round().map(nnummap[column])
             return res
+
         return df, unmap
 
     def _slice_stream(self, df, lap, pad=0):
-        pad = pd.to_timedelta(f'{pad*0.1}s')
+        pad = pd.to_timedelta(f'{pad * 0.1}s')
         end_time, lap_time = lap['Time'], lap['LapTime']
         sel = ((df['Time'] < (end_time + pad))
-                & (df['Time'] >= (end_time - lap_time - pad)))
+               & (df['Time'] >= (end_time - lap_time - pad)))
+
         lap_stream = df.loc[sel].copy()
         lap_stream['SessionTime'] = lap_stream['Time']
         # Then shift time to 0 so laps can overlap
         lap_stream['Time'] += lap_time - end_time
-        return lap_stream
 
+        return lap_stream
 
     def _augment_position(self):
         """Improves laps information content
@@ -567,27 +593,29 @@ class Session:
             - Adds 'DistanceToCarAhead' channel to driver position
         """
         lap = self._get_reference_lap()
-        driver_ahead = self._make_trajectory(lap) 
+        driver_ahead = self._make_trajectory(lap)
+
         for d in self.position:
             self.position[d] = self.position[d].join(driver_ahead[d])
-
 
     def _get_reference_lap(self):
         valid_tele = False
         times = self.laps['LapTime'].copy()
         times = times.sort_values()
         i = 0
+
         while not valid_tele:
             lap = self.laps.loc[times.index[i]].copy()
             time, driver = lap['Time'], lap['DriverNumber']
             tele = self._slice_stream(self.car_data[driver], lap)
             valid_tele = np.all(tele['Speed'] > 0)
             i += 1
+
         tele = self._inject_position(self.position[driver], lap, tele)
         tele = self._inject_space(tele)
         lap['telemetry'] = tele
-        return lap
 
+        return lap
 
     def _inject_space(self, _telemetry):
         dt = _telemetry['Time'].dt.total_seconds().diff()
@@ -595,7 +623,6 @@ class Session:
         ds = _telemetry['Speed'] / 3.6 * dt
         _telemetry['Space'] = ds.cumsum()
         return _telemetry
-
 
     def _make_trajectory(self, lap):
         """Create telemetry space
@@ -613,7 +640,7 @@ class Session:
 
         # To prolong start and finish and have a correct linear interpolation 
         full_s = np.concatenate([s - total_s, s, s + total_s])
-        full_x = np.concatenate([x, x, x]) 
+        full_x = np.concatenate([x, x, x])
         full_y = np.concatenate([y, y, y])
         full_z = np.concatenate([z, z, z])
 
@@ -627,10 +654,12 @@ class Session:
 
         """Build track map and project driver position to one trajectory 
         """
+
         def fix_suzuka(projection_index, _s):
             """Yes, suzuka is bad
             """
-            # For tracks like suzuka (therefore only suzuka) we have
+
+            #  For tracks like suzuka (therefore only suzuka) we have
             # a beautiful crossing point. So, FOR F**K SAKE, sometimes
             # shortest distance may fall below the bridge or viceversa
             # gotta do some monotony sort of check. Not the cleanest
@@ -639,24 +668,30 @@ class Session:
                 ret = np.cumsum(a, dtype=float)
                 ret[n:] = ret[n:] - ret[:-n]
                 ma = ret[n - 1:] / n
-                return np.concatenate([ma[0:n//2], ma, ma[-n//2:-1]])
+
+                return np.concatenate([ma[0:n // 2], ma, ma[-n // 2:-1]])
+
             ma_projection = moving_average(_s[projection_index], n=3)
             spikes = np.absolute(_s[projection_index] - ma_projection)
             # 1000 and 3000, very suzuka specific. Damn magic numbers
             sel_bridge = np.logical_and(spikes > 1000, spikes < 3000)
             unexpected = np.where(sel_bridge)[0]
             max_length = _s[-1]
+
             for p in unexpected:
                 # Just assuming linearity for this 2 or 3 samples
                 last_value = _s[projection_index[p - 1]]
                 last_step = last_value - _s[projection_index[p - 2]]
+
                 if (last_value + last_step) > max_length:
                     # Over the finish line
-                    corrected_distance = -max_length + last_step + last_value 
+                    corrected_distance = -max_length + last_step + last_value
                 else:
-                    corrected_distance = last_value + last_step 
+                    corrected_distance = last_value + last_step
+
                 corrected_index = np.argmin(np.abs(_s - corrected_distance))
                 projection_index[p] = corrected_index
+
             return projection_index
 
         track = np.empty((ssize, 3))
@@ -703,6 +738,7 @@ class Session:
                 if not pd.isnull(lap['PitOutTime']) and in_pit:
                     times[0].append(lap['PitOutTime'])
                     in_pit = False
+
             if not in_pit:
                 # Car crashed, we put a time and 'Status' will take care
                 times[1].append(lap['Time'])
@@ -719,10 +755,12 @@ class Session:
         stream_axis = np.arange(stream_length)
         for my_di, my_d in enumerate(drivers_list):
             rel_distance = np.empty(np.shape(dmap))
+
             for his_di, his_d in enumerate(drivers_list):
                 my_pos_i = dmap[:, my_di]
                 his_pos_i = dmap[:, his_di]
                 rel_distance[:, his_di] = t_matrix[my_pos_i, his_pos_i]
+
             his_in_pit = ~pit_mask.copy()
             his_in_pit[:, my_di] = False
             my_in_pit = ~pit_mask[:, drivers_list == my_d][:, 0]
@@ -737,6 +775,7 @@ class Session:
             data = {'DistanceToDriverAhead': closest_distance,
                     'DriverAhead': closest_driver}
             driver_ahead[my_d] = pd.DataFrame(data)
+
         return driver_ahead
 
 
@@ -800,6 +839,7 @@ class Laps(pd.DataFrame):
         names = [n for n in identifiers if not str(n).isdigit()]
         numbers = [str(n) for n in identifiers if str(n).isdigit()]
         drv, num = self['Driver'], self['DriverNumber']
+
         return self[(drv.isin(names) | num.isin(numbers))]
 
     @__pick_wrap
@@ -827,7 +867,8 @@ class Laps(pd.DataFrame):
         lap = self.loc[self['LapTime'].idxmin()]
         if isinstance(lap, pd.DataFrame):
             # More laps, same time
-            lap = lap.iloc[0] # take first clocked
+            lap = lap.iloc[0]  # take first clocked
+
         return lap
 
     @__pick_wrap
@@ -843,6 +884,7 @@ class Laps(pd.DataFrame):
         if threshold is None:
             threshold = Laps.QUICKLAP_THRESHOLD
         time_threshold = self['LapTime'].min() * threshold
+
         return self[self['LapTime'] < time_threshold]
 
     @__pick_wrap
@@ -857,7 +899,6 @@ class Laps(pd.DataFrame):
 
 
 class Driver:
-
     def __init__(self, session, info):
         self.session = session
         self.info = info
@@ -904,8 +945,8 @@ class ETL:
 
 
 def _log_progress(i, length, c=30):
-    if (logging.root.level >= logging.INFO and i % int(length / (c-1)) == 0):
+    if logging.root.level >= logging.INFO and i % int(length / (c - 1)) == 0:
         p = round((i / length) * c)
-        is_last = (p * (c+1)/c) > c
-        print(f"\r[{'+'*p}{'-'*(c-p)}] ({length if is_last else i}/{length})",
+        is_last = (p * (c + 1) / c) > c
+        print(f"\r[{'+' * p}{'-' * (c - p)}] ({length if is_last else i}/{length})",
               end="\n" if is_last else '')
