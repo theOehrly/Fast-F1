@@ -189,6 +189,7 @@ class Session:
                 self.results = ergast.load(w.year, w.gp, s)
             except:
                 logging.warning("Ergast lookup failed")
+                self.results = _gen_results()
         else:
             self.results = _gen_results()
 
