@@ -10,6 +10,7 @@ from matplotlib import cycler
 import pandas as pd
 import numpy as np
 from pandas.plotting import register_matplotlib_converters
+import logging
 register_matplotlib_converters()
 
 
@@ -56,7 +57,12 @@ def timedelta_converter(x):
     Create an array for the axis' data where `NaT` values are masked.
     Other data types but `np.ndarray` are left unchanged."""
     if isinstance(x, np.ndarray):
-        return np.ma.masked_where(np.isnat(x), x)
+        if x.dtype == "timedelta64[ns]":
+            x /= 1e9
+        try:
+            return np.ma.masked_where(np.isnat(x), x)
+        except TypeError:
+            return np.ma.masked_where(np.isnan(x), x)
     return x
 
 
@@ -68,12 +74,15 @@ def laptime_axis(ax, axis='yaxis'):
         axis (='yaxis', optional): can be 'xaxis' or 'yaxis'
 
     """
-    def time_ticks(x, pos):
-        if not np.isnan(x):
-            pieces = f'{x - 60*int(x/60)}'.split('.')
-            pieces[0] = pieces[0].zfill(2)
-            x = f'{int(x/60/1e9)}:{".".join(pieces)}'
-        return x
+    def time_ticks(t, pos):
+        if not np.isnan(t):
+            mm = int(t/60)
+            ss = int(t - mm*60)
+            ms = int((t - mm * 60 - ss)*10)
+
+            t_str = f"{str(mm).zfill(1)}:{str(ss).zfill(2)}.{ms}"
+
+            return t_str
 
     formatter = matplotlib.ticker.FuncFormatter(time_ticks)
     getattr(ax, axis).set_major_formatter(formatter)
