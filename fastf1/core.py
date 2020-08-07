@@ -230,6 +230,7 @@ class Session:
                 # Ergast will take some time after a session until the data is available
                 # while the data is not yet available, an error will be raised
                 # TODO improve the very broad except at least for the pupose of better logging
+                logging.warning("Ergast lookup failed")
                 self._create_empty_ergast_result()
 
         else:
