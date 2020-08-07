@@ -87,6 +87,7 @@ def laptime_axis(ax, axis='yaxis'):
     formatter = matplotlib.ticker.FuncFormatter(time_ticks)
     getattr(ax, axis).set_major_formatter(formatter)
     getattr(ax, axis).convert_units = timedelta_converter  # replace the converter for this axis (and only this one)
+    getattr(ax, 'xaxis').get_major_locator().set_params(integer=True, min_n_ticks=0)
 
     return ax
 
