@@ -1,0 +1,2 @@
+include requirements.txt
+recursive-include fastf1/patched_sessions *
