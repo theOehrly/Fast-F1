@@ -54,7 +54,8 @@ def team_color(identifier):
 def timedelta_converter(x):
     """Special data type converter for laptime axis.
 
-    Create an array for the axis' data where `NaT` values are masked.
+    Masks `NaT` and `NaN` values in data arrays and converts nanoseconds
+    based times to seconds if necessary.
     Other data types but `np.ndarray` are left unchanged."""
     if isinstance(x, np.ndarray):
         if x.dtype == "timedelta64[ns]":

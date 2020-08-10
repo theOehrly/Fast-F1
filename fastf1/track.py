@@ -1,6 +1,10 @@
 """
 :mod:`fastf1.track` - Track module
 ==================================
+
+.. warning::
+    This module is currently broken!
+
 """
 
 from fastf1.func import min_index

@@ -18,11 +18,10 @@ Known bugs and caveats
     and Bottas on 28/02/2020, time doesn't match. A manually patched file is
     included with the code. A more sofisticated solution is needed.
 
-- Inlap and outlap handling in :func:`fastf1.track.Track.resync_lap_times`:
+- :mod:`fastf1.track` is currently broken:
 
-    Inlaps and outlaps may not be resynced correctly because of the addtional time
-    in pit. Whether there is actually a bug is not sure yet though. Further analysis
-    of the data is necessary. Only inlaps and outlaps seem to be concerned.
+    Changes made to the position data by F1 broke the functionality of this module.
+    The breaking changes were introduced with the firts GP (Austria) of 2020.
 
 - Missing telemetry
 

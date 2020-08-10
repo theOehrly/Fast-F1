@@ -23,6 +23,7 @@ For the passionate F1 nerds.
    utils
    track
    func
+   plotting
    known_bugs
    changelog
 
