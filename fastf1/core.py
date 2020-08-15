@@ -522,12 +522,8 @@ class Session:
                 counter = 0
             last_val = val
 
-        # Disclaimer: In the alignment process some samples are lost :(
-        # Just because it is easier then to resample, but shouldn't really
-        # matter, recordings start quite early and we don't loose
-        # relevant information.
-        pre = df.iloc[i:].copy().reset_index(drop=True)
-        start_date, start_time = pre['Date'].iloc[0], pre['Time'].iloc[0]
+        pre = df.copy().reset_index(drop=True)
+        start_date, start_time = df.iloc[i]['Date'], df.iloc[i]['Time']
         offset_date = start_date - start_time
         pre['Time'] = (pre['Date'] - start_date) + start_time
 
@@ -535,15 +531,15 @@ class Session:
         mapped, unmap = self._map_objects(pre)
 
         # Resample:
-        # Date contains the corret time spacing information, so we use that
+        # Date contains the correct time spacing information, so we use that
         # 90% of function time is spent in the next line
-        res = (mapped.resample('0.1S', on='Time').mean().interpolate(method='linear'))
+        res = mapped.resample('0.1S', on='Date', origin=start_date).mean().interpolate(method='linear')
 
         if 'nGear' in res.columns and 'DRS' in res.columns:
             res[['nGear', 'DRS']] = res[['nGear', 'DRS']].round().astype(int)
 
         res = unmap(res)
-        res['Time'] = pd.to_timedelta(res.index, unit='s')
+        res['Time'] = res.index - offset_date
 
         return res.reset_index(drop=True), offset_date
 
