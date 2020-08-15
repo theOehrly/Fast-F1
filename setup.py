@@ -9,7 +9,7 @@ info = {
     'include_package_data': True,
     'install_requires': [
         'numpy', 'pandas', 'requests', 'requests_cache', 'matplotlib',
-        'python-Levenshtein', 'fuzzywuzzy', 'scipy'
+        'fuzzywuzzy', 'scipy'
     ],
     'license': 'MIT',
     'url': '',
