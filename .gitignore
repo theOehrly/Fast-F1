@@ -2,6 +2,7 @@
 .idea/
 dist/
 venv/
+tests/testenv/
 docs/_build/
 build/
 solver_results/
