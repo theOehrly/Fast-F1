@@ -9,7 +9,6 @@ from fastf1 import utils
 from fastf1 import ergast
 from fastf1 import api
 from fuzzywuzzy import fuzz
-import warnings
 import pandas as pd
 import numpy as np
 import logging
@@ -159,7 +158,7 @@ class Weekend:
         self.year = year
         self.gp = gp
         if self.is_testing():
-            warnings.warn("Ergast api not supported for testing.")
+            logging.warning("Ergast api not supported for testing.")
             self.data = {
                 'raceName': gp,
                 'date': TESTING_LOOKUP[str(year)][int(gp[-1]) - 1][-1]}
@@ -436,11 +435,11 @@ class Session:
             if driver in car_data:
                 tel[driver], date_offset[driver] = self._resample(car_data[driver])
             else:
-                warnings.warn(f"Could not find telemetry data for driver {driver}")
+                logging.warning(f"Could not find telemetry data for driver {driver}")
             if driver in position:
                 pos[driver], _ = self._resample(position[driver])
             else:
-                warnings.warn(f"Could not find gps data for driver {driver}")
+                logging.warning(f"Could not find gps data for driver {driver}")
 
         self.car_data, self.position = tel, pos
         can_find_reference = position != {}
@@ -471,8 +470,7 @@ class Session:
                     lap_start_date.append(date_offset[driver] + lap_start_time)
 
                 else:
-                    warnings.warn("Empty telemetry slice from lap "
-                                  + f"{lap['LapNumber']} of driver {driver}")
+                    logging.warning(f"Empty telemetry slice from lap {lap['LapNumber']} of driver {driver}")
                     event_telemetry.append(None)
                     lap_start_date.append(None)
             else:
