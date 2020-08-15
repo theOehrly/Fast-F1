@@ -390,8 +390,25 @@ def car_data(path):
                 for key in index:
                     value = cars[driver]['Channels'][key]
                     data[driver][index[key]].append(value)
+
+    most_complete_ref = None
     for driver in data:
-        data[driver] = pd.DataFrame(data[driver])
+        data[driver] = pd.DataFrame(data[driver])  # convert dict to dataframe
+        # check length of dataframe; sometimes there can be missing data
+        if most_complete_ref is None or len(data[driver]['Date']) > len(most_complete_ref):
+            most_complete_ref = data[driver]['Date']
+
+    for driver in data:
+        if len(data[driver]['Date']) < len(most_complete_ref):
+            # there is missing data for this driver
+            # extend the Date column and fill up missing values with zero,
+            # except Time which is left as NaT and will be calculated correctly during resampling
+            index_df = pd.DataFrame(data={'Date': most_complete_ref})
+            data[driver] = data[driver].merge(index_df, how='outer').sort_values(by='Date').reset_index()
+            data[driver].loc[:, index.values()] = data[driver].loc[:, index.values()].fillna(value=0, inplace=False)
+
+            logging.warning(f"Car data for driver {driver} is incomplete!")
+
     return data
 
 
@@ -443,8 +460,27 @@ def position(path):
                     int_val = data[driver]['Status'][-1] 
                     new_map = 'OffTrack' if int_val else 'OnTrack'
                     data[driver]['Status'][-1] = new_map
+
+    most_complete_ref = None
     for driver in data:
-        data[driver] = pd.DataFrame(data[driver])
+        data[driver] = pd.DataFrame(data[driver])  # convert dict to dataframe
+        # check length of dataframe; sometimes there can be missing data
+        if most_complete_ref is None or len(data[driver]['Date']) > len(most_complete_ref):
+            most_complete_ref = data[driver]['Date']
+
+    for driver in data:
+        if len(data[driver]['Date']) < len(most_complete_ref):
+            # there is missing data for this driver
+            # extend the Date column and fill up missing values with zero,
+            # except Time which is left as NaT and will be calculated correctly during resampling
+            # and except Status which should be 'OffTrack' for missing data
+            index_df = pd.DataFrame(data={'Date': most_complete_ref})
+            data[driver] = data[driver].merge(index_df, how='outer').sort_values(by='Date').reset_index()
+            data[driver]['Status'].fillna(value='OffTrack', inplace=True)
+            data[driver].loc[:, ['X', 'Y', 'Z']] = data[driver].loc[:, ['X', 'Y', 'Z']].fillna(value=0, inplace=False)
+
+            logging.warning(f"Position data for driver {driver} is incomplete!")
+
     return data
 
 
