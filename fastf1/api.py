@@ -6,11 +6,12 @@ A collection of functions to interface with the F1 web api.
 """
 import json
 import base64
-import copy
 import zlib
+from functools import reduce
 import requests
 import logging
 import pandas as pd
+import numpy as np
 
 
 base_url = 'https://livetiming.formula1.com'
@@ -26,25 +27,25 @@ headers = {
 }
 
 pages = {
-  'session_info': 'SessionInfo.json', # more rnd
-  'archive_status': 'ArchiveStatus.json', # rnd=1880327548
-  'heartbeat': 'Heartbeat.jsonStream', # Probably time sinchronization?
-  'audio_streams': 'AudioStreams.jsonStream', # Link to audio commentary
-  'driver_list': 'DriverList.jsonStream', # Driver info and line story
-  'extrapolated_clock': 'ExtrapolatedClock.jsonStream', # Boolean
-  'race_control_messages': 'RaceControlMessages.json', # Flags etc
-  'session_status': 'SessionStatus.jsonStream', # Start and finish times
-  'team_radio': 'TeamRadio.jsonStream', # Links to team radios
-  'timing_app_data': 'TimingAppData.jsonStream', # Tyres and laps (juicy)
-  'timing_stats': 'TimingStats.jsonStream', # 'Best times/speed' useless
-  'track_status': 'TrackStatus.jsonStream', # SC, VSC and Yellow
-  'weather_data': 'WeatherData.jsonStream', # Temp, wind and rain
-  'position': 'Position.z.jsonStream', # Coordinates, not GPS? (.z)
-  'car_data': 'CarData.z.jsonStream', # Telemetry channels (.z)
-  'content_streams': 'ContentStreams.jsonStream', # Lap by lap feeds
-  'timing_data': 'TimingData.jsonStream', # Gap to car ahead 
-  'lap_count': 'LapCount.jsonStream', # Lap counter
-  'championship_predicion': 'ChampionshipPrediction.jsonStream' # Points
+  'session_info': 'SessionInfo.json',  # more rnd
+  'archive_status': 'ArchiveStatus.json',  # rnd=1880327548
+  'heartbeat': 'Heartbeat.jsonStream',  # Probably time sinchronization?
+  'audio_streams': 'AudioStreams.jsonStream',  # Link to audio commentary
+  'driver_list': 'DriverList.jsonStream',  # Driver info and line story
+  'extrapolated_clock': 'ExtrapolatedClock.jsonStream',  # Boolean
+  'race_control_messages': 'RaceControlMessages.json',  #  Flags etc
+  'session_status': 'SessionStatus.jsonStream',  # Start and finish times
+  'team_radio': 'TeamRadio.jsonStream',  # Links to team radios
+  'timing_app_data': 'TimingAppData.jsonStream',  # Tyres and laps (juicy)
+  'timing_stats': 'TimingStats.jsonStream',  # 'Best times/speed' useless
+  'track_status': 'TrackStatus.jsonStream',  # SC, VSC and Yellow
+  'weather_data': 'WeatherData.jsonStream',  # Temp, wind and rain
+  'position': 'Position.z.jsonStream',  # Coordinates, not GPS? (.z)
+  'car_data': 'CarData.z.jsonStream',  # Telemetry channels (.z)
+  'content_streams': 'ContentStreams.jsonStream',  # Lap by lap feeds
+  'timing_data': 'TimingData.jsonStream',  # Gap to car ahead
+  'lap_count': 'LapCount.jsonStream',  # Lap counter
+  'championship_predicion': 'ChampionshipPrediction.jsonStream'  # Points
 }
 """Known requests
 """
@@ -75,262 +76,245 @@ def timing_data(path):
     While most of this data can be mapped lap by lap given a readable and
     usable data structure, other entries like position and time gaps are
     separated and mapped on finer timeseries.
-    """
-    raw = fetch_page(path, 'timing_data')
-    laps_data = _timing_data_laps(path, response=raw)
-    stream_data = _timing_data_stream(path, response=raw)
-    return laps_data, stream_data
 
+    Args:
+        path: url path (see :func:`make_path`)
 
-def _timing_data_stream(path, response=None):
-    """pre-fetched response can be fed if other functions parse the same
-    raw data.
+    Returns:
+        pandas.Dataframe for timing/lap data,
+        pandas.Dataframe for position/time gaps
     """
-    data, df = {}, None
+
+    # possible optional sanity checks (TODO, maybe):
+    #   - inlap has to be followed by outlap
+    #   - pit stops may never be negative (missing outlap)
+    #   - speed traps against telemetry (especially in Q FastLap - Slow Lap)
+
+    response = fetch_page(path, 'timing_data')
     if response is None:
-        response = fetch_page(path, 'timing_data')
+        raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
+
+    # split up response per driver for easier iteration and processing later
+    resp_per_driver = dict()
     for entry in response:
         if 'Lines' not in entry[1]:
             continue
-        for driver in entry[1]['Lines']:
-            if driver not in data:
-                data[driver] = {'Time': [], 'Driver': [], 'Position': [],
-                                'GapToLeader': [], 'IntervalToPositionAhead':[]}
-            time = entry[0]
-            block = entry[1]['Lines'][driver]
-            new_entry = False
+        for drv in entry[1]['Lines']:
+            if drv not in resp_per_driver.keys():
+                resp_per_driver[drv] = [(entry[0], entry[1]['Lines'][drv])]
+            else:
+                resp_per_driver[drv].append((entry[0], entry[1]['Lines'][drv]))
 
-            key = 'Position'
-            if key in block:
-                data[driver][key].append(block[key])
-                new_entry = True
-            key = 'GapToLeader'
-            if key in block:
-                data[driver][key].append(block[key])
-                new_entry = True
-            key = 'IntervalToPositionAhead'  
-            if key in block:
-                if 'Value' in block[key]:
-                    data[driver][key].append(block[key]['Value'])
-                    new_entry = True
+    # define all empty columns
+    empty_laps = {'Time': pd.NaT, 'Driver': str(), 'LastLapTime': pd.NaT, 'NumberOfLaps': np.NaN,
+                  'NumberOfPitStops': np.NaN, 'PitOutTime': pd.NaT, 'PitInTime': pd.NaT,
+                  'Sector1Time': pd.NaT, 'Sector2Time': pd.NaT, 'Sector3Time': pd.NaT,
+                  'Sector1SessionTime': pd.NaT, 'Sector2SessionTime': pd.NaT, 'Sector3SessionTime': pd.NaT,
+                  'SpeedI1': np.NaN, 'SpeedI2': np.NaN, 'SpeedFL': np.NaN, 'SpeedST': np.NaN}
 
-            if new_entry:
-                data[driver]['Time'].append(time)
-                data[driver]['Driver'].append(driver)
-                expected_length = len(data[driver]['Time'])
-                for key in data[driver]:
-                    if len(data[driver][key]) == 0:
-                        data[driver][key].append(None)
-                    elif len(data[driver][key]) < expected_length:
-                        data[driver][key].append(data[driver][key][-1])
-    for driver in data:
-        data[driver] = pd.DataFrame(data[driver])
-        df = data[driver] if df is None else pd.concat([df, data[driver]])
-    return df
+    empty_stream = {'Time': pd.NaT, 'Driver': str(), 'Position': np.NaN,
+                    'GapToLeader': np.NaN, 'IntervalToPositionAhead': np.NaN}
+
+    # create empty data dicts and populate them with data from all drivers after that
+    laps_data = {key: list() for key, val in empty_laps.items()}
+    stream_data = {key: list() for key, val in empty_stream.items()}
+
+    for drv in resp_per_driver.keys():
+        drv_laps_data = _laps_data_driver(resp_per_driver[drv], empty_laps, drv)
+        drv_stream_data = _stream_data_driver(resp_per_driver[drv], empty_stream, drv)
+
+        for key in empty_laps.keys():
+            laps_data[key].extend(drv_laps_data[key])
+
+        for key in empty_stream.keys():
+            stream_data[key].extend(drv_stream_data[key])
+
+    return pd.DataFrame(laps_data), pd.DataFrame(stream_data)
 
 
-def _timing_data_laps(path, response=None):
-    """pre-fetched response can be fed if other functions parse the same
-    raw data.
-
+def _laps_data_driver(driver_raw, empty_vals, drv):
     """
-    if response is None:
-        response = fetch_page(path, 'timing_data')
-    data, flags, df = {}, {}, None
-    for entry in response:
-        if 'Lines' not in entry[1]:
-            continue
-        for driver in entry[1]['Lines']:
-            data, flags = _timing_data_laps_entry(entry, driver, data, flags)
-    data_cols = [key for key in data[driver] if key not in ['Time', 'Driver']]
-    td_cols = ['LastLapTime', 'PitInTime', 'PitOutTime',
-               'Sector1Time', 'Sector2Time', 'Sector3Time',
-               'Sector1SessionTime', 'Sector2SessionTime', 'Sector3SessionTime']
-    for driver in data:
-        _df = pd.DataFrame(data[driver])
-        if not _df.iloc[-1][data_cols].any():
-            # Pop last row if all entries are empty
-            _df = _df.iloc[:-1]
-        # To increase pitstop count on next lap start and not end 
-        pit_stops = _df['NumberOfPitStops'].max()
-        _df['NumberOfPitStops'] -= 1
-        pit_laps = _df[~_df['NumberOfPitStops'].isnull()].index
-        for lap in (pit_laps.to_list() + [len(_df)])[::-1]:
-            # Going in reverse to spot easily if this messes up
-            # (Should always have 0 pitstops at start)
-            _df.loc[_df.index <= lap, 'NumberOfPitStops'] = pit_stops
-            pit_stops -= 1
-        for col in td_cols:
-            try:
-                _df[col] = _df[col].astype('timedelta64[ns]')
-            except:
+    Data is on a per-lap basis.
+
+    Boolean flag 'PitOut' is not evaluated. Meaning is unknown and flag is only sometimes present when a car leaves
+    the pits.
+
+    Params:
+        driver_raw (list): raw api response for this driver only [(Timestamp, data), (...), ...]
+        empty_vals (dict): dictionary of column names and empty column values
+        drv (str): driver identifier
+
+    Returns:
+         dictionary of laps data for this driver
+    """
+    laps = 0
+    pitstops = -1  # start with -1 because first is out lap, needs to be zero after that
+    # entries are prefilled with empty values and only overwritten if they exist in the response line
+    drv_data = {key: [val, ] for key, val in empty_vals.items()}
+
+    # iterate through the data; new lap triggers next row in data
+    for time, resp in driver_raw:
+        if 'Sectors' in resp and isinstance(resp['Sectors'], dict):
+            # sometimes it's a list but then it never contains values...
+            for sn, sector, sesst in (('0', 'Sector1Time', 'Sector1SessionTime'),
+                                      ('1', 'Sector2Time', 'Sector2SessionTime'),
+                                      ('2', 'Sector3Time', 'Sector3SessionTime')):
+                if val := _dict_get(resp, 'Sectors', sn, 'Value'):
+                    drv_data[sector][laps] = _to_timedelta(val)
+                    drv_data[sesst][laps] = _to_timedelta(time)
+
+        if val := _dict_get(resp, 'LastLapTime', 'Value'):
+            # if 'LastLapTime' is received less than five seconds after the start of a new lap, it is still added
+            # to the last lap
+            if _to_timedelta(time) - drv_data['Time'][laps - 1] < pd.Timedelta(5, 's'):
+                drv_data['LastLapTime'][laps - 1] = _to_timedelta(val)
+            else:
+                drv_data['LastLapTime'][laps] = _to_timedelta(val)
+
+        if 'Speeds' in resp:
+            for trapkey, trapname in (('I1', 'SpeedI1'), ('I2', 'SpeedI2'), ('FL', 'SpeedFL'), ('ST', 'SpeedST')):
+                if val := _dict_get(resp, 'Speeds', trapkey, 'Value'):
+                    drv_data[trapname][laps] = float(val)  # speed has to be float because int does not support NaN
+
+        if 'InPit' in resp:
+            # 'InPit': True is received once when entering pits, False is received once when leaving
+            if resp['InPit'] is True:
+                drv_data['PitInTime'][laps] = _to_timedelta(time)
+            else:
+                if 'NumberOfLaps' not in resp:
+                    # sometimes 'NumberOfLaps' is late and only received when leaving the pits
+                    # 'NumberOfLaps' and 'InPit' == False are then received in the same response line
+                    # 'PitOut' not this lap but next lap then; this is handled after lap count increase then
+                    drv_data['PitOutTime'][laps] = _to_timedelta(time)
+                    pitstops += 1
+
+        # new lap; create next row
+        if 'NumberOfLaps' in resp:
+            # make sure the car actually drove out of the pits already; it can't be a new lap if it didn't
+            if pitstops >= 0:
+                drv_data['Time'][laps] = _to_timedelta(time)
+                drv_data['NumberOfLaps'][laps] = laps + 1  # don't use F1's lap count; ours is better
+                drv_data['NumberOfPitStops'][laps] = pitstops
+                drv_data['Driver'][laps] = drv
+
+                laps += 1
+                # append a new empty row; last row may not be populated (depending on session) and may be removed later
+                for key, val in empty_vals.items():
+                    drv_data[key].append(val)
+
+            # pit out in same response line as new lap; in this case the pit out counts to the next lap as the lap
+            # count is increased while in pit still but the info is delayed. Therefore this is handled at the end.
+            if 'InPit' in resp and resp['InPit'] is False:
+                drv_data['PitOutTime'][laps] = _to_timedelta(time)
+                pitstops += 1
+
+    # 'NumberOfLaps' always introduces a new lap but sometimes there is one more lap after it
+    # in this case the data will be added as usual above, lap count and pit stops are added here and the 'Time' is
+    # calculated below from sector times
+    if not pd.isnull(drv_data['LastLapTime'][laps]):
+        drv_data['NumberOfLaps'][laps] = laps + 1
+        drv_data['NumberOfPitStops'][laps] = pitstops
+        drv_data['Driver'][laps] = drv
+    else:  # if there was no more data after the last lap count increase, delete the last empty record
+        for key in drv_data.keys():
+            drv_data[key] = drv_data[key][:-1]
+
+    # lap time sync; check which sector time was triggered with the lowest latency
+    # Sector3SessionTime == end of lap
+    # Sector2SessionTime + Sector3Time == end of lap
+    # Sector1SessionTime + Sector2Time + Sector3Time == end of lap
+    # all of these three have slightly different times; take earliest one -> most exact because can't trigger too early
+    for i in range(len(drv_data['Time'])):
+        sector_sum = pd.Timedelta(0)
+        min_time = drv_data['Time'][i]
+        for sector_time, session_time in ((pd.Timedelta(0), drv_data['Sector3SessionTime'][i]),
+                                          (drv_data['Sector3Time'][i], drv_data['Sector2SessionTime'][i]),
+                                          (drv_data['Sector2Time'][i], drv_data['Sector1SessionTime'][i])):
+            if pd.isnull(session_time):
                 continue
-        df = _df if df is None else pd.concat([df, _df])
-    return df
+            if pd.isnull(sector_time):
+                break  # need to stop here because else the sector sum will be incorrect
+
+            sector_sum += sector_time
+            new_time = session_time + sector_sum
+            if not pd.isnull(new_time) and (new_time < min_time or pd.isnull(min_time)):
+                min_time = new_time
+        drv_data['Time'][i] = min_time
+
+    return drv_data
 
 
-def _timing_data_laps_entry(entry, driver, data={}, flags={}):
-    if driver not in data:
-        # create empty dictionary for driver
-        data[driver] = {'Time': [], 'Driver': [], 'LastLapTime': [],
-                        'NumberOfLaps': [], 'NumberOfPitStops': [],
-                        'PitOutTime': [], 'PitInTime': [], 'Sector1Time': [],
-                        'Sector2Time': [], 'Sector3Time': [], 'Sector1SessionTime': [],
-                        'Sector2SessionTime': [], 'Sector3SessionTime': [], 'SpeedI1': [],
-                        'SpeedI2': [], 'SpeedFL': [], 'SpeedST': []}
-        [data[driver][key].append(None) for key in data[driver]]  # append None to all lists in the dictionary
+def _stream_data_driver(driver_raw, empty_vals, drv):
+    """
+    Data is on a timestamp basis.
 
-    # add flag for driver if driver is not yet in flags
-    if driver not in flags:
-        flags[driver] = {'time_reference': [None], 'locked_times': [False]}
+    Params:
+        driver_raw (list): raw api response for this driver only [(Timestamp, data), (...), ...]
+        empty_vals (dict): dictionary of column names and empty column values
+        drv (str): driver identifier
 
-    time = __to_timedelta(entry[0])  # entry[0] is session time; convert string to pandas timedelta
-    block = entry[1]['Lines'][driver]  # contains data
+    Returns:
+         dictionary of timing stream data for this driver
+    """
+    # entries are prefilled with empty or previous values and only overwritten if they exist in the response line
+    # basically interpolation by filling up with last known value because not every value is in every response
+    drv_data = {key: [val, ] for key, val in empty_vals.items()}
+    i = 0
 
-    # i is the row index that this block has to populate. The
-    # arrival of information is a bit randomic. It is assumed that
-    # if something arrives 5s after a new record is created, it
-    # still belongs to the lap before
-    i = -1
-    if len(data[driver]['Time']) > 1:
-        last_time = data[driver]['Time'][-2]
-        if time < (last_time + __to_timedelta('5.000')):
-            i = -2
+    # iterate through the data; timestamp + any of the values triggers new row in data
+    for time, resp in driver_raw:
+        new_entry = False
+        if val := _dict_get(resp, 'Position'):
+            drv_data['Position'][i] = val
+            new_entry = True
+        if val := _dict_get(resp, 'GapToLeader'):
+            drv_data['GapToLeader'][i] = val
+            new_entry = True
+        if val := _dict_get(resp, 'IntervalToPositionAhead', 'Value'):
+            drv_data['IntervalToPositionAhead'][i] = val
+            new_entry = True
 
-    no_time_reference = flags[driver]['time_reference'][i] is None
-    no_locked_time = not flags[driver]['locked_times'][i]
-    # Final word on time remains to NumberOfLaps, but this
-    # keeps also the last entry populated (in quali can be inlap)
-    if no_locked_time:
-        data[driver]['Time'][-1] = time
-    data[driver]['Driver'][i] = driver
+        # at least one value was present, create next row
+        if new_entry:
+            drv_data['Time'][i] = time
+            drv_data['Driver'][i] = drv
+            i += 1
 
-    # The easy one
-    if 'NumberOfPitStops' in block:
-        data[driver]['NumberOfPitStops'][i] = block['NumberOfPitStops']
+            # create next row of data from the last values; there will always be one row too much at the end which is
+            # removed again
+            for key, val in empty_vals.items():
+                drv_data[key].append(drv_data[key][-1])
 
-    # Sectors are flattened on three separated series
-    if 'Sectors' in block:
-        # Sectors is a list only if all three are present
-        for _n, sector in enumerate(block['Sectors']):
-            if isinstance(block['Sectors'], dict):
-                # For this trip of pure consistency, we have that
-                # sometimes Sectors is a list, so it will be... 
-                _n = int(sector)
-                sector = block['Sectors'][str(_n)]
-            if 'Value' in sector:
-                sector_time = __to_timedelta(sector['Value'])
-                data[driver][f'Sector{str(_n+1)}Time'][i] = sector_time
-                data[driver][f'Sector{str(_n+1)}SessionTime'][i] = time
+    for key in drv_data.keys():
+        drv_data[key] = drv_data[key][:-1]  # remove very last row again
 
-            # Sectors are used to calculate the sacred time reference.
-            # The following block of code has the only purpose to find the
-            # time with the minimum measuring delay.
-            # Otherwise laps will be out of sync (by a lot)!
-            has_measure = 'Value' in sector and sector['Value'] != ''
-
-            # Sector 1
-            if _n == 0 and has_measure and no_time_reference:
-                flags[driver]['time_reference'][i] = {'base': time,
-                                                      'delta': sector_time,
-                                                      'ts0': sector_time}
-
-            # Sector 2
-            reference_has_ts0 = (not no_time_reference) and ('ts0' in flags[driver]['time_reference'][i])
-            if _n == 1 and has_measure and reference_has_ts0:
-                old_reference = (flags[driver]['time_reference'][i]['base']
-                                 - flags[driver]['time_reference'][i]['delta'])
-                new_delta = (sector_time 
-                             + flags[driver]['time_reference'][i]['ts0'])
-                new_reference = time - new_delta
-                if new_reference < old_reference:
-                    flags[driver]['time_reference'][i]['base'] = time
-                    flags[driver]['time_reference'][i]['delta'] = new_delta
-                flags[driver]['time_reference'][i]['ts1'] = sector_time
-
-            # Sector 3
-            reference_has_ts01 = reference_has_ts0 and ('ts1' in flags[driver]['time_reference'][i])
-            if _n == 2 and has_measure and reference_has_ts01:
-                old_reference = (flags[driver]['time_reference'][i]['base']
-                                 - flags[driver]['time_reference'][i]['delta'])
-                new_delta = (sector_time 
-                             + flags[driver]['time_reference'][i]['ts1']
-                             + flags[driver]['time_reference'][i]['ts0'])
-                new_reference = time - new_delta
-                if new_reference < old_reference:
-                    flags[driver]['time_reference'][i]['base'] = time
-                    flags[driver]['time_reference'][i]['delta'] = new_delta
-                flags[driver]['time_reference'][i]['ts2'] = sector_time
-
-    # Same for speed traps
-    if 'Speeds' in block:
-        for trap in block['Speeds']:
-            if 'Value' in block['Speeds'][trap]:
-                speedtrap_value = block['Speeds'][trap]['Value']
-                data[driver][f'Speed{trap}'][i] = speedtrap_value
-
-    # F1 Reports start and end time of InPit and PitOut
-    # To simplify these are reduced to a single pit in start
-    # and pit out end time
-    if 'InPit' in block and block['InPit'] == False:
-        data[driver]['PitOutTime'][i] = time
-    if 'InPit' in block and block['InPit'] == True:
-        data[driver]['PitInTime'][i] = time
-
-    # Populate LastLapTime only if value is given sometimes it
-    # tells it was personal best or something but nobody cares
-    # just use .min() This is the last entry of a lap usually.
-    if ('LastLapTime' in block
-            and 'Value' in block['LastLapTime']
-            and block['LastLapTime']['Value'] != ''):
-
-        lap_time = __to_timedelta(block['LastLapTime']['Value'])
-        # Pandas here is very smart (i guess?) because even if I
-        # append None it will be guessed as NaT to keep datatype
-        # consistency. Very silent behaviour though.
-        # UNLESS, no time has been set by this guy (shit #1)
-        data[driver]['LastLapTime'][i] = lap_time
-        # Tricky tricks to discover with 'accuracy'
-        # when lap time has been set
-        time_ref = flags[driver]['time_reference'][i]
-        if time_ref is not None:
-            lap_start_time = time_ref['base'] - time_ref['delta']
-            data[driver]['Time'][i] = lap_start_time + lap_time
-            flags[driver]['locked_times'][i] = True
-
-    # Number of laps triggers a new entry it looks like always
-    # comes before LastLapTime.
-    # Unless bottas qualifies under red flag in Monza but is later 
-    # convalidated, but we are bullet proof against that as well, apart
-    # pit stop time. sorry.
-    if 'NumberOfLaps' in block:
-        data[driver]['NumberOfLaps'][-1] = block['NumberOfLaps']
-        [data[driver][key].append(None) for key in data[driver]]
-        # prevent shit #1 and put a NaT
-        data[driver]['LastLapTime'][-1] = __to_timedelta('')
-        flags[driver]['time_reference'].append(None)
-        flags[driver]['locked_times'].append(False)
-
-    return data, flags
+    return drv_data
 
 
 def timing_app_data(path, response=None):
     """Full parse of timing app data. This parsing is quite ignorant,
     with  minimum logic just to fix data structure inconsistencies. Tyre
     information is passed to the summary table.
+
+    Args:
+        path (str): web path for base_url, see :func:`make_path`
+        response (optional): api response can be passed if data was already downloaded
+
+    Returns:
+        pandas.Dataframe
     """
     if response is None:
         response = fetch_page(path, 'timing_app_data')
-    data = {'LapNumber': [], 'Driver': [], 'LapTime': [], 'Stint': [],
-            'TotalLaps': [], 'Compound': [], 'New': [],
-            'TyresNotChanged': [], 'Time': [], 'LapFlags': [],
-            'LapCountTime': [], 'StartLaps': [], 'Outlap': []}
+
+    data = {'LapNumber': [], 'Driver': [], 'LapTime': [], 'Stint': [], 'TotalLaps': [], 'Compound': [], 'New': [],
+            'TyresNotChanged': [], 'Time': [], 'LapFlags': [], 'LapCountTime': [], 'StartLaps': [], 'Outlap': []}
+
     for entry in response:
-        time = __to_timedelta(entry[0])
+        time = _to_timedelta(entry[0])
+
         row = entry[1]
         for driver_number in row['Lines']:
-            if 'Stints' in row['Lines'][driver_number]:
-                update = row['Lines'][driver_number]['Stints']
+            if update := _dict_get(row, 'Lines', driver_number, 'Stints'):
                 for stint_number, stint in enumerate(update):
                     if isinstance(update, dict):
                         stint_number = int(stint)
@@ -342,11 +326,12 @@ def timing_app_data(path, response=None):
                             data[key].append(None)
                     for key in stint:
                         if key not in data:
-                            # Just for debug, maybe remove one day?
-                            print(f"{key} not in data!")
+                            logging.debug(f"Found unknown key in timing app data: {key}")
+
                     data['Time'][-1] = time
                     data['Driver'][-1] = driver_number
                     data['Stint'][-1] = stint_number
+
     return pd.DataFrame(data)
 
 
@@ -358,39 +343,51 @@ def car_data(path):
     time is not constant, usually 240ms but sometimes can be ~270ms.
     Keep absolute reference.
 
-    Useful columns:
-        - Date: sample pandas datetime
-        - Driver: driver identifier
-        - Speed: Km/h
-        - RPM, Gear
-        - Throttle, Brake: 0-100 (don't trust brake too much)
-        - DRS: Off, Available, Active
+    Dataframe columns:
+        - Date (pandas.Timestamp): timestamp for this sample as Date + Time; more or less exact
+        - Time (pandas.Timedelta): session timestamp; inaccurate, has duplicate values; use Date instead
+        - Speed (int): Km/h
+        - RPM (int)
+        - Gear (int)
+        - Throttle (int): 0-100%
+        - Brake (int): 0-100% (don't trust brake too much)
+        - DRS (int): 0=Off, 8=Active; sometimes other values --> to be researched still
+
+    Args:
+        path: url path (see :func:`make_path`)
 
     Returns:
-        pandas dataframe
+        dictionary containing one pandas dataframe for each driver; dictionary keys are driver numbers as string
     """
-    index = {'0': 'RPM', '2': 'Speed', '3': 'nGear',
-             '4': 'Throttle', '5': 'Brake', '45': 'DRS'}
-    data, main_structure = {}, {'Date': [], 'Time': []}
-    [main_structure.update({index[i]: []}) for i in index]
-    logging.info("Fetching car data") 
+    logging.info("Fetching car data")
     raw = fetch_page(path, 'car_data')
-    logging.info("Parsing car data") 
+    logging.info("Parsing car data")
+
+    channels = {'0': 'RPM', '2': 'Speed', '3': 'nGear', '4': 'Throttle', '5': 'Brake', '45': 'DRS'}
+    columns = {'Time', 'Date', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake', 'DRS'}
     date_format = "%Y-%m-%dT%H:%M:%S.%f%z"
+
+    data = dict()
+
     for line in raw:
-        time = __to_timedelta(line[0])
+        time = _to_timedelta(line[0])
         for entry in line[1]['Entries']:
-            cars = entry['Cars']
             date = pd.to_datetime(entry['Utc'], format=date_format)
-            for driver in cars:
+
+            for driver in entry['Cars']:
                 if driver not in data:
-                    data[driver] = copy.deepcopy(main_structure)
+                    data[driver] = {col: list() for col in columns}
+
                 data[driver]['Time'].append(time)
                 data[driver]['Date'].append(date)
-                for key in index:
-                    value = cars[driver]['Channels'][key]
-                    data[driver][index[key]].append(value)
 
+                for n in channels:
+                    val = _dict_get(entry, 'Cars', driver, 'Channels', n)
+                    if not val:
+                        val = 0
+                    data[driver][channels[n]].append(val)
+
+    # create one dataframe per driver and check for the longest dataframe
     most_complete_ref = None
     for driver in data:
         data[driver] = pd.DataFrame(data[driver])  # convert dict to dataframe
@@ -398,14 +395,15 @@ def car_data(path):
         if most_complete_ref is None or len(data[driver]['Date']) > len(most_complete_ref):
             most_complete_ref = data[driver]['Date']
 
+    # if everything is well, all dataframes should have the same length and no postprocessing is necessary
     for driver in data:
         if len(data[driver]['Date']) < len(most_complete_ref):
             # there is missing data for this driver
-            # extend the Date column and fill up missing values with zero,
+            # extend the Date column and fill up missing telemetry values with zero,
             # except Time which is left as NaT and will be calculated correctly during resampling
             index_df = pd.DataFrame(data={'Date': most_complete_ref})
             data[driver] = data[driver].merge(index_df, how='outer').sort_values(by='Date').reset_index()
-            data[driver].loc[:, index.values()] = data[driver].loc[:, index.values()].fillna(value=0, inplace=False)
+            data[driver].loc[:, channels.values()] = data[driver].loc[:, channels.values()].fillna(value=0, inplace=False)
 
             logging.warning(f"Car data for driver {driver} is incomplete!")
 
@@ -419,48 +417,55 @@ def position(path):
     time is not constant, usually 300ms but sometimes can be ~200ms.
     Keep absolute reference.
 
-    Useful columns:
-        - Date: pandas datetime of sample
-        - Driver: driver identifier
-        - X, Y, Z: Position coordinates
+    Dataframe columns:
+        - Date (pandas.Timestamp): timestamp for this sample as Date + Time; more or less exact
+        - Time (pandas.Timedelta): session timestamp; inaccurate, has duplicate values; use Date instead
+        - X, Y, Z (int): Position coordinates
+        - Status (str): 'OnTrack' or 'OffTrack'
 
     Args:
         path: web path for base_url, see :func:`make_path`
 
     Returns:
-        pandas dataframe
+        dictionary containing one pandas dataframe for each driver, dictionary keys are driver numbers as string
     """
-    tl = 12  # length of timestamp: len('00:00:00:000')
-    index = ['Status', 'X', 'Y', 'Z']
-    data, main_structure = {}, {'Date': [], 'Time': []}
-    [main_structure.update({i: []}) for i in index]
-    logging.info("Fetching position") 
+    logging.info("Fetching position")
     raw = fetch_page(path, 'position')
     logging.info("Parsing position") 
 
-    if raw is None:
+    if not raw:
         return {}
+
+    ts_length = 12  # length of timestamp: len('00:00:00:000')
+    date_format = "%Y-%m-%dT%H:%M:%S.%f"
+    columns = ['Time', 'Date', 'Status', 'X', 'Y', 'Z']
+
+    data = dict()
+
     for record in raw:
-        time = __to_timedelta(record[:tl])
-        jrecord = parse(record[tl:], zipped=True)
+        time = _to_timedelta(record[:ts_length])
+        jrecord = parse(record[ts_length:], zipped=True)
+
         for sample in jrecord['Position']:
-            date = pd.to_datetime(sample['Timestamp'],
-                                  format="%Y-%m-%dT%H:%M:%S.%f",
-                                  infer_datetime_format=True)
-            entries = sample['Entries']
-            for driver in entries:
+            date = pd.to_datetime(sample['Timestamp'], format=date_format)
+
+            for driver in sample['Entries']:
                 if driver not in data:
-                    data[driver] = copy.deepcopy(main_structure)
+                    data[driver] = {col: list() for col in columns}
+
                 data[driver]['Time'].append(time)
                 data[driver]['Date'].append(date)
-                for key in index:
-                    data[driver][key].append(entries[driver][key])
-                if str(entries[driver]['Status']).isdigit():
-                    # Fallback on older api status mapping and convert
-                    int_val = data[driver]['Status'][-1] 
-                    new_map = 'OffTrack' if int_val else 'OnTrack'
-                    data[driver]['Status'][-1] = new_map
 
+                for coord in ['X', 'Y', 'Z']:
+                    data[driver][coord].append(_dict_get(sample, 'Entries', driver, coord))
+
+                status = _dict_get(sample, 'Entries', driver, 'Status')
+                if str(status).isdigit():
+                    # Fallback on older api status mapping and convert
+                    status = 'OffTrack' if int(status) else 'OnTrack'
+                data[driver]['Status'].append(status)
+
+    # create one dataframe per driver and check for the longest dataframe
     most_complete_ref = None
     for driver in data:
         data[driver] = pd.DataFrame(data[driver])  # convert dict to dataframe
@@ -468,10 +473,11 @@ def position(path):
         if most_complete_ref is None or len(data[driver]['Date']) > len(most_complete_ref):
             most_complete_ref = data[driver]['Date']
 
+    # if everything is well, all dataframes should have the same length and no postprocessing is necessary
     for driver in data:
         if len(data[driver]['Date']) < len(most_complete_ref):
             # there is missing data for this driver
-            # extend the Date column and fill up missing values with zero,
+            # extend the Date column and fill up missing telemetry values with zero,
             # except Time which is left as NaT and will be calculated correctly during resampling
             # and except Status which should be 'OffTrack' for missing data
             index_df = pd.DataFrame(data={'Date': most_complete_ref})
@@ -562,7 +568,21 @@ def _json_inspector(obj, start=None):
     return obj
 
 
-def __to_timedelta(x):
+def _to_timedelta(x):
     if len(x) and isinstance(x, str):
         return pd.to_timedelta('00:00:00.000'[:-len(x)] + x)
     return pd.to_timedelta(x)
+
+
+def _dict_get(d, *keys):
+    """Recursive dict get. Can take an arbitrary number of keys and returns an empty
+    dict if any key does not exist.
+    https://stackoverflow.com/a/28225747"""
+    return reduce(lambda c, k: c.get(k, {}), keys, d)
+
+
+class SessionNotAvailableError(BaseException):
+    """Raised if an api request returned no data for the requested session.
+    A likely cause is that the session does not exist because it was cancelled."""
+    def __init__(self, *args):
+        super().__init__(*args)
