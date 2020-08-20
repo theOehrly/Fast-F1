@@ -538,36 +538,6 @@ def parse(text, zipped=False):
     return text
 
 
-def _json_inspector(obj, start=None):
-    """This function builds a unique data structure from any jsonStream,
-    it allows further inspection for debug/features.
-
-    Args:
-        obj: structure returned from fetch_page, usually array 
-
-    Returns:
-        dictionary
-
-    """
-    structure = obj if start is None else start
-    if isinstance(obj, list):
-        structure = [{}]
-        for e in obj:
-            structure[0] = json_inspector(e, start=structure[0])
-        return structure
-    elif isinstance(obj, dict):
-        for key in obj:
-            if key not in structure:
-                try:
-                    structure[key] = {}
-                except:
-                    print("Inconsistent structure")
-                    return None
-            structure[key] = json_inspector(obj[key], start=structure[key])
-        return structure
-    return obj
-
-
 def _to_timedelta(x):
     if len(x) and isinstance(x, str):
         return pd.to_timedelta('00:00:00.000'[:-len(x)] + x)
