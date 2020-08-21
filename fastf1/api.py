@@ -172,27 +172,31 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         if in_past:  # still in the past, just continue and ignore everything
             continue
 
+        # values which are up to five seconds late are still counted towards the previous lap
+        # (sector times, speed traps and lap times)
+        lap_offset = 0
+        if _to_timedelta(time) - drv_data['Time'][lapcnt - 1] < pd.Timedelta(5, 's'):
+            lap_offset = 1
+
         if 'Sectors' in resp and isinstance(resp['Sectors'], dict):
             # sometimes it's a list but then it never contains values...
             for sn, sector, sesst in (('0', 'Sector1Time', 'Sector1SessionTime'),
                                       ('1', 'Sector2Time', 'Sector2SessionTime'),
                                       ('2', 'Sector3Time', 'Sector3SessionTime')):
                 if val := _dict_get(resp, 'Sectors', sn, 'Value'):
-                    drv_data[sector][lapcnt] = _to_timedelta(val)
-                    drv_data[sesst][lapcnt] = _to_timedelta(time)
+                    drv_data[sector][lapcnt - lap_offset] = _to_timedelta(val)
+                    drv_data[sesst][lapcnt - lap_offset] = _to_timedelta(time)
 
         if val := _dict_get(resp, 'LastLapTime', 'Value'):
             # if 'LastLapTime' is received less than five seconds after the start of a new lap, it is still added
             # to the last lap
-            if _to_timedelta(time) - drv_data['Time'][lapcnt - 1] < pd.Timedelta(5, 's'):
-                drv_data['LastLapTime'][lapcnt - 1] = _to_timedelta(val)
-            else:
-                drv_data['LastLapTime'][lapcnt] = _to_timedelta(val)
+            drv_data['LastLapTime'][lapcnt - lap_offset] = _to_timedelta(val)
 
         if 'Speeds' in resp:
             for trapkey, trapname in (('I1', 'SpeedI1'), ('I2', 'SpeedI2'), ('FL', 'SpeedFL'), ('ST', 'SpeedST')):
                 if val := _dict_get(resp, 'Speeds', trapkey, 'Value'):
-                    drv_data[trapname][lapcnt] = float(val)  # speed has to be float because int does not support NaN
+                    # speed has to be float because int does not support NaN
+                    drv_data[trapname][lapcnt - lap_offset] = float(val)
 
         if 'InPit' in resp:
             # 'InPit': True is received once when entering pits, False is received once when leaving
