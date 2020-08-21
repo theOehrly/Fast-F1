@@ -377,28 +377,7 @@ class Session:
             d1 = data[data['Driver'] == driver]
             d2 = useful[useful['Driver'] == driver]
 
-            try:
-                result = pd.merge_asof(d1, d2, on='Time', by='Driver')
-            except:
-                # For some not correctly synchronised sessions there are manually patched files
-                if driver in MANUAL_PATCHES.keys() and self.api_path in MANUAL_PATCHES[driver].keys():
-                    file_name = os.path.join('patched_sessions', MANUAL_PATCHES[driver][self.api_path])
-                    path = pathlib.Path(__file__).parent.absolute()
-                    file_path = os.path.join(path, file_name)
-
-                    result = pd.read_csv(file_path)
-                    for col in result.columns:
-                        if 'Time' in col:
-                            result[col] = pd.to_timedelta(result[col])
-                    result['Driver'] = driver
-
-                    logging.warning(f"Failed to merge timing data and timing app data for driver {driver}. A manual patch was loaded instead.")
-
-                else:
-                    # TODO this is not a nice solution and the error should be properly handled and recovered in api._timing_data_laps_entry
-                    logging.error(f"Failed to merge timing data and timing app data for driver {driver}. No manual patch is available. "
-                                  f"Data for this driver will be missing!")
-                    continue
+            result = pd.merge_asof(d1, d2, on='Time', by='Driver')
 
             for npit in result['NumberOfPitStops'].unique():
                 sel = result['NumberOfPitStops'] == npit
