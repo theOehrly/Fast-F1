@@ -17,27 +17,25 @@ def test_partial_position_data(caplog):
     assert "Laps loaded and saved!" in caplog.text  # indicates success
 
 
-def test_manual_patch_file(caplog):
-    # test if manual loading of patch file works
+def test_history_mod_1(caplog):
+    # api data sometimes goes back in time
     caplog.set_level(logging.INFO)
 
     session = core.get_session(2020, 'testing', 3)
     session.load_laps()
 
-    assert "Failed to merge timing data and timing app data for driver 5. " \
-           "A manual patch was loaded instead." in caplog.text  # the warning
+    assert "The api attempted to rewrite history" in caplog.text  # the warning
     assert "Laps loaded and saved!" in caplog.text  # indicates success
 
 
-def test_no_manual_patch(caplog):
-    # data can not be merged and no manual patch is available
+def test_history_mod_2(caplog):
+    # api data sometimes goes back in time
     caplog.set_level(logging.INFO)
 
     session = core.get_session(2020, 3, 'FP2')
     session.load_laps()
 
-    assert "Failed to merge timing data and timing app data for driver 16. " \
-           "No manual patch is available. Data for this driver will be missing!" in caplog.text  # the error
+    assert "The api attempted to rewrite history" in caplog.text  # the error
     assert "Laps loaded and saved!" in caplog.text  # indicates success
 
 
