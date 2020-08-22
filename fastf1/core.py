@@ -8,7 +8,6 @@ Contains the main classes and functions.
 from fastf1 import utils
 from fastf1 import ergast
 from fastf1 import api
-from fuzzywuzzy import fuzz
 import pandas as pd
 import numpy as np
 import logging
@@ -17,6 +16,13 @@ import scipy
 from scipy import spatial
 import pathlib
 import os
+
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings('ignore', message="Using slow pure-python SequenceMatcher")
+    # suppress that warning, it's confusing at best here, we don't need fast sequence matching
+    # and the installation (on windows) some effort
+    from fuzzywuzzy import fuzz
 
 logging.basicConfig(level=logging.INFO)
 
