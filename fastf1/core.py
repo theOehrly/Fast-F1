@@ -24,7 +24,8 @@ with warnings.catch_warnings():
     # and the installation (on windows) some effort
     from fuzzywuzzy import fuzz
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, style='{', format="{module: <8} {levelname: >10} \t{message}")
+
 
 TESTING_LOOKUP = {'2020': [['2020-02-19', '2020-02-20', '2020-02-21'],
                            ['2020-02-26', '2020-02-27', '2020-02-28']]}
