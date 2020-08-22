@@ -248,8 +248,7 @@ class Session:
                 'Constructor': {'name': driver[2]}})
 
     def _get_session_date(self):
-        """Session date formatted as '%Y-%m-%d' (e.g. '2019-03-12')
-        """
+        """Session date formatted as '%Y-%m-%d' (e.g. '2019-03-12')"""
         if self.weekend.is_testing():
             year = str(self.weekend.year)
             week_index = int(self.weekend.name[-1]) - 1
@@ -284,18 +283,21 @@ class Session:
         The dataframe columns, therefore, each lap, has the following
         properties:
 
-            - **Time** (timedelta): Time when the lap was recorded
+            - **Time** (pandas.Timedelta): Time when the lap time was set (end of lap)
             - **Driver** (string): Three letters driver identifier
-            - **LapTime** (timedelta): Recorded lap time
+            - **LapTime** (pandas.Timedelta): Recorded lap time
             - **LapNumber** (int): Recorded lap number
-            - **PitOutTime** (timedelta): Time when car exited the pit
-            - **PitInTime** (timedelta): Time when car entered the pit
-            - **Sector1Time** (timedelta): Sector 1 recorded time
-            - **Sector2Time** (timedelta): Sector 2 recorded time
-            - **Sector3Time** (timedelta): Sector 3 recorded time
+            - **PitOutTime** (pandas.Timedelta): Time when car exited the pit
+            - **PitInTime** (pandas.Timedelta): Time when car entered the pit
+            - **Sector1Time** (pandas.Timedelta): Sector 1 recorded time
+            - **Sector2Time** (pandas.Timedelta): Sector 2 recorded time
+            - **Sector3Time** (pandas.Timedelta): Sector 3 recorded time
+            - **Sector1Time** (pandas.Timedelta): Sector 1 timestamp (end of sector)
+            - **Sector2Time** (pandas.Timedelta): Sector 2 timestamp (end of sector)
+            - **Sector3Time** (pandas.Timedelta): Sector 3 timestamp (end of sector)
             - **SpeedI1** (float): Speedtrap sector 1
             - **SpeedI2** (float): Speedtrap sector 2
-            - **SpeedFL** (float): Speedtrap sector 3 (Not sure)
+            - **SpeedFL** (float): Speedtrap at finish line
             - **SpeedST** (float): Speedtrap on longest straight (Not sure)
             - **Stint** (int): Indicates the stint number
             - **Compound** (str): Tyre compound name: SOFT, MEDIUM ..
@@ -303,9 +305,8 @@ class Session:
             - **FreshTyre** (bool): Tyre had TyreLife=0 at stint start
             - **DriverNumber** (str): Car number
             - **Team** (str): Team name
-            - **LapStartDate** (datetime): When the lap started
-            - **telemetry** (pandas.DataFrame): Telemetry with the \
-                                                following channels:
+            - **LapStartDate** (pandas.Timestamp): Timestamp (Date+Time) for the start of the lap
+            - **telemetry** (pandas.DataFrame): Telemetry with the following channels:
 
                 - `Time` (timedelta): Time axis (0 is start of lap)
                 - `Space` (float): Space in meters (from speed and time)
@@ -345,6 +346,13 @@ class Session:
         return self.laps
 
     def get_driver(self, identifier):
+        """
+        Args:
+            identifier (str): driver's three letter identifier (for example 'VER')
+
+        Returns:
+            instance of :class:`Driver`
+        """
         if type(identifier) is str:
             for info in self.results:
                 if info['Driver']['code'] == identifier:
@@ -436,7 +444,7 @@ class Session:
             _log_progress(i, len(self.laps.index))
             lap = self.laps.loc[i]
             driver = lap['DriverNumber']
-            if str(lap['LapTime']) != 'NaT' and driver in tel:
+            if not pd.isnull(lap['LapTime']) and driver in tel:
                 telemetry = self._slice_stream(tel[driver], lap)
                 if len(telemetry.index):
                     if driver in pos:
@@ -880,49 +888,50 @@ class Laps(pd.DataFrame):
 
 
 class Driver:
+    """Driver class that provides some information on drivers and their finishing results.
+
+    see also :func:`Session.get_driver`
+
+    .. note:: Driver data is only available if the Ergast api lookup did not fail.
+
+    """
     def __init__(self, session, info):
         self.session = session
         self.info = info
+        """`Driver.info` contains some more info from the Ergast api"""
         self.identifier = info['Driver']['code']
         self.number = info['number']
 
     @property
     def dnf(self):
-        """True if driver did not finish
-        """
+        """True if driver did not finish"""
         s = self.info['status']
         return not (s[3:6] == 'Lap' or s == 'Finished')
 
     @property
     def grid(self):
-        """Grid position
-        """
+        """Grid position"""
         return int(self.info['grid'])
 
     @property
     def position(self):
-        """Finishing position
-        """
+        """Finishing position"""
         return int(self.info['position'])
 
     @property
     def name(self):
+        """Driver first name"""
         return self.info['Driver']['givenName']
 
     @property
+    def familyname(self):
+        """Driver family name"""
+        return self.info['Driver']['familyName']
+
+    @property
     def team(self):
-        """Team name
-        """
+        """Team name"""
         return self.info['Constructor']['name']
-
-    def _filter(self, df):
-        return df[df['Driver'] == self.number]
-
-
-class ETL:
-
-    def __init__(self, api_path):
-        self.api_path = api_path
 
 
 def _log_progress(i, length, c=30):
