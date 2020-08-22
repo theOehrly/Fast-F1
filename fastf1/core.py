@@ -377,12 +377,16 @@ class Session:
             d1 = data[data['Driver'] == driver]
             d2 = useful[useful['Driver'] == driver]
 
+            if not driver or len(d2) == 0:
+                continue  # no data for this driver; skip
+
             result = pd.merge_asof(d1, d2, on='Time', by='Driver')
 
             for npit in result['NumberOfPitStops'].unique():
                 sel = result['NumberOfPitStops'] == npit
                 result.loc[sel, 'TotalLaps'] += np.arange(0, sel.sum()) + 1
-            df = result if i == 0 else pd.concat([df, result], sort=False)
+            # check if df is defined already before concat (vars is a builtin function)
+            df = result if 'df' not in vars() else pd.concat([df, result], sort=False)
 
         summary = df.reset_index(drop=True)
         summary.rename(columns={'TotalLaps': 'TyreLife',

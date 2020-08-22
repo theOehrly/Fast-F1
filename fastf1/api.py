@@ -147,35 +147,78 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
     Returns:
          dictionary of laps data for this driver
     """
+
+    # do a quick first pass over the data to find out when laps start and end
+    # this is needed so we can work with a more efficient "look ahead" on the main pass
+    # example: we can have 'PitOut' 0.01s before a new lap starts, but 'PitOut' belongs to the new lap, not the old one
+
     lapcnt = 0  # we're keeping two separate lap counts because sometimes the api has a non existent lap too much...
     api_lapcnt = 0  # ...at the beginning; we can correct that though;
     # api_lapcnt does not count backwards even if the source data does
     in_past = False  # flag for when the data went back in time
+    out_of_pit = False  # flag set to true when driver drives out FOR THE FIRST TIME; stays true from then on
 
-    pitstops = -1  # start with -1 because first is out lap, needs to be zero after that
     # entries are prefilled with empty values and only overwritten if they exist in the response line
     drv_data = {key: [val, ] for key, val in empty_vals.items()}
 
-    # iterate through the data; new lap triggers next row in data
     for time, resp in driver_raw:
+        data_in_lap = False
         # the first three ifs are just edge case handling for the rare sessions were the data goes back in time
         if in_past and 'NumberOfLaps' in resp and resp['NumberOfLaps'] == api_lapcnt:
             in_past = False  # we're back in the present
 
         if 'NumberOfLaps' in resp and resp['NumberOfLaps'] < api_lapcnt:
             logging.warning(f"The api attempted to rewrite history for driver {drv}. This was ignored! The data may not"
-                            f" be correct. Feel free to report this warning. This behaviour is very rare and therefore"
-                            f" difficult to analyze.")
+                            f" be entirely correct. (near lap {lapcnt})")
             in_past = True
             continue
 
         if in_past:  # still in the past, just continue and ignore everything
             continue
 
+        if ('InPit' in resp) and (resp['InPit'] is False):
+            out_of_pit = True  # drove out of the pits for the first time
+
+        # new lap; create next row
+        if 'NumberOfLaps' in resp and resp['NumberOfLaps'] > api_lapcnt:
+            api_lapcnt += 1
+            # make sure the car actually drove out of the pits already; it can't be a new lap if it didn't
+            if out_of_pit:
+                drv_data['Time'][lapcnt] = _to_timedelta(time)
+                lapcnt += 1
+                # append a new empty row; last row may not be populated (depending on session) and may be removed later
+                for key, val in empty_vals.items():
+                    drv_data[key].append(val)
+
+    # now, do the main pass where all the other data is actually filled in
+    # same counters and flags as before, reset them
+    lapcnt = 0  # we're keeping two separate lap counts because sometimes the api has a non existent lap too much...
+    api_lapcnt = 0  # ...at the beginning; we can correct that though;
+    # api_lapcnt does not count backwards even if the source data does
+    in_past = False  # flag for when the data went back in time
+
+    pitstops = -1  # start with -1 because first is out lap, needs to be zero after that
+
+    # iterate through the data; new lap triggers next row in data
+    for time, resp in driver_raw:
+        # the first three ifs are just edge case handling for the rare sessions were the data goes back in time
+        if in_past and 'NumberOfLaps' in resp and resp['NumberOfLaps'] == api_lapcnt:
+            in_past = False  # we're back in the present
+        if in_past or ('NumberOfLaps' in resp and resp['NumberOfLaps'] < api_lapcnt):
+            in_past = True
+            continue
+
+        if (lapcnt == 0) and ((drv_data['Time'][lapcnt] - _to_timedelta(time)) > pd.Timedelta(5, 'min')):
+            # ignore any data which arrives more than 5 minutes before the end of the first lap, except 'PitOut'
+            if ('InPit' in resp) and (resp['InPit'] is False):
+                drv_data['PitOutTime'][lapcnt] = _to_timedelta(time)
+                pitstops = 0  # special here, can be multiple times for no reason therefore set zero instead of +=1
+            continue
+
         # values which are up to five seconds late are still counted towards the previous lap
         # (sector times, speed traps and lap times)
         lap_offset = 0
-        if _to_timedelta(time) - drv_data['Time'][lapcnt - 1] < pd.Timedelta(5, 's'):
+        if (lapcnt > 0) and (_to_timedelta(time) - drv_data['Time'][lapcnt - 1] < pd.Timedelta(5, 's')):
             lap_offset = 1
 
         if 'Sectors' in resp and isinstance(resp['Sectors'], dict):
@@ -201,14 +244,15 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         if 'InPit' in resp:
             # 'InPit': True is received once when entering pits, False is received once when leaving
             if resp['InPit'] is True:
-                drv_data['PitInTime'][lapcnt] = _to_timedelta(time)
+                if pitstops >= 0:
+                    drv_data['PitInTime'][lapcnt] = _to_timedelta(time)
+            elif ('NumberOfLaps' in resp) or (drv_data['Time'][lapcnt] - _to_timedelta(time)) < pd.Timedelta(5, 's'):
+                # same response line as beginning of next lap or beginning of next lap less than 5 seconds away
+                drv_data['PitOutTime'][lapcnt+1] = _to_timedelta(time)  # add to next lap
+                pitstops += 1
             else:
-                if 'NumberOfLaps' not in resp:
-                    # sometimes 'NumberOfLaps' is late and only received when leaving the pits
-                    # 'NumberOfLaps' and 'InPit' == False are then received in the same response line
-                    # 'PitOut' not this lap but next lap then; this is handled after lap count increase then
-                    drv_data['PitOutTime'][lapcnt] = _to_timedelta(time)
-                    pitstops += 1
+                drv_data['PitOutTime'][lapcnt] = _to_timedelta(time)  # add to current lap
+                pitstops += 1
 
         # new lap; create next row
         if 'NumberOfLaps' in resp and resp['NumberOfLaps'] > api_lapcnt:
@@ -219,31 +263,35 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
                 drv_data['NumberOfLaps'][lapcnt] = lapcnt + 1  # don't use F1's lap count; ours is better
                 drv_data['NumberOfPitStops'][lapcnt] = pitstops
                 drv_data['Driver'][lapcnt] = drv
-
                 lapcnt += 1
-                # append a new empty row; last row may not be populated (depending on session) and may be removed later
-                for key, val in empty_vals.items():
-                    drv_data[key].append(val)
-            else:
-                for key, val in empty_vals.items():  # reset first row again
-                    drv_data[key][0] = val
 
-            # pit out in same response line as new lap; in this case the pit out counts to the next lap as the lap
-            # count is increased while in pit still but the info is delayed. Therefore this is handled at the end.
-            if 'InPit' in resp and resp['InPit'] is False:
-                drv_data['PitOutTime'][lapcnt] = _to_timedelta(time)
-                pitstops += 1
+    if lapcnt == 0:  # no data at all for this driver
+        return drv_data
+
+    # done reading the data, do postprocessing
+
+    def data_in_lap(lap_n):
+        relevant = ('Sector1Time', 'Sector2Time', 'Sector3Time', 'SpeedI1', 'SpeedI2',
+                    'SpeedFL', 'SpeedST', 'LastLapTime')
+        for col in relevant:
+            if not pd.isnull(drv_data[col][lap_n]):
+                return True
+        return False
 
     # 'NumberOfLaps' always introduces a new lap (can be a previous one) but sometimes there is one more lap at the end
     # in this case the data will be added as usual above, lap count and pit stops are added here and the 'Time' is
     # calculated below from sector times
-    if not pd.isnull(drv_data['LastLapTime'][lapcnt]):
+    if data_in_lap(lapcnt):
         drv_data['NumberOfLaps'][lapcnt] = lapcnt + 1
         drv_data['NumberOfPitStops'][lapcnt] = pitstops
         drv_data['Driver'][lapcnt] = drv
     else:  # if there was no more data after the last lap count increase, delete the last empty record
         for key in drv_data.keys():
             drv_data[key] = drv_data[key][:-1]
+    if not data_in_lap(0):  # remove first lap if there's no data; "pseudo outlap" that didn't exist
+        for key in drv_data.keys():
+            drv_data[key] = drv_data[key][1:]
+        drv_data['NumberOfLaps'] = list(map(lambda n: n-1, drv_data['NumberOfLaps']))  # reduce each lap count by one
 
     # lap time sync; check which sector time was triggered with the lowest latency
     # Sector3SessionTime == end of lap
@@ -266,6 +314,12 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             if not pd.isnull(new_time) and (new_time < min_time or pd.isnull(min_time)):
                 min_time = new_time
         drv_data['Time'][i] = min_time
+
+    # one last check
+    # last lap needs to be removed if it does not have a 'Time' and it could not be calculated (likely an inlap)
+    if pd.isnull(drv_data['Time'][-1]):
+        for key in drv_data.keys():
+            drv_data[key] = drv_data[key][:-1]
 
     return drv_data
 
