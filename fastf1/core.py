@@ -437,7 +437,7 @@ class Session:
             if driver in position:
                 pos[driver], _ = self._resample(position[driver])
             else:
-                logging.warning(f"Could not find gps data for driver {driver}")
+                logging.warning(f"Could not find position data for driver {driver}")
 
         self.car_data, self.position = tel, pos
         can_find_reference = position != {}
