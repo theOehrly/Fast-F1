@@ -506,9 +506,14 @@ class Session:
         if 'Driver' in df.columns and len(df['Driver'].unique()) > 1:
             raise Exception("Cannot resample with multiple drivers")
 
+        # find first row where time is not zero; usually this is the first row but sometimes.....
+        i_min = np.min(np.where((df['Time'] != pd.Timedelta(0)) & ~pd.isna(df['Time'])))
+
         # Align:
         counter, last_val = 0, None
         for i, val in enumerate(df['Time'].values):
+            if i < i_min:
+                continue
             if val == last_val:
                 counter += 1
             elif counter > 2:
@@ -519,9 +524,11 @@ class Session:
             last_val = val
 
         pre = df.copy().reset_index(drop=True)
-        start_date, start_time = df.iloc[i]['Date'], df.iloc[i]['Time']
-        offset_date = start_date - start_time
-        pre['Time'] = (pre['Date'] - start_date) + start_time
+        ref_date = df.iloc[i]['Date']
+        ref_time = df.iloc[i]['Time']
+
+        offset_date = ref_date - ref_time
+        pre['Time'] = (pre['Date'] - ref_date) + ref_time
 
         # Map non numeric
         mapped, unmap = self._map_objects(pre)
@@ -529,7 +536,7 @@ class Session:
         # Resample:
         # Date contains the correct time spacing information, so we use that
         # 90% of function time is spent in the next line
-        res = mapped.resample('0.1S', on='Date', origin=start_date).mean().interpolate(method='linear')
+        res = mapped.resample('0.1S', on='Date', origin=ref_date).mean().interpolate(method='linear')
 
         if 'nGear' in res.columns and 'DRS' in res.columns:
             res[['nGear', 'DRS']] = res[['nGear', 'DRS']].round().astype(int)
