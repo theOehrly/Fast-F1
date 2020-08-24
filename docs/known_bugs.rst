@@ -10,14 +10,6 @@ Known bugs and caveats
     referring to timing_data drivers. For winter test we have driver number
     65535 and it is not bypassed.
 
-- Day 3 and 6 of winter testing 2020
-
-    Usually times obtained from the `timing_app_data` and `timing_data`
-    requests are synchronised and because of this, the two data sources are
-    merged on the time index. For some reason and only for Vettel on 21/02/2020
-    and Bottas on 28/02/2020, time doesn't match. A manually patched file is
-    included with the code. A more sofisticated solution is needed.
-
 - :mod:`fastf1.track` is currently broken:
 
     Changes made to the position data by F1 broke the functionality of this module.

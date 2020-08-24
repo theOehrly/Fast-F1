@@ -22,6 +22,9 @@ def enable_cache(path):
 
     :param path: Path to a folder which to use as cache directory
     :type path: str
+
+    .. warning:: It is highly recommended to clear the cache after updating the module! Else data will not be
+        recomputed. This could lead to fixed bugs looking as if they still existed, for example.
     """
     global CACHE_ENABLE, CACHE_PATH
     CACHE_PATH = path

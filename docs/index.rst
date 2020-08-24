@@ -25,6 +25,7 @@ For the passionate F1 nerds.
    func
    plotting
    known_bugs
+   troubleshooting
    changelog
 
 .. toctree::
