@@ -405,7 +405,6 @@ class Session:
 
         summary = df.reset_index(drop=True)
         summary.rename(columns={'TotalLaps': 'TyreLife',
-                                'LastLapTime': 'LapTime',
                                 'NumberOfPitStops': 'Stint',
                                 'Driver': 'DriverNumber',
                                 'NumberOfLaps': 'LapNumber',

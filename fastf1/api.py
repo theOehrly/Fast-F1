@@ -106,7 +106,7 @@ def timing_data(path):
                 resp_per_driver[drv].append((entry[0], entry[1]['Lines'][drv]))
 
     # define all empty columns
-    empty_laps = {'Time': pd.NaT, 'Driver': str(), 'LastLapTime': pd.NaT, 'NumberOfLaps': np.NaN,
+    empty_laps = {'Time': pd.NaT, 'Driver': str(), 'LapTime': pd.NaT, 'NumberOfLaps': np.NaN,
                   'NumberOfPitStops': np.NaN, 'PitOutTime': pd.NaT, 'PitInTime': pd.NaT,
                   'Sector1Time': pd.NaT, 'Sector2Time': pd.NaT, 'Sector3Time': pd.NaT,
                   'Sector1SessionTime': pd.NaT, 'Sector2SessionTime': pd.NaT, 'Sector3SessionTime': pd.NaT,
@@ -233,7 +233,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         if val := _dict_get(resp, 'LastLapTime', 'Value'):
             # if 'LastLapTime' is received less than five seconds after the start of a new lap, it is still added
             # to the last lap
-            drv_data['LastLapTime'][lapcnt - lap_offset] = _to_timedelta(val)
+            drv_data['LapTime'][lapcnt - lap_offset] = _to_timedelta(val)
 
         if 'Speeds' in resp:
             for trapkey, trapname in (('I1', 'SpeedI1'), ('I2', 'SpeedI2'), ('FL', 'SpeedFL'), ('ST', 'SpeedST')):
@@ -272,7 +272,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
 
     def data_in_lap(lap_n):
         relevant = ('Sector1Time', 'Sector2Time', 'Sector3Time', 'SpeedI1', 'SpeedI2',
-                    'SpeedFL', 'SpeedST', 'LastLapTime')
+                    'SpeedFL', 'SpeedST', 'LapTime')
         for col in relevant:
             if not pd.isnull(drv_data[col][lap_n]):
                 return True
@@ -482,7 +482,7 @@ def car_data(path):
             # extend the Date column and fill up missing telemetry values with zero,
             # except Time which is left as NaT and will be calculated correctly during resampling
             index_df = pd.DataFrame(data={'Date': most_complete_ref})
-            data[driver] = data[driver].merge(index_df, how='outer').sort_values(by='Date').reset_index()
+            data[driver] = data[driver].merge(index_df, how='outer').sort_values(by='Date').reset_index(drop=True)
             data[driver].loc[:, channels.values()] = data[driver].loc[:, channels.values()].fillna(value=0, inplace=False)
 
             logging.warning(f"Car data for driver {driver} is incomplete!")
