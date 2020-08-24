@@ -2,7 +2,7 @@ from setuptools import setup
 
 info = {
     'name': 'fastf1',
-    'version': 'v2.0.1',
+    'version': '2.0.2',
     'author': 'Oehrly',
     'author_email': 'oehrly@mailbox.org',
     'packages': ['fastf1', 'fastf1.experimental'],
@@ -12,7 +12,7 @@ info = {
         'fuzzywuzzy', 'scipy'
     ],
     'license': 'MIT',
-    'url': '',
+    'url': 'https://github.com/theOehrly/Fast-F1',
     'description': 'Wrapper library for F1 data and telemetry with additional data processing capabilities.',
     'zip_safe': False
 }

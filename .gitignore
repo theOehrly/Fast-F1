@@ -9,5 +9,6 @@ solver_results/
 reference/
 var_dumps/
 tracks/
+fastf1.egg-info/
 **.xlsx
 **.csv
