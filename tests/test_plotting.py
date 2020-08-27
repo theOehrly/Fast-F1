@@ -67,3 +67,19 @@ def test_doc_example_delta_time():
     twin.plot(ham.telemetry['Space'], utils.delta_time(ham, lec), '--', color=plotting.TEAM_COLORS[lec['Team']])
 
     return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_speed_trace():
+    session = ff1.get_session(2020, 5, 'Q')
+    session.load_laps()
+
+    fastest = session.laps.pick_fastest().telemetry
+
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+    ax.plot(fastest['Time'], fastest['Speed'])
+
+    plotting.laptime_axis(ax, 'xaxis')
+
+    return fig

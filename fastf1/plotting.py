@@ -68,15 +68,23 @@ def timedelta_converter(x):
 
 
 def laptime_axis(ax, axis='yaxis'):
-    """Convert axis to change time formatting from seconds to "mm:ss.ms"
+    """Add formatting to change time formatting from (nano)seconds to "mm:ss.ms"
 
     Args:
         ax: matplotlib axis
         axis (='yaxis', optional): can be 'xaxis' or 'yaxis'
 
+    Returns:
+        the modified axis instance
+
     """
     def time_ticks(t, pos):
         if not np.isnan(t):
+            # data is sometimes seconds and sometimes nanoseconds if the source is pandas.Timedelta
+            # assume nanoseconds if the value is very large
+            if t > 1e9:
+                t /= 1e9
+
             mm = int(t/60)
             ss = int(t - mm*60)
             ms = int((t - mm * 60 - ss)*10)
@@ -87,8 +95,23 @@ def laptime_axis(ax, axis='yaxis'):
 
     formatter = matplotlib.ticker.FuncFormatter(time_ticks)
     getattr(ax, axis).set_major_formatter(formatter)
-    getattr(ax, axis).convert_units = timedelta_converter  # replace the converter for this axis (and only this one)
-    getattr(ax, 'xaxis').get_major_locator().set_params(integer=True, min_n_ticks=0)
+    getattr(ax, axis).convert_units = timedelta_converter
+
+    return ax
+
+
+def lapnumber_axis(ax, axis='xaxis'):
+    """Set axis to integer ticks only."
+
+    Args:
+        ax: matplotlib axis
+        axis (='xaxis', optional): can be 'xaxis' or 'yaxis'
+
+    Returns:
+        the modified axis instance
+
+    """
+    getattr(ax, axis).get_major_locator().set_params(integer=True, min_n_ticks=0)
 
     return ax
 
