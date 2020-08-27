@@ -42,6 +42,8 @@ This version integrates a major overhaul of the api code (:mod:`fastf1.api`)
 
     - changed logging format for hopefully better readability
 
+    - tried to fix lap time axis again; hopefully this time I got it right
+
 
 
 v2.0.1: Integration of a newer version of Ax6's old repository
