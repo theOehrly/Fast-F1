@@ -637,7 +637,7 @@ def _dict_get(d, *keys):
     return reduce(lambda c, k: c.get(k, {}), keys, d)
 
 
-class SessionNotAvailableError(BaseException):
+class SessionNotAvailableError(Exception):
     """Raised if an api request returned no data for the requested session.
     A likely cause is that the session does not exist because it was cancelled."""
     def __init__(self, *args):
