@@ -595,23 +595,33 @@ class Session:
             - Adds 'DistanceToCarAhead' channel to driver position
         """
         lap = self._get_reference_lap()
-        driver_ahead = self._make_trajectory(lap)
 
-        for d in self.position:
-            self.position[d] = self.position[d].join(driver_ahead[d])
+        if lap is not None:
+            driver_ahead = self._make_trajectory(lap)
+
+        else:
+            logging.warning("Telemetry data is missing! No valid car data has been found for any lap!")
+            driver_ahead = dict()  # create empty data
+            for drv in self.position:
+                empty_drv = (None, ) * len(self.position[drv])
+                empty_dist = (np.nan, ) * len(self.position[drv])
+                driver_ahead[drv] = pd.DataFrame({'DistanceToDriverAhead': empty_dist, 'DriverAhead': empty_drv})
+
+        for drv in self.position:
+            self.position[drv] = self.position[drv].join(driver_ahead[drv])
 
     def _get_reference_lap(self):
-        valid_tele = False
         times = self.laps['LapTime'].copy()
         times = times.sort_values()
-        i = 0
 
-        while not valid_tele:
+        for i in range(len(self.laps)):
             lap = self.laps.loc[times.index[i]].copy()
             time, driver = lap['Time'], lap['DriverNumber']
             tele = self._slice_stream(self.car_data[driver], lap)
-            valid_tele = np.all(tele['Speed'] > 0)
-            i += 1
+            if np.all(tele['Speed'] > 0):  # check for valid telemetry
+                break
+        else:
+            return None
 
         tele = self._inject_position(self.position[driver], lap, tele)
         tele = self._inject_space(tele)
