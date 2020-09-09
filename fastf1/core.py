@@ -555,7 +555,10 @@ class Session:
 
         for column in lap_position.columns:
             if column not in _telemetry:
-                y = np.interp(ref_x, ref_xp, lap_position[column].values)
+                if ref_xp.any():  # data can be missing; make sure it exists
+                    y = np.interp(ref_x, ref_xp, lap_position[column].values)
+                else:
+                    y = (np.nan, ) * len(ref_x)  # create empty values
                 _telemetry[column] = y
 
         return unmap(_telemetry)
