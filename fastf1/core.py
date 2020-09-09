@@ -633,163 +633,175 @@ class Session:
         return lap
 
     def _inject_space(self, _telemetry):
-        dt = _telemetry['Time'].dt.total_seconds().diff()
-        dt.iloc[0] = _telemetry['Time'].iloc[0].total_seconds()
-        ds = _telemetry['Speed'] / 3.6 * dt
-        _telemetry['Space'] = ds.cumsum()
+        if _telemetry.size != 0:
+            dt = _telemetry['Time'].dt.total_seconds().diff()
+            dt.iloc[0] = _telemetry['Time'].iloc[0].total_seconds()
+            ds = _telemetry['Speed'] / 3.6 * dt
+            _telemetry['Space'] = ds.cumsum()
+        else:
+            _telemetry['Space'] = ()
+
         return _telemetry
 
     def _make_trajectory(self, lap):
         """Create telemetry space
         """
-        telemetry = lap.telemetry
-        x = telemetry['X'].values
-        y = telemetry['Y'].values
-        z = telemetry['Z'].values
-        s = telemetry['Space'].values
+        if lap.telemetry.size != 0:
+            telemetry = lap.telemetry
+            x = telemetry['X'].values
+            y = telemetry['Y'].values
+            z = telemetry['Z'].values
+            s = telemetry['Space'].values
 
-        # Assuming constant speed in the last tenth
-        dt0_ = (lap['LapTime'] - telemetry['Time'].iloc[-1]).total_seconds()
-        ds0_ = (telemetry['Speed'].iloc[-1] / 3.6) * dt0_
-        total_s = s[-1] + ds0_
+            # Assuming constant speed in the last tenth
+            dt0_ = (lap['LapTime'] - telemetry['Time'].iloc[-1]).total_seconds()
+            ds0_ = (telemetry['Speed'].iloc[-1] / 3.6) * dt0_
+            total_s = s[-1] + ds0_
 
-        # To prolong start and finish and have a correct linear interpolation 
-        full_s = np.concatenate([s - total_s, s, s + total_s])
-        full_x = np.concatenate([x, x, x])
-        full_y = np.concatenate([y, y, y])
-        full_z = np.concatenate([z, z, z])
+            # To prolong start and finish and have a correct linear interpolation
+            full_s = np.concatenate([s - total_s, s, s + total_s])
+            full_x = np.concatenate([x, x, x])
+            full_y = np.concatenate([y, y, y])
+            full_z = np.concatenate([z, z, z])
 
-        reference_s = np.arange(0, total_s, REFERENCE_LAP_RESOLUTION)
+            reference_s = np.arange(0, total_s, REFERENCE_LAP_RESOLUTION)
 
-        reference_x = np.interp(reference_s, full_s, full_x)
-        reference_y = np.interp(reference_s, full_s, full_y)
-        reference_z = np.interp(reference_s, full_s, full_z)
+            reference_x = np.interp(reference_s, full_s, full_x)
+            reference_y = np.interp(reference_s, full_s, full_y)
+            reference_z = np.interp(reference_s, full_s, full_z)
 
-        ssize = len(reference_s)
+            ssize = len(reference_s)
 
-        """Build track map and project driver position to one trajectory 
-        """
-
-        def fix_suzuka(projection_index, _s):
-            """Yes, suzuka is bad
+            """Build track map and project driver position to one trajectory
             """
 
-            #  For tracks like suzuka (therefore only suzuka) we have
-            # a beautiful crossing point. So, FOR F**K SAKE, sometimes
-            # shortest distance may fall below the bridge or viceversa
-            # gotta do some monotony sort of check. Not the cleanest
-            # solution.
-            def moving_average(a, n=3):
-                ret = np.cumsum(a, dtype=float)
-                ret[n:] = ret[n:] - ret[:-n]
-                ma = ret[n - 1:] / n
+            def fix_suzuka(projection_index, _s):
+                """Yes, suzuka is bad
+                """
 
-                return np.concatenate([ma[0:n // 2], ma, ma[-n // 2:-1]])
+                #  For tracks like suzuka (therefore only suzuka) we have
+                # a beautiful crossing point. So, FOR F**K SAKE, sometimes
+                # shortest distance may fall below the bridge or viceversa
+                # gotta do some monotony sort of check. Not the cleanest
+                # solution.
+                def moving_average(a, n=3):
+                    ret = np.cumsum(a, dtype=float)
+                    ret[n:] = ret[n:] - ret[:-n]
+                    ma = ret[n - 1:] / n
 
-            ma_projection = moving_average(_s[projection_index], n=3)
-            spikes = np.absolute(_s[projection_index] - ma_projection)
-            # 1000 and 3000, very suzuka specific. Damn magic numbers
-            sel_bridge = np.logical_and(spikes > 1000, spikes < 3000)
-            unexpected = np.where(sel_bridge)[0]
-            max_length = _s[-1]
+                    return np.concatenate([ma[0:n // 2], ma, ma[-n // 2:-1]])
 
-            for p in unexpected:
-                # Just assuming linearity for this 2 or 3 samples
-                last_value = _s[projection_index[p - 1]]
-                last_step = last_value - _s[projection_index[p - 2]]
+                ma_projection = moving_average(_s[projection_index], n=3)
+                spikes = np.absolute(_s[projection_index] - ma_projection)
+                # 1000 and 3000, very suzuka specific. Damn magic numbers
+                sel_bridge = np.logical_and(spikes > 1000, spikes < 3000)
+                unexpected = np.where(sel_bridge)[0]
+                max_length = _s[-1]
 
-                if (last_value + last_step) > max_length:
-                    # Over the finish line
-                    corrected_distance = -max_length + last_step + last_value
-                else:
-                    corrected_distance = last_value + last_step
+                for p in unexpected:
+                    # Just assuming linearity for this 2 or 3 samples
+                    last_value = _s[projection_index[p - 1]]
+                    last_step = last_value - _s[projection_index[p - 2]]
 
-                corrected_index = np.argmin(np.abs(_s - corrected_distance))
-                projection_index[p] = corrected_index
+                    if (last_value + last_step) > max_length:
+                        # Over the finish line
+                        corrected_distance = -max_length + last_step + last_value
+                    else:
+                        corrected_distance = last_value + last_step
 
-            return projection_index
+                    corrected_index = np.argmin(np.abs(_s - corrected_distance))
+                    projection_index[p] = corrected_index
 
-        track = np.empty((ssize, 3))
-        track[:, 0] = reference_x
-        track[:, 1] = reference_y
-        track[:, 2] = reference_z
+                return projection_index
 
-        track_tree = scipy.spatial.cKDTree(track)
-        drivers_list = np.array(list(self.position))
-        stream_length = len(self.position[drivers_list[0]])
-        dmap = np.empty((stream_length, len(drivers_list)), dtype=int)
+            track = np.empty((ssize, 3))
+            track[:, 0] = reference_x
+            track[:, 1] = reference_y
+            track[:, 2] = reference_z
 
-        fast_query = {'n_jobs': 2, 'distance_upper_bound': 500}
-        # fast_query < Increases speed
-        for index, driver in enumerate(self.position):
-            trajectory = self.position[driver][['X', 'Y', 'Z']].values
-            projection_index = track_tree.query(trajectory, **fast_query)[1]
-            # When tree cannot solve super far points means there is some
-            # pit shit shutdown. We can replace these index with 0
-            projection_index[projection_index == len(reference_s)] = 0
-            dmap[:, index] = fix_suzuka(projection_index.copy(), reference_s)
+            track_tree = scipy.spatial.cKDTree(track)
+            drivers_list = np.array(list(self.position))
+            stream_length = len(self.position[drivers_list[0]])
+            dmap = np.empty((stream_length, len(drivers_list)), dtype=int)
 
-        """Create transform matrix to change distance point of reference
-        """
-        t_matrix = np.empty((ssize, ssize))
-        for index in range(ssize):
-            rref = reference_s - reference_s[index]
-            rref[rref <= 0] = total_s + rref[rref <= 0]
-            t_matrix[index, :] = rref
+            fast_query = {'n_jobs': 2, 'distance_upper_bound': 500}
+            # fast_query < Increases speed
+            for index, driver in enumerate(self.position):
+                trajectory = self.position[driver][['X', 'Y', 'Z']].values
+                projection_index = track_tree.query(trajectory, **fast_query)[1]
+                # When tree cannot solve super far points means there is some
+                # pit shit shutdown. We can replace these index with 0
+                projection_index[projection_index == len(reference_s)] = 0
+                dmap[:, index] = fix_suzuka(projection_index.copy(), reference_s)
 
-        """Create mask to remove distance elements when car is on track
-        """
-        time = self.position[drivers_list[0]]['Time']
-        pit_mask = np.zeros((stream_length, len(drivers_list)), dtype=bool)
-        for driver_index, driver_number in enumerate(drivers_list):
-            laps = self.laps.pick_driver(driver_number)
-            in_pit = True
-            times = [[], []]
-            for lap_index in laps.index:
-                lap = laps.loc[lap_index]
-                if not pd.isnull(lap['PitInTime']) and not in_pit:
-                    times[1].append(lap['PitInTime'])
-                    in_pit = True
-                if not pd.isnull(lap['PitOutTime']) and in_pit:
-                    times[0].append(lap['PitOutTime'])
-                    in_pit = False
+            """Create transform matrix to change distance point of reference
+            """
+            t_matrix = np.empty((ssize, ssize))
+            for index in range(ssize):
+                rref = reference_s - reference_s[index]
+                rref[rref <= 0] = total_s + rref[rref <= 0]
+                t_matrix[index, :] = rref
 
-            if not in_pit:
-                # Car crashed, we put a time and 'Status' will take care
-                times[1].append(lap['Time'])
-            times = np.transpose(np.array(times))
-            for inout in times:
-                out_of_pit = np.logical_and(time >= inout[0], time < inout[1])
-                pit_mask[:, driver_index] |= out_of_pit
-            on_track = (self.position[driver_number]['Status'] == 'OnTrack')
-            pit_mask[:, driver_index] &= on_track.values
+            """Create mask to remove distance elements when car is on track
+            """
+            time = self.position[drivers_list[0]]['Time']
+            pit_mask = np.zeros((stream_length, len(drivers_list)), dtype=bool)
+            for driver_index, driver_number in enumerate(drivers_list):
+                laps = self.laps.pick_driver(driver_number)
+                in_pit = True
+                times = [[], []]
+                for lap_index in laps.index:
+                    lap = laps.loc[lap_index]
+                    if not pd.isnull(lap['PitInTime']) and not in_pit:
+                        times[1].append(lap['PitInTime'])
+                        in_pit = True
+                    if not pd.isnull(lap['PitOutTime']) and in_pit:
+                        times[0].append(lap['PitOutTime'])
+                        in_pit = False
 
-        """Calculate relative distances using transform matrix
-        """
-        driver_ahead = {}
-        stream_axis = np.arange(stream_length)
-        for my_di, my_d in enumerate(drivers_list):
-            rel_distance = np.empty(np.shape(dmap))
+                if not in_pit:
+                    # Car crashed, we put a time and 'Status' will take care
+                    times[1].append(lap['Time'])
+                times = np.transpose(np.array(times))
+                for inout in times:
+                    out_of_pit = np.logical_and(time >= inout[0], time < inout[1])
+                    pit_mask[:, driver_index] |= out_of_pit
+                on_track = (self.position[driver_number]['Status'] == 'OnTrack')
+                pit_mask[:, driver_index] &= on_track.values
 
-            for his_di, his_d in enumerate(drivers_list):
-                my_pos_i = dmap[:, my_di]
-                his_pos_i = dmap[:, his_di]
-                rel_distance[:, his_di] = t_matrix[my_pos_i, his_pos_i]
+            """Calculate relative distances using transform matrix
+            """
+            driver_ahead = {}
+            stream_axis = np.arange(stream_length)
+            for my_di, my_d in enumerate(drivers_list):
+                rel_distance = np.empty(np.shape(dmap))
 
-            his_in_pit = ~pit_mask.copy()
-            his_in_pit[:, my_di] = False
-            my_in_pit = ~pit_mask[:, drivers_list == my_d][:, 0]
-            rel_distance[his_in_pit] = np.nan
+                for his_di, his_d in enumerate(drivers_list):
+                    my_pos_i = dmap[:, my_di]
+                    his_pos_i = dmap[:, his_di]
+                    rel_distance[:, his_di] = t_matrix[my_pos_i, his_pos_i]
 
-            closest_index = np.nanargmin(rel_distance, axis=1)
-            closest_distance = rel_distance[stream_axis, closest_index]
-            closest_driver = drivers_list[closest_index].astype(object)
-            closest_distance[my_in_pit] = np.nan
-            closest_driver[my_in_pit] = None
+                his_in_pit = ~pit_mask.copy()
+                his_in_pit[:, my_di] = False
+                my_in_pit = ~pit_mask[:, drivers_list == my_d][:, 0]
+                rel_distance[his_in_pit] = np.nan
 
-            data = {'DistanceToDriverAhead': closest_distance,
-                    'DriverAhead': closest_driver}
-            driver_ahead[my_d] = pd.DataFrame(data)
+                closest_index = np.nanargmin(rel_distance, axis=1)
+                closest_distance = rel_distance[stream_axis, closest_index]
+                closest_driver = drivers_list[closest_index].astype(object)
+                closest_distance[my_in_pit] = np.nan
+                closest_driver[my_in_pit] = None
+
+                data = {'DistanceToDriverAhead': closest_distance,
+                        'DriverAhead': closest_driver}
+                driver_ahead[my_d] = pd.DataFrame(data)
+
+        else:
+            # no data to base calculations on; create empty results
+            driver_ahead = dict()
+            for drv in self.position.keys():
+                data = {'DistanceToDriverAhead': (), 'DriverAhead': ()}
+                driver_ahead[drv] = pd.DataFrame(data)
 
         return driver_ahead
 
