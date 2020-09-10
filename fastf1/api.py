@@ -129,7 +129,13 @@ def timing_data(path):
         for key in empty_stream.keys():
             stream_data[key].extend(drv_stream_data[key])
 
-    return pd.DataFrame(laps_data), pd.DataFrame(stream_data)
+    laps_data = pd.DataFrame(laps_data)
+    stream_data = pd.DataFrame(stream_data)
+
+    if ((laps_data.to_numpy() == '') | (pd.isna(laps_data.to_numpy()))).all():  # if all values of the frame are nan/...
+        raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
+
+    return laps_data, stream_data
 
 
 def _laps_data_driver(driver_raw, empty_vals, drv):
