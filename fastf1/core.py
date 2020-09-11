@@ -832,14 +832,6 @@ class Laps(pd.DataFrame):
     def _constructor(self):
         return Laps
 
-    def __pick_wrap(func):
-        @functools.wraps(func)
-        def decorator(*args, **kwargs):
-            res = func(*args, **kwargs)
-            return Laps(res) if isinstance(res, pd.DataFrame) else res
-        return decorator
-
-    @__pick_wrap
     def pick_driver(self, identifier):
         """Select driver given his three letters identifier or its car
         number::
@@ -855,7 +847,6 @@ class Laps(pd.DataFrame):
         else:
             return self[self['Driver'] == identifier]
 
-    @__pick_wrap
     def pick_drivers(self, identifiers):
         """Select drivers given a list of their identifiers. Same as
         :meth:`Laps.pick_driver` but for lists::
@@ -869,7 +860,6 @@ class Laps(pd.DataFrame):
 
         return self[(drv.isin(names) | num.isin(numbers))]
 
-    @__pick_wrap
     def pick_team(self, name):
         """Select team given its name::
 
@@ -881,13 +871,11 @@ class Laps(pd.DataFrame):
         """
         return self[self['Team'] == name]
 
-    @__pick_wrap
     def pick_teams(self, names):
         """Same as :meth:`Laps.pick_team` but for a list of teams.
         """
         return self[self['Team'].isin(names)]
 
-    @__pick_wrap
     def pick_fastest(self):
         """Get lap with best `LapTime`.
         """
@@ -898,7 +886,6 @@ class Laps(pd.DataFrame):
 
         return lap
 
-    @__pick_wrap
     def pick_quicklaps(self, threshold=None):
         """Select laps with `LapTime` faster than a certain limit.
         By default 107% of the best `LapTime` of the given laps set.
@@ -914,7 +901,6 @@ class Laps(pd.DataFrame):
 
         return self[self['LapTime'] < time_threshold]
 
-    @__pick_wrap
     def pick_tyre(self, compound):
         """Get laps done on a specific compound.
 
