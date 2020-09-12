@@ -12,6 +12,7 @@ import requests
 import logging
 import pandas as pd
 import numpy as np
+from datetime import datetime, timedelta
 
 
 base_url = 'https://livetiming.formula1.com'
@@ -451,14 +452,15 @@ def car_data(path):
 
     channels = {'0': 'RPM', '2': 'Speed', '3': 'nGear', '4': 'Throttle', '5': 'Brake', '45': 'DRS'}
     columns = {'Time', 'Date', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake', 'DRS'}
-    date_format = "%Y-%m-%dT%H:%M:%S.%f%z"
 
     data = dict()
 
     for line in raw:
         time = _to_timedelta(line[0])
         for entry in line[1]['Entries']:
-            date = pd.to_datetime(entry['Utc'], format=date_format)
+            # date format is '2020-08-08T09:45:03.0619797Z' with a varying number of millisecond decimal points
+            # always remove last char ('z'), max len 26, right pad to len 26 with zeroes if shorter
+            date = datetime.fromisoformat('{:<026}'.format(entry['Utc'][:-1][:26]))
 
             for driver in entry['Cars']:
                 if driver not in data:
@@ -533,7 +535,9 @@ def position(path):
         jrecord = parse(record[ts_length:], zipped=True)
 
         for sample in jrecord['Position']:
-            date = pd.to_datetime(sample['Timestamp'], format=date_format)
+            # date format is '2020-08-08T09:45:03.0619797Z' with a varying number of millisecond decimal points
+            # always remove last char ('z'), max len 26, right pad to len 26 with zeroes if shorter
+            date = datetime.fromisoformat('{:<026}'.format(sample['Timestamp'][:-1][:26]))
 
             for driver in sample['Entries']:
                 if driver not in data:
@@ -625,8 +629,26 @@ def parse(text, zipped=False):
 
 
 def _to_timedelta(x):
+    """create a timedelta object from a time string or any object that can be converted to a timedelta
+
+    string format: hh:mm:ss.ms
+    an arbitrary part of the left side can be skipped
+    for example 'm:ss.ms' is acceptable too
+
+    Args:
+        x: any object that can be converted to a timedelta
+    Returns:
+        timedelta object
+    """
+    # this is faster than using pd.timedelta on a string
+    def tdformat(s):
+        h, m, sms = s.split(':')
+        s, ms = sms.split('.')
+        return {'hours': int(h), 'minutes': int(m), 'seconds': int(s), 'milliseconds': int(ms)}
+
     if len(x) and isinstance(x, str):
-        return pd.to_timedelta('00:00:00.000'[:-len(x)] + x)
+        return timedelta(**tdformat('00:00:00.000'[:-len(x)] + x))
+
     return pd.to_timedelta(x)
 
 
