@@ -478,6 +478,7 @@ def car_data(path):
     # create one dataframe per driver and check for the longest dataframe
     most_complete_ref = None
     for driver in data:
+        data[driver]['Source'] = ['car', ] * len(data[driver]['Date'])  # add source reference for each sample
         data[driver] = pd.DataFrame(data[driver])  # convert dict to dataframe
         # check length of dataframe; sometimes there can be missing data
         if most_complete_ref is None or len(data[driver]['Date']) > len(most_complete_ref):
@@ -558,6 +559,7 @@ def position(path):
     # create one dataframe per driver and check for the longest dataframe
     most_complete_ref = None
     for driver in data:
+        data[driver]['Source'] = ['pos', ] * len(data[driver]['Date'])  # add source reference for each sample
         data[driver] = pd.DataFrame(data[driver])  # convert dict to dataframe
         # check length of dataframe; sometimes there can be missing data
         if most_complete_ref is None or len(data[driver]['Date']) > len(most_complete_ref):
