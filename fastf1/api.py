@@ -322,11 +322,28 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
                 min_time = new_time
         drv_data['Time'][i] = min_time
 
-    # one last check
     # last lap needs to be removed if it does not have a 'Time' and it could not be calculated (likely an inlap)
     if pd.isnull(drv_data['Time'][-1]):
         for key in drv_data.keys():
             drv_data[key] = drv_data[key][:-1]
+
+    # more lap sync, this time check which lap triggered with the lowest latency
+    for i in range(len(drv_data['Time'])-1, 0, -1):
+        if (new_time := drv_data['Time'][i] - drv_data['LapTime'][i]) < drv_data['Time'][i-1]:
+            drv_data['Time'][i-1] = new_time
+
+    # need to go both directions once to make everything match up; also recalculate sector times
+    for i in range(len(drv_data['Time'])-1):
+        if (new_time := drv_data['Time'][i] + drv_data['LapTime'][i+1]) < drv_data['Time'][i+1]:
+            drv_data['Time'][i+1] = new_time
+        if (new_s1_time := drv_data['Time'][i] + drv_data['Sector1Time'][i+1]) < drv_data['Sector1SessionTime'][i+1]:
+            drv_data['Sector1SessionTime'][i+1] = new_s1_time
+        if (new_s2_time := drv_data['Time'][i] + drv_data['Sector1Time'][i+1] + drv_data['Sector2Time'][i+1]) < \
+                drv_data['Sector2SessionTime'][i+1]:
+            drv_data['Sector2SessionTime'][i+1] = new_s2_time
+        if (new_s3_time := drv_data['Time'][i] + drv_data['Sector1Time'][i+1] + drv_data['Sector2Time'][i+1] +
+                drv_data['Sector2Time'][i+1]) < drv_data['Sector3SessionTime'][i+1]:
+            drv_data['Sector3SessionTime'][i+1] = new_s3_time
 
     return drv_data
 
