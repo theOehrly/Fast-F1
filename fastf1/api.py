@@ -7,13 +7,13 @@ A collection of functions to interface with the F1 web api.
 import json
 import base64
 import zlib
-from functools import reduce
 import requests
 import logging
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
+from fastf1.utils import recursive_dict_get
 
 base_url = 'https://livetiming.formula1.com'
 
@@ -155,6 +155,8 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
          dictionary of laps data for this driver
     """
 
+    integrity_errors = list()
+
     # do a quick first pass over the data to find out when laps start and end
     # this is needed so we can work with a more efficient "look ahead" on the main pass
     # example: we can have 'PitOut' 0.01s before a new lap starts, but 'PitOut' belongs to the new lap, not the old one
@@ -175,8 +177,8 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             in_past = False  # we're back in the present
 
         if 'NumberOfLaps' in resp and resp['NumberOfLaps'] < api_lapcnt:
-            logging.warning(f"The api attempted to rewrite history for driver {drv}. This was ignored! The data may not"
-                            f" be entirely correct. (near lap {lapcnt})")
+            logging.warning(f"The api attempted to change a previous lap for driver {drv}. This was ignored! The "
+                            f"data may not be entirely correct. (near lap {lapcnt})")
             in_past = True
             continue
 
@@ -233,18 +235,23 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             for sn, sector, sesst in (('0', 'Sector1Time', 'Sector1SessionTime'),
                                       ('1', 'Sector2Time', 'Sector2SessionTime'),
                                       ('2', 'Sector3Time', 'Sector3SessionTime')):
-                if val := _dict_get(resp, 'Sectors', sn, 'Value'):
+                if val := recursive_dict_get(resp, 'Sectors', sn, 'Value'):
                     drv_data[sector][lapcnt - lap_offset] = _to_timedelta(val)
                     drv_data[sesst][lapcnt - lap_offset] = _to_timedelta(time)
 
-        if val := _dict_get(resp, 'LastLapTime', 'Value'):
+        if val := recursive_dict_get(resp, 'LastLapTime', 'Value'):
             # if 'LastLapTime' is received less than five seconds after the start of a new lap, it is still added
             # to the last lap
-            drv_data['LapTime'][lapcnt - lap_offset] = _to_timedelta(val)
+            val = _to_timedelta(val)
+            if val.total_seconds() < 150:
+                # laps which are longer than 150 seconds are ignored; usually this is the case between Q1, Q2 and Q3
+                # because all three qualifying sessions are one session here. Those timestamps are often wrong and
+                # sometimes associated with the wrong lap
+                drv_data['LapTime'][lapcnt - lap_offset] = val
 
         if 'Speeds' in resp:
             for trapkey, trapname in (('I1', 'SpeedI1'), ('I2', 'SpeedI2'), ('FL', 'SpeedFL'), ('ST', 'SpeedST')):
-                if val := _dict_get(resp, 'Speeds', trapkey, 'Value'):
+                if val := recursive_dict_get(resp, 'Speeds', trapkey, 'Value'):
                     # speed has to be float because int does not support NaN
                     drv_data[trapname][lapcnt - lap_offset] = float(val)
 
@@ -253,7 +260,8 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             if resp['InPit'] is True:
                 if pitstops >= 0:
                     drv_data['PitInTime'][lapcnt] = _to_timedelta(time)
-            elif ('NumberOfLaps' in resp) or (drv_data['Time'][lapcnt] - _to_timedelta(time)) < pd.Timedelta(5, 's'):
+            elif ((('NumberOfLaps' in resp) and resp['NumberOfLaps'] > api_lapcnt)
+                  or (drv_data['Time'][lapcnt] - _to_timedelta(time)) < pd.Timedelta(5, 's')):
                 # same response line as beginning of next lap or beginning of next lap less than 5 seconds away
                 drv_data['PitOutTime'][lapcnt+1] = _to_timedelta(time)  # add to next lap
                 pitstops += 1
@@ -320,6 +328,10 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             new_time = session_time + sector_sum
             if not pd.isnull(new_time) and (new_time < min_time or pd.isnull(min_time)):
                 min_time = new_time
+        if i > 0 and min_time < drv_data['Time'][i-1]:
+            integrity_errors.append(i+1)  # not be possible if sector times and lap time are correct
+            continue
+
         drv_data['Time'][i] = min_time
 
     # last lap needs to be removed if it does not have a 'Time' and it could not be calculated (likely an inlap)
@@ -330,10 +342,17 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
     # more lap sync, this time check which lap triggered with the lowest latency
     for i in range(len(drv_data['Time'])-1, 0, -1):
         if (new_time := drv_data['Time'][i] - drv_data['LapTime'][i]) < drv_data['Time'][i-1]:
-            drv_data['Time'][i-1] = new_time
+            if i > 1 and new_time < drv_data['Time'][i-2]:
+                integrity_errors.append(i+1)  # not be possible if sector times and lap time are correct
+            else:
+                drv_data['Time'][i-1] = new_time
 
     # need to go both directions once to make everything match up; also recalculate sector times
     for i in range(len(drv_data['Time'])-1):
+        if any(pd.isnull(tst) for tst in (drv_data['Time'][i], drv_data['LapTime'][i+1], drv_data['Sector1Time'][i+1],
+                                          drv_data['Sector2Time'][i+1], drv_data['Sector3Time'][i+1])):
+            continue  # lap not usable, missing critical values
+
         if (new_time := drv_data['Time'][i] + drv_data['LapTime'][i+1]) < drv_data['Time'][i+1]:
             drv_data['Time'][i+1] = new_time
         if (new_s1_time := drv_data['Time'][i] + drv_data['Sector1Time'][i+1]) < drv_data['Sector1SessionTime'][i+1]:
@@ -342,8 +361,12 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
                 drv_data['Sector2SessionTime'][i+1]:
             drv_data['Sector2SessionTime'][i+1] = new_s2_time
         if (new_s3_time := drv_data['Time'][i] + drv_data['Sector1Time'][i+1] + drv_data['Sector2Time'][i+1] +
-                drv_data['Sector2Time'][i+1]) < drv_data['Sector3SessionTime'][i+1]:
+                drv_data['Sector3Time'][i+1]) < drv_data['Sector3SessionTime'][i+1]:
             drv_data['Sector3SessionTime'][i+1] = new_s3_time
+
+    if integrity_errors:
+        logging.warning(f"Driver {drv: >2}: Encountered {len(integrity_errors)} timing integrity error(s) "
+                        f"near lap(s): {integrity_errors}")
 
     return drv_data
 
@@ -368,13 +391,13 @@ def _stream_data_driver(driver_raw, empty_vals, drv):
     # iterate through the data; timestamp + any of the values triggers new row in data
     for time, resp in driver_raw:
         new_entry = False
-        if val := _dict_get(resp, 'Position'):
+        if val := recursive_dict_get(resp, 'Position'):
             drv_data['Position'][i] = val
             new_entry = True
-        if val := _dict_get(resp, 'GapToLeader'):
+        if val := recursive_dict_get(resp, 'GapToLeader'):
             drv_data['GapToLeader'][i] = val
             new_entry = True
-        if val := _dict_get(resp, 'IntervalToPositionAhead', 'Value'):
+        if val := recursive_dict_get(resp, 'IntervalToPositionAhead', 'Value'):
             drv_data['IntervalToPositionAhead'][i] = val
             new_entry = True
 
@@ -418,7 +441,7 @@ def timing_app_data(path, response=None):
 
         row = entry[1]
         for driver_number in row['Lines']:
-            if update := _dict_get(row, 'Lines', driver_number, 'Stints'):
+            if update := recursive_dict_get(row, 'Lines', driver_number, 'Stints'):
                 for stint_number, stint in enumerate(update):
                     if isinstance(update, dict):
                         stint_number = int(stint)
@@ -487,7 +510,7 @@ def car_data(path):
                 data[driver]['Date'].append(date)
 
                 for n in channels:
-                    val = _dict_get(entry, 'Cars', driver, 'Channels', n)
+                    val = recursive_dict_get(entry, 'Cars', driver, 'Channels', n)
                     if not val:
                         val = 0
                     data[driver][channels[n]].append(val)
@@ -516,7 +539,7 @@ def car_data(path):
     return data
 
 
-def position(path):
+def position_data(path):
     """Fetch and create pandas dataframe for Position.
 
     Samples are not synchronised with the other dataframes and sampling
@@ -565,9 +588,9 @@ def position(path):
                 data[driver]['Date'].append(date)
 
                 for coord in ['X', 'Y', 'Z']:
-                    data[driver][coord].append(_dict_get(sample, 'Entries', driver, coord))
+                    data[driver][coord].append(recursive_dict_get(sample, 'Entries', driver, coord))
 
-                status = _dict_get(sample, 'Entries', driver, 'Status')
+                status = recursive_dict_get(sample, 'Entries', driver, 'Status')
                 if str(status).isdigit():
                     # Fallback on older api status mapping and convert
                     status = 'OffTrack' if int(status) else 'OnTrack'
@@ -595,6 +618,21 @@ def position(path):
             data[driver].loc[:, ['X', 'Y', 'Z']] = data[driver].loc[:, ['X', 'Y', 'Z']].fillna(value=0, inplace=False)
 
             logging.warning(f"Position data for driver {driver} is incomplete!")
+
+    return data
+
+
+def track_status_data(path, response=None):
+    if response is None:
+        response = fetch_page(path, 'track_status')
+
+    data = {'Time': [], 'Status': [], 'Message': []}
+
+    for entry in response:
+        row = entry[1]
+        data['Time'].append(_to_timedelta(entry[0]))
+        data['Status'].append(row['Status'])
+        data['Message'].append(row['Message'])
 
     return data
 
@@ -669,13 +707,6 @@ def _to_timedelta(x):
         return timedelta(**tdformat('00:00:00.000'[:-len(x)] + x))
 
     return pd.to_timedelta(x)
-
-
-def _dict_get(d, *keys):
-    """Recursive dict get. Can take an arbitrary number of keys and returns an empty
-    dict if any key does not exist.
-    https://stackoverflow.com/a/28225747"""
-    return reduce(lambda c, k: c.get(k, {}), keys, d)
 
 
 class SessionNotAvailableError(Exception):

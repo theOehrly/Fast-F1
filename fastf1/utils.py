@@ -4,6 +4,8 @@
 """
 import os
 import functools
+from functools import reduce
+
 import requests_cache
 import pandas as pd
 import numpy as np
@@ -61,9 +63,14 @@ def laps_file_name(api_path):
 
 
 def delta_time(reference_lap, compare_lap):
-    # TODO what is this and why is it here?
-    """Calculates the delta time of a given lap, along the 'Space' axis
+    # TODO move somewhere else
+    """Calculates the delta time of a given lap, along the 'Distance' axis
     of the reference lap.
+
+    .. warning:: This is a nice gimmick but not actually very accurate which
+        is an inherent problem from the way this is calculated currently (There
+        may not be a better way though). In comparison with the sector times and the
+        differences that can be calculated from these, there are notable differences!
 
     Here is an example that compares the quickest laps of Leclerc and
     Hamilton from Barcelona 2019 Qualifying::
@@ -79,13 +86,13 @@ def delta_time(reference_lap, compare_lap):
         ham = laps.pick_driver('HAM').pick_fastest()
 
         fig, ax = plt.subplots()
-        ax.plot(lec.telemetry['Space'], lec.telemetry['Speed'],
+        ax.plot(lec.telemetry['Distance'], lec.telemetry['Speed'],
                 color=plotting.TEAM_COLORS[lec['Team']])
-        ax.plot(ham.telemetry['Space'], ham.telemetry['Speed'],
+        ax.plot(ham.telemetry['Distance'], ham.telemetry['Speed'],
                 color=plotting.TEAM_COLORS[ham['Team']])
+        delta_time, dt_ref = utils.delta_time(ham, lec)
         twin = ax.twinx()
-        twin.plot(ham.telemetry['Space'], utils.delta_time(ham, lec),
-                  '--', color=plotting.TEAM_COLORS[lec['Team']])
+        twin.plot(dt_ref['Distance'], delta_time, '--', color=plotting.TEAM_COLORS[lec['Team']])
         plt.show()
 
     .. image:: _static/delta_time.svg
@@ -96,10 +103,16 @@ def delta_time(reference_lap, compare_lap):
         compare_lap (pd.Series): The lap to compare
 
     Returns:
-        A pd.Series of type `float64` with the delta in seconds.
+        A tuple with
+          - pd.Series of type `float64` with the delta in seconds.
+          - :class:`Telemetry` for the reference lap
+          - :class:`Telemetry` for the comparison lap
+        Use the return telemetry for plotting to make sure you have telemetry data that was created with the same
+        settings!
 
     """
-    ref, lap = reference_lap.telemetry, compare_lap.telemetry
+    ref = reference_lap.get_car_data(interpolate_edges=True)
+    lap = compare_lap.get_car_data(interpolate_edges=True)
 
     def mini_pro(stream):
         # Ensure that all samples are interpolated
@@ -108,10 +121,12 @@ def delta_time(reference_lap, compare_lap):
         return np.concatenate([[stream[0] - dstream_start], stream, [stream[-1] + dstream_end]])
 
     ltime = mini_pro(lap['Time'].dt.total_seconds().to_numpy())
-    lspace = mini_pro(lap['Space'].to_numpy())
-    lap_time = np.interp(ref['Space'], lspace, ltime)
+    ldistance = mini_pro(lap['RelativeDistance'].to_numpy())
+    lap_time = np.interp(ref['RelativeDistance'], ldistance, ltime)
 
-    return lap_time - ref['Time'].dt.total_seconds()
+    delta = lap_time - ref['Time'].dt.total_seconds()
+
+    return delta, ref, lap
 
 
 def _cached_laps(func):
@@ -134,3 +149,10 @@ def _cached_laps(func):
 def _laps_file_name(api_path):
     # api path used as session identifier
     return f"{'_'.join(api_path.split('/')[-3:-1])}_laps.pkl"
+
+
+def recursive_dict_get(d, *keys):
+    """Recursive dict get. Can take an arbitrary number of keys and returns an empty
+    dict if any key does not exist.
+    https://stackoverflow.com/a/28225747"""
+    return reduce(lambda c, k: c.get(k, {}), keys, d)

@@ -1,7 +1,9 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
+import pandas as pd
 import os
+import fastf1 as ff1
 
 
 def show_deviation_minima_on_track(res, track, sector_number):
@@ -84,37 +86,55 @@ def plot_lap_time_integrity(laps_data, suffix=''):
     plt.hist(deltas, bins=50)
 
 
-def plot_lap_position_integrity(laps_data, track, suffix=''):
-    x_vals = list()
-    y_vals = list()
+def plot_lap_position_integrity(laps_data, pos_data, suffix=''):
+    vals = dict()
 
-    if 'Date' in laps_data.columns:
-        for _, lap in laps_data.iterrows():
-            if type(lap.Driver) != str:
-                continue
-            p = track.interpolate_pos_from_time(lap.Driver, lap.Date)
-            if not p:
-                continue
-            x_vals.append(p.x)
-            y_vals.append(p.y)
-    else:
-        drivers = list(track._pos_data.keys())
-        # calculate the start date of the session
-        some_driver = drivers[0]  # TODO to be sure this should be done with multiple drivers
-        session_start_date = track._pos_data[some_driver].head(1).Date.squeeze().round('min')
-        for _, lap in laps_data.iterrows():
-            if type(lap.Driver) != str:
-                continue
-            p = track.interpolate_pos_from_time(lap.Driver, session_start_date + lap.Time)
-            if not p:
-                continue
+    for _, lap in laps_data.pick_wo_box().pick_track_status('1').iterlaps(require=['LapStartDate', 'DriverNumber']):
+        if not lap['IsAccurate']:
+            continue
+        if lap['LapStartDate'] not in pos_data[lap['DriverNumber']]['Date']:
+            tmp_add = pd.DataFrame({}, index=[lap['LapStartDate'], ])
+            tmp_df = pos_data[lap['DriverNumber']].set_index('Date').append(tmp_add).sort_index()
+            tmp_df.loc[:, ('X', 'Y')] = tmp_df.loc[:, ('X', 'Y')].interpolate(method='quadratic')
 
-            x_vals.append(p.x)
-            y_vals.append(p.y)
+            row = tmp_df[tmp_df.index == lap['LapStartDate']].iloc[0]
+
+        else:
+            row = pos_data[lap['DriverNumber']][pos_data[lap['DriverNumber']]['Date'] == lap['LapStartDate']].iloc[0]
+
+        if lap['DriverNumber'] not in vals.keys():
+            vals[lap['DriverNumber']] = {'x': list(), 'y': list(), 't': list()}
+
+        vals[lap['DriverNumber']]['x'].append(row['X'])
+        vals[lap['DriverNumber']]['y'].append(row['Y'])
+        vals[lap['DriverNumber']]['t'].append(lap['Time'].total_seconds())
+
+    x_vals, y_vals = list(), list()
+    for drv in vals.keys():
+        x_vals.extend(vals[drv]['x'])
+        y_vals.extend(vals[drv]['y'])
+
+    y_mean_tot = np.mean(y_vals)
+
+    fig0y = plt.figure()
+    fig0y.suptitle("Time Scatter {}".format(suffix))
+    for drv in vals.keys():
+        plt.plot(vals[drv]['t'], vals[drv]['y'], label=drv)
+    plt.legend()
+
+    fig0cy = plt.figure()
+    fig0cy.suptitle("Time Scatter Mean correction {}".format(suffix))
+    for drv in vals.keys():
+        plt.plot(vals[drv]['t'], np.array(vals[drv]['y']) + (y_mean_tot - np.mean(vals[drv]['y'])), label=drv)
+    plt.legend()
+
 
     fig1 = plt.figure()
     fig1.suptitle("Position Scatter {}".format(suffix))
-    plt.scatter(x_vals, y_vals)
+    for drv in vals.keys():
+        plt.scatter(vals[drv]['x'], vals[drv]['y'], label=drv)
+    plt.axis('equal')
+    plt.legend()
 
     fig2 = plt.figure()
     fig2 .suptitle("Position X Histogram {}".format(suffix))
@@ -188,3 +208,27 @@ def all_sectors_result_plots(result, track, suffix, workdir=None):
         plt.savefig(os.path.join(workdir, 'coord diff {}.png'.format(suffix)), dpi=300)
 
     plt.show()
+
+
+def delta_time_validation(ref_lap, comp_lap):
+    import fastf1.plotting  # for style
+    plt.figure()
+
+    dt, ref_tel, compare_tel = ff1.utils.delta_time(ref_lap, comp_lap)
+
+    sec12 = ref_tel['Distance'].iloc[np.argmin(abs(ref_tel['SessionTime'] - ref_lap['Sector1SessionTime']))]
+    sec23 = ref_tel['Distance'].iloc[np.argmin(abs(ref_tel['SessionTime'] - ref_lap['Sector2SessionTime']))]
+    plt.vlines(sec12, min(dt), max(dt), colors='yellow')
+    plt.vlines(sec23, min(dt), max(dt), colors='yellow')
+    plt.vlines(1.0, min(dt), max(dt), colors='yellow')
+
+    plt.plot(ref_tel['Distance'], dt, label='Gap')
+
+    dts1 = comp_lap['Sector1Time'] - ref_lap['Sector1Time']
+    dts2 = (comp_lap['Sector1Time'] + comp_lap['Sector2Time']) - (ref_lap['Sector1Time'] + ref_lap['Sector2Time'])
+    dtsL = comp_lap['LapTime'] - ref_lap['LapTime']
+    plt.hlines(dts1.total_seconds(), 0, max(ref_tel['Distance']), label='Sec1', colors='blue')
+    plt.hlines(dts2.total_seconds(), 0, max(ref_tel['Distance']), label='Sec2', colors='pink')
+    plt.hlines(dtsL.total_seconds(), 0, max(ref_tel['Distance']), label='Sec3', colors='grey')
+
+    plt.legend()
