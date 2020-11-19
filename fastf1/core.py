@@ -175,7 +175,7 @@ class Telemetry(pd.DataFrame):
         'RelativeDistance': {'type': 'continuous', 'missing': 'quadratic'},
         'DifferentialDistance': {'type': 'continuous', 'missing': 'quadratic'},
         'DriverAhead': {'type': 'discrete', 'missing': 'fill'},
-        'DistanceToDriverAhead': {'type': 'continuous', 'missing': 'quadratic'}
+        'DistanceToDriverAhead': {'type': 'continuous', 'missing': 'linear'}
     }
 
     _metadata = ['session', 'driver']
@@ -596,11 +596,108 @@ class Telemetry(pd.DataFrame):
             return pd.Series()
 
     def integrate_distance(self):
+        """Return the distance driven since the first sample of self.
+
+        Distance is in meters. The data is produce by integration. Integration error will stack up when used for
+        long slices of data. This should therefore only be used for data of single laps or few laps at a time.
+
+        Returns:
+            :class:`pd.Series`
+        """
         ds = self.calculate_differential_distance()
         if not ds.empty:
             return ds.cumsum()
         else:
             return pd.Series()
+
+    def calculate_driver_ahead(self):
+        """Calculate driver ahead and distance to driver ahead.
+
+        Driver ahead: three letter abbreviation of the drivers name
+        Distance to driver ahead: distance to the car ahead in meters
+
+        .. note:: This gives a smoother/cleaner result than the legacy implementation but WILL introduce
+            integration error when used over long distances (more than one or two laps may sometimes be considered
+            a long distance). If in doubt, do sanity checks against the legacy version.
+
+        Returns:
+            driver ahead (numpy.array), distance to driver ahead (numpy.array)
+        """
+        t_start = self['SessionTime'].iloc[0]
+        t_end = self['SessionTime'].iloc[-1]
+
+        combined_distance = pd.DataFrame()
+
+        # Assume the following lap profile as a catch all for all drivers
+        #
+        # |------ Lap before ------|------ n Laps between ------|------ Lap after ------|
+        #        ^                                                   ^
+        #        t_start                                             t_end
+        # Integration of the distance needs to start at the finish line so that there exists a common zero point
+        # Therefore find the "lap before" which is the lap during which the telemetry slice starts and the "lap after"
+        # where the telemetry slice ends
+        # Integrate distance over all relevant laps and slice by t_start and t_end after to get the interesting
+        # part only
+        own_laps = self.session.laps[self.session.laps['DriverNumber'] == self.driver]
+        first_lap_number = (own_laps[own_laps['LapStartTime'] <= t_start])['LapNumber'].iloc[-1]
+
+        for drv in self.session.drivers:
+            # find correct first relevant lap; very important for correct zero point in distance
+            drv_laps = self.session.laps[self.session.laps['DriverNumber'] == drv]
+            drv_laps_before = drv_laps[(drv_laps['LapStartTime'] <= t_start)]
+            if not drv_laps_before.empty:
+                lap_n_before = drv_laps_before['LapNumber'].iloc[-1]
+                if lap_n_before < first_lap_number:
+                    # driver is behind on track an therefore will cross the finish line AFTER self
+                    # therefore above check for LapStartTime <= t_start is wrong
+                    # the first relevant lap is the first lap with LapStartTime > t_start which is lap_n_before += 1
+                    lap_n_before += 1
+            else:
+                lap_n_before = min(drv_laps['LapNumber'])
+
+            # find last relevant lap so as to no do too much unnecessary calculation later
+            drv_laps_after = drv_laps[drv_laps['Time'] >= t_end]
+            lap_n_after = drv_laps_after['LapNumber'].iloc[0] if not drv_laps_after.empty else max(drv_laps['LapNumber'])
+            relevant_laps = drv_laps[(drv_laps['LapNumber'] >= lap_n_before) & (drv_laps['LapNumber'] <= lap_n_after)]
+
+            # first slice by lap and calculate distance, so that distance is zero at finish line
+            drv_tel = self.session.car_data[drv].slice_by_lap(relevant_laps).add_distance() \
+                .loc[:, ('SessionTime', 'Distance')].rename(columns={'Distance': drv})
+
+            # now slice again by time to only get the relevant time frame
+            drv_tel = drv_tel.slice_by_time(t_start, t_end)
+            if drv_tel.empty:
+                continue
+            drv_tel = drv_tel.set_index('SessionTime')
+            combined_distance = combined_distance.join(drv_tel, how='outer')
+
+        # create driver map for array
+        drv_map = combined_distance.loc[:, combined_distance.columns != self.driver].columns.to_numpy()
+        for drv_number, drv_abb, team in D_LOOKUP:  # change driver number into abbreviation
+            drv_map[drv_map == str(drv_number)] = drv_abb
+
+        own_dst = combined_distance.loc[:, self.driver].to_numpy()
+        other_dst = combined_distance.loc[:, combined_distance.columns != self.driver].to_numpy()
+        # replace distance with nan if it does not change
+        # prepend first row before diff so that array size stays the same; but missing first sample because of that
+        other_dst[np.diff(other_dst, n=1, axis=0, prepend=other_dst[0, :].reshape((1, -1))) == 0] = np.nan
+
+        # resize own_dst to match shape of other_dst for easy subtraction
+        own_dst = np.repeat(own_dst.reshape((-1, 1)), other_dst.shape[1], axis=1)
+
+        delta_dst = other_dst - own_dst
+        delta_dst[np.isnan(delta_dst)] = np.inf  # substitute nan with inf, else nan is returned as min
+        delta_dst[delta_dst < 0] = np.inf  # remove cars behind so that neg numbers are not returned as min
+
+        index_ahead = np.argmin(delta_dst, axis=1)
+
+        drv_ahead = np.array([drv_map[i] for i in index_ahead])
+        drv_ahead[np.all(delta_dst == np.inf, axis=1)] = ''  # remove driver from all inf rows
+
+        dist_to_drv_ahead = np.array([delta_dst[i, index_ahead[i]] for i in range(len(index_ahead))])
+        dist_to_drv_ahead[np.all(delta_dst == np.inf, axis=1)] = np.nan  # remove value from all inf rows
+
+        return drv_ahead, dist_to_drv_ahead
 
     def _make_trajectory(self, ref_lap, working_data):
         """Create telemetry Distance
@@ -1338,6 +1435,7 @@ class Laps(pd.DataFrame):
 
     def get_car_data(self, **kwargs):
         car_data = self.session.car_data[self['DriverNumber']].slice_by_lap(self, **kwargs).reset_index(drop=True)
+        car_data = car_data.add_distance().add_relative_distance().add_driver_ahead()
         return car_data
 
     def get_pos_data(self, **kwargs):
@@ -1493,7 +1591,7 @@ class Lap(pd.Series):
 
     def get_car_data(self, **kwargs):
         car_data = self.session.car_data[self['DriverNumber']].slice_by_lap(self, **kwargs).reset_index(drop=True)
-        car_data = car_data.add_distance().add_relative_distance()
+        car_data = car_data.add_distance().add_relative_distance().add_driver_ahead()
         return car_data
 
     def get_pos_data(self, **kwargs):
