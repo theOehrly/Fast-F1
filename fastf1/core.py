@@ -1405,7 +1405,6 @@ class Laps(pd.DataFrame):
     def __init__(self, *args, session=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.session = session
-        self._telemetry = None  # used for "caching" the property
 
     @property
     def _constructor(self):
@@ -1434,11 +1433,19 @@ class Laps(pd.DataFrame):
         return merged.slice_by_lap(self, interpolate_edges=True)
 
     def get_car_data(self, **kwargs):
-        car_data = self.session.car_data[self['DriverNumber']].slice_by_lap(self, **kwargs).reset_index(drop=True)
+        drv_num = self['DriverNumber'].unique()
+        if len(drv_num) != 1:
+            raise ValueError("Cannot slice telemetry for when self contains Laps of multiple drivers!")
+        drv_num = drv_num[0]
+        car_data = self.session.car_data[drv_num].slice_by_lap(self, **kwargs).reset_index(drop=True)
         car_data = car_data.add_distance().add_relative_distance().add_driver_ahead()
         return car_data
 
     def get_pos_data(self, **kwargs):
+        drv_num = self['DriverNumber'].unique()
+        if len(drv_num) != 1:
+            raise ValueError("Cannot slice telemetry for when self contains Laps of multiple drivers!")
+        drv_num = drv_num[0]
         pos_data = self.session.pos_data[self['DriverNumber']].slice_by_lap(self, **kwargs).reset_index(drop=True)
         return pos_data
 
