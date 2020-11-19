@@ -490,21 +490,101 @@ class Telemetry(pd.DataFrame):
             return np.min(i_arr)
         return None
 
-    def add_differential_distance(self):
+    def add_differential_distance(self, drop_existing=True):
+        """A column 'DifferentialDistance' to self.
+
+        This column contains the distance driven between subsequent samples.
+
+        Args:
+            drop_existing (bool): Drop and recalculate column if it already exists
+        """
+        if 'Distance' in self.columns:
+            if drop_existing:
+                return self.drop('DifferentialDistance', 1)\
+                    .join(pd.DataFrame({'DifferentialDistance': self.calculate_differential_distance()}), how='outer')
+            return self
         return self.join(pd.DataFrame({'DifferentialDistance': self.calculate_differential_distance()}), how='outer')
 
-    def add_distance(self):
+    def add_distance(self, drop_existing=True):
+        """Add column 'Distance' to self.
+
+        This column contains the distance driven since the first sample of self in meters.
+
+        The data is produced by integrating the differential distance between subsequent laps.
+        You should not apply this function to telemetry of many laps simultaneously to reduce integration error.
+        Instead apply it only to single laps or few laps at a time!
+
+        Args:
+            drop_existing (bool): Drop and recalculate column if it already exists
+        """
+        if 'Distance' in self.columns:
+            if drop_existing:
+                return self.drop('Distance', 1).join(pd.DataFrame({'Distance': self.integrate_distance()}), how='outer')
+            return self
         return self.join(pd.DataFrame({'Distance': self.integrate_distance()}), how='outer')
 
-    def add_relative_distance(self):
-        if 'Distance' in self.columns:
-            rel_dist = self.loc[:, 'Distance'] / self.loc[:, 'Distance'].iloc[-1]
+    def add_relative_distance(self, drop_existing=True):
+        """Add column 'RelativeDistance' to self.
+
+        This column contains the distance driven since the first sample as a floating point number in the range
+        from 0.0 to 1.0.
+
+        This the same way as 'Distance' (see: :func:`add_distance`). The same warnings apply.
+
+        Args:
+            drop_existing (bool): Drop and recalculate column if it already exists
+        """
+        if 'RelativeDistance' in self.columns:
+            if drop_existing:
+                d = self.drop('RelativeDistance', 1)
+            else:
+                return self
         else:
-            dist = self.integrate_distance()
+            d = self
+
+        if 'Distance' in d.columns:
+            rel_dist = d.loc[:, 'Distance'] / d.loc[:, 'Distance'].iloc[-1]
+        else:
+            dist = d.integrate_distance()
             rel_dist = dist / dist.iloc[0]
-        return self.join(pd.DataFrame({'RelativeDistance': rel_dist}), how='outer')
+        return d.join(pd.DataFrame({'RelativeDistance': rel_dist}), how='outer')
+
+    def add_driver_ahead(self, drop_existing=True):
+        """Add column 'DriverAhead' and 'DistanceToDriverAhead' to self.
+
+        DriverAhead: Three letter abbreviation of the drivers name
+        DistanceToDriverAhead: Distance to next car ahead in meters
+
+        .. note:: Cars in the pit lane are currently not excluded from the data. They will show up when overtaken on
+            pit straight even if they're not technically in front of the car. A fix for this is TBD with other
+            improvements.
+
+        This should only be apply to data of single laps or few laps at a time to reduce integration error.
+        If you absolutely need to apply it to a whole session, used the legacy implementation. Note that data of
+        the legacy implementation will be considerably less smooth.
+
+        Args:
+            drop_existing (bool): Drop and recalculate column if it already exists
+        """
+        if 'DriverAhead' in self.columns and 'DistanceToDriverAhead' in self.columns:
+            if drop_existing:
+                d = self.drop('DriverAhead', 1).drop('DistanceToDriverAhead', 1)
+            else:
+                return self
+        else:
+            d = self
+
+        drv_ahead, dist = self.calculate_driver_ahead()
+        return d.join(pd.DataFrame({'DriverAhead': drv_ahead, 'DistanceToDriverAhead': dist}), how='outer')
 
     def calculate_differential_distance(self):
+        """Calculate the distance between subsequent samples of self.
+
+        Distance is in meters
+
+        Returns:
+            :class:`pandas.Series`
+        """
         if not all([col in self.columns for col in ('Speed', 'Time')]):
             raise ValueError("Telemetry does not contain required channels 'Time' and 'Speed'.")
         if self.size != 0:
