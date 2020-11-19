@@ -178,6 +178,13 @@ class Telemetry(pd.DataFrame):
         'DistanceToDriverAhead': {'type': 'continuous', 'missing': 'quadratic'}
     }
 
+    _metadata = ['session', 'driver']
+
+    def __init__(self, *args, session=None, driver=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.session = session
+        self.driver = driver
+
     @property
     def _constructor(self):
         return Telemetry
@@ -186,6 +193,19 @@ class Telemetry(pd.DataFrame):
     def base_class_view(self):
         # for a nicer debugging experience; can now select base_class_view -> show as dataframe in IDE
         return pd.DataFrame(self)
+
+    def join(self, *args, **kwargs):
+        """Wraps :mod:`pandas.DataFrame.join` and adds metadata propagation.
+
+        When calling `self.join` metadata will be propagated from self to the joined dataframe.
+        """
+        meta = dict()
+        for var in self._metadata:
+            meta[var] = getattr(self, var)
+        ret = super().join(*args, **kwargs)
+        for var, val in meta.items():
+            setattr(ret, var, val)
+        return ret
 
     def slice_by_lap(self, ref_laps, pad=0, pad_side='both', interpolate_edges=False):
         """Slice :attr:`self.car_data` and :attr:`self.pos_data` according to the provided lap or laps.
@@ -1053,8 +1073,8 @@ class Session:
 
         for drv in self.drivers:
             # drop and recalculate time stamps based on 'Date', because 'Date' has a higher resolution
-            drv_car = Telemetry(car_data[drv].drop('Time', 1))
-            drv_pos = Telemetry(pos_data[drv].drop('Time', 1))
+            drv_car = Telemetry(car_data[drv].drop('Time', 1), session=self, driver=drv)
+            drv_pos = Telemetry(pos_data[drv].drop('Time', 1), session=self, driver=drv)
 
             drv_car['Date'] = drv_car['Date'].round('ms')
             drv_pos['Date'] = drv_pos['Date'].round('ms')
