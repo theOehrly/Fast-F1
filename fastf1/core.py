@@ -207,30 +207,64 @@ class Telemetry(pd.DataFrame):
             setattr(ret, var, val)
         return ret
 
-    def slice_by_lap(self, ref_laps, pad=0, pad_side='both', interpolate_edges=False):
-        """Slice :attr:`self.car_data` and :attr:`self.pos_data` according to the provided lap or laps.
+    def slice_by_mask(self, mask, pad=0, pad_side='both'):
+        """Slice self using a boolean array as a mask.
 
-        The 'Time' data will be recalculated to start at the first sample of the returned data.
+        Args:
+            mask (array-like): Array of boolean values with the same length as self
+            pad (int): Number of samples used for padding the sliced data
+            pad_side (str): Where to pad the data; possible options: 'both', 'before', 'after'
+
+        Returns:
+            :class:`Telemetry`
+        """
+        if pad:
+            if pad_side in ('both', 'before'):
+                i_left_pad = max(0, np.min(np.where(mask)) - pad)
+            else:
+                i_left_pad = np.min(np.where(mask))
+
+            if pad_side in ('both', 'after'):
+                i_right_pad = min(len(mask), np.max(np.where(mask)) + pad)
+            else:
+                i_right_pad = np.max(np.where(mask))
+            mask[i_left_pad: i_right_pad + 1] = True
+
+        data_slice = self.loc[mask].copy()
+
+        return data_slice
+
+    def slice_by_lap(self, ref_laps, pad=0, pad_side='both', interpolate_edges=False):
+        """Slice self to only include data from the provided lap or laps.
+
+        .. note:: Self needs to have a 'SessionTime' column for slicing by time.
+
+        .. note:: When slicing with an instance of :class:`Laps` as a reference, the data will be sliced by first and
+            last lap. Missing laps in between will not be considered and data for these will still be included in
+            the sliced result.
 
         Args:
             ref_laps (Lap or Laps): The lap/laps by which to slice self
-            pad (int): Number of samples by which to pad the returned data stream (beginning and end)
-            pad_side (str): Either 'before', 'after' or 'both'
+            pad (int): Number of samples used for padding the sliced data
+            pad_side (str): Where to pad the data; possible options: 'both', 'before', 'after
+            interpolate_edges (bool): Add an interpolated sample at the beginning and end to exactly
+                match the provided time window.
 
         Returns:
-            sliced car_data, sliced pos_data
+            :class:`Telemetry`
         """
-        if isinstance(ref_laps, Laps):
+        if isinstance(ref_laps, Laps) and len(ref_laps) > 1:
             if 'DriverNumber' not in ref_laps.columns:
                 ValueError("Laps is missing 'DriverNumber'. Cannot return telemetry for unknown driver.")
             if not len(ref_laps['DriverNumber'].unique()) <= 1:
                 raise ValueError("Cannot create telemetry for multiple drivers at once!")
 
             end_time = max(ref_laps['Time'])
-            start_time = min(ref_laps['Time'])
-            duration = end_time - start_time
+            start_time = min(ref_laps['LapStartTime'])
 
-        elif isinstance(ref_laps, Lap):
+        elif isinstance(ref_laps, (Lap, Laps)):
+            if isinstance(ref_laps, Laps):  # one lap in Laps
+                ref_laps = ref_laps.iloc[0]  # needs to be handled as a single lap
             if 'DriverNumber' not in ref_laps.index:
                 ValueError("Lap is missing 'DriverNumber'. Cannot return telemetry for unknown driver.")
             end_time, duration = ref_laps['Time'], ref_laps['LapTime']
@@ -239,37 +273,45 @@ class Telemetry(pd.DataFrame):
         else:
             raise TypeError("Attribute 'ref_laps' needs to be an instance of `Lap` or `Laps`")
 
+        return self.slice_by_time(start_time, end_time, pad, pad_side, interpolate_edges)
+
+    def slice_by_time(self, start_time, end_time, pad=0, pad_side='both', interpolate_edges=False):
+        """requires session time to be present
+        Slice self to only include data in a specific time frame.
+
+        .. note:: Self needs to have a 'SessionTime' column for slicing by time.
+
+        Args:
+            start_time (Timedelta): Start of the section
+            end_time (Timedelta): End of the section
+            pad (int): Number of samples used for padding the sliced data
+            pad_side (str): Where to pad the data; possible options: 'both', 'before', 'after
+            interpolate_edges (bool): Add an interpolated sample at the beginning and end to exactly
+                match the provided time window.
+
+        Returns:
+            :class:`Telemetry`
+        """
         if interpolate_edges:
-            edges = pd.DataFrame({'Time': (start_time, end_time)})
-            d = self.merge(edges, how='outer').sort_values(by='Time').reset_index(drop=True)
+            edges = pd.DataFrame({'SessionTime': (start_time, end_time)})
+            d = self.merge(edges, how='outer').sort_values(by='SessionTime').reset_index(drop=True)
 
             # cannot simply use fill_missing() because it expects 'Date' without missing values; calculate 'Date' first
             i = d.get_first_non_zero_time_index()
-            time_offset = d['Date'].iloc[i] - d['Time'].iloc[i]
-            d.loc[:, 'Date'] = d['Time'] + time_offset
+            time_offset = d['Date'].iloc[i] - d['SessionTime'].iloc[i]
+            d.loc[:, 'Date'] = d['SessionTime'] + time_offset
 
             d = d.fill_missing()  # now fill in the other missing values
 
         else:
-            d = self.copy()
+            d = self.copy()  # TODO no copy?
 
         sel = ((d['SessionTime'] <= end_time) & (d['SessionTime'] >= start_time))
         if np.any(sel):
-            if pad:
-                if pad_side in ('both', 'before'):
-                    i_left_pad = max(0, np.min(np.where(sel)) - pad)
-                else:
-                    i_left_pad = np.min(np.where(sel))
+            data_slice = d.slice_by_mask(sel, pad, pad_side)
 
-                if pad_side in ('both', 'after'):
-                    i_right_pad = min(len(sel), np.max(np.where(sel)) + pad)
-                else:
-                    i_right_pad = np.max(np.where(sel))
-                sel[i_left_pad: i_right_pad + 1] = True
-
-            data_slice = d.loc[sel].copy()
-
-            data_slice.loc[:, 'Time'] += duration - end_time  # shift time to 0 so laps can overlap
+            if 'Time' in data_slice.columns:
+                data_slice.loc[:, 'Time'] -= start_time  # shift time to 0 so laps can overlap
 
             if 'Distance' in data_slice.columns:  # offset Distance so that it starts at zero on the first sample
                 distance_zero = data_slice['Distance'].iloc[0]  # TODO and others?
@@ -397,6 +439,14 @@ class Telemetry(pd.DataFrame):
         return merged
 
     def fill_missing(self):
+        """Calculate missing values in self.
+
+        Interpolation will be used for continuous values (Speed, RPM).
+        Forward-fill will be used for discrete values (Gear, DRS, ...)
+
+        Only default columns and registered columns will be processed. Missing data in other columns will be ignored.
+        See :func:`register_new_channel` for adding custom channels.
+        """
         ret = self.copy()
 
         i = ret.get_first_non_zero_time_index()
