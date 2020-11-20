@@ -14,7 +14,7 @@ The library is designed to be interfaced with matplotlib (although you
 can use whatever you want) but there is a neat :mod:`plots` module which
 you can import and gives some color to your graphs. 
 
-Modules handle big chunks of data (~30mb per session) so most of the
+Modules handle big chunks of data (~50-100mb per session) so most of the
 information is stored locally as cached requests (be aware).
 
 Have fun!
@@ -31,7 +31,7 @@ Setting up a running snippet is straightforward::
 
     import fastf1 as ff1
 
-    ff1.utils.enable_cache('path/to/folder/for/cache')  # optional but recommended
+    ff1.Cache.enable_cache('path/to/folder/for/cache')  # optional but highly recommended
 
     monza_quali = ff1.get_session(2019, 'Monza', 'Q')
 
@@ -62,8 +62,8 @@ For some more advanced stuff, just a few more steps::
     :target: _static/gettingstarted.svg
 
 
-It is not necessary to enable the usage of a cache but it is recommended. Simply provide
-the path to some empty folder on your system.
+It is not necessary to enable the usage of the cache but it is highly recommended. Simply provide
+the path to some empty folder on your system. Using the cache will greatly speed up loading of the data.
 
 
 Package functions
@@ -73,9 +73,9 @@ Available functions directly accessible from fastf1 package
 .. autofunction:: fastf1.core.get_session
     :noindex:
 
-.. autofunction:: fastf1.utils.clear_cache
+.. autofunction:: fastf1.api.Cache.clear_cache
     :noindex:
 
 """
 from fastf1.core import get_session
-from fastf1.utils import clear_cache
+from fastf1.api import Cache

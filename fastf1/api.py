@@ -7,7 +7,10 @@ A collection of functions to interface with the F1 web api.
 import json
 import base64
 import zlib
+import os
+import pickle
 import requests
+import requests_cache
 import logging
 import pandas as pd
 import numpy as np
@@ -52,6 +55,143 @@ pages = {
 """
 
 
+class Cache:
+    """Pickle and requests based API cache.
+
+    The parsed API data will be saved as a pickled object.
+    Raw GET and POST requests are cached by requests-cache in a sqlite db.
+
+    The cache has two "stages".
+
+        - Stage 1: Caching of raw GET and POST requests. This works for all requests. The returned data is unlikely
+          to ever change.
+        - Stage 2: Caching of the parsed data. This saves a lot of time when running as parsing of the data is
+          computationally expensive. This data can change whenever the API parser code is updated.
+          Cache data is saved together with a version number. Updates of the code are automatically detected
+          (comparing version numbers). The cache is updated in case the version numbers of the cached
+          data and the code don't match. Stage 2 is only used for some api functions.
+    """
+    _CACHE_DIR = ''
+    _API_CORE_VERSION = 1  # version of the api parser code (unrelated to release version number)
+    _IGNORE_VERSION = False
+    _FORCE_RENEW = False
+
+    _has_been_warned = False  # flag to ensure that warning about disabled cache is logged once only
+
+    @classmethod
+    def enable_cache(cls, cache_dir, ignore_version=False, force_renew=False, use_requests_cache=True):
+        """Enables the API cache.
+
+        Args:
+            cache_dir (str): Path to the directory which should be used to store cached data. Path needs to exist.
+            ignore_version (bool): Ignore if cached data was create with a different version of the API parser
+                (not recommended: this can cause crashes or unrecognized errors as incompatible data may be loaded)
+            force_renew (bool): Ignore existing cached data. Download data and update the cache instead.
+            use_requests_cache (bool): Do caching of the raw GET and POST requests.
+        """
+        if not os.path.exists(cache_dir):
+            raise NotADirectoryError("Cache directory does not exist! Please check for typos or create it first.")
+        cls._CACHE_DIR = cache_dir
+        cls._IGNORE_VERSION = ignore_version
+        cls._FORCE_RENEW = force_renew
+        if use_requests_cache:
+            cls._install_requests_cache(cache_dir)
+
+    @staticmethod
+    def _install_requests_cache(cache_dir):
+        requests_cache.install_cache(os.path.join(cache_dir, 'fastf1_http_cache'), allowable_methods=('GET', 'POST'))
+
+    @classmethod
+    def clear_cache(cls, cache_dir, deep=False):
+        """Clear all cached data.
+
+        This deletes all cache files in the provided cache directory.
+        Optionally, the requests cache is cleared too.
+
+        Can be called without enabling the cache first.
+
+        Deleting specific events or sessions is not supported but can be done manually (stage 2 cache).
+        The cached data is structured by year, event and session. The structure is more or less self-explanatory.
+        To delete specific events or sessions delete the corresponding folder within the cache directory.
+        Deleting specific requests from the requests cache (stage 1) is not possible. To delete the requests cache only,
+        delete the sqlite file in the root of the cache directory.
+
+        Args:
+            cache_dir (str): Path to the directory which is used to store cached data.
+            deep (bool): Clear the requests cache (stage 1) too.
+        """
+        if not os.path.exists(cache_dir):
+            raise NotADirectoryError("Cache directory does not exist!")
+
+        for dirpath, dirnames, filenames in os.walk(cache_dir):
+            for filename in filenames:
+                if filename.endswith('.ff1pkl'):
+                    os.remove(os.path.join(dirpath, filename))
+
+        if deep:
+            if not hasattr(requests.Session(), 'cache'):
+                cls._install_requests_cache(cache_dir)
+            requests_cache.clear()
+
+    @classmethod
+    def api_request_wrapper(cls, func):
+        """Wrapper function for adding stage 2 caching to api functions.
+        """
+        def cached_api_request(api_path, **kwargs):
+            if cls._CACHE_DIR:
+                # caching is enabled, extend the cache dir path using the api path
+                cache_dir_path = os.path.join(cls._CACHE_DIR, api_path[8:])  # remove leading '/static/' from api path
+                if not os.path.exists(cache_dir_path):
+                    os.makedirs(cache_dir_path)  # create subfolders if they don't yet exist
+
+                # create cache file path for this specific request by extending cache dir path with file named after
+                # requesting api function
+                cache_file_path = cache_dir_path + str(func.__name__) + '.ff1pkl'
+                if os.path.isfile(cache_file_path):
+                    # file exists already, try to load it
+                    cached = pickle.load(open(cache_file_path, 'rb'))
+                    if ((cached['version'] == cls._API_CORE_VERSION) or cls._IGNORE_VERSION) and not cls._FORCE_RENEW:
+                        # was created with same version or version is ignored
+                        logging.info(f"Using cached data for {str(func.__name__)}")
+                        return cached['data']
+
+                    else:  # created with different version or force renew --> download again and update
+                        logging.info(f"Updating cache for {str(func.__name__)}...")
+                        data = func(api_path, **kwargs)
+                        if data is not None:
+                            new_cached = {'version': cls._API_CORE_VERSION, 'data': data}
+                            pickle.dump(new_cached, open(cache_file_path, 'wb'))
+                            logging.info("Cache updated!")
+                        else:  # downloading data failed, cannot proceed because of missing critical data
+                            logging.critical("Failed to update cache! No data received! Cannot continue!")
+                            exit()
+                        return data
+
+                else:  # cached data does not yet exist for this request, try to download and create cache
+                    logging.info(f"No cached data found. Downloading...")
+                    data = func(api_path, **kwargs)
+                    if data is not None:
+                        new_cached = {'version': cls._API_CORE_VERSION, 'data': data}
+                        pickle.dump(new_cached, open(cache_file_path, 'wb'))
+                        logging.info("Data has been written to cache!")
+                        return data
+                    else:
+                        logging.critical("Failed to load data!")
+                        exit()
+
+            else:  # cache was not enabled
+                if not cls._has_been_warned:  # warn only once
+                    logging.warning("\n\nNO CACHE! Api request caching has not been enabled! \n\t"
+                                    "It is highly recommended to enable this feature for much faster data loading!\n\t"
+                                    "Use `fastf1.Cache.enable_cache('path/to/cache/')`\n")
+
+                    cls._has_been_warned = True
+
+                return func(api_path, **kwargs)
+
+        return cached_api_request
+
+
 def make_path(wname, wdate, sname, sdate):
     """Create web path to append on livetiming.formula1.com for api
     requests.
@@ -69,7 +209,8 @@ def make_path(wname, wdate, sname, sdate):
     return '/static/' + smooth_operator.replace(' ', '_')
 
 
-def timing_data(path):
+@Cache.api_request_wrapper
+def timing_data(path, response=None):
     """Timing data is a mixed stream of information of each driver.
     At a given time a packet of data may indicate position, lap time,
     speed trap, sector time and so on.
@@ -80,6 +221,7 @@ def timing_data(path):
 
     Args:
         path: url path (see :func:`make_path`)
+        response (optional): api response can be passed if data was already downloaded
 
     Returns:
         pandas.Dataframe for timing/lap data,
@@ -90,9 +232,9 @@ def timing_data(path):
     #   - inlap has to be followed by outlap
     #   - pit stops may never be negative (missing outlap)
     #   - speed traps against telemetry (especially in Q FastLap - Slow Lap)
-
-    response = fetch_page(path, 'timing_data')
-    if response is None:
+    if response is None:  # no previous response provided
+        response = fetch_page(path, 'timing_data')
+    if response is None:  # no response received
         raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
 
     # split up response per driver for easier iteration and processing later
@@ -418,6 +560,7 @@ def _stream_data_driver(driver_raw, empty_vals, drv):
     return drv_data
 
 
+@Cache.api_request_wrapper
 def timing_app_data(path, response=None):
     """Full parse of timing app data. This parsing is quite ignorant,
     with  minimum logic just to fix data structure inconsistencies. Tyre
@@ -430,8 +573,10 @@ def timing_app_data(path, response=None):
     Returns:
         pandas.Dataframe
     """
-    if response is None:
+    if response is None:  # no response provided
         response = fetch_page(path, 'timing_app_data')
+    if response is None:  # no response received
+        raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
 
     data = {'LapNumber': [], 'Driver': [], 'LapTime': [], 'Stint': [], 'TotalLaps': [], 'Compound': [], 'New': [],
             'TyresNotChanged': [], 'Time': [], 'LapFlags': [], 'LapCountTime': [], 'StartLaps': [], 'Outlap': []}
@@ -462,7 +607,8 @@ def timing_app_data(path, response=None):
     return pd.DataFrame(data)
 
 
-def car_data(path):
+@Cache.api_request_wrapper
+def car_data(path, response=None):
     """Fetch and create pandas dataframe for each driver containing
     Telemetry data.
 
@@ -482,12 +628,17 @@ def car_data(path):
 
     Args:
         path: url path (see :func:`make_path`)
+        response (optional): api response can be passed if data was already downloaded
 
     Returns:
         dictionary containing one pandas dataframe for each driver; dictionary keys are driver numbers as string
-    """
-    logging.info("Fetching car data")
-    raw = fetch_page(path, 'car_data')
+    """  # TODO update docstring
+    if response is None:
+        logging.info("Fetching car data")
+        response = fetch_page(path, 'car_data')
+    if response is None:  # no response received
+        raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
+
     logging.info("Parsing car data")
 
     channels = {'0': 'RPM', '2': 'Speed', '3': 'nGear', '4': 'Throttle', '5': 'Brake', '45': 'DRS'}
@@ -495,7 +646,7 @@ def car_data(path):
 
     data = dict()
 
-    for line in raw:
+    for line in response:
         time = _to_timedelta(line[0])
         for entry in line[1]['Entries']:
             # date format is '2020-08-08T09:45:03.0619797Z' with a varying number of millisecond decimal points
@@ -539,7 +690,8 @@ def car_data(path):
     return data
 
 
-def position_data(path):
+@Cache.api_request_wrapper
+def position_data(path, response=None):
     """Fetch and create pandas dataframe for Position.
 
     Samples are not synchronised with the other dataframes and sampling
@@ -554,15 +706,21 @@ def position_data(path):
 
     Args:
         path: web path for base_url, see :func:`make_path`
+        response (optional): api response can be passed if data was already downloaded
+
 
     Returns:
         dictionary containing one pandas dataframe for each driver, dictionary keys are driver numbers as string
-    """
-    logging.info("Fetching position")
-    raw = fetch_page(path, 'position')
+    """  # TODO update docstring
+    if response is None:
+        logging.info("Fetching position")
+        response = fetch_page(path, 'position')
+    if response is None:  # no response received
+        raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
+
     logging.info("Parsing position") 
 
-    if not raw:
+    if not response:
         return {}
 
     ts_length = 12  # length of timestamp: len('00:00:00:000')
@@ -571,7 +729,7 @@ def position_data(path):
 
     data = dict()
 
-    for record in raw:
+    for record in response:
         time = _to_timedelta(record[:ts_length])
         jrecord = parse(record[ts_length:], zipped=True)
 
@@ -622,6 +780,7 @@ def position_data(path):
     return data
 
 
+@Cache.api_request_wrapper
 def track_status_data(path, response=None):
     if response is None:
         response = fetch_page(path, 'track_status')
