@@ -354,6 +354,15 @@ class Telemetry(pd.DataFrame):
         data = self.set_index('Date')
         other = other.set_index('Date')
 
+        # save dtypes before merging so they can be restored after merging
+        # necessary for example because merging produces NaN values which would cause an int column to become float
+        # but it can be converted back to int after interpolating missing values
+        dtype_map = dict()
+        for df in data, other:
+            for col in df.columns:
+                if col not in dtype_map.keys():
+                    dtype_map[col] = df[col].dtype
+
         # Exclude columns existing on both dataframes from one dataframe before merging (cannot merge with duplicates)
         on_both_columns = set(other.columns).intersection(set(data.columns))
         merged = other.merge(data[data.columns.difference(on_both_columns, sort=False)],
@@ -398,6 +407,13 @@ class Telemetry(pd.DataFrame):
                 elif sig_type == 'discrete':
                     merged.loc[:, ch] = merged.loc[:, ch]\
                         .fillna(method='ffill').fillna(method='bfill')  # only use bfill after ffill to fix first row
+
+            # restore data types from before merging
+            for col in dtype_map.keys():
+                try:
+                    merged.loc[:, col] = merged.loc[:, col].astype(dtype_map[col])
+                except ValueError:
+                    logging.warning(f"Failed to preserve data type for column '{col}' while merging telemetry.")
 
             merged = merged.reset_index().rename(columns={'index': 'Date'})  # make 'Date' a column again
 
