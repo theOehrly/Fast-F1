@@ -23,11 +23,9 @@ base_url = 'https://livetiming.formula1.com'
 headers = {
   'Host': 'livetiming.formula1.com',
   'Connection': 'close',
-  'Accept': '*/*',
-  'User-Agent': 'Formula%201/715 CFNetwork/1120 Darwin/19.0.0',
-  'Accept-Language': 'en-us',
-  'Accept-Encoding': 'gzip, deflate',
-  'X-Unity-Version': '2018.4.1f1'
+  'TE': 'identity',
+  'User-Agent': 'BestHTTP',
+  'Accept-Encoding': 'gzip, identity',
 }
 
 pages = {
