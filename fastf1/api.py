@@ -794,6 +794,37 @@ def track_status_data(path, response=None):
     return data
 
 
+@Cache.api_request_wrapper
+def session_status_data(path, response=None):
+    """Fetch and parse session status data.
+
+    Session status contains information on when a session was started and when it ended (amongst others).
+
+    Args:
+        path (str): api path base string (see :func:`api.make_path`)
+        response: Response as returned by :func:`api.fetch_page` can be passed if it was downloaded already.
+
+    Returns:
+        .. code-block::
+
+            {'Time': [pandas.Timedelta(), ], 'Status': [str(), ]}
+
+        | Time contains :class:`pandas.Timedelta` timestamps
+        | Status contains status messages of type str
+    """
+    if response is None:
+        logging.info("Fetching session status data...")
+        response = fetch_page(path, 'session_status')
+
+    data = {'Time': [], 'Status': []}
+
+    for entry in response:
+        data['Time'].append(_to_timedelta(entry[0]))
+        data['Status'].append(entry[1]['Status'])
+
+    return data
+
+
 def fetch_page(path, name):
     """Fetch formula1 web api, given url path and page name. An attempt
     to parse json or decode known messages is made.

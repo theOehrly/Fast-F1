@@ -267,8 +267,8 @@ class Telemetry(pd.DataFrame):
                 ref_laps = ref_laps.iloc[0]  # needs to be handled as a single lap
             if 'DriverNumber' not in ref_laps.index:
                 ValueError("Lap is missing 'DriverNumber'. Cannot return telemetry for unknown driver.")
-            end_time, duration = ref_laps['Time'], ref_laps['LapTime']
-            start_time = end_time - duration
+            end_time = ref_laps['Time']
+            start_time = ref_laps['LapStartTime']
 
         else:
             raise TypeError("Attribute 'ref_laps' needs to be an instance of `Lap` or `Laps`")
@@ -1021,7 +1021,10 @@ class Session:
 
         self.laps = Laps(session=self)
         """Instance of :class:`Laps` containing all laps from all drivers in this session."""
-        self.session_start_date = None  # can only be set when/if telemetry has been downloaded
+        self.t0_date = None  # can only be set when/if telemetry has been downloaded
+        """Date timestamps which marks the beginning of the data stream."""
+        self.session_start_time = None
+        """Time at which a session was started."""
 
         self.car_data = dict()
         """Car telemetry (Speed, RPM, etc.) as received from the api."""
@@ -1169,6 +1172,13 @@ class Session:
         if not self.drivers:
             raise NoLapDataError
 
+        # check when a session was started; for a race this indicates the start of the race
+        session_status = api.session_status_data(self.api_path)
+        for i in range(len(session_status)):
+            if session_status['Status'][i] == 'Started':
+                self.session_start_time = session_status['Time'][i]
+                break
+
         for i, driver in enumerate(self.drivers):
             d1 = data[data['Driver'] == driver]
             d2 = useful[useful['Driver'] == driver]
@@ -1177,6 +1187,15 @@ class Session:
                 continue  # no data for this driver; skip
 
             result = pd.merge_asof(d1, d2, on='Time', by='Driver')
+
+            # calculate lap start time by setting it to the 'Time' of the previous lap
+            laps_start_time = list(result['Time'])[:-1]
+            if self.name == 'Race':
+                # assumption that the first lap started when the session was started can only be made for the race
+                laps_start_time.insert(0, self.session_start_time)
+            else:
+                laps_start_time.insert(0, pd.NaT)
+            result.loc[:, 'LapStartTime'] = pd.Series(laps_start_time, dtype='timedelta64[ns]')
 
             for npit in result['NumberOfPitStops'].unique():
                 sel = result['NumberOfPitStops'] == npit
@@ -1195,8 +1214,6 @@ class Session:
         laps['Team'] = laps['DriverNumber'].map(t_map)
         d_map = {r['number']: r['Driver']['code'] for r in self.results}
         laps['Driver'] = laps['DriverNumber'].map(d_map)
-        laps['LapStartTime'] = laps['Time'] - laps['LapTime']
-
         # add track status data
         ts_data = api.track_status_data(self.api_path)
         laps['TrackStatus'] = '1'
@@ -1312,7 +1329,7 @@ class Session:
         self.drivers = list(set(self.drivers).intersection(set(car_data.keys())).intersection(set(pos_data.keys())))
         # self.drivers should only contain drivers which exist in all parts of the data
 
-        self._calculate_session_start_date(car_data, pos_data)
+        self._calculate_t0_date(car_data, pos_data)
 
         for drv in self.drivers:
             # drop and recalculate time stamps based on 'Date', because 'Date' has a higher resolution
@@ -1322,15 +1339,15 @@ class Session:
             drv_car['Date'] = drv_car['Date'].round('ms')
             drv_pos['Date'] = drv_pos['Date'].round('ms')
 
-            drv_car['Time'] = drv_car['Date'] - self.session_start_date  # create proper continuous timestamps
-            drv_pos['Time'] = drv_pos['Date'] - self.session_start_date
+            drv_car['Time'] = drv_car['Date'] - self.t0_date  # create proper continuous timestamps
+            drv_pos['Time'] = drv_pos['Date'] - self.t0_date
             drv_car['SessionTime'] = drv_car['Time']
             drv_pos['SessionTime'] = drv_pos['Time']
 
             self.car_data[drv] = drv_car
             self.pos_data[drv] = drv_pos
 
-        self.laps['LapStartDate'] = self.laps['LapStartTime'] + self.session_start_date
+        self.laps['LapStartDate'] = self.laps['LapStartTime'] + self.t0_date
 
         # for drv in self.drivers:
         #     self.car_data[drv] = self.car_data[drv].drop('Distance', 1)
@@ -1357,10 +1374,13 @@ class Session:
 
         return None
 
-    def _calculate_session_start_date(self, car_data, pos_data):
-        """Calculate the timestamp at which the session was started.
+    def _calculate_t0_date(self, car_data, pos_data):
+        """Calculate the date timestamp at which data for this session is starting.
 
-        This function sets :py:attr:`self.start_date`
+        This does not mark the start of a race (or other sessions). This marks the start of the data which is
+        far before.
+
+        This function sets :py:attr:`self.t0_date` which is an internally required offset for some calculations.
 
         The current assumption is that the latest date which can be calculated is correct. (Based on the timestamp with
         the least delay.)
@@ -1377,7 +1397,7 @@ class Session:
                 if date_offset is None or new_offset > date_offset:
                     date_offset = new_offset
 
-        self.session_start_date = date_offset
+        self.t0_date = date_offset.round('ms')
 
     def _get_reference_lap(self, working_data):
         times = self.laps['LapTime'].copy()
