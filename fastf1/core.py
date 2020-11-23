@@ -808,7 +808,7 @@ class Telemetry(pd.DataFrame):
             # fast_query < Increases speed
             for index, drv in enumerate(drivers_list):
                 if drv not in working_data.keys():
-                    logging.warning(f"No position data for driver {drv}. (_make_trajectory)")
+                    logging.warning(f"Driver {drv: >2}: No position data. (_make_trajectory)")
                     continue
                 trajectory = working_data[drv][['X', 'Y', 'Z']].values
                 projection_index = track_tree.query(trajectory, **fast_query)[1]
@@ -930,7 +930,7 @@ class Weekend:
         self.year = year
         self.gp = gp
         if self.is_testing():
-            logging.warning("Ergast api not supported for testing.")
+            logging.warning("The Ergast API is not supported for testing")
             self.data = {'raceName': gp,
                          'date': TESTING_LOOKUP[str(year)][int(gp[-1]) - 1][-1]}
         else:
@@ -938,7 +938,7 @@ class Weekend:
                 self.data = ergast.fetch_weekend(self.year, self.gp)
             except Exception as exception:
                 logging.critical("Failed to load critical data from Ergast!\n\n Cannot determine the date and name "
-                                 "of the weekend. Cannot proceed!\n")  # TODO some backup strategy for this
+                                 "of the event. Cannot proceed!\n")  # TODO some backup strategy for this
                 logging.critical(str(exception))
                 logging.debug("", exc_info=exception)
                 exit()
@@ -1008,11 +1008,11 @@ class Session:
             except IndexError:
                 # Ergast will take some time after a session until the data is available
                 # while the data is not yet available, an error will be raised
-                logging.warning("Ergast  API lookup failed. The session is very recent and not yet available or does "
+                logging.warning("Ergast API lookup failed. The session is very recent and not yet available or does "
                                 "not exist.")
                 self._create_empty_ergast_result()
             except Exception as exception:
-                logging.error("Failed to load data from Ergast!")
+                logging.error("Failed to load data from Ergast API!")
                 logging.exception(exception)
                 self._create_empty_ergast_result()
 
@@ -1145,7 +1145,7 @@ class Session:
             :class:`Laps`
 
         """
-        logging.info(f"Loading {self.weekend.name} {self.name}")
+        logging.info(f"Loading {self.weekend.name} - {self.name}")
 
         """From `timing_data` and `timing_app_data` a summary table is
         built. Lap by lap, information on tyre, sectors and times are 
@@ -1155,11 +1155,10 @@ class Session:
             pandas dataframe
 
         """
-        logging.info("Getting summary...")
         data, _ = api.timing_data(self.api_path)
         app_data = api.timing_app_data(self.api_path)
         # Now we do some manipulation to make it beautiful
-        logging.info("Formatting summary...")
+        logging.info("Processing timing data...")
 
         # Matching data and app_data. Not super straightforward
         # Sometimes a car may enter the pit without changing tyres, so
@@ -1263,7 +1262,6 @@ class Session:
             self.load_telemetry()
 
         logging.info(f"Loaded data for {len(self.drivers)} drivers: {self.drivers}")
-        logging.info(f"Laps loaded and saved!")
 
         return self.laps
 
@@ -1321,9 +1319,7 @@ class Session:
         Also does some further calculations to add LapStartDate, LapStartTime which can only be done precisely with
         timing information from the telemetry data.
         """
-        logging.info("Getting telemetry data...")
         car_data = api.car_data(self.api_path)
-        logging.info("Getting position data...")
         pos_data = api.position_data(self.api_path)
 
         self.drivers = list(set(self.drivers).intersection(set(car_data.keys())).intersection(set(pos_data.keys())))
