@@ -231,9 +231,11 @@ def timing_data(path, response=None):
     #   - pit stops may never be negative (missing outlap)
     #   - speed traps against telemetry (especially in Q FastLap - Slow Lap)
     if response is None:  # no previous response provided
+        logging.info("Fetching timing data...")
         response = fetch_page(path, 'timing_data')
     if response is None:  # no response received
         raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
+    logging.info("Parsing timing data...")
 
     # split up response per driver for easier iteration and processing later
     resp_per_driver = dict()
@@ -316,9 +318,9 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         if in_past and 'NumberOfLaps' in resp and resp['NumberOfLaps'] == api_lapcnt:
             in_past = False  # we're back in the present
 
-        if 'NumberOfLaps' in resp and resp['NumberOfLaps'] < api_lapcnt:
-            logging.warning(f"The api attempted to change a previous lap for driver {drv}. This was ignored! The "
-                            f"data may not be entirely correct. (near lap {lapcnt})")
+        if 'NumberOfLaps' in resp and (prev_lapcnt := resp['NumberOfLaps'] < api_lapcnt):
+            logging.warning(f"Driver {drv: >2}: Ignoring late data for a previously processed lap."
+                            f"The data may contain errors (previous: {prev_lapcnt}; current {lapcnt})")
             in_past = True
             continue
 
@@ -572,6 +574,7 @@ def timing_app_data(path, response=None):
         pandas.Dataframe
     """
     if response is None:  # no response provided
+        logging.info("Fetching timing app data...")
         response = fetch_page(path, 'timing_app_data')
     if response is None:  # no response received
         raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
@@ -632,12 +635,12 @@ def car_data(path, response=None):
         dictionary containing one pandas dataframe for each driver; dictionary keys are driver numbers as string
     """  # TODO update docstring
     if response is None:
-        logging.info("Fetching car data")
+        logging.info("Fetching car data...")
         response = fetch_page(path, 'car_data')
     if response is None:  # no response received
         raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
 
-    logging.info("Parsing car data")
+    logging.info("Parsing car data...")
 
     channels = {'0': 'RPM', '2': 'Speed', '3': 'nGear', '4': 'Throttle', '5': 'Brake', '45': 'DRS'}
     columns = {'Time', 'Date', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake', 'DRS'}
@@ -683,7 +686,7 @@ def car_data(path, response=None):
             data[driver] = data[driver].merge(index_df, how='outer').sort_values(by='Date').reset_index(drop=True)
             data[driver].loc[:, channels.values()] = data[driver].loc[:, channels.values()].fillna(value=0, inplace=False)
 
-            logging.warning(f"Car data for driver {driver} is incomplete!")
+            logging.warning(f"Driver {driver: >2}: Car data is incomplete!")
 
     return data
 
@@ -711,12 +714,12 @@ def position_data(path, response=None):
         dictionary containing one pandas dataframe for each driver, dictionary keys are driver numbers as string
     """  # TODO update docstring
     if response is None:
-        logging.info("Fetching position")
+        logging.info("Fetching position data...")
         response = fetch_page(path, 'position')
     if response is None:  # no response received
         raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
 
-    logging.info("Parsing position") 
+    logging.info("Parsing position data...")
 
     if not response:
         return {}
@@ -773,7 +776,7 @@ def position_data(path, response=None):
             data[driver]['Status'].fillna(value='OffTrack', inplace=True)
             data[driver].loc[:, ['X', 'Y', 'Z']] = data[driver].loc[:, ['X', 'Y', 'Z']].fillna(value=0, inplace=False)
 
-            logging.warning(f"Position data for driver {driver} is incomplete!")
+            logging.warning(f"Driver {driver: >2}: Position data is incomplete!")
 
     return data
 
@@ -781,6 +784,7 @@ def position_data(path, response=None):
 @Cache.api_request_wrapper
 def track_status_data(path, response=None):
     if response is None:
+        logging.info("Fetching track status data...")
         response = fetch_page(path, 'track_status')
 
     data = {'Time': [], 'Status': [], 'Message': []}
