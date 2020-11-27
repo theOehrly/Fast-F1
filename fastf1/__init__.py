@@ -79,3 +79,4 @@ Available functions directly accessible from fastf1 package
 """
 from fastf1.core import get_session
 from fastf1.api import Cache
+from fastf1 import legacy
