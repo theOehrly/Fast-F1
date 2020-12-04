@@ -734,6 +734,9 @@ class Telemetry(pd.DataFrame):
             lap_n_after = drv_laps_after['LapNumber'].iloc[0] if not drv_laps_after.empty else max(drv_laps['LapNumber'])
             relevant_laps = drv_laps[(drv_laps['LapNumber'] >= lap_n_before) & (drv_laps['LapNumber'] <= lap_n_after)]
 
+            if relevant_laps.empty:
+                continue
+
             # first slice by lap and calculate distance, so that distance is zero at finish line
             drv_tel = self.session.car_data[drv].slice_by_lap(relevant_laps).add_distance() \
                 .loc[:, ('SessionTime', 'Distance')].rename(columns={'Distance': drv})
@@ -747,8 +750,6 @@ class Telemetry(pd.DataFrame):
 
         # create driver map for array
         drv_map = combined_distance.loc[:, combined_distance.columns != self.driver].columns.to_numpy()
-        for drv_number, drv_abb, team in D_LOOKUP:  # change driver number into abbreviation
-            drv_map[drv_map == str(drv_number)] = drv_abb
 
         own_dst = combined_distance.loc[:, self.driver].to_numpy()
         other_dst = combined_distance.loc[:, combined_distance.columns != self.driver].to_numpy()
