@@ -351,11 +351,8 @@ class Telemetry(pd.DataFrame):
             data_slice = d.slice_by_mask(sel, pad, pad_side)
 
             if 'Time' in data_slice.columns:
-                data_slice.loc[:, 'Time'] -= start_time  # shift time to 0 so laps can overlap
-
-            if 'Distance' in data_slice.columns:  # offset Distance so that it starts at zero on the first sample
-                distance_zero = data_slice['Distance'].iloc[0]  # TODO and others?
-                data_slice.loc[:, 'Distance'] = data_slice.loc[:, 'Distance'] - distance_zero
+                # shift time to 0 so laps can overlap
+                data_slice.loc[:, 'Time'] = data_slice['SessionTime'] - start_time
 
             return data_slice
         return Telemetry()
