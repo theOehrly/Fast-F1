@@ -31,11 +31,11 @@ headers = {
 pages = {
   'session_info': 'SessionInfo.json',  # more rnd
   'archive_status': 'ArchiveStatus.json',  # rnd=1880327548
-  'heartbeat': 'Heartbeat.jsonStream',  # Probably time sinchronization?
+  'heartbeat': 'Heartbeat.jsonStream',  # Probably time synchronization?
   'audio_streams': 'AudioStreams.jsonStream',  # Link to audio commentary
   'driver_list': 'DriverList.jsonStream',  # Driver info and line story
   'extrapolated_clock': 'ExtrapolatedClock.jsonStream',  # Boolean
-  'race_control_messages': 'RaceControlMessages.json',  #  Flags etc
+  'race_control_messages': 'RaceControlMessages.json',  # Flags etc
   'session_status': 'SessionStatus.jsonStream',  # Start and finish times
   'team_radio': 'TeamRadio.jsonStream',  # Links to team radios
   'timing_app_data': 'TimingAppData.jsonStream',  # Tyres and laps (juicy)
@@ -49,8 +49,7 @@ pages = {
   'lap_count': 'LapCount.jsonStream',  # Lap counter
   'championship_predicion': 'ChampionshipPrediction.jsonStream'  # Points
 }
-"""Known requests
-"""
+"""Known API requests"""
 
 
 class Cache:
@@ -134,6 +133,12 @@ class Cache:
     @classmethod
     def api_request_wrapper(cls, func):
         """Wrapper function for adding stage 2 caching to api functions.
+
+        Args:
+            func: function to be wrapped
+
+        Returns:
+            The wrapped function
         """
         def cached_api_request(api_path, **kwargs):
             if cls._CACHE_DIR:
@@ -187,12 +192,17 @@ class Cache:
 
                 return func(api_path, **kwargs)
 
-        return cached_api_request
+        wrapped = cached_api_request
+        wrapped.__doc__ = func.__doc__  # necessary to make docstrings work
+
+        return wrapped
 
 
 def make_path(wname, wdate, sname, sdate):
-    """Create web path to append on livetiming.formula1.com for api
+    """Create the api path base string to append on livetiming.formula1.com for api
     requests.
+
+    The api path base string changes for every session only.
 
     Args:
         wname: Weekend name (e.g. 'Italian Grand Prix')
@@ -201,7 +211,7 @@ def make_path(wname, wdate, sname, sdate):
         sdate: Session date (formatted as wdate)
     
     Returns:
-        string path
+        relative url path
     """
     smooth_operator = f'{wdate[:4]}/{wdate} {wname}/{sdate} {sname}/'
     return '/static/' + smooth_operator.replace(' ', '_')
@@ -209,21 +219,61 @@ def make_path(wname, wdate, sname, sdate):
 
 @Cache.api_request_wrapper
 def timing_data(path, response=None):
-    """Timing data is a mixed stream of information of each driver.
-    At a given time a packet of data may indicate position, lap time,
-    speed trap, sector time and so on.
+    """Fetch and parse timing data.
 
-    While most of this data can be mapped lap by lap given a readable and
-    usable data structure, other entries like position and time gaps are
-    separated and mapped on finer timeseries.
+    Timing data is a mixed stream of information. At a given time a packet of data may indicate position, lap time,
+    speed trap, sector times and so on.
+
+    While most of this data can be mapped lap by lap giving a readable and usable data structure (-> laps_data),
+    other entries like position and time gaps are provided on a more frequent time base. Those values are separated
+    and returned as a separate object (-> stream_data).
+
+    .. note:: This function does not actually return "raw" API data. This is because of the need to process a mixed
+      linear data stream into a usable object and because of frequent errors and inaccuracies in said stream.
+      Occasionally an "educated guess" needs to be made for judging whether a value belongs to this lap or to another
+      lap. Additionally, some values which are considered "obviously" wrong are removed from the data. This can happen
+      with or without warnings, depending on the reason an severity.
+      | Timestamps marking start or end of a lap are postprocessed as the provided values are inaccurate.
+      | Lap and sector times are not modified ever! They are considered as the absolute truth. If necessary,
+      other values are adjusted to fit.
+
 
     Args:
-        path: url path (see :func:`make_path`)
+        path: api path base string (see :func:`make_path`)
         response (optional): api response can be passed if data was already downloaded
 
     Returns:
-        pandas.Dataframe for timing/lap data,
-        pandas.Dataframe for position/time gaps
+        (DataFrame, DataFrame):
+
+            - laps_data (DataFrame):
+                contains the following columns of data (one row per driver and lap)
+
+                    - Time (pandas.Timedelta): Session time at which the lap was set (i.e. finished)
+                    - LapTime (pandas.Timedelta): Lap time of the last finished lap (the lap in this row)
+                    - Driver (str): Driver number
+                    - NumberOfLaps (int): Number of laps driven by this driver including the lap in this row
+                    - NumberOfPitStops (int): Number of pit stops of this driver
+                    - PitInTime (pandas.Timedelta): Session time at which the driver entered the pits. Consequentially,
+                      if this value is not NaT the lap in this row is an inlap.
+                    - PitOutTime (pandas.Timedelta): Session time at which the driver exited the pits. Consequentially,
+                      if this value is not NaT  the lap in this row is an outlap.
+                    - Sector1/2/3Time (pandas.Timedelta): Sector times (one column for each sector time)
+                    - Sector1/2/3SessionTime (pandas.Timedelta): Session time at which the corresponding sector time
+                      was set (one column for each sector's session time)
+                    - SpeedI1/I2/FL/ST: Speed trap speeds; FL is speed at the finish line; I1 and I2 are speed traps in
+                      sector 1 and 2 respectively; ST maybe a speed trap on the longest straight (?)
+
+            - stream_data (DataFrame):
+                contains the following columns of data
+
+                    - Time (pandas.Timedelta): Session time at which this sample was created
+                    - Driver (str): Driver number
+                    - Position (int): Position in the field
+                    - GapToLeader (pandas.Timedelta): Time gap to leader in seconds
+                    - IntervalToPositionAhead (pandas.Timedelta): Time gap to car ahead
+
+    Raises:
+        SessionNotAvailableError: in case the F1 livetiming api returns no data
     """
 
     # possible optional sanity checks (TODO, maybe):
@@ -562,16 +612,37 @@ def _stream_data_driver(driver_raw, empty_vals, drv):
 
 @Cache.api_request_wrapper
 def timing_app_data(path, response=None):
-    """Full parse of timing app data. This parsing is quite ignorant,
-    with  minimum logic just to fix data structure inconsistencies. Tyre
-    information is passed to the summary table.
+    """Fetch and parse 'timing app data'.
+
+    Timing app data provides the following data channels per sample:
+       - LapNumber (float or nan): Current lap number
+       - Driver (str): Driver number
+       - LapTime (pandas.Timedelta or None): Lap time of last lap
+       - Stint (int): Counter for the number of driven stints
+       - TotalLaps (float or nan): Total number of laps driven on this set of tires (includes laps driven in
+         other sessions!)
+       - Compound (str or None): Tire compound
+       - New (bool or None): Whether the tire was new when fitted
+       - TyresNotChanged (int or None): ??? Probably a flag to mark pit stops without tire changes
+       - Time (pandas.Timedelta): Session time
+       - LapFlags (float or nan): ??? unknown
+       - LapCountTime (None or ???): ??? unknown; no data
+       - StartLaps (float or nan): ??? Tire age when fitted (same as 'TotalLaps' in the same sample?!?)
+       - Outlap (None or ???): ??? unknown; no data
+
+    Only a few values are present per timestamp. Somewhat comprehensive information can therefore only be obtained by
+    aggregating data (usually over the course of one lap). Some values are sent even less
+    frequently (for example 'Compound' only after tire changes).
 
     Args:
-        path (str): web path for base_url, see :func:`make_path`
-        response (optional): api response can be passed if data was already downloaded
+        path (str): api path base string (see :func:`make_path`)
+        response: Response as returned by :func:`fetch_page` can be passed if it was downloaded already.
 
     Returns:
-        pandas.Dataframe
+        A DataFrame contianing one column for each data channel as listed above.
+
+    Raises:
+        SessionNotAvailableError: in case the F1 livetiming api returns no data
     """
     if response is None:  # no response provided
         logging.info("Fetching timing app data...")
@@ -610,30 +681,33 @@ def timing_app_data(path, response=None):
 
 @Cache.api_request_wrapper
 def car_data(path, response=None):
-    """Fetch and create pandas dataframe for each driver containing
-    Telemetry data.
+    """Fetch and parse car data.
 
-    Samples are not synchronised with the other dataframes and sampling
-    time is not constant, usually 240ms but sometimes can be ~270ms.
-    Keep absolute reference.
-
-    Dataframe columns:
+    Car data provides the following data channels per sample:
         - Date (pandas.Timestamp): timestamp for this sample as Date + Time; more or less exact
-        - Time (pandas.Timedelta): session timestamp; inaccurate, has duplicate values; use Date instead
+        - Time (pandas.Timedelta): session timestamp (time only); inaccurate, has duplicate values; use Date instead
         - Speed (int): Km/h
         - RPM (int)
-        - Gear (int)
+        - Gear (int) [called 'nGear' in the data!]
         - Throttle (int): 0-100%
         - Brake (int): 0-100% (don't trust brake too much)
-        - DRS (int): 0=Off, 8=Active; sometimes other values --> to be researched still
+        - DRS (int): 0=Off, 8=Active; sometimes other values --> to be researched
+
+    The data stream has a sample rate of (usually) 240ms. The samples from the data streams for position data and
+    car data do not line up. Resampling/interpolation is required to merge them.
 
     Args:
-        path: url path (see :func:`make_path`)
-        response (optional): api response can be passed if data was already downloaded
+        path (str): api path base string (see :func:`make_path`)
+        response: Response as returned by :func:`fetch_page` can be passed if it was downloaded already.
 
     Returns:
-        dictionary containing one pandas dataframe for each driver; dictionary keys are driver numbers as string
-    """  # TODO update docstring
+        | A dictionary containing one pandas DataFrame per driver. Dictionary keys are the driver's numbers as
+          string (e.g. '16'). You should never assume that a number exists!
+        | Each dataframe contains one column for each data channel as listed above
+
+    Raises:
+        SessionNotAvailableError: in case the F1 livetiming api returns no data
+    """
     if response is None:
         logging.info("Fetching car data...")
         response = fetch_page(path, 'car_data')
@@ -693,26 +767,29 @@ def car_data(path, response=None):
 
 @Cache.api_request_wrapper
 def position_data(path, response=None):
-    """Fetch and create pandas dataframe for Position.
+    """Fetch and parse position data.
 
-    Samples are not synchronised with the other dataframes and sampling
-    time is not constant, usually 300ms but sometimes can be ~200ms.
-    Keep absolute reference.
-
-    Dataframe columns:
+    Position data provides the following data channels per sample:
         - Date (pandas.Timestamp): timestamp for this sample as Date + Time; more or less exact
-        - Time (pandas.Timedelta): session timestamp; inaccurate, has duplicate values; use Date instead
-        - X, Y, Z (int): Position coordinates
+        - Time (pandas.Timedelta): session timestamp (time only); inaccurate, has duplicate values; use Date instead
+        - X, Y, Z (int): Position coordinates; starting from 2020 the coordinates are given in 1/10 meter
         - Status (str): 'OnTrack' or 'OffTrack'
 
-    Args:
-        path: web path for base_url, see :func:`make_path`
-        response (optional): api response can be passed if data was already downloaded
+    The data stream has a sample rate of (usually) 220ms. The samples from the data streams for position data and
+    car data do not line up. Resampling/interpolation is required to merge them.
 
+    Args:
+        path (str): api path base string (see :func:`api.make_path`)
+        response: Response as returned by :func:`api.fetch_page` can be passed if it was downloaded already.
 
     Returns:
-        dictionary containing one pandas dataframe for each driver, dictionary keys are driver numbers as string
-    """  # TODO update docstring
+        | A dictionary containing one pandas DataFrame per driver. Dictionary keys are the driver's numbers as
+          string (e.g. '16'). You should never assume that a number exists!
+        | Each dataframe contains one column for each data channel as listed above
+
+    Raises:
+        SessionNotAvailableError: in case the F1 livetiming api returns no data
+    """
     if response is None:
         logging.info("Fetching position data...")
         response = fetch_page(path, 'position')
@@ -783,9 +860,44 @@ def position_data(path, response=None):
 
 @Cache.api_request_wrapper
 def track_status_data(path, response=None):
+    """Fetch and parse track status data.
+
+    Track status contains information on yellow/red/green flags, safety car and virtual safety car. It provides the
+    following data channels per sample:
+
+        - Time (pandas.Timedelta): session timestamp (time only)
+        - Status (str): contains track status changes as numeric values (described below)
+        - Message (str): contains the same information as status but in easily understandable
+          words ('Yellow', 'AllClear',...)
+
+    A new value is sent every time the track status changes.
+
+    Track status is indicated using single digit integer status codes (as string). List of known statuses:
+
+        - '1': Track clear (beginning of session ot to indicate the end of another status)
+        - '2': Yellow flag (sectors are unknown)
+        - '3': ??? Never seen so far, does not exist?
+        - '4': Safety Car
+        - '5': Red Flag
+        - '6': Virtual Safety Car deployed
+        - '7': Virtual Safety Car ending (As indicated on the drivers steering wheel, on tv and so on; status '1'
+          will mark the actual end)
+
+    Args:
+        path (str): api path base string (see :func:`api.make_path`)
+        response: Response as returned by :func:`api.fetch_page` can be passed if it was downloaded already.
+
+    Returns:
+        A dictionary containing one key for each data channel and a list of values per key.
+
+    Raises:
+        SessionNotAvailableError: in case the F1 livetiming api returns no data
+    """
     if response is None:
         logging.info("Fetching track status data...")
         response = fetch_page(path, 'track_status')
+    if response is None:  # no response received
+        raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
 
     data = {'Time': [], 'Status': [], 'Message': []}
 
@@ -802,23 +914,29 @@ def track_status_data(path, response=None):
 def session_status_data(path, response=None):
     """Fetch and parse session status data.
 
-    Session status contains information on when a session was started and when it ended (amongst others).
+    Session status contains information on when a session was started and when it ended (amongst others). It
+    provides the following data channels per sample:
+
+        - Time (pandas.Timedelta): session timestamp (time only)
+        - Status (str): status messages
+
+    A new value is sent every time the session status changes.
 
     Args:
         path (str): api path base string (see :func:`api.make_path`)
         response: Response as returned by :func:`api.fetch_page` can be passed if it was downloaded already.
 
     Returns:
-        .. code-block::
+        A dictionary containing one key for each data channel and a list of values per key.
 
-            {'Time': [pandas.Timedelta(), ], 'Status': [str(), ]}
-
-        | Time contains :class:`pandas.Timedelta` timestamps
-        | Status contains status messages of type str
+    Raises:
+        SessionNotAvailableError: in case the F1 livetiming api returns no data
     """
     if response is None:
         logging.info("Fetching session status data...")
         response = fetch_page(path, 'session_status')
+    if response is None:  # no response received
+        raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
 
     data = {'Time': [], 'Status': []}
 
@@ -830,17 +948,18 @@ def session_status_data(path, response=None):
 
 
 def fetch_page(path, name):
-    """Fetch formula1 web api, given url path and page name. An attempt
+    """Fetch data from the formula1 livetiming web api, given url base path and page name. An attempt
     to parse json or decode known messages is made.
 
     Args:
-        path: url path (see :func:`make_path`)
-        name: page name (see :attr:`pages`)
+        path (str): api path base string (see :func:`api.make_path`)
+        name (str): page name (see :attr:`pages` for all known pages)
 
     Returns:
-        dictionary if content was json, list of entries if jsonStream,
-        where each element is len 2: [clock, content]. Content is
-        parsed with :func:`parse`. None if request failed.
+        - dictionary if content was json
+        - list of entries if jsonStream, where each entry again contains two elements: [timestamp, content]. Content is
+          parsed with :func:`parse` and will usually be a dictionary created from json data.
+        - None if request failed
 
     """
     page = pages[name]
@@ -864,7 +983,19 @@ def fetch_page(path, name):
 
 
 def parse(text, zipped=False):
-    """Parse json and jsonStream as known from livetiming.formula1.com
+    """Parse json and jsonStream as returned by livetiming.formula1.com
+
+    This function can only pass one data entry at a time, not a whole response.
+    Timestamps and data need to be separated before and only the data must be passed as a string to be parsed.
+
+    Args:
+        text (str): The string which should be parsed
+        zipped (bool): Whether or not the text is compressed. This is the case for '.z' data (e.g. position data=)
+
+    Returns:
+        Depending on data of which page is parsed:
+            - a dictionary created as a result of loading json data
+            - a string
     """
     if text[0] == '{':
         return json.loads(text)
@@ -878,17 +1009,19 @@ def parse(text, zipped=False):
 
 
 def _to_timedelta(x):
-    """create a timedelta object from a time string or any object that can be converted to a timedelta
+    """Fast timedelta object creation from a time string
 
-    string format: hh:mm:ss.ms
-    an arbitrary part of the left side can be skipped
-    for example 'm:ss.ms' is acceptable too
+    | String format: hh:mm:ss.ms
+    | Hours or minutes do not necessarily need to be present.
+    | Hours minutes and seconds always need to be zero padded so as to have two digits.
+    | An arbitrary part of the left side can be skipped for example 'mm:ss.ms' is acceptable too
 
     Args:
-        x: any object that can be converted to a timedelta
+        x (str): [hh:][mm:]ss.ms
     Returns:
         timedelta object
     """
+    # TODO should "fix" this; it does work for the given use case but actually does not quite behave as expected
     # this is faster than using pd.timedelta on a string
     def tdformat(s):
         h, m, sms = s.split(':')
