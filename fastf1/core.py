@@ -1671,23 +1671,6 @@ class Driver:
         return self.info['Constructor']['name']
 
 
-def _log_progress(i, length, c=30):
-    """Simple progress bar for console logging.
-
-    Args:
-        i (int): current value
-        length (int): maximum value
-        c (int, optional): number of steps when displaying the progress bar
-    """
-    if length < c:
-        c = length
-    if logging.root.level >= logging.INFO and i % int(length / (c - 1)) == 0:
-        p = round((i / length) * c)
-        is_last = (p * (c + 1) / c) > c
-        print(f"\r[{'+' * p}{'-' * (c - p)}] ({length if is_last else i}/{length})",
-              end="\n" if is_last else '')
-
-
 class NoLapDataError(Exception):
     """Raised if the API request does not fail but there is no usable data after processing the result."""
     def __init__(self, *args):
