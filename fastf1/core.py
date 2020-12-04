@@ -1671,37 +1671,6 @@ class Driver:
         return self.info['Constructor']['name']
 
 
-def _map_objects(df):
-    """Map column values of dataframes to integers if they are a non-numeric type.
-
-    For example map the 'Status' column values 'OnTrack' and 'OffTrack' to 0 and 1.
-    This can be useful when doing interpolation and allows for interpolating columns that can not be interpolated
-    with their native data type.
-
-    Args:
-        df (pd.DataFrame): pandas dataframe
-
-    Returns:
-        pd.DataFrame: the original dataframe with it's column values mapped to integers where necessary
-        func: a function that takes the mapped dataframe as single argument, maps the original values back and
-            returns the dataframe again
-    """
-    nnummap = {}
-    for column in df.columns:
-        if df[column].dtype == object:
-            backward = dict(enumerate(df[column].unique()))
-            forward = {v: k for k, v in backward.items()}
-            df[column] = df[column].map(forward)
-            nnummap[column] = backward
-
-    def unmap(res):
-        for column in nnummap:
-            res[column] = res[column].round().map(nnummap[column])
-        return res
-
-    return df, unmap
-
-
 def _log_progress(i, length, c=30):
     """Simple progress bar for console logging.
 
