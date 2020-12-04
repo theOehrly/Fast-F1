@@ -7,19 +7,9 @@ Contains the main classes and functions.
 
 from fastf1 import ergast
 from fastf1 import api
-from fastf1.utils import recursive_dict_get
 import pandas as pd
 import numpy as np
 import logging
-import scipy
-import scipy.interpolate
-import scipy.spatial
-import scipy.signal
-import scipy.optimize
-import pickle
-import json
-import pathlib
-import os
 from functools import cached_property
 
 import warnings
@@ -78,7 +68,6 @@ def get_session(year, gp, event=None):
     """
     if type(gp) is str and gp == 'testing':
         pre_season_week, event = _get_testing_week_event(year, event)
-        print(pre_season_week, event)
         weekend = Weekend(year, pre_season_week)
         return Session(weekend, event)
 
@@ -447,7 +436,7 @@ class Telemetry(pd.DataFrame):
                     continue
                 sig_type = self._CHANNELS[ch]['type']
 
-                if sig_type == 'continuous':  # yes, this is necessary to prevent pandas from crashing
+                if sig_type == 'continuous':
                     missing = self._CHANNELS[ch]['missing']
                     merged.loc[:, ch] = merged.loc[:, ch] \
                         .interpolate(method=missing, limit_direction='both', fill_value='extrapolate')
@@ -1140,8 +1129,6 @@ class Session:
             prev_lap = None
             integrity_errors = 0
             for _, lap in self.laps[self.laps['DriverNumber'] == drv].iterrows():
-                a = True
-
                 # require existence, non-existence and specific values for some variables
                 check_1 = (pd.isnull(lap['PitInTime'])
                            & pd.isnull(lap['PitOutTime'])
@@ -1218,16 +1205,6 @@ class Session:
             self.pos_data[drv] = drv_pos
 
         self.laps['LapStartDate'] = self.laps['LapStartTime'] + self.t0_date
-
-        # for drv in self.drivers:
-        #     self.car_data[drv] = self.car_data[drv].drop('Distance', 1)
-        #     # TODO if somehow preventable, do not merge here! All calculations should be done without resampling
-        #     self.telemetry[drv] = self.merge_channels(self.car_data[drv], self.pos_data[drv], frequency='original')
-        #     self.telemetry[drv] = self.inject_distance(self.telemetry[drv])
-        #
-        # driver_ahead = self._inject_driver_ahead(self.telemetry)  # this is done here because the full data set is required for this operation
-        # for drv in self.drivers:
-        #     self.telemetry[drv] = self.telemetry[drv].join(driver_ahead[drv])
 
     def get_driver(self, identifier):
         """
@@ -1397,7 +1374,6 @@ class Laps(pd.DataFrame):
             raise ValueError("Cannot slice telemetry because self contains no driver number!")
         if len(drv_num) > 1:
             raise ValueError("Cannot slice telemetry because self contains Laps of multiple drivers!")
-        drv_num = drv_num[0]
         pos_data = self.session.pos_data[self['DriverNumber']].slice_by_lap(self, **kwargs).reset_index(drop=True)
         return pos_data
 

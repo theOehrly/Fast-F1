@@ -363,7 +363,6 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
     drv_data = {key: [val, ] for key, val in empty_vals.items()}
 
     for time, resp in driver_raw:
-        data_in_lap = False
         # the first three ifs are just edge case handling for the rare sessions were the data goes back in time
         if in_past and 'NumberOfLaps' in resp and resp['NumberOfLaps'] == api_lapcnt:
             in_past = False  # we're back in the present
@@ -802,7 +801,6 @@ def position_data(path, response=None):
         return {}
 
     ts_length = 12  # length of timestamp: len('00:00:00:000')
-    date_format = "%Y-%m-%dT%H:%M:%S.%f"
     columns = ['Time', 'Date', 'Status', 'X', 'Y', 'Z']
 
     data = dict()
