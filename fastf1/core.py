@@ -901,13 +901,6 @@ class Session:
         """List of all drivers that took part in this session; contains driver numbers as string. Drivers for which 
         lap or telemetry data is missing completely are not listed!"""
 
-    @property
-    def driver_numbers(self):
-        """A list of all driver numbers in this session"""  # TODO fix or remove
-        if self.laps:
-            return list(self.laps['DriversNum'].unique())
-        return None
-
     def _create_empty_ergast_result(self):
         """In case Ergast has no data, this function creates an empty result to emulate the structure."""
         self.results = []
