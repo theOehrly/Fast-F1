@@ -335,15 +335,10 @@ class Telemetry(pd.DataFrame):
             :class:`Telemetry`
         """
         if interpolate_edges:
-            edges = pd.DataFrame({'SessionTime': (start_time, end_time)})
-            d = self.merge(edges, how='outer').sort_values(by='SessionTime').reset_index(drop=True)
-
-            # cannot simply use fill_missing() because it expects 'Date' without missing values; calculate 'Date' first
-            i = d.get_first_non_zero_time_index()
-            time_offset = d['Date'].iloc[i] - d['SessionTime'].iloc[i]
-            d.loc[:, 'Date'] = d['SessionTime'] + time_offset
-
-            d = d.fill_missing()  # now fill in the other missing values
+            edges = Telemetry({'SessionTime': (start_time, end_time),
+                               'Date': (start_time + self.session.t0_date, end_time + self.session.t0_date)},
+                              session=self.session)
+            d = self.merge_channels(edges)
 
         else:
             d = self.copy()  # TODO no copy?
@@ -431,11 +426,6 @@ class Telemetry(pd.DataFrame):
         if i is None:
             raise ValueError("No valid 'Time' data. Cannot resample!")
 
-        time_offset = merged.index[i] - merged['Time'].iloc[i]  # offsets are valid for this slice only
-        if 'SessionTime' in merged.columns:
-            session_time_offset = merged.index[i] - merged['SessionTime'].iloc[i]
-        else:
-            session_time_offset = None
         ref_date = merged.index[i]
 
         # data needs to be resampled/interpolated differently, depending on what kind of data it is
@@ -443,28 +433,7 @@ class Telemetry(pd.DataFrame):
 
         if frequency == 'original':
             # no resampling but still interpolation due to merging
-            # 'Source' column not mentioned here because no changes are necessary
-            for ch in self._CHANNELS.keys():
-                if ch not in merged.columns:
-                    continue
-                sig_type = self._CHANNELS[ch]['type']
-
-                if sig_type == 'continuous':
-                    missing = self._CHANNELS[ch]['missing']
-                    merged.loc[:, ch] = merged.loc[:, ch] \
-                        .interpolate(method=missing, limit_direction='both', fill_value='extrapolate')
-
-                elif sig_type == 'discrete':
-                    merged.loc[:, ch] = merged.loc[:, ch]\
-                        .fillna(method='ffill').fillna(method='bfill')  # only use bfill after ffill to fix first row
-
-            # restore data types from before merging
-            for col in dtype_map.keys():
-                try:
-                    merged.loc[:, col] = merged.loc[:, col].astype(dtype_map[col])
-                except ValueError:
-                    logging.warning(f"Failed to preserve data type for column '{col}' while merging telemetry.")
-
+            merged = merged.fill_missing()
             merged = merged.reset_index().rename(columns={'index': 'Date'})  # make 'Date' a column again
 
         else:
@@ -563,13 +532,6 @@ class Telemetry(pd.DataFrame):
         """
         ret = self.copy()
 
-        i = ret.get_first_non_zero_time_index()
-        time_offset = ret['Date'].iloc[i] - ret['Time'].iloc[i]  # offsets are valid for this slice only
-        if 'SessionTime' in ret.columns:
-            session_time_offset = ret['Date'].iloc[i] - ret['SessionTime'].iloc[i]
-        else:
-            session_time_offset = None
-
         for ch in self._CHANNELS.keys():
             if ch not in self.columns:
                 continue
@@ -587,9 +549,11 @@ class Telemetry(pd.DataFrame):
         if 'Source' in ret.columns:
             ret.loc[:, 'Source'] = ret.loc[:, 'Source'].fillna(value='interpolation')
 
-        if session_time_offset is not None:
-            ret.loc[:, 'SessionTime'] = ret['Date'] - session_time_offset
-        ret.loc[:, 'Time'] = ret['Date'] - time_offset
+        if 'Date' in self.columns:
+            ret['SessionTime'] = ret['Date'] - self.session.t0_date
+        elif isinstance(ret.index, pd.DatetimeIndex):
+            ret['SessionTime'] = ret.index - self.session.t0_date  # assume index is Date
+        ret['Time'] = ret['SessionTime'] - ret['SessionTime'].iloc[0]
 
         return ret
 
