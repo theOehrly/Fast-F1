@@ -935,11 +935,6 @@ class Session:
         self.pos_data = dict()
         """Car position data as received from the api."""
 
-        self.telemetry = dict()
-        """Merged and possibly resampled telemetry and position data."""
-
-        self.track = None
-
         self.drivers = list()
         """List of all drivers that took part in this session; contains driver numbers as string. Drivers for which 
         lap or telemetry data is missing completely are not listed!"""
