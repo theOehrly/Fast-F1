@@ -367,7 +367,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         if in_past and 'NumberOfLaps' in resp and resp['NumberOfLaps'] == api_lapcnt:
             in_past = False  # we're back in the present
 
-        if 'NumberOfLaps' in resp and (prev_lapcnt := resp['NumberOfLaps'] < api_lapcnt):
+        if 'NumberOfLaps' in resp and ((prev_lapcnt := resp['NumberOfLaps']) < api_lapcnt):
             logging.warning(f"Driver {drv: >2}: Ignoring late data for a previously processed lap."
                             f"The data may contain errors (previous: {prev_lapcnt}; current {lapcnt})")
             in_past = True
