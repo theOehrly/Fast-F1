@@ -484,12 +484,58 @@ class Telemetry(pd.DataFrame):
             # join resampled columns and make 'Date' a column again
             merged = Telemetry(resampled_columns).reset_index().rename(columns={'index': 'Date'})
 
-        # recalculate the time columns
-        if session_time_offset is not None:
-            merged['SessionTime'] = merged['Date'] - session_time_offset
-        merged['Time'] = merged['Date'] - time_offset
+            # recalculate the time columns
+            merged['SessionTime'] = merged['Date'] - self.session.t0_date
+            merged['Time'] = merged['SessionTime'] - merged['SessionTime'].iloc[0]
+
+        # restore data types from before merging
+        for col in dtype_map.keys():
+            try:
+                merged.loc[:, col] = merged.loc[:, col].astype(dtype_map[col])
+            except ValueError:
+                logging.warning(f"Failed to preserve data type for column '{col}' while merging telemetry.")
 
         return merged
+
+    def resample_channels(self, rule=None, new_date_ref=None, **kwargs):
+        """Resample telemetry data.
+
+        Convenience method for frequency conversion and resampling. Up and down sampling of data is supported.
+        'Date' and 'SessionTime' need to exist in the data. 'Date' is used as the main time reference.
+
+        There are two ways to use this method:
+
+            - Usage like :meth:`pandas.DataFrame.resample`: In this case you need to specify the 'rule' for resampling
+              and any additional keywords will be passed on to :meth:`pandas.Series.resample` to create a new time
+              reference. See the pandas method to see which options are available.
+
+            - using the 'new_date_ref' keyword a :class:`pandas.Series` containing new values for date
+              (dtype :class:`pandas.Timestamp`) can be provided. The existing data will be resampled onto this new
+              time reference.
+
+        Args:
+            rule (optional, str): Resampling rule for :meth:`pandas.Series.resample`
+            new_date_ref (optional, pandas.Series): New custom Series of reference dates
+            **kwargs (optional, any): Only in combination with 'rule'; additional parameters for
+                :meth:`pandas.Series.resample`
+        """
+        if rule is not None and new_date_ref is not None:
+            raise ValueError("You can only specify one of 'rule' or 'new_index'")
+        if rule is None and new_date_ref is None:
+            raise ValueError("You need to specify either 'rule' or 'new_index'")
+
+        if new_date_ref is None:
+            st = pd.Series(index=pd.DatetimeIndex(self['Date']), dtype=int).resample(rule, **kwargs).asfreq()
+            new_date_ref = pd.Series(st.index)
+
+        new_tel = Telemetry(session=self.session, driver=self.driver, columns=self.columns)
+        new_tel.loc[:, 'Date'] = new_date_ref
+
+        combined_tel = self.merge_channels(Telemetry({'Date': new_date_ref}, session=self.session))
+        mask = combined_tel['Date'].isin(new_date_ref)
+        new_tel = combined_tel.loc[mask, :]
+
+        return new_tel
 
     def fill_missing(self):
         """Calculate missing values in self.
