@@ -237,6 +237,19 @@ class Telemetry(pd.DataFrame):
             setattr(ret, var, val)
         return ret
 
+    def merge(self, *args, **kwargs):
+        """Wraps :mod:`pandas.DataFrame.merge` and adds metadata propagation.
+
+        When calling `self.merge` metadata will be propagated from self to the merged dataframe.
+        """
+        meta = dict()
+        for var in self._metadata:
+            meta[var] = getattr(self, var)
+        ret = super().merge(*args, **kwargs)
+        for var, val in meta.items():
+            setattr(ret, var, val)
+        return ret
+
     def slice_by_mask(self, mask, pad=0, pad_side='both'):
         """Slice self using a boolean array as a mask.
 
