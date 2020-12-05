@@ -189,13 +189,13 @@ class Telemetry(pd.DataFrame):
         'X': {'type': 'continuous', 'missing': 'quadratic'},
         'Y': {'type': 'continuous', 'missing': 'quadratic'},
         'Z': {'type': 'continuous', 'missing': 'quadratic'},
-        'Status': {'type': 'discrete', 'missing': 'fill'},
+        'Status': {'type': 'discrete'},
         'Speed': {'type': 'continuous', 'missing': 'linear'},     # linear is often required as quadratic overshoots
         'RPM': {'type': 'continuous', 'missing': 'linear'},       # on sudden changes like sudden pedal application,
         'Throttle': {'type': 'continuous', 'missing': 'linear'},  # braking, ...)
         'Brake': {'type': 'continuous', 'missing': 'linear'},
-        'DRS': {'type': 'discrete', 'missing': 'fill'},
-        'nGear': {'type': 'discrete', 'missing': 'fill'},
+        'DRS': {'type': 'discrete'},
+        'nGear': {'type': 'discrete'},
         'Source': {'type': 'excluded'},  # special case, custom handling
         'Date': {'type': 'excluded'},  # special case, used as the index during resampling
         'Time': {'type': 'excluded'},  # special case, Time/SessionTime recalculated from 'Date'
@@ -203,7 +203,7 @@ class Telemetry(pd.DataFrame):
         'Distance': {'type': 'continuous', 'missing': 'quadratic'},
         'RelativeDistance': {'type': 'continuous', 'missing': 'quadratic'},
         'DifferentialDistance': {'type': 'continuous', 'missing': 'quadratic'},
-        'DriverAhead': {'type': 'discrete', 'missing': 'fill'},
+        'DriverAhead': {'type': 'discrete'},
         'DistanceToDriverAhead': {'type': 'continuous', 'missing': 'linear'}
     }
     """Known telemetry channels which are supported by default"""
@@ -534,8 +534,28 @@ class Telemetry(pd.DataFrame):
 
         return ret
 
-    def register_new_channel(self, name, signal_type, interpolation_method):
-        pass  # TODO TBD
+    @classmethod
+    def register_new_channel(cls, name, signal_type, interpolation_method=None):
+        """Register a custom telemetry channel.
+
+        Registered telemetry channels are automatically interpolated when merging or resampling data.
+
+        Args:
+            name (str): Telemetry channel/column name
+            signal_type (str): One of three possible signal types:
+                - 'continuous': Speed, RPM, Distance, ...
+                - 'discrete': DRS, nGear, status values, ...
+                - 'excluded': Data channel will be ignored during resampling
+            interpolation_method (optional, str): The interpolation method which should be used. Can only be specified
+                and is required in combination with signal_type='continuous'. See :meth:`pandas.Series.interpolate` for
+                possible interpolation methods.
+        """
+        if signal_type not in ('discrete', 'continuous', 'excluded'):
+            raise ValueError(f"Unknown signal type {signal_type}.")
+        if signal_type == 'continuous' and interpolation_method is None:
+            raise ValueError(f"signal_type='continuous' requires interpolation_method to be specified.")
+
+        cls._CHANNELS[name] = {'type': signal_type, 'missing': interpolation_method}
 
     def get_first_non_zero_time_index(self):
         """Return the first index at which the 'Time' value is not zero or NA/NaT"""
