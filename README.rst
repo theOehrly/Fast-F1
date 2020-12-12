@@ -2,7 +2,60 @@
 Fast F1
 =======
 
-A python package for accessible F1 historical data and telemetry. 
+A python package for accessible F1 historical data and telemetry.
+
+IMPORTANT NOTE: Status of the project
+=====================================
+
+Currently this module is not usable which is the result of server issues with the F1 API.
+
+See `this <https://twitter.com/F1Help/status/1335939396240093185>`_ Twitter post for some information.
+
+Basically, it is no longer possible to download telemetry data after a session. Full telemetry data is currently
+only available live during a session.
+
+What will be done about this? For now, nothing. If, as hinted in the twitter post, this will work again next season,
+then everything will be fine. In case this functionality will no longer ba available at all, a way to record a live
+session will be implemented. This will lack the convenience of being able to load the data whenever desired so this is
+only a worst case solution.
+
+Interested in contributing? Read on...
+
+Roadmap
+=======
+
+This is a rather loose roadmap with no fixed timeline whatsoever.
+
+  - Release of version 2.1: This has been in development for multiple months, see the v2.1 branch. The main aim of this
+    release is not to provide any new features. There are a lot of internal changes to the structure of the code. More
+    of the available functionality is exposed so that more interaction and finer control is possible. Additionally,
+    there are some speed and accuracy improvements as well as a better reimplemented cache.
+    This release is "close" to be finished. It will not be usable for the same reasons as the current version until F1
+    fixes their server issues. I will likely provide cached data for a few sessions, so that the new release can be
+    tried out if somebody wants to do so.
+
+After that in some yet to be determined order:
+
+  - Improvements to the current plotting functionality
+  - Some default plots to easily allow creating nice visualizations and interesting comparisons
+  - General improvements and smaller additions to the current core functionality
+  - Support for F1's own data api to get information about events, sessions, drivers and venues
+
+And if necessary:
+
+  - recording of live timing during a session
+
+
+Contributing
+============
+
+Contributions are welcome of course. If you are interested in contributing, open an issue for the proposed feature
+or issue you would like to work on. This way we can coordinate so that no unnecessary work is done.
+
+Working directly on the core and api code will require some time to understand. Creating nice default plots on the
+other hand does not required as deep of an understanding of the code and is therefore easier to accomplish. Pick
+whatever you like to do.
+
 
 Installation
 ============
