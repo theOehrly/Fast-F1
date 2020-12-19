@@ -1346,13 +1346,15 @@ class Laps(pd.DataFrame):
         """Telemetry data for all laps in `self`
 
         Telemetry data is the result of merging the returned data from :meth:`get_car_data` and :meth:`get_pos_data`.
-        This means that telemetry data at least partially contains interpolated values! Therefore it is recommended
-        to use :meth:`get_car_data` or :meth:`get_pos_data` when possible.
+        This means that telemetry data at least partially contains interpolated values! Telemetry data additionally
+        already has computed channels added (e.g. Distance).
+
+        This method is provided for convenience and compatibility reasons. But using it does usually not produce
+        the most accurate possible result.
+        It is recommended to use :meth:`get_car_data` or :meth:`get_pos_data` when possible. This is also faster if
+        merging of car and position data is not necessary and if not all computed channels are needed.
 
         Resampling during merging is done according to the frequency set by :attr:`TELEMETRY_FREQUENCY`.
-
-        Note that this function call is comparably slow (as in milliseconds). Avoid calling multiple times for the same
-        lap if very fast execution is desired.
 
         .. note:: Telemetry can only be returned if `self` contains laps of one driver only.
 
@@ -1361,6 +1363,7 @@ class Laps(pd.DataFrame):
         """
         pos_data = self.get_pos_data(pad=1, pad_side='both')
         car_data = self.get_car_data(pad=1, pad_side='both')
+        car_data = car_data.add_distance().add_relative_distance().add_driver_ahead()
         merged = pos_data.merge_channels(car_data)
         return merged.slice_by_lap(self, interpolate_edges=True)
 
@@ -1368,6 +1371,9 @@ class Laps(pd.DataFrame):
         """Car data for all laps in `self`
 
         Slices the car data in :attr:`Session.car_data` using this set of laps and returns the result.
+
+        The data returned by this method does not contain computed telemetry channels. The can be added by calling the
+        appropriate `add_*()` method on the returned telemetry object..
 
         .. note:: Car data can only be returned if `self` contains laps of one driver only.
 
@@ -1384,7 +1390,6 @@ class Laps(pd.DataFrame):
             raise ValueError("Cannot slice telemetry because self contains Laps of multiple drivers!")
         drv_num = drv_num[0]
         car_data = self.session.car_data[drv_num].slice_by_lap(self, **kwargs).reset_index(drop=True)
-        car_data = car_data.add_distance().add_relative_distance().add_driver_ahead()  # TODO do not add
         return car_data
 
     def get_pos_data(self, **kwargs):
@@ -1610,19 +1615,22 @@ class Lap(pd.Series):
         """Telemetry data for this lap
 
         Telemetry data is the result of merging the returned data from :meth:`get_car_data` and :meth:`get_pos_data`.
-        This means that telemetry data at least partially contains interpolated values! Therefore it is recommended
-        to use :meth:`get_car_data` or :meth:`get_pos_data` when possible.
+        This means that telemetry data at least partially contains interpolated values! Telemetry data additionally
+        already has computed channels added (e.g. Distance).
+
+        This method is provided for convenience and compatibility reasons. But using it does usually not produce
+        the most accurate possible result.
+        It is recommended to use :meth:`get_car_data` or :meth:`get_pos_data` when possible. This is also faster if
+        merging of car and position data is not necessary and if not all computed channels are needed.
 
         Resampling during merging is done according to the frequency set by :attr:`TELEMETRY_FREQUENCY`.
-
-        Note that this function call is comparably slow (as in milliseconds). Avoid calling multiple times for the same
-        lap if very fast execution is desired.
 
         Returns:
             instance of :class:`Telemetry`
         """
         pos_data = self.get_pos_data(pad=1, pad_side='both')
         car_data = self.get_car_data(pad=1, pad_side='both')
+        car_data = car_data.add_distance().add_relative_distance().add_driver_ahead()
         merged = pos_data.merge_channels(car_data)
         return merged.slice_by_lap(self, interpolate_edges=True)
 
@@ -1631,6 +1639,9 @@ class Lap(pd.Series):
 
         Slices the car data in :attr:`Session.car_data` using this lap and returns the result.
 
+        The data returned by this method does not contain computed telemetry channels. The can be added by calling the
+        appropriate `add_*()` method on the returned telemetry object.
+
         Args:
             **kwargs: Keyword arguments are passed to :meth:`Telemetry.slice_by_lap`
 
@@ -1638,7 +1649,6 @@ class Lap(pd.Series):
             instance of :class:`Telemetry`
         """
         car_data = self.session.car_data[self['DriverNumber']].slice_by_lap(self, **kwargs).reset_index(drop=True)
-        car_data = car_data.add_distance().add_relative_distance().add_driver_ahead()
         return car_data
 
     def get_pos_data(self, **kwargs):
