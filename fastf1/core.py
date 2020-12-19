@@ -999,7 +999,7 @@ class Session:
             - **SpeedFL** (float): Speedtrap at finish line
             - **SpeedST** (float): Speedtrap on longest straight (Not sure)
             - **Compound** (str): Tyre compound name: SOFT, MEDIUM ..
-            - **TyreLife** (int): Laps driven on this tire (includes laps in other sessions for used sets of tires)
+            - **TyreLife** (float): Laps driven on this tire (includes laps in other sessions for used sets of tires)
             - **FreshTyre** (bool): Tyre had TyreLife=0 at stint start, i.e. was a new tire
             - **Team** (str): Team name
             - **LapStartTime** (pandas.Timedelta): Session time at the start of the lap
