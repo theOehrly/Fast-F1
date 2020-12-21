@@ -452,7 +452,10 @@ class Telemetry(pd.DataFrame):
                         .resample(frq, origin=ref_date).mean().interpolate(method=missing, fill_value='extrapolate')
 
                 elif sig_type == 'discrete':
-                    res = merged.loc[:, ch].resample(frq, origin=ref_date).fillna(method='ffill').fillna(method='bfill')
+                    res = merged.loc[:, ch].resample(frq, origin=ref_date).ffill().ffill().bfill()
+                    # first ffill is a method of the resampler object and will ONLY ffill values created during
+                    # resampling but not already existing NaN values. NaN values already existed because of merging,
+                    # therefore call ffill a second time as a method of the returned series to fill these too
                     # only use bfill after ffill to fix first row
 
                 else:
@@ -543,8 +546,11 @@ class Telemetry(pd.DataFrame):
                     .interpolate(method=missing, limit_direction='both', fill_value='extrapolate')
 
             elif sig_type == 'discrete':
-                ret.loc[:, ch] = ret.loc[:, ch] \
-                    .fillna(method='ffill').fillna(method='bfill')  # only use bfill after ffill to fix first row
+                ret.loc[:, ch] = ret.loc[:, ch].ffill().ffill().bfill()
+                # first ffill is a method of the resampler object and will ONLY ffill values created during
+                # resampling but not already existing NaN values. NaN values already existed because of merging,
+                # therefore call ffill a second time as a method of the returned series to fill these too
+                # only use bfill after ffill to fix first row
 
         if 'Source' in ret.columns:
             ret.loc[:, 'Source'] = ret.loc[:, 'Source'].fillna(value='interpolation')
