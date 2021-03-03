@@ -21,20 +21,19 @@ For the passionate F1 nerds.
    core
    api
    utils
-   track
-   func
    plotting
+   legacy
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Information:
+
+   time_explanation
+   howto_accurate_calculations
    known_bugs
    troubleshooting
    changelog
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Experimental:
-
-   experimental
-   conditions
-   syncsolver
 
 ==================
 Indices and tables

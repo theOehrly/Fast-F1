@@ -13,7 +13,7 @@ from setup import info
 
 project = 'Fast F1'
 copyright = 'MIT'
-author = 'Ax_6'
+author = 'Oehrly'
 version = info['version']
 
 
@@ -26,7 +26,8 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.todo',
     'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon'
+    'sphinx.ext.napoleon',
+    'sphinx_rtd_theme',
 ]
 
 todo_include_todos = True

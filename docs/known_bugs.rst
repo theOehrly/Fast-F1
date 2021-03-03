@@ -1,6 +1,13 @@
 Known bugs and caveats
 ======================
 
+
+- This module does not work if the Ergast API is not available.
+
+    If the Ergast server is down, this module does not work. Fixing this is high up on the ToDo list but
+    not necessarily easy to accomplish.
+
+
 - Unexpected car numbers being parsed from :func:`fastf1.api.car_data`:
 
     There are some cases like 2019 Germany Q where the returned structure of
@@ -10,10 +17,6 @@ Known bugs and caveats
     referring to timing_data drivers. For winter test we have driver number
     65535 and it is not bypassed.
 
-- :mod:`fastf1.track` is currently broken:
-
-    Changes made to the position data by F1 broke the functionality of this module.
-    The breaking changes were introduced with the firts GP (Austria) of 2020.
 
 - Missing telemetry
 
