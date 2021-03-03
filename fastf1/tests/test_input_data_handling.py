@@ -1,9 +1,11 @@
 # test some known special cases
 
+import pytest
 from fastf1 import core, ergast
 import logging
 
 
+@pytest.mark.f1telapi
 def test_partial_position_data(caplog):
     # RUS is missing the first half of the position data because F1 somehow
     # switches from development driver to RUS mid-session
@@ -17,6 +19,7 @@ def test_partial_position_data(caplog):
     assert "Laps loaded and saved!" in caplog.text  # indicates success
 
 
+@pytest.mark.f1telapi
 def test_history_mod_1(caplog):
     # api data sometimes goes back in time
     caplog.set_level(logging.INFO)
@@ -28,6 +31,7 @@ def test_history_mod_1(caplog):
     assert "Laps loaded and saved!" in caplog.text  # indicates success
 
 
+@pytest.mark.f1telapi
 def test_history_mod_2(caplog):
     # api data sometimes goes back in time
     caplog.set_level(logging.INFO)
@@ -39,6 +43,7 @@ def test_history_mod_2(caplog):
     assert "Laps loaded and saved!" in caplog.text  # indicates success
 
 
+@pytest.mark.f1telapi
 def test_ergast_lookup_fail(caplog):
     # ergast lookup fails if data is requested to soon after a session ends
     caplog.set_level(logging.INFO)

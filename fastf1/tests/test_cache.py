@@ -1,3 +1,4 @@
+import pytest
 import fastf1
 import os
 
@@ -6,6 +7,7 @@ def test_enable_cache(tmpdir):
     fastf1.Cache.enable_cache(tmpdir)
 
 
+@pytest.mark.f1telapi
 def test_cache_used_and_clear(tmpdir):
     fastf1.Cache.enable_cache(tmpdir)
 

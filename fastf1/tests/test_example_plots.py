@@ -1,14 +1,16 @@
+import pytest
 import fastf1 as ff1
 from fastf1 import plotting, utils
 from matplotlib import pyplot as plt
 
-import pytest
 
 # generate baseline with
 # >pytest tests --mpl-generate-path=tests/mpl-baseline
 
 ff1.Cache.enable_cache("test_cache/")
 
+
+@pytest.mark.f1telapi
 @pytest.mark.mpl_image_compare
 def test_readme_example():
     race = ff1.get_session(2020, 'Belgian', 'R')
@@ -27,6 +29,7 @@ def test_readme_example():
     return fig
 
 
+@pytest.mark.f1telapi
 def test_doc_example_pronto_seb():
     monza_quali = ff1.get_session(2020, 'Belgian', 'R')
 
@@ -34,6 +37,7 @@ def test_doc_example_pronto_seb():
     assert f"Pronto {vettel.name}?" == "Pronto Sebastian?"
 
 
+@pytest.mark.f1telapi
 @pytest.mark.mpl_image_compare
 def test_doc_example_fast_lec():
     monza_quali = ff1.get_session(2020, 'Belgian', 'R')
@@ -53,6 +57,7 @@ def test_doc_example_fast_lec():
     return fig
 
 
+@pytest.mark.f1telapi
 @pytest.mark.mpl_image_compare
 def test_doc_example_delta_time():
     quali = ff1.get_session(2020, 'Belgian', 'R')
@@ -71,6 +76,7 @@ def test_doc_example_delta_time():
     return fig
 
 
+@pytest.mark.f1telapi
 @pytest.mark.mpl_image_compare
 def test_speed_trace():
     session = ff1.get_session(2020, 'Belgian', 'R')

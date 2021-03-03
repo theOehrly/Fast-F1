@@ -1,13 +1,9 @@
+import pytest
 import fastf1
 import pandas
 import numpy
 
-from tests.reference_values import CAR_DATA_DTYPES, POS_DATA_DTYPES, ensure_data_type
-
-
-fastf1.Cache.enable_cache("test_cache/")
-EXP_SESSION = fastf1.get_session(2020, 'Italy', 'R')
-EXP_LAPS = EXP_SESSION.load_laps()
+from fastf1.testing.reference_values import CAR_DATA_DTYPES, POS_DATA_DTYPES, ensure_data_type
 
 
 def test_constructor():
@@ -62,17 +58,21 @@ def test_joining_with_metadata_propagation():
     assert all(col in joined.columns for col in ('example_1', 'example_2'))
 
 
-def test_dtypes_from_api():
-    for drv in EXP_SESSION.car_data.keys():
-        ensure_data_type(CAR_DATA_DTYPES, EXP_SESSION.car_data[drv])
+@pytest.mark.f1telapi
+def test_dtypes_from_api(reference_laps_data):
+    session, laps = reference_laps_data
+    for drv in session.car_data.keys():
+        ensure_data_type(CAR_DATA_DTYPES, session.car_data[drv])
 
-    for drv in EXP_SESSION.pos_data.keys():
-        ensure_data_type(POS_DATA_DTYPES, EXP_SESSION.pos_data[drv])
+    for drv in session.pos_data.keys():
+        ensure_data_type(POS_DATA_DTYPES, session.pos_data[drv])
 
 
-def test_slice_by_time():
-    drv = list(EXP_SESSION.car_data.keys())[1]  # some driver
-    test_data = EXP_SESSION.car_data[drv]
+@pytest.mark.f1telapi
+def test_slice_by_time(reference_laps_data):
+    session, laps = reference_laps_data
+    drv = list(session.car_data.keys())[1]  # some driver
+    test_data = session.car_data[drv]
     t0 = test_data['SessionTime'].iloc[1000]
     t1 = test_data['SessionTime'].iloc[2000]
 
@@ -90,9 +90,11 @@ def test_slice_by_time():
     ensure_data_type(CAR_DATA_DTYPES, slice2)
 
 
-def test_slice_by_mask():
-    drv = list(EXP_SESSION.car_data.keys())[1]  # some driver
-    test_data = EXP_SESSION.car_data[drv]
+@pytest.mark.f1telapi
+def test_slice_by_mask(reference_laps_data):
+    session, laps = reference_laps_data
+    drv = list(session.car_data.keys())[1]  # some driver
+    test_data = session.car_data[drv]
     mask = numpy.array([False, ] * len(test_data))
     mask[200:500] = True
 
@@ -107,10 +109,12 @@ def test_slice_by_mask():
     assert slice2['SessionTime'].iloc[0] == test_data['SessionTime'].iloc[198]
 
 
-def test_slice_by_lap():
-    drv = list(EXP_SESSION.car_data.keys())[1]  # some driver
-    test_data = EXP_SESSION.car_data[drv]
-    test_laps = EXP_LAPS.pick_driver(drv)
+@pytest.mark.f1telapi
+def test_slice_by_lap(reference_laps_data):
+    session, laps = reference_laps_data
+    drv = list(session.car_data.keys())[1]  # some driver
+    test_data = session.car_data[drv]
+    test_laps = session.pick_driver(drv)
 
     lap2 = test_laps[test_laps['LapNumber'] == 2].iloc[0]
     lap3 = test_laps[test_laps['LapNumber'] == 3].iloc[0]
@@ -126,11 +130,13 @@ def test_slice_by_lap():
     assert len(tel2_3) == len(tel2) + len(tel3)
 
 
-def test_merging_original_freq():
-    lap = EXP_LAPS.pick_fastest()
+@pytest.mark.f1telapi
+def test_merging_original_freq(reference_laps_data):
+    session, laps = reference_laps_data
+    lap = laps.pick_fastest()
     drv = lap['DriverNumber']
-    test_car_data = EXP_SESSION.car_data[drv].slice_by_lap(lap)
-    test_pos_data = EXP_SESSION.pos_data[drv].slice_by_lap(lap)
+    test_car_data = session.car_data[drv].slice_by_lap(lap)
+    test_pos_data = session.pos_data[drv].slice_by_lap(lap)
     merged = test_car_data.merge_channels(test_pos_data, frequency='original')
 
     ensure_data_type(CAR_DATA_DTYPES, merged)
@@ -153,11 +159,13 @@ def test_merging_original_freq():
     assert merged['SessionTime'].iloc[0] != pandas.Timedelta(0)
 
 
-def test_merging_10_hz():
-    lap = EXP_LAPS.pick_fastest()
+@pytest.mark.f1telapi
+def test_merging_10_hz(reference_laps_data):
+    session, laps = reference_laps_data
+    lap = laps.pick_fastest()
     drv = lap['DriverNumber']
-    test_car_data = EXP_SESSION.car_data[drv].slice_by_lap(lap)
-    test_pos_data = EXP_SESSION.pos_data[drv].slice_by_lap(lap)
+    test_car_data = session.car_data[drv].slice_by_lap(lap)
+    test_pos_data = session.pos_data[drv].slice_by_lap(lap)
     merged = test_car_data.merge_channels(test_pos_data, frequency=10)
 
     ensure_data_type(CAR_DATA_DTYPES, merged)
@@ -180,10 +188,12 @@ def test_merging_10_hz():
     assert merged['SessionTime'].iloc[0] != pandas.Timedelta(0)
 
 
-def test_resampling_down():
-    lap = EXP_LAPS.pick_fastest()
+@pytest.mark.f1telapi
+def test_resampling_down(reference_laps_data):
+    session, laps = reference_laps_data
+    lap = laps.pick_fastest()
     drv = lap['DriverNumber']
-    test_data = EXP_SESSION.car_data[drv].slice_by_lap(lap)
+    test_data = session.car_data[drv].slice_by_lap(lap)
 
     test_data = test_data.resample_channels(rule='0.5S')
 
@@ -199,10 +209,12 @@ def test_resampling_down():
     assert test_data['SessionTime'].iloc[0] != pandas.Timedelta(0)
 
 
-def test_resampling_up():
-    lap = EXP_LAPS.pick_fastest()
+@pytest.mark.f1telapi
+def test_resampling_up(reference_laps_data):
+    session, laps = reference_laps_data
+    lap = laps.pick_fastest()
     drv = lap['DriverNumber']
-    test_data = EXP_SESSION.car_data[drv].slice_by_lap(lap)
+    test_data = session.car_data[drv].slice_by_lap(lap)
 
     test_data = test_data.resample_channels(rule='0.05S')
 
