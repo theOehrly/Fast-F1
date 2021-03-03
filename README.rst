@@ -84,6 +84,8 @@ Hamilton from the Bahrain GP (weekend number 2) of 2019.
     from fastf1 import plotting
     from matplotlib import pyplot as plt
 
+    plotting.setup_mpl()
+
     ff1.utils.enable_cache('path/to/folder/for/cache')  # optional but recommended
 
     race = ff1.get_session(2019, 'Bahrain', 'R')
@@ -104,7 +106,6 @@ the path to some empty folder on your system.
 .. code:: python
 
     fig, ax = plt.subplots()
-    plotting.laptime_axis(ax)
     ax.plot(lec['LapNumber'], lec['LapTime'], color='red')
     ax.plot(ham['LapNumber'], ham['LapTime'], color='cyan')
     ax.set_title("LEC vs HAM")
