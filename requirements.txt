@@ -1,8 +1,0 @@
-requests
-requests-cache
-pandas
-numpy
-scipy
-fuzzywuzzy
-matplotlib
-timple>=0.1.2

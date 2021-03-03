@@ -7,14 +7,15 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../'))
-from setup import info
+from datetime import datetime
 
 # -- Project information -----------------------------------------------------
 
-project = 'Fast F1'
-copyright = 'MIT'
-author = 'Oehrly'
-version = info['version']
+# project = 'Fast F1'
+# copyright = 'MIT'
+# author = 'Oehrly'
+# version = info['version']
+copyright = f'{datetime.now().year}, theOehrly'
 
 
 # -- General configuration ---------------------------------------------------

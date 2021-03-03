@@ -1,13 +1,15 @@
 **/__pycache__/
 **.xlsx
 **.csv
+.actrc
 
 .idea/
 dist/
 venv/
-tests/testenv/
-tests/mpl-results/
-tests/mpl-baseline-new/
+act/
+fastf1/tests/testenv/
+fastf1/tests/mpl-results/
+fastf1/tests/mpl-baseline-new/
 docs/_build/
 build/
 test_cache/

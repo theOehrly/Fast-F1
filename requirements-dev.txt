@@ -1,2 +1,6 @@
 pytest
 pytest-mpl
+sphinx
+sphinx-rtd-theme
+wheel
+pytest-flake8
