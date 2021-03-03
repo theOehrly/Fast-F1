@@ -9,9 +9,21 @@ from matplotlib import pyplot as plt
 from matplotlib import cycler
 import pandas as pd
 import numpy as np
-from pandas.plotting import register_matplotlib_converters
-import logging
-register_matplotlib_converters()
+
+# use external package timple to patch matplotlib
+# this adds converters, locators and formatters for
+# plotting timedelta values
+import timple
+tick_formats = [
+    "%d %day",
+    "%H:00",
+    "%H:%m",
+    "%M:%s.0",
+    "%M:%s.%ms"
+]
+tmpl = timple.Timple(converter='concise', formatter_args={'show_offset_zero': False,
+                                                          'formats': tick_formats})
+tmpl.enable()
 
 
 TEAM_COLORS = {'Mercedes': '#00d2be', 'Ferrari': '#dc0000',
@@ -49,55 +61,6 @@ def team_color(identifier):
         return TEAM_COLORS[TEAM_TRANSLATE[identifier]]
     else:
         return None
-
-
-def timedelta_converter(x):
-    """Special data type converter for laptime axis.
-
-    Masks `NaT` and `NaN` values in data arrays and converts nanoseconds
-    based times to seconds if necessary.
-    Other data types but `np.ndarray` are left unchanged."""
-    if isinstance(x, np.ndarray):
-        if x.dtype == "timedelta64[ns]":
-            x /= 1e9
-        try:
-            return np.ma.masked_where(np.isnat(x), x)
-        except TypeError:
-            return np.ma.masked_where(np.isnan(x), x)
-    return x
-
-
-def laptime_axis(ax, axis='yaxis'):
-    """Add formatting to change time formatting from (nano)seconds to "mm:ss.ms"
-
-    Args:
-        ax: matplotlib axis
-        axis (='yaxis', optional): can be 'xaxis' or 'yaxis'
-
-    Returns:
-        the modified axis instance
-
-    """
-    def time_ticks(t, pos):
-        if not np.isnan(t):
-            # data is sometimes seconds and sometimes nanoseconds if the source is pandas.Timedelta
-            # assume nanoseconds if the value is very large
-            if t > 1e9:
-                t /= 1e9
-
-            mm = int(t/60)
-            ss = int(t - mm*60)
-            ms = int((t - mm * 60 - ss)*10)
-
-            t_str = f"{str(mm).zfill(1)}:{str(ss).zfill(2)}.{ms}"
-
-            return t_str
-
-    formatter = matplotlib.ticker.FuncFormatter(time_ticks)
-    getattr(ax, axis).set_major_formatter(formatter)
-    getattr(ax, axis).convert_units = timedelta_converter
-
-    return ax
 
 
 def lapnumber_axis(ax, axis='xaxis'):

@@ -9,7 +9,7 @@ info = {
     'include_package_data': True,
     'install_requires': [
         'numpy', 'pandas', 'requests', 'requests_cache', 'matplotlib',
-        'fuzzywuzzy', 'scipy'
+        'fuzzywuzzy', 'scipy', 'timple'
     ],
     'license': 'MIT',
     'url': 'https://github.com/theOehrly/Fast-F1',
