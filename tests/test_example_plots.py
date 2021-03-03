@@ -7,17 +7,17 @@ import pytest
 # generate baseline with
 # >pytest tests --mpl-generate-path=tests/mpl-baseline
 
+ff1.Cache.enable_cache("test_cache/")
 
 @pytest.mark.mpl_image_compare
 def test_readme_example():
-    race = ff1.get_session(2019, 'Bahrain', 'R')
+    race = ff1.get_session(2020, 'Belgian', 'R')
     laps = race.load_laps()
 
     lec = laps.pick_driver('LEC')
     ham = laps.pick_driver('HAM')
 
     fig, ax = plt.subplots()
-    plotting.laptime_axis(ax)
     ax.plot(lec['LapNumber'], lec['LapTime'], color='red')
     ax.plot(ham['LapNumber'], ham['LapTime'], color='cyan')
     ax.set_title("LEC vs HAM")
@@ -28,7 +28,7 @@ def test_readme_example():
 
 
 def test_doc_example_pronto_seb():
-    monza_quali = ff1.get_session(2019, 'Monza', 'Q')
+    monza_quali = ff1.get_session(2020, 'Belgian', 'R')
 
     vettel = monza_quali.get_driver('VET')
     assert f"Pronto {vettel.name}?" == "Pronto Sebastian?"
@@ -36,7 +36,7 @@ def test_doc_example_pronto_seb():
 
 @pytest.mark.mpl_image_compare
 def test_doc_example_fast_lec():
-    monza_quali = ff1.get_session(2019, 'Monza', 'Q')
+    monza_quali = ff1.get_session(2020, 'Belgian', 'R')
 
     laps = monza_quali.load_laps()
     fast_leclerc = laps.pick_driver('LEC').pick_fastest()
@@ -55,23 +55,25 @@ def test_doc_example_fast_lec():
 
 @pytest.mark.mpl_image_compare
 def test_doc_example_delta_time():
-    quali = ff1.get_session(2019, 'Spain', 'Q')
+    quali = ff1.get_session(2020, 'Belgian', 'R')
     laps = quali.load_laps()
     lec = laps.pick_driver('LEC').pick_fastest()
     ham = laps.pick_driver('HAM').pick_fastest()
 
     fig, ax = plt.subplots()
-    ax.plot(lec.telemetry['Space'], lec.telemetry['Speed'], color=plotting.TEAM_COLORS[lec['Team']])
-    ax.plot(ham.telemetry['Space'], ham.telemetry['Speed'], color=plotting.TEAM_COLORS[ham['Team']])
+    ax.plot(lec.telemetry['Distance'], lec.telemetry['Speed'], color=plotting.TEAM_COLORS[lec['Team']])
+    ax.plot(ham.telemetry['Distance'], ham.telemetry['Speed'], color=plotting.TEAM_COLORS[ham['Team']])
     twin = ax.twinx()
-    twin.plot(ham.telemetry['Space'], utils.delta_time(ham, lec), '--', color=plotting.TEAM_COLORS[lec['Team']])
+    delta_time, ham_car_data, lec_car_data = utils.delta_time(ham, lec)
+    ham_car_data = ham_car_data.add_distance()
+    twin.plot(ham_car_data['Distance'], delta_time, '--', color=plotting.TEAM_COLORS[lec['Team']])
 
     return fig
 
 
 @pytest.mark.mpl_image_compare
 def test_speed_trace():
-    session = ff1.get_session(2020, 5, 'Q')
+    session = ff1.get_session(2020, 'Belgian', 'R')
     session.load_laps()
 
     fastest = session.laps.pick_fastest().telemetry
@@ -79,7 +81,5 @@ def test_speed_trace():
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
     ax.plot(fastest['Time'], fastest['Speed'])
-
-    plotting.laptime_axis(ax, 'xaxis')
 
     return fig
