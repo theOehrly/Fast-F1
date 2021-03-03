@@ -86,7 +86,7 @@ Hamilton from the Bahrain GP (weekend number 2) of 2019.
 
     plotting.setup_mpl()
 
-    ff1.utils.enable_cache('path/to/folder/for/cache')  # optional but recommended
+    ff1.Cache.enable_cache('path/to/folder/for/cache')  # optional but recommended
 
     race = ff1.get_session(2019, 'Bahrain', 'R')
     laps = race.load_laps()
