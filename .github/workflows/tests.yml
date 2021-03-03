@@ -1,0 +1,86 @@
+name: Run tests
+
+# Controls when the action will run.
+on:
+  # run on push, manual dispatch and on a schedule
+  # when run on schedule, tests will only be run if a new matplotlib release was found
+  workflow_dispatch:
+  push:
+    branches-ignore:
+      - gh-pages
+  pull_request:
+
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: pip-cache-${{ hashFiles('requirements/*/*.txt') }}
+          restore-keys: |
+            pip-cache
+
+      - name: Install Python dev dependencies
+        run: |
+          python3 -m pip install --upgrade pip setuptools wheel
+          python3 -m pip install -r requirements-dev.txt
+
+      - name: Install python requirements
+        run: |
+          python3 -m pip install --upgrade pip setuptools wheel
+          python3 -m pip install -r requirements-dev.txt
+
+      - name: Install Fast-F1 from sources
+        run: |
+          python3 -m pip install -e .
+
+      - name: Run tests
+        run: |
+          mkdir test_cache  # make sure cache dir exists
+          pytest -rf
+
+
+  run-lint-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: pip-cache-${{ hashFiles('requirements/*/*.txt') }}
+          restore-keys: |
+            pip-cache
+
+      - name: Install python requirements
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r requirements-dev.txt
+
+      - name: Install Fast-F1 from sources
+        run: |
+          python3 -m pip install -e .
+
+      - name: Run tests
+        run: |
+          mkdir test_cache  # make sure cache dir exists
+          pytest -rf --flake8 --lint-only
