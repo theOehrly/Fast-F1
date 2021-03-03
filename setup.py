@@ -2,10 +2,10 @@ from setuptools import setup
 
 info = {
     'name': 'fastf1',
-    'version': '2.0.2',
+    'version': '2.1-rc',
     'author': 'Oehrly',
     'author_email': 'oehrly@mailbox.org',
-    'packages': ['fastf1', 'fastf1.experimental'],
+    'packages': ['fastf1'],
     'include_package_data': True,
     'install_requires': [
         'numpy', 'pandas', 'requests', 'requests_cache', 'matplotlib',
