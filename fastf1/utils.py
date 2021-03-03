@@ -17,6 +17,8 @@ def delta_time(reference_lap, compare_lap):
         is an inherent problem from the way this is calculated currently (There
         may not be a better way though). In comparison with the sector times and the
         differences that can be calculated from these, there are notable differences!
+        You should always verify the result against sector time differences or find a
+        different way for verification.
 
     Here is an example that compares the quickest laps of Leclerc and
     Hamilton from Barcelona 2019 Qualifying::
@@ -49,16 +51,15 @@ def delta_time(reference_lap, compare_lap):
         compare_lap (pd.Series): The lap to compare
 
     Returns:
-        A tuple with
+        tuple: (delta, reference, comparison)
           - pd.Series of type `float64` with the delta in seconds.
           - :class:`Telemetry` for the reference lap
           - :class:`Telemetry` for the comparison lap
-        Use the return telemetry for plotting to make sure you have telemetry data that was created with the same
-        settings!
-
+            Use the return telemetry for plotting to make sure you have
+            telemetry data that was created with the same settings!
     """
-    ref = reference_lap.get_car_data(interpolate_edges=True)
-    lap = compare_lap.get_car_data(interpolate_edges=True)
+    ref = reference_lap.get_car_data(interpolate_edges=True).add_relative_distance()
+    comp = compare_lap.get_car_data(interpolate_edges=True).add_relative_distance()
 
     def mini_pro(stream):
         # Ensure that all samples are interpolated
@@ -66,13 +67,13 @@ def delta_time(reference_lap, compare_lap):
         dstream_end = stream[-1] - stream[-2]
         return np.concatenate([[stream[0] - dstream_start], stream, [stream[-1] + dstream_end]])
 
-    ltime = mini_pro(lap['Time'].dt.total_seconds().to_numpy())
-    ldistance = mini_pro(lap['RelativeDistance'].to_numpy())
+    ltime = mini_pro(comp['Time'].dt.total_seconds().to_numpy())
+    ldistance = mini_pro(comp['RelativeDistance'].to_numpy())
     lap_time = np.interp(ref['RelativeDistance'], ldistance, ltime)
 
     delta = lap_time - ref['Time'].dt.total_seconds()
 
-    return delta, ref, lap
+    return delta, ref, comp
 
 
 def recursive_dict_get(d, *keys):
