@@ -57,8 +57,8 @@ def delta_time(reference_lap, compare_lap):
             Use the return telemetry for plotting to make sure you have
             telemetry data that was created with the same settings!
     """
-    ref = reference_lap.get_car_data(interpolate_edges=True).add_relative_distance()
-    comp = compare_lap.get_car_data(interpolate_edges=True).add_relative_distance()
+    ref = reference_lap.get_car_data(interpolate_edges=True).add_distance()
+    comp = compare_lap.get_car_data(interpolate_edges=True).add_distance()
 
     def mini_pro(stream):
         # Ensure that all samples are interpolated
@@ -67,8 +67,8 @@ def delta_time(reference_lap, compare_lap):
         return np.concatenate([[stream[0] - dstream_start], stream, [stream[-1] + dstream_end]])
 
     ltime = mini_pro(comp['Time'].dt.total_seconds().to_numpy())
-    ldistance = mini_pro(comp['RelativeDistance'].to_numpy())
-    lap_time = np.interp(ref['RelativeDistance'], ldistance, ltime)
+    ldistance = mini_pro(comp['Distance'].to_numpy())
+    lap_time = np.interp(ref['Distance'], ldistance, ltime)
 
     delta = lap_time - ref['Time'].dt.total_seconds()
 
