@@ -2,22 +2,48 @@
 Fast F1
 =======
 
-A python package for accessible F1 historical data and telemetry.
+A python package for accessing F1 historical timing data and telemetry.
 
-IMPORTANT NOTE: Status of the project
-=====================================
 
-Currently this module is not usable which is the result of server issues with the F1 API.
+IMPORTANT NOTE: Status of the project (Updated: 4th March 2021)
+===============================================================
 
-See `this <https://twitter.com/F1Help/status/1335939396240093185>`_ Twitter post for some information.
+Currently this module is not fully usable which is the result of server issues
+with the F1 API.
 
-Basically, it is no longer possible to download telemetry data after a session. Full telemetry data is currently
-only available live during a session.
+See `this <https://twitter.com/F1Help/status/1335939396240093185>`_ Twitter
+post for some information.
 
-What will be done about this? For now, nothing. If, as hinted in the twitter post, this will work again next season,
-then everything will be fine. In case this functionality will no longer ba available at all, a way to record a live
-session will be implemented. This will lack the convenience of being able to load the data whenever desired so this is
-only a worst case solution.
+For the 2019 and 2020 seasons this means:
+
+  - It is still **possible** to load timing data, tire data, track status
+    data and session status data.
+
+  - It is **not possible** to load car telemetry data
+    (includes position data).
+
+What this means for the 2021 season cannot yet be said.
+
+You will need FastF1 v2.1 to load the 2019/2020 seasons easily. Previous
+versions do not allow for loading laps data and car telemetry separately. Use
+the new argument ``with_telemetry=False`` when calling
+``Session.load_laps()`` to prevent the loading of unavailable telemetry data.
+
+A pre-release of FastF1 v2.1 is available for download through Github's releases.
+Please report bugs if (when) you find them. Feel free to report complaints about
+unclear documentation too.
+The available documentation is updated for this version. There may be further
+changes.
+
+If you have used previous versions of FastF1, please read the changelog in the
+documentation.
+
+V2.1 introduces some new features and some breaking changes.
+The documentation is improved in general. Also, there is a new section
+discussing how to get the most accurate results from the data that is
+available. It may be worth reading if you want to make more complicated
+analyses and visualizations.
+
 
 Interested in contributing? Read on...
 
@@ -25,16 +51,6 @@ Roadmap
 =======
 
 This is a rather loose roadmap with no fixed timeline whatsoever.
-
-  - Release of version 2.1: This has been in development for multiple months, see the v2.1 branch. The main aim of this
-    release is not to provide any new features. There are a lot of internal changes to the structure of the code. More
-    of the available functionality is exposed so that more interaction and finer control is possible. Additionally,
-    there are some speed and accuracy improvements as well as a better reimplemented cache.
-    This release is "close" to be finished. It will not be usable for the same reasons as the current version until F1
-    fixes their server issues. I will likely provide cached data for a few sessions, so that the new release can be
-    tried out if somebody wants to do so.
-
-After that in some yet to be determined order:
 
   - Improvements to the current plotting functionality
   - Some default plots to easily allow creating nice visualizations and interesting comparisons
@@ -60,9 +76,9 @@ whatever you like to do.
 Installation
 ============
 
-You can install and update this package using the following command::
+Install the wheel that is available for download through Github's releases:
 
-    pip install git+https://github.com/theOehrly/Fast-F1.git
+    pip install fastf1-*version*-py3-none-any.whl
 
 Note that Python 3.8 is required.
 
@@ -72,7 +88,7 @@ Usage
 Full documentation can be found
 `here <https://theoehrly.github.io/Fast-F1/fastf1.html>`_.
 
-Setting up an experiment is easy, especially if you are already familiar
+Creating a simple analysis is not very difficult, especially if you are already familiar
 with pandas and numpy.
 
 Suppose that we want to analyse the race pace of Leclerc compared to 
@@ -88,7 +104,7 @@ Hamilton from the Bahrain GP (weekend number 2) of 2019.
 
     ff1.Cache.enable_cache('path/to/folder/for/cache')  # optional but recommended
 
-    race = ff1.get_session(2019, 'Bahrain', 'R')
+    race = ff1.get_session(2020, 'Turkish Grand Prix', 'R')
     laps = race.load_laps()
 
     lec = laps.pick_driver('LEC')
@@ -116,14 +132,11 @@ the path to some empty folder on your system.
 .. image:: docs/_static/readme.svg
     :target: docs/_static/readme.svg
 
+
 Compatibility
 =============
 
-Starting with the Austrian GP 2020 the API provides the position data in a
-somewhat different format. This currently breaks ALL functionality of the track class.
-Maybe also other functionality.
-
-The library is fully compatible with 2018 and 2019 season.  Older seasons are still
-accessible and it is possible to obtain general weekend information (limited to
+Timing data is available for the 2018, 2019 and 2020 season.
+Very basic weekend information is available for older seasons (limited to
 `Ergast web api <http://ergast.com/mrd/>`_). Live timing and telemetry is only
 available starting from 2018.
