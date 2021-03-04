@@ -63,4 +63,3 @@ for evn in range(1, 18):  # 17 races
             with open(f'logs/2020_{evn}_{ses}.txt', 'w') as f:
                 f.write(str(e))
                 f.write(traceback.format_exc())
-

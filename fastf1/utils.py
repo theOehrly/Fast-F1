@@ -4,7 +4,6 @@
 """
 from functools import reduce
 
-import pandas as pd
 import numpy as np
 
 

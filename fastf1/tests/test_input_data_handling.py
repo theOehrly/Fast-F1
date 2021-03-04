@@ -1,7 +1,7 @@
 # test some known special cases
 
 import pytest
-from fastf1 import core, ergast
+from fastf1 import core
 import logging
 
 

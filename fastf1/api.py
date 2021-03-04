@@ -171,7 +171,7 @@ class Cache:
                         return data
 
                 else:  # cached data does not yet exist for this request, try to download and create cache
-                    logging.info(f"No cached data found. Downloading...")
+                    logging.info("No cached data found. Downloading...")
                     data = func(api_path, **kwargs)
                     if data is not None:
                         new_cached = {'version': cls._API_CORE_VERSION, 'data': data}
@@ -209,7 +209,7 @@ def make_path(wname, wdate, sname, sdate):
         wdate: Weekend date (e.g. '2019-09-08')
         sname: Session name 'Qualifying' or 'Race'
         sdate: Session date (formatted as wdate)
-    
+
     Returns:
         relative url path
     """
@@ -757,7 +757,8 @@ def car_data(path, response=None):
             # except Time which is left as NaT and will be calculated correctly during resampling
             index_df = pd.DataFrame(data={'Date': most_complete_ref})
             data[driver] = data[driver].merge(index_df, how='outer').sort_values(by='Date').reset_index(drop=True)
-            data[driver].loc[:, channels.values()] = data[driver].loc[:, channels.values()].fillna(value=0, inplace=False)
+            data[driver].loc[:, channels.values()] = \
+                data[driver].loc[:, channels.values()].fillna(value=0, inplace=False)
 
             logging.warning(f"Driver {driver: >2}: Car data is incomplete!")
 

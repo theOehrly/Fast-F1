@@ -1,9 +1,9 @@
 import json
 import requests
-import requests_cache
 import warnings
 
 base_url = 'http://ergast.com/api/f1'
+
 
 def load(year, gp, session):
     """session can be 'Qualifying' or 'Race'
@@ -13,9 +13,11 @@ def load(year, gp, session):
     sel = 'QualifyingResults' if session == 'Qualifying' else 'Results'
     return _parse_ergast(fetch_day(year, gp, day))[0][sel]
 
+
 def fetch_season(year):
     url = f"{base_url}/{year}.json"
     return _parse_ergast(_parse_json_response(requests.get(url)))
+
 
 def fetch_weekend(year, gp):
     url = f"{base_url}/{year}/{gp}.json"
@@ -38,7 +40,6 @@ def fetch_day(year, gp, day):
 
 
 def _parse_json_response(r):
-    #print(r.from_cache)
     if r.status_code == 200:
         return json.loads(r.content.decode('utf-8'))
     else:

@@ -128,7 +128,6 @@ def plot_lap_position_integrity(laps_data, pos_data, suffix=''):
         plt.plot(vals[drv]['t'], np.array(vals[drv]['y']) + (y_mean_tot - np.mean(vals[drv]['y'])), label=drv)
     plt.legend()
 
-
     fig1 = plt.figure()
     fig1.suptitle("Position Scatter {}".format(suffix))
     for drv in vals.keys():
@@ -211,7 +210,8 @@ def all_sectors_result_plots(result, track, suffix, workdir=None):
 
 
 def delta_time_validation(ref_lap, comp_lap):
-    import fastf1.plotting  # for style
+    from fastf1 import plotting
+    plotting.setup_mpl()
     plt.figure()
 
     dt, ref_tel, compare_tel = ff1.utils.delta_time(ref_lap, comp_lap)

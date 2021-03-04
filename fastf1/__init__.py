@@ -12,7 +12,7 @@ of the many available resources. No formula1 account is needed.
 
 The library is designed to be interfaced with matplotlib (although you
 can use whatever you want) but there is a neat :mod:`plots` module which
-you can import and gives some color to your graphs. 
+you can import and gives some color to your graphs.
 
 Modules handle big chunks of data (~50-100mb per session) so most of the
 information is stored locally as cached requests (be aware).
@@ -77,6 +77,6 @@ Available functions directly accessible from fastf1 package
     :noindex:
 
 """
-from fastf1.core import get_session
-from fastf1.api import Cache
-from fastf1 import legacy
+from fastf1.core import get_session  # noqa: F401
+from fastf1.api import Cache  # noqa: F401
+from fastf1 import legacy  # noqa: F401

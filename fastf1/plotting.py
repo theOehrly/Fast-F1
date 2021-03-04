@@ -22,7 +22,7 @@ and colors which are provided below.
 
 
 .. note:: Plotting related functionality is likely to change in a future
-    release. 
+    release.
 """
 
 import pandas as pd
@@ -62,7 +62,7 @@ TEAM_TRANSLATE = {'MER': 'Mercedes', 'FER': 'Ferrari',
 
 COLOR_PALETTE = ['#FF79C6', '#50FA7B', '#8BE9FD', '#BD93F9',
                  '#FFB86C', '#FF5555', '#F1FA8C']
-"""The default color palette for matplotlib plot lines in fastf1's color 
+"""The default color palette for matplotlib plot lines in fastf1's color
 scheme."""
 
 

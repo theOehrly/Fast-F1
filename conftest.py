@@ -49,7 +49,7 @@ def pytest_collection_modifyitems(config, items):
     if config.getoption('--prj-doc'):
         skip_non_prj = pytest.mark.skip(reason="--prj-doc given: run only project structure and documentation tests")
         for item in items:
-            if not "prjdoc" in item.keywords:
+            if "prjdoc" not in item.keywords:
                 item.add_marker(skip_non_prj)
     else:
         skip_prj = pytest.mark.skip(reason="need --prj-doc to run project structure and documentation tests")

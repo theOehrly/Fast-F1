@@ -60,8 +60,8 @@ whatever you like to do.
 Installation
 ============
 
-You can install and update this package using the following command
-::
+You can install and update this package using the following command::
+
     pip install git+https://github.com/theOehrly/Fast-F1.git
 
 Note that Python 3.8 is required.

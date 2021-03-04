@@ -58,7 +58,7 @@ def get_session(year, gp, event=None):
                                Pass 'testing' to fetch Barcelona winter
                                tests.
 
-        event (=None): may be 'FP1', 'FP2', 'FP3', 'Q' or 'R', if not 
+        event (=None): may be 'FP1', 'FP2', 'FP3', 'Q' or 'R', if not
                        specified you get the full :class:`Weekend`.
                        If gp is 'testing' event is the test day (1 to 6)
 
@@ -102,7 +102,7 @@ def get_round(year, match):
 
     def build_string(d):
         r = len('https://en.wikipedia.org/wiki/')  # TODO what the hell is this
-        c, l = d['Circuit'], d['Circuit']['Location']
+        c, l = d['Circuit'], d['Circuit']['Location']  # noqa: E741 (for now...)
         return (f"{d['url'][r:]} {d['raceName']} {c['circuitId']} "
                 + f"{c['url'][r:]} {c['circuitName']} {l['locality']} "
                 + f"{l['country']}")
@@ -121,7 +121,7 @@ def _get_testing_week_event(year, day):
     try:
         day = int(day)
         week = 1 if day < 4 else 2  # TODO Probably will change from 2021
-    except:
+    except:  # noqa: E722 TODO: improve
         msg = "Cannot fetch testing without correct event day."
         raise Exception(msg)
     week_day = ((day - 1) % 3) + 1  # TODO Probably will change from 2021
@@ -582,7 +582,7 @@ class Telemetry(pd.DataFrame):
         if signal_type not in ('discrete', 'continuous', 'excluded'):
             raise ValueError(f"Unknown signal type {signal_type}.")
         if signal_type == 'continuous' and interpolation_method is None:
-            raise ValueError(f"signal_type='continuous' requires interpolation_method to be specified.")
+            raise ValueError("signal_type='continuous' requires interpolation_method to be specified.")
 
         cls._CHANNELS[name] = {'type': signal_type, 'missing': interpolation_method}
 
@@ -769,7 +769,9 @@ class Telemetry(pd.DataFrame):
 
             # find last relevant lap so as to no do too much unnecessary calculation later
             drv_laps_after = drv_laps[drv_laps['Time'] >= t_end]
-            lap_n_after = drv_laps_after['LapNumber'].iloc[0] if not drv_laps_after.empty else max(drv_laps['LapNumber'])
+            lap_n_after = drv_laps_after['LapNumber'].iloc[0] \
+                if not drv_laps_after.empty \
+                else max(drv_laps['LapNumber'])
             relevant_laps = drv_laps[(drv_laps['LapNumber'] >= lap_n_before) & (drv_laps['LapNumber'] <= lap_n_after)]
 
             if relevant_laps.empty:
@@ -942,7 +944,7 @@ class Session:
         """Car position data as received from the api."""
 
         self.drivers = list()
-        """List of all drivers that took part in this session; contains driver numbers as string. Drivers for which 
+        """List of all drivers that took part in this session; contains driver numbers as string. Drivers for which
         lap or telemetry data is missing completely are not listed!"""
 
     def _create_empty_ergast_result(self):
@@ -1039,7 +1041,7 @@ class Session:
         logging.info(f"Loading {self.weekend.name} - {self.name}")
 
         """From `timing_data` and `timing_app_data` a summary table is
-        built. Lap by lap, information on tyre, sectors and times are 
+        built. Lap by lap, information on tyre, sectors and times are
         organised in an accessible pandas data frame.
 
         Returns:
@@ -1091,9 +1093,9 @@ class Session:
                 sel = result['NumberOfPitStops'] == npit
                 result.loc[sel, 'TotalLaps'] += np.arange(0, sel.sum()) + 1
             # check if df is defined already before concat (vars is a builtin function)
-            df = result if 'df' not in vars() else pd.concat([df, result], sort=False)
+            df = result if 'df' not in vars() else pd.concat([df, result], sort=False)  # noqa: F821
 
-        laps = df.reset_index(drop=True)
+        laps = df.reset_index(drop=True)  # noqa: F821
         laps.rename(columns={'TotalLaps': 'TyreLife',
                              'NumberOfPitStops': 'Stint',
                              'Driver': 'DriverNumber',
@@ -1270,7 +1272,7 @@ class Session:
 
         The current assumption is that the latest date which can be calculated is correct. (Based on the timestamp with
         the least delay.)
-        
+
         Args:
             car_data: Car telemetry; should contain all samples and only original ones
             pos_data: Car position data; should contain all samples and only original ones
