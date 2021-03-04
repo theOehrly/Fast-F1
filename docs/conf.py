@@ -11,10 +11,15 @@ from datetime import datetime
 
 # -- Project information -----------------------------------------------------
 
+# load version number from file in project root dir
+with open('../VERSION.txt') as vfobj:
+    version = str(vfobj.read())
+
 # project = 'Fast F1'
 # copyright = 'MIT'
 # author = 'Oehrly'
-# version = info['version']
+version = version
+release = version
 copyright = f'{datetime.now().year}, theOehrly'
 
 
