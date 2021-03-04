@@ -18,15 +18,28 @@ def pytest_addoption(parser):
         "--prj-doc", action="store_true", default=False,
         help="run only tests for general project structure and documentation"
     )
+    parser.addoption(
+        "--slow", action="store_true", default=False,
+        help="run very slow tests too: this may take 30 minutes or more and will may multiple"
+             "hundred requests to the api server - usage is highly discouraged"
+    )
 
 
 def pytest_configure(config):
     config.addinivalue_line("markers", "f1telapi: test connects to the f1 telemetry api")
     config.addinivalue_line("markers", "ergastapi: test connects to the ergast api")
     config.addinivalue_line("markers", "prjdoc: general non-code tests for project and structure")
+    config.addinivalue_line("markers", "slow: extremely slow tests (multiple minutes)")
 
 
 def pytest_collection_modifyitems(config, items):
+    # cli conditional skip extremely slow tests
+    if not config.getoption("--slow"):
+        skip_slow = pytest.mark.skip(reason="need --slow option to run; usage highly discouraged")
+        for item in items:
+            if "slow" in item.keywords:
+                item.add_marker(skip_slow)
+
     # cli conditional skip test that connect to the f1 telemetry api
     if not config.getoption("--f1-tel-api"):
         skip_f1_tel = pytest.mark.skip(reason="need --f1-tel-api option to run")

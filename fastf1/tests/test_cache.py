@@ -7,7 +7,9 @@ def test_enable_cache(tmpdir):
     fastf1.Cache.enable_cache(tmpdir)
 
 
+# TODO: use some workaround/fixture/whatever to ingest a valid response and make thís test run!
 @pytest.mark.f1telapi
+@pytest.mark.skip(reason="required data not available")
 def test_cache_used_and_clear(tmpdir):
     fastf1.Cache.enable_cache(tmpdir)
 

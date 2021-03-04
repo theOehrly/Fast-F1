@@ -2,17 +2,16 @@ import pytest
 import fastf1 as ff1
 from fastf1 import plotting, utils
 from matplotlib import pyplot as plt
-
+plotting.setup_mpl()
 
 # generate baseline with
 # >pytest tests --mpl-generate-path=tests/mpl-baseline
 
-ff1.Cache.enable_cache("test_cache/")
-
 
 @pytest.mark.f1telapi
-@pytest.mark.mpl_image_compare
+@pytest.mark.mpl_image_compare(style='default')
 def test_readme_example():
+    ff1.Cache.enable_cache("test_cache/")
     race = ff1.get_session(2020, 'Belgian', 'R')
     laps = race.load_laps()
 
@@ -31,18 +30,20 @@ def test_readme_example():
 
 @pytest.mark.f1telapi
 def test_doc_example_pronto_seb():
-    monza_quali = ff1.get_session(2020, 'Belgian', 'R')
+    ff1.Cache.enable_cache("test_cache/")
+    session = ff1.get_session(2020, 'Belgian', 'R')
 
-    vettel = monza_quali.get_driver('VET')
+    vettel = session.get_driver('VET')
     assert f"Pronto {vettel.name}?" == "Pronto Sebastian?"
 
 
 @pytest.mark.f1telapi
-@pytest.mark.mpl_image_compare
+@pytest.mark.mpl_image_compare(style='default')
 def test_doc_example_fast_lec():
-    monza_quali = ff1.get_session(2020, 'Belgian', 'R')
+    ff1.Cache.enable_cache("test_cache/")
+    session = ff1.get_session(2020, 'Belgian', 'R')
 
-    laps = monza_quali.load_laps()
+    laps = session.load_laps()
     fast_leclerc = laps.pick_driver('LEC').pick_fastest()
     t = fast_leclerc.telemetry['Time']
     vCar = fast_leclerc.telemetry['Speed']
@@ -58,8 +59,9 @@ def test_doc_example_fast_lec():
 
 
 @pytest.mark.f1telapi
-@pytest.mark.mpl_image_compare
+@pytest.mark.mpl_image_compare(style='default')
 def test_doc_example_delta_time():
+    ff1.Cache.enable_cache("test_cache/")
     quali = ff1.get_session(2020, 'Belgian', 'R')
     laps = quali.load_laps()
     lec = laps.pick_driver('LEC').pick_fastest()
@@ -77,8 +79,9 @@ def test_doc_example_delta_time():
 
 
 @pytest.mark.f1telapi
-@pytest.mark.mpl_image_compare
+@pytest.mark.mpl_image_compare(style='default')
 def test_speed_trace():
+    ff1.Cache.enable_cache("test_cache/")
     session = ff1.get_session(2020, 'Belgian', 'R')
     session.load_laps()
 

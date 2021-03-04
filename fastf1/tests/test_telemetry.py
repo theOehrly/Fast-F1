@@ -114,7 +114,7 @@ def test_slice_by_lap(reference_laps_data):
     session, laps = reference_laps_data
     drv = list(session.car_data.keys())[1]  # some driver
     test_data = session.car_data[drv]
-    test_laps = session.pick_driver(drv)
+    test_laps = laps.pick_driver(drv)
 
     lap2 = test_laps[test_laps['LapNumber'] == 2].iloc[0]
     lap3 = test_laps[test_laps['LapNumber'] == 3].iloc[0]
