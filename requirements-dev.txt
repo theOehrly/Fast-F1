@@ -4,3 +4,4 @@ sphinx
 sphinx-rtd-theme
 wheel
 pytest-flake8
+readme-renderer
