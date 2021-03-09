@@ -22,6 +22,7 @@ For the passionate F1 nerds.
    api
    utils
    plotting
+   livetiming
    legacy
 
 .. toctree::
