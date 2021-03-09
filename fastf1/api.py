@@ -14,9 +14,9 @@ import requests_cache
 import logging
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import datetime  # TODO use utils.to_datetime and add tests!
 
-from fastf1.utils import recursive_dict_get
+from fastf1.utils import recursive_dict_get, to_timedelta
 
 base_url = 'https://livetiming.formula1.com'
 
@@ -384,7 +384,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             api_lapcnt += 1
             # make sure the car actually drove out of the pits already; it can't be a new lap if it didn't
             if out_of_pit:
-                drv_data['Time'][lapcnt] = _to_timedelta(time)
+                drv_data['Time'][lapcnt] = to_timedelta(time)
                 lapcnt += 1
                 # append a new empty row; last row may not be populated (depending on session) and may be removed later
                 for key, val in empty_vals.items():
@@ -408,17 +408,17 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             in_past = True
             continue
 
-        if (lapcnt == 0) and ((drv_data['Time'][lapcnt] - _to_timedelta(time)) > pd.Timedelta(5, 'min')):
+        if (lapcnt == 0) and ((drv_data['Time'][lapcnt] - to_timedelta(time)) > pd.Timedelta(5, 'min')):
             # ignore any data which arrives more than 5 minutes before the end of the first lap, except 'PitOut'
             if ('InPit' in resp) and (resp['InPit'] is False):
-                drv_data['PitOutTime'][lapcnt] = _to_timedelta(time)
+                drv_data['PitOutTime'][lapcnt] = to_timedelta(time)
                 pitstops = 0  # special here, can be multiple times for no reason therefore set zero instead of +=1
             continue
 
         # values which are up to five seconds late are still counted towards the previous lap
         # (sector times, speed traps and lap times)
         lap_offset = 0
-        if (lapcnt > 0) and (_to_timedelta(time) - drv_data['Time'][lapcnt - 1] < pd.Timedelta(5, 's')):
+        if (lapcnt > 0) and (to_timedelta(time) - drv_data['Time'][lapcnt - 1] < pd.Timedelta(5, 's')):
             lap_offset = 1
 
         if 'Sectors' in resp and isinstance(resp['Sectors'], dict):
@@ -427,13 +427,13 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
                                       ('1', 'Sector2Time', 'Sector2SessionTime'),
                                       ('2', 'Sector3Time', 'Sector3SessionTime')):
                 if val := recursive_dict_get(resp, 'Sectors', sn, 'Value'):
-                    drv_data[sector][lapcnt - lap_offset] = _to_timedelta(val)
-                    drv_data[sesst][lapcnt - lap_offset] = _to_timedelta(time)
+                    drv_data[sector][lapcnt - lap_offset] = to_timedelta(val)
+                    drv_data[sesst][lapcnt - lap_offset] = to_timedelta(time)
 
         if val := recursive_dict_get(resp, 'LastLapTime', 'Value'):
             # if 'LastLapTime' is received less than five seconds after the start of a new lap, it is still added
             # to the last lap
-            val = _to_timedelta(val)
+            val = to_timedelta(val)
             if val.total_seconds() < 150:
                 # laps which are longer than 150 seconds are ignored; usually this is the case between Q1, Q2 and Q3
                 # because all three qualifying sessions are one session here. Those timestamps are often wrong and
@@ -450,14 +450,14 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             # 'InPit': True is received once when entering pits, False is received once when leaving
             if resp['InPit'] is True:
                 if pitstops >= 0:
-                    drv_data['PitInTime'][lapcnt] = _to_timedelta(time)
+                    drv_data['PitInTime'][lapcnt] = to_timedelta(time)
             elif ((('NumberOfLaps' in resp) and resp['NumberOfLaps'] > api_lapcnt)
-                  or (drv_data['Time'][lapcnt] - _to_timedelta(time)) < pd.Timedelta(5, 's')):
+                  or (drv_data['Time'][lapcnt] - to_timedelta(time)) < pd.Timedelta(5, 's')):
                 # same response line as beginning of next lap or beginning of next lap less than 5 seconds away
-                drv_data['PitOutTime'][lapcnt+1] = _to_timedelta(time)  # add to next lap
+                drv_data['PitOutTime'][lapcnt+1] = to_timedelta(time)  # add to next lap
                 pitstops += 1
             else:
-                drv_data['PitOutTime'][lapcnt] = _to_timedelta(time)  # add to current lap
+                drv_data['PitOutTime'][lapcnt] = to_timedelta(time)  # add to current lap
                 pitstops += 1
 
         # new lap; create next row
@@ -465,7 +465,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             api_lapcnt += 1
             # make sure the car actually drove out of the pits already; it can't be a new lap if it didn't
             if pitstops >= 0:
-                drv_data['Time'][lapcnt] = _to_timedelta(time)
+                drv_data['Time'][lapcnt] = to_timedelta(time)
                 drv_data['NumberOfLaps'][lapcnt] = lapcnt + 1  # don't use F1's lap count; ours is better
                 drv_data['NumberOfPitStops'][lapcnt] = pitstops
                 drv_data['Driver'][lapcnt] = drv
@@ -653,7 +653,7 @@ def timing_app_data(path, response=None):
             'TyresNotChanged': [], 'Time': [], 'LapFlags': [], 'LapCountTime': [], 'StartLaps': [], 'Outlap': []}
 
     for entry in response:
-        time = _to_timedelta(entry[0])
+        time = to_timedelta(entry[0])
 
         row = entry[1]
         for driver_number in row['Lines']:
@@ -721,7 +721,7 @@ def car_data(path, response=None):
     data = dict()
 
     for line in response:
-        time = _to_timedelta(line[0])
+        time = to_timedelta(line[0])
         for entry in line[1]['Entries']:
             # date format is '2020-08-08T09:45:03.0619797Z' with a varying number of millisecond decimal points
             # always remove last char ('z'), max len 26, right pad to len 26 with zeroes if shorter
@@ -807,7 +807,7 @@ def position_data(path, response=None):
     data = dict()
 
     for record in response:
-        time = _to_timedelta(record[:ts_length])
+        time = to_timedelta(record[:ts_length])
         jrecord = parse(record[ts_length:], zipped=True)
 
         for sample in jrecord['Position']:
@@ -902,7 +902,7 @@ def track_status_data(path, response=None):
 
     for entry in response:
         row = entry[1]
-        data['Time'].append(_to_timedelta(entry[0]))
+        data['Time'].append(to_timedelta(entry[0]))
         data['Status'].append(row['Status'])
         data['Message'].append(row['Message'])
 
@@ -940,7 +940,7 @@ def session_status_data(path, response=None):
     data = {'Time': [], 'Status': []}
 
     for entry in response:
-        data['Time'].append(_to_timedelta(entry[0]))
+        data['Time'].append(to_timedelta(entry[0]))
         data['Status'].append(entry[1]['Status'])
 
     return data
@@ -1005,32 +1005,6 @@ def parse(text, zipped=False):
         return parse(text.decode('utf-8-sig'))
     logging.warning("Couldn't parse text")
     return text
-
-
-def _to_timedelta(x):
-    """Fast timedelta object creation from a time string
-
-    | String format: hh:mm:ss.ms
-    | Hours or minutes do not necessarily need to be present.
-    | Hours minutes and seconds always need to be zero padded so as to have two digits.
-    | An arbitrary part of the left side can be skipped for example 'mm:ss.ms' is acceptable too
-
-    Args:
-        x (str): [hh:][mm:]ss.ms
-    Returns:
-        timedelta object
-    """
-    # TODO should "fix" this; it does work for the given use case but actually does not quite behave as expected
-    # this is faster than using pd.timedelta on a string
-    def tdformat(s):
-        h, m, sms = s.split(':')
-        s, ms = sms.split('.')
-        return {'hours': int(h), 'minutes': int(m), 'seconds': int(s), 'milliseconds': int(ms)}
-
-    if len(x) and isinstance(x, str):
-        return timedelta(**tdformat('00:00:00.000'[:-len(x)] + x))
-
-    return pd.to_timedelta(x)
 
 
 class SessionNotAvailableError(Exception):

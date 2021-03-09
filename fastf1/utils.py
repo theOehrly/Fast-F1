@@ -5,6 +5,8 @@
 from functools import reduce
 
 import numpy as np
+import pandas as pd
+from datetime import datetime, timedelta
 
 
 def delta_time(reference_lap, compare_lap):
@@ -80,3 +82,57 @@ def recursive_dict_get(d, *keys):
     dict if any key does not exist.
     https://stackoverflow.com/a/28225747"""
     return reduce(lambda c, k: c.get(k, {}), keys, d)
+
+
+def to_timedelta(x):
+    """Fast timedelta object creation from a time string
+
+    | String format: hh:mm:ss.ms
+    | Hours or minutes do not necessarily need to be present.
+    | Hours minutes and seconds always need to be zero padded so as to have two digits.
+    | An arbitrary part of the left side can be skipped for example 'mm:ss.ms' is acceptable too
+
+    Args:
+        x (str): [hh:][mm:]ss.ms
+    Returns:
+        timedelta object
+    """
+    # TODO should "fix" this; it does work for the given use case but actually does not quite behave as expected
+    # this is faster than using pd.timedelta on a string
+    if isinstance(x, str):
+        def tdformat(s):
+            h, m, sms = s.split(':')
+            s, ms = sms.split('.')
+            return {'hours': int(h), 'minutes': int(m), 'seconds': int(s), 'milliseconds': int(ms)}
+
+        if len(x) and isinstance(x, str):
+            return timedelta(**tdformat('00:00:00.000'[:-len(x)] + x))
+    elif isinstance(x, timedelta):
+        return x
+    return pd.to_timedelta(x)  # attempted catch-all; slow!
+
+
+def to_datetime(x):
+    """Fast datetime object creation from a date string.
+
+    Permissible formats:
+        For example '2020-12-13T13:27:320000Z' with:
+            - seconds or no seconds
+            - optional milliseconds and microseconds with
+              arbitrary precision
+            - with optional trailing letter 'Z'
+    """
+    date, time = x.strip('Z').split('T')
+    year, month, day = date.split('-')
+    hours, minutes, seconds = time.split(':')
+    if '.' in seconds:
+        seconds, msus = seconds.split('.')
+        if len(msus) < 6:
+            msus = msus+'0'*(6-len(msus))
+        elif len(msus) > 6:
+            msus = msus[0:6]
+    else:
+        msus = 0
+
+    return datetime(int(year), int(month), int(day), int(hours),
+                    int(minutes), int(seconds), int(msus))
