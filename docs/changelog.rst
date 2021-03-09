@@ -17,7 +17,8 @@ v2.1: Refactoring, accuracy improvements and a more accessible interface
 
     - calculated property `.telemetry`: This contains position and car data merged into one instance of
       :class:`Telemetry` (instance of `DataFrame`). The data is comparable to the previous 'telemetry' column.
-      This data is intended for easy plotting of all data as it is.
+      This data is intended for easy plotting. It should not be used for any further calculations as it
+      contains interpolated values.
 
       .. code-block::
 
@@ -95,6 +96,8 @@ v2.1: Refactoring, accuracy improvements and a more accessible interface
     increasing integration error when used over longer periods of time (i.e. over multiple laps). To work around this,
     it should be applied to laps individually. Additionally, the old implementation is still available in
     :mod:`fastf1.legacy`.
+
+  - Add a SignalR client for receiving and saving live timing and telemetry data during a session.
 
 
 - Fixed:

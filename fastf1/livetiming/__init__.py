@@ -21,13 +21,13 @@ There are two ways to interact with this module.
     - From the command line by calling ``python -m fastf1.livetiming``
 
 
-Livetiming Data Object
+Live Timing Data Object
 ----------------------
 
 To be added in future release
 
 
-Livetiming Client
+Live Timing Client
 -----------------
 
 .. automodule:: fastf1.livetiming.client

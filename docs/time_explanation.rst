@@ -1,3 +1,5 @@
+.. _time-explanation:
+
 ===================================
 Time, Date and Timing - Explanation
 ===================================
