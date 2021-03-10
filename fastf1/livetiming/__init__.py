@@ -22,13 +22,13 @@ There are two ways to interact with this module.
 
 
 Live Timing Data Object
-----------------------
+-----------------------
 
 To be added in future release
 
 
 Live Timing Client
------------------
+------------------
 
 .. automodule:: fastf1.livetiming.client
     :members:
