@@ -45,19 +45,18 @@ except ImportError:
 
 
 TEAM_COLORS = {'Mercedes': '#00d2be', 'Ferrari': '#dc0000',
-               'Red Bull': '#1e41ff', 'McLaren': '#ff8700',
-               'Renault': '#fff500', 'Racing Point': '#f596c8',
-               'Alfa Romeo': '#9b0000', 'Toro Rosso': '#469bff',
-               'Haas F1 Team': '#7e7e7e', 'Williams': '#469bff',
-               'Alpha Tauri': '#ffffff'}
-"""Mapping of team colors (hex color code) to team names."""
+               'Red Bull': '#0600ef', 'McLaren': '#ff8700',
+               'Alpine': '#0090ff', 'Aston Martin': '#006f62',
+               'Alfa Romeo': '#900000', 'AlphaTauri': '#2b4562',
+               'Haas F1 Team': '#ffffff', 'Williams': '#005aff'}
+"""Mapping of team colors (hex color code) to team names.
+(current season only)"""
 
 TEAM_TRANSLATE = {'MER': 'Mercedes', 'FER': 'Ferrari',
                   'RBR': 'Red Bull', 'MCL': 'McLaren',
-                  'REN': 'Renault', 'RPT': 'Racing Point',
-                  'ARR': 'Alfa Romeo', 'STR': 'Toro Rosso',
-                  'HAA': 'Haas F1 Team', 'WIL': 'Williams',
-                  'ALP': 'Alpha Tauri'}
+                  'APN': 'Alpine', 'AMR': 'Aston Martin',
+                  'ARR': 'Alfa Romeo', 'APT': 'AlphaTauri',
+                  'HAA': 'Haas F1 Team', 'WIL': 'Williams'}
 """Mapping of team names to theirs respective abbreviations."""
 
 COLOR_PALETTE = ['#FF79C6', '#50FA7B', '#8BE9FD', '#BD93F9',

@@ -83,19 +83,19 @@ logging.basicConfig(level=logging.INFO, style='{', format="{module: <8} {levelna
 
 
 TESTING_LOOKUP = {'2020': [['2020-02-19', '2020-02-20', '2020-02-21'],
-                           ['2020-02-26', '2020-02-27', '2020-02-28']]}
+                           ['2020-02-26', '2020-02-27', '2020-02-28']],
+                  '2021': [['2021-03-12', '2021-03-13', '2021-03-14']]}
 
 D_LOOKUP = [[44, 'HAM', 'Mercedes'], [77, 'BOT', 'Mercedes'],
-            [5, 'VET', 'Ferrari'], [16, 'LEC', 'Ferrari'],
-            [33, 'VER', 'Red Bull'], [23, 'ALB', 'Red Bull'],
-            [55, 'SAI', 'McLaren'], [4, 'NOR', 'McLaren'],
-            [11, 'PER', 'Racing Point'], [18, 'STR', 'Racing Point'],
-            [3, 'RIC', 'Renault'], [31, 'OCO', 'Renault'],
-            [26, 'KVY', 'Alpha Tauri'], [10, 'GAS', 'Alpha Tauri'],
-            [8, 'GRO', 'Haas F1 Team'], [20, 'MAG', 'Haas F1 Team'],
+            [55, 'SAI', 'Ferrari'], [16, 'LEC', 'Ferrari'],
+            [33, 'VER', 'Red Bull'], [11, 'PER', 'Red Bull'],
+            [2, 'RIC', 'McLaren'], [4, 'NOR', 'McLaren'],
+            [5, 'VET', 'Aston Martin'], [18, 'STR', 'Aston Martin'],
+            [3, 'RIC', 'Alpine'], [31, 'OCO', 'Alpine'],
+            [22, 'TSU', 'AlphaTauri'], [10, 'GAS', 'AlphaTauri'],
+            [47, 'SCH', 'Haas F1 Team'], [9, 'MAZ', 'Haas F1 Team'],
             [7, 'RAI', 'Alfa Romeo'], [99, 'GIO', 'Alfa Romeo'],
-            [6, 'LAT', 'Williams'], [63, 'RUS', 'Williams'],
-            [88, 'KUB', 'Alfa Romeo']]
+            [6, 'LAT', 'Williams'], [63, 'RUS', 'Williams']]
 
 
 def get_session(year, gp, event=None):
@@ -180,15 +180,20 @@ def _get_testing_week_event(year, day):
     """Get the correct weekend and event for testing from the
     year and day of the test. (where day is 1, 2, 3, ...)
     """
-    try:
-        day = int(day)
-        week = 1 if day < 4 else 2  # TODO Probably will change from 2021
-    except:  # noqa: E722 TODO: improve
-        msg = "Cannot fetch testing without correct event day."
-        raise Exception(msg)
-    week_day = ((day - 1) % 3) + 1  # TODO Probably will change from 2021
-    pre_season_week = f'Pre-Season Test {week}'
-    event = f'Practice {week_day}'
+    if year == 2020:
+        try:
+            day = int(day)
+            week = 1 if day < 4 else 2
+        except:  # noqa: E722 TODO: improve
+            raise InvalidSessionError
+        week_day = ((day - 1) % 3) + 1
+        pre_season_week = f'Pre-Season Test {week}'
+        event = f'Practice {week_day}'
+    elif year == 2021 and int(day) in (1, 2, 3):
+        pre_season_week = 'Pre-Season Test'
+        event = f'Practice {day}'
+    else:
+        raise InvalidSessionError
 
     return pre_season_week, event
 
@@ -930,8 +935,13 @@ class Weekend:
         self.gp = gp
         if self.is_testing():
             logging.warning("The Ergast API is not supported for testing")
-            self.data = {'raceName': gp,
-                         'date': TESTING_LOOKUP[str(year)][int(gp[-1]) - 1][-1]}
+            if year == 2020:
+                date = TESTING_LOOKUP[str(year)][int(gp[-1]) - 1][-1]
+            elif year == 2021:
+                date = TESTING_LOOKUP[str(year)][0][-1]
+            else:
+                raise InvalidSessionError
+            self.data = {'raceName': gp, 'date': date}
         else:
             try:
                 self.data = ergast.fetch_weekend(self.year, self.gp)
@@ -1059,10 +1069,14 @@ class Session:
     def _get_session_date(self):
         """Session date formatted as '%Y-%m-%d' (e.g. '2019-03-12')"""
         if self.weekend.is_testing():
-            year = str(self.weekend.year)
-            week_index = int(self.weekend.name[-1]) - 1
-            day_index = int(self.name[-1]) - 1
-            date = TESTING_LOOKUP[year][week_index][day_index]
+            if (year := str(self.weekend.year)) == '2020':
+                week_index = int(self.weekend.name[-1]) - 1
+                day_index = int(self.name[-1]) - 1
+                date = TESTING_LOOKUP[year][week_index][day_index]
+            elif year == '2021':
+                day_index = int(self.name[-1]) - 1
+                date = TESTING_LOOKUP[year][0][day_index]
+
         elif self.name in ('Qualifying', 'Practice 3'):
             # Assuming that quali was one day before race which is not always correct
             # TODO Should check if also formula1 makes this assumption
@@ -1844,3 +1858,13 @@ class NoLapDataError(Exception):
     """Raised if the API request does not fail but there is no usable data after processing the result."""
     def __init__(self, *args):
         super(NoLapDataError, self).__init__("Failed to load session because the API did not provide any usable data.")
+
+
+class InvalidSessionError(Exception):
+    """Raised if no session for the specified event name, type and year
+    can be found."""
+
+    def __init__(self, *args):
+        super(InvalidSessionError, self).__init__(
+            "No matching session can be found."
+        )
