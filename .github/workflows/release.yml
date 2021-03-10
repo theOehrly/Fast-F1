@@ -1,0 +1,40 @@
+name: Upload Python Package
+
+on:
+  release:
+    types: [released]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install setuptools wheel twine
+
+    # if this is a release, upload to PyPI
+    - name: Build and publish release
+      if: github.event_name == 'release'
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+      run: |
+        python setup.py sdist bdist_wheel
+        twine upload dist/*
+
+      # if this is a manual dispatch, upload to TestPyPI
+    - name: Build and publish test release
+      if: github.event_name == 'workflow_dispatch'
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.TEST_PYPI_TOKEN}}
+      run: |
+        python setup.py sdist bdist_wheel
+        twine upload --repository testpypi dist/*
