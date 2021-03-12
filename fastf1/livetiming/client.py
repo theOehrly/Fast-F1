@@ -77,7 +77,10 @@ class SignalRClient:
 
         self.topics = ["Heartbeat", "CarData.z", "Position.z",
                        "ExtrapolatedClock", "TopThree", "RcmSeries",
-                       "TimingStats", "TimingAppData"]
+                       "TimingStats", "TimingAppData",
+                       "WeatherData", "TrackStatus", "DriverList",
+                       "RaceControlMessages", "SessionInfo",
+                       "SessionData", "LapCount", "TimingData"]
 
         self.debug = debug
         self.filename = filename
@@ -85,7 +88,6 @@ class SignalRClient:
         self.timeout = timeout
 
         if not logger:
-            print('****')
             logging.basicConfig(
                 format="%(asctime)s - %(levelname)s: %(message)s"
             )
@@ -99,6 +101,11 @@ class SignalRClient:
     def _to_file(self, msg):
         self._output_file.write(msg + '\n')
         self._output_file.flush()
+
+    async def _on_do_nothing(self, msg):
+        # just do nothing with the message; intended for debug mode where some
+        # callback method still needs to be provided
+        pass
 
     async def _on_message(self, msg):
         self._t_last_message = time.time()
@@ -139,6 +146,7 @@ class SignalRClient:
             connection.error += self._on_debug
             # Assign debug message handler to save raw responses
             connection.received += self._on_debug
+            hub.client.on('feed', self._on_do_nothing)  # need to connect an async method
         else:
             # Assign hub message handler
             hub.client.on('feed', self._on_message)
