@@ -43,7 +43,7 @@ def test_doc_example_fast_lec():
     ff1.Cache.enable_cache("test_cache/")
     session = ff1.get_session(2020, 'Belgian', 'R')
 
-    laps = session.load_laps()
+    laps = session.load_laps(with_telemetry=True)
     fast_leclerc = laps.pick_driver('LEC').pick_fastest()
     t = fast_leclerc.telemetry['Time']
     vCar = fast_leclerc.telemetry['Speed']
@@ -63,7 +63,7 @@ def test_doc_example_fast_lec():
 def test_doc_example_delta_time():
     ff1.Cache.enable_cache("test_cache/")
     quali = ff1.get_session(2020, 'Belgian', 'R')
-    laps = quali.load_laps()
+    laps = quali.load_laps(with_telemetry=True)
     lec = laps.pick_driver('LEC').pick_fastest()
     ham = laps.pick_driver('HAM').pick_fastest()
 
@@ -83,7 +83,7 @@ def test_doc_example_delta_time():
 def test_speed_trace():
     ff1.Cache.enable_cache("test_cache/")
     session = ff1.get_session(2020, 'Belgian', 'R')
-    session.load_laps()
+    session.load_laps(with_telemetry=True)
 
     fastest = session.laps.pick_fastest().telemetry
 

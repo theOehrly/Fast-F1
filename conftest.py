@@ -78,5 +78,5 @@ def reference_laps_data():
     import fastf1
     fastf1.Cache.enable_cache("test_cache/")
     session = fastf1.get_session(2020, 'Italy', 'R')
-    laps = session.load_laps()
+    laps = session.load_laps(with_telemetry=True)
     return session, laps
