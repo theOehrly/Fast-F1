@@ -3,6 +3,15 @@ Changelog
 =========
 
 
+v2.1.2 Hotfixes for loading live timing data
+============================================
+
+- Fix failure to load live timing data due to an error in the
+  api cache function wrapper.
+
+- Improve track status loading
+
+
 v2.1.1 Add support for recording and using live timing data
 ===========================================================
 

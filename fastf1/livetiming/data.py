@@ -10,6 +10,16 @@ import logging
 from fastf1.utils import to_datetime, recursive_dict_get
 
 
+_track_status_mapping = {
+    'AllClear': '1',
+    'Yellow': '2',
+    'SCDeployed': '4',
+    'Red': '5',
+    'VSCDeployed': '6',
+    'VSCEnding': '7'
+}
+
+
 class LiveTimingData:
     """Live timing data object for using saved livetiming data as data source.
 
@@ -126,23 +136,25 @@ class LiveTimingData:
         if 'SessionStatus' not in self.data.keys():
             self.data['SessionStatus'] = {'Time': [], 'Status': []}
 
-        for entry in msg['StatusSeries']:
-            if isinstance(entry, str):
-                continue  # TODO sometimes weird entries?
+        if isinstance(msg['StatusSeries'], dict):
+            for entry in msg['StatusSeries'].values():
+                # convert timestamp to timedelta
+                status_dt = to_datetime(entry['Utc'])
+                status_timedelta = status_dt - self._start_date
 
-            # convert timestamp to timedelta
-            status_dt = to_datetime(entry['Utc'])
-            status_timedelta = status_dt - self._start_date
+                # add data to category
+                if 'TrackStatus' in entry.keys():
+                    status_value = str(entry['TrackStatus'])
+                    # convert to numeric system used by the api
+                    if not status_value.isnumeric():
+                        status_value = _track_status_mapping[status_value]
+                    self.data['TrackStatus']['Time'].append(status_timedelta)
+                    self.data['TrackStatus']['Status'].append(status_value)
+                    self.data['TrackStatus']['Message'].append("")
 
-            # add data to category
-            if 'TrackStatus' in entry.keys():
-                self.data['TrackStatus']['Time'].append(status_timedelta)
-                self.data['TrackStatus']['Status'].append(entry['TrackStatus'])
-                self.data['TrackStatus']['Message'].append("")
-
-            elif 'SessionStatus' in entry.keys():
-                self.data['SessionStatus']['Time'].append(status_timedelta)
-                self.data['SessionStatus']['Status'].append(entry['SessionStatus'])
+                elif 'SessionStatus' in entry.keys():
+                    self.data['SessionStatus']['Time'].append(status_timedelta)
+                    self.data['SessionStatus']['Status'].append(entry['SessionStatus'])
 
     def _try_set_correct_start_date(self, data):
         # skim content to find 'Started' session status without actually
@@ -166,10 +178,16 @@ class LiveTimingData:
             return
 
         # find correct entry in series
-        for entry in msg['StatusSeries']:
-            status = recursive_dict_get(entry, 'SessionStatus')
-            if status == 'Started':
-                self._start_date = to_datetime(entry['Utc'])
+        try:
+            for entry in msg['StatusSeries']:
+                status = recursive_dict_get(entry, 'SessionStatus')
+                if status == 'Started':
+                    self._start_date = to_datetime(entry['Utc'])
+        except AttributeError:
+            for entry in msg['StatusSeries'].values():
+                status = entry.get('SessionStatus', None)
+                if status == 'Started':
+                    self._start_date = to_datetime(entry['Utc'])
 
     def get(self, name):
         """

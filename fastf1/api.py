@@ -160,7 +160,7 @@ class Cache:
 
                     else:  # created with different version or force renew --> download again and update
                         logging.info(f"Updating cache for {str(func.__name__)}...")
-                        data = func(api_path, response=None, livedata=None)
+                        data = func(api_path, response=response, livedata=livedata)
                         if data is not None:
                             new_cached = {'version': cls._API_CORE_VERSION, 'data': data}
                             pickle.dump(new_cached, open(cache_file_path, 'wb'))
@@ -172,7 +172,7 @@ class Cache:
 
                 else:  # cached data does not yet exist for this request, try to download and create cache
                     logging.info("No cached data found. Downloading...")
-                    data = func(api_path, response=None, livedata=None)
+                    data = func(api_path, response=response, livedata=livedata)
                     if data is not None:
                         new_cached = {'version': cls._API_CORE_VERSION, 'data': data}
                         pickle.dump(new_cached, open(cache_file_path, 'wb'))
@@ -190,7 +190,7 @@ class Cache:
 
                     cls._has_been_warned = True
 
-                return func(api_path, response=None, livedata=None)
+                return func(api_path, response=response, livedata=livedata)
 
         wrapped = cached_api_request
         wrapped.__doc__ = func.__doc__  # necessary to make docstrings work
