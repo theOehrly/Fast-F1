@@ -15,5 +15,6 @@ build/
 test_cache/
 reference/
 var_dumps/
+recordings/
 tracks/
 fastf1.egg-info/
