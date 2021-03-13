@@ -5,7 +5,7 @@ Fast F1
 A python package for accessing F1 historical timing data and telemetry.
 
 
-IMPORTANT NOTE: Status of the project (Update 2: 10th March 2021)
+IMPORTANT NOTE: Status of the project (Update 3: 13th March 2021)
 =================================================================
 
 **FastF1 v2.1 is now available for installation through pip.
@@ -44,15 +44,6 @@ intention of changing this.
 Consider all live timing related functionality as beta-grade at best.
 
 For usage see the documentation.
-
-
-Previous Seasons
-----------------
-
-You will need FastF1 v2.1 to load the 2019/2020 seasons easily. Previous
-versions do not allow for loading laps data and car telemetry separately. Use
-the new argument ``with_telemetry=False`` when calling
-``Session.load_laps()`` to prevent the loading of unavailable telemetry data.
 
 
 Changes
