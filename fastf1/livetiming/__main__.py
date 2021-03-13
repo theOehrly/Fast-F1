@@ -21,7 +21,7 @@ def convert(args):
 
 
 parser = argparse.ArgumentParser(
-    prog="FastF1 SignalR client",
+    prog="python -m fastf1.livetiming",
     description="Save live timing data during a session",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter
 )

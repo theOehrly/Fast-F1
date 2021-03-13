@@ -218,7 +218,7 @@ def make_path(wname, wdate, sname, sdate):
 
 
 @Cache.api_request_wrapper
-def timing_data(path, response=None):
+def timing_data(path, response=None, livedata=None):
     """Fetch and parse timing data.
 
     Timing data is a mixed stream of information. At a given time a packet of data may indicate position, lap time,
@@ -280,11 +280,14 @@ def timing_data(path, response=None):
     #   - inlap has to be followed by outlap
     #   - pit stops may never be negative (missing outlap)
     #   - speed traps against telemetry (especially in Q FastLap - Slow Lap)
-    if response is None:  # no previous response provided
+    if livedata is not None and livedata.has('TimingData'):
+        response = livedata.get('TimingData')
+    elif response is None:  # no previous response provided
         logging.info("Fetching timing data...")
         response = fetch_page(path, 'timing_data')
-    if response is None:  # no response received
-        raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
+        if response is None:  # no response received
+            raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
+
     logging.info("Parsing timing data...")
 
     # split up response per driver for easier iteration and processing later
@@ -610,7 +613,7 @@ def _stream_data_driver(driver_raw, empty_vals, drv):
 
 
 @Cache.api_request_wrapper
-def timing_app_data(path, response=None):
+def timing_app_data(path, response=None, livedata=None):
     """Fetch and parse 'timing app data'.
 
     Timing app data provides the following data channels per sample:
@@ -636,6 +639,7 @@ def timing_app_data(path, response=None):
     Args:
         path (str): api path base string (see :func:`make_path`)
         response: Response as returned by :func:`fetch_page` can be passed if it was downloaded already.
+        livedata: An instance of :class:`fastf1.livetiming.data.LivetimingData` to use as a source instead of the api
 
     Returns:
         A DataFrame contianing one column for each data channel as listed above.
@@ -643,11 +647,13 @@ def timing_app_data(path, response=None):
     Raises:
         SessionNotAvailableError: in case the F1 livetiming api returns no data
     """
-    if response is None:  # no response provided
+    if livedata is not None and livedata.has('TimingAppData'):
+        response = livedata.get('TimingAppData')
+    elif response is None:  # no previous response provided
         logging.info("Fetching timing app data...")
         response = fetch_page(path, 'timing_app_data')
-    if response is None:  # no response received
-        raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
+        if response is None:  # no response received
+            raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
 
     data = {'LapNumber': [], 'Driver': [], 'LapTime': [], 'Stint': [], 'TotalLaps': [], 'Compound': [], 'New': [],
             'TyresNotChanged': [], 'Time': [], 'LapFlags': [], 'LapCountTime': [], 'StartLaps': [], 'Outlap': []}
@@ -679,7 +685,7 @@ def timing_app_data(path, response=None):
 
 
 @Cache.api_request_wrapper
-def car_data(path, response=None):
+def car_data(path, response=None, livedata=None):
     """Fetch and parse car data.
 
     Car data provides the following data channels per sample:
@@ -698,6 +704,7 @@ def car_data(path, response=None):
     Args:
         path (str): api path base string (see :func:`make_path`)
         response: Response as returned by :func:`fetch_page` can be passed if it was downloaded already.
+        livedata: An instance of :class:`fastf1.livetiming.data.LivetimingData` to use as a source instead of the api
 
     Returns:
         | A dictionary containing one pandas DataFrame per driver. Dictionary keys are the driver's numbers as
@@ -707,11 +714,17 @@ def car_data(path, response=None):
     Raises:
         SessionNotAvailableError: in case the F1 livetiming api returns no data
     """
-    if response is None:
+    # data recorded from live timing has a slightly different structure
+    is_livedata = False  # flag to indicate live timing data
+
+    if livedata is not None and livedata.has('CarData.z'):
+        response = livedata.get('CarData.z')
+        is_livedata = True
+    elif response is None:
         logging.info("Fetching car data...")
         response = fetch_page(path, 'car_data')
-    if response is None:  # no response received
-        raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
+        if response is None:  # no response received
+            raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
 
     logging.info("Parsing car data...")
 
@@ -720,9 +733,14 @@ def car_data(path, response=None):
 
     data = dict()
 
-    for line in response:
-        time = to_timedelta(line[0])
-        for entry in line[1]['Entries']:
+    for record in response:
+        time = to_timedelta(record[0])
+        if is_livedata:
+            jrecord = parse(record[1], zipped=True)
+        else:
+            jrecord = record[1]
+
+        for entry in jrecord['Entries']:
             # date format is '2020-08-08T09:45:03.0619797Z' with a varying number of millisecond decimal points
             # always remove last char ('z'), max len 26, right pad to len 26 with zeroes if shorter
             date = datetime.fromisoformat('{:<026}'.format(entry['Utc'][:-1][:26]))
@@ -766,7 +784,7 @@ def car_data(path, response=None):
 
 
 @Cache.api_request_wrapper
-def position_data(path, response=None):
+def position_data(path, response=None, livedata=None):
     """Fetch and parse position data.
 
     Position data provides the following data channels per sample:
@@ -781,6 +799,7 @@ def position_data(path, response=None):
     Args:
         path (str): api path base string (see :func:`api.make_path`)
         response: Response as returned by :func:`api.fetch_page` can be passed if it was downloaded already.
+        livedata: An instance of :class:`fastf1.livetiming.data.LivetimingData` to use as a source instead of the api
 
     Returns:
         | A dictionary containing one pandas DataFrame per driver. Dictionary keys are the driver's numbers as
@@ -790,11 +809,17 @@ def position_data(path, response=None):
     Raises:
         SessionNotAvailableError: in case the F1 livetiming api returns no data
     """
-    if response is None:
+    # data recorded from live timing has a slightly different structure
+    is_livedata = False  # flag to indicate live timing data
+
+    if livedata is not None and livedata.has('Position.z'):
+        response = livedata.get('Position.z')
+        is_livedata = True
+    elif response is None:
         logging.info("Fetching position data...")
         response = fetch_page(path, 'position')
-    if response is None:  # no response received
-        raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
+        if response is None:  # no response received
+            raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
 
     logging.info("Parsing position data...")
 
@@ -807,8 +832,12 @@ def position_data(path, response=None):
     data = dict()
 
     for record in response:
-        time = to_timedelta(record[:ts_length])
-        jrecord = parse(record[ts_length:], zipped=True)
+        if is_livedata:
+            time = record[0]
+            jrecord = parse(record[1], zipped=True)
+        else:
+            time = to_timedelta(record[:ts_length])
+            jrecord = parse(record[ts_length:], zipped=True)
 
         for sample in jrecord['Position']:
             # date format is '2020-08-08T09:45:03.0619797Z' with a varying number of millisecond decimal points
@@ -858,7 +887,7 @@ def position_data(path, response=None):
 
 
 @Cache.api_request_wrapper
-def track_status_data(path, response=None):
+def track_status_data(path, response=None, livedata=None):
     """Fetch and parse track status data.
 
     Track status contains information on yellow/red/green flags, safety car and virtual safety car. It provides the
@@ -885,6 +914,7 @@ def track_status_data(path, response=None):
     Args:
         path (str): api path base string (see :func:`api.make_path`)
         response: Response as returned by :func:`api.fetch_page` can be passed if it was downloaded already.
+        livedata: An instance of :class:`fastf1.livetiming.data.LivetimingData` to use as a source instead of the api
 
     Returns:
         A dictionary containing one key for each data channel and a list of values per key.
@@ -892,11 +922,14 @@ def track_status_data(path, response=None):
     Raises:
         SessionNotAvailableError: in case the F1 livetiming api returns no data
     """
-    if response is None:
+    if livedata is not None and livedata.has('TrackStatus'):
+        # does not need any further processing
+        return livedata.get('TrackStatus')
+    elif response is None:
         logging.info("Fetching track status data...")
         response = fetch_page(path, 'track_status')
-    if response is None:  # no response received
-        raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
+        if response is None:  # no response received
+            raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
 
     data = {'Time': [], 'Status': [], 'Message': []}
 
@@ -910,7 +943,7 @@ def track_status_data(path, response=None):
 
 
 @Cache.api_request_wrapper
-def session_status_data(path, response=None):
+def session_status_data(path, response=None, livedata=None):
     """Fetch and parse session status data.
 
     Session status contains information on when a session was started and when it ended (amongst others). It
@@ -924,6 +957,7 @@ def session_status_data(path, response=None):
     Args:
         path (str): api path base string (see :func:`api.make_path`)
         response: Response as returned by :func:`api.fetch_page` can be passed if it was downloaded already.
+        livedata: An instance of :class:`fastf1.livetiming.data.LivetimingData` to use as a source instead of the api
 
     Returns:
         A dictionary containing one key for each data channel and a list of values per key.
@@ -931,11 +965,14 @@ def session_status_data(path, response=None):
     Raises:
         SessionNotAvailableError: in case the F1 livetiming api returns no data
     """
-    if response is None:
+    if livedata is not None and livedata.has('SessionStatus'):
+        # does not need any further processing
+        return livedata.get('SessionStatus')
+    elif response is None:
         logging.info("Fetching session status data...")
         response = fetch_page(path, 'session_status')
-    if response is None:  # no response received
-        raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
+        if response is None:  # no response received
+            raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
 
     data = {'Time': [], 'Status': []}
 

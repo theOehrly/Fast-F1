@@ -1092,7 +1092,7 @@ class Session:
 
         return date
 
-    def load_laps(self, with_telemetry=True):
+    def load_laps(self, with_telemetry=False, livedata=None):
         """Load lap timing information and telemetry data.
 
         This method creates a :class:`Laps` instance (:attr:`Session.laps`) which subclasses :class:`pandas.DataFrame`
@@ -1113,6 +1113,9 @@ class Session:
 
         Args:
             with_telemetry (bool): Load telemetry data also. (Same as calling :meth:`Session.load_telemetry` manually)
+            livedata (fastf1.api.LivetimingResponse, optional) :
+                instead of requesting the data from the api, locally saved
+                livetiming data can be used as a data source
 
         Returns:
             instance of :class:`Laps`
@@ -1127,8 +1130,8 @@ class Session:
             pandas dataframe
 
         """
-        data, _ = api.timing_data(self.api_path)
-        app_data = api.timing_app_data(self.api_path)
+        data, _ = api.timing_data(self.api_path, livedata=livedata)
+        app_data = api.timing_app_data(self.api_path, livedata=livedata)
         # Now we do some manipulation to make it beautiful
         logging.info("Processing timing data...")
 
@@ -1144,8 +1147,9 @@ class Session:
             raise NoLapDataError
 
         # check when a session was started; for a race this indicates the start of the race
-        session_status = api.session_status_data(self.api_path)
-        for i in range(len(session_status)):
+        session_status = api.session_status_data(self.api_path,
+                                                 livedata=livedata)
+        for i in range(len(session_status['Status'])):
             if session_status['Status'][i] == 'Started':
                 self.session_start_time = session_status['Time'][i]
                 break
@@ -1186,7 +1190,7 @@ class Session:
         d_map = {r['number']: r['Driver']['code'] for r in self.results}
         laps['Driver'] = laps['DriverNumber'].map(d_map)
         # add track status data
-        ts_data = api.track_status_data(self.api_path)
+        ts_data = api.track_status_data(self.api_path, livedata=livedata)
         laps['TrackStatus'] = '1'
 
         def applicator(new_status, current_status):
@@ -1197,7 +1201,7 @@ class Session:
             else:
                 return current_status
 
-        if len(ts_data) > 0:
+        if len(ts_data['Time']) > 0:
             t = ts_data['Time'][0]
             status = ts_data['Status'][0]
             for next_t, next_status in zip(ts_data['Time'][1:], ts_data['Status'][1:]):
@@ -1231,7 +1235,7 @@ class Session:
         self._check_lap_accuracy()
 
         if with_telemetry:
-            self.load_telemetry()
+            self.load_telemetry(livedata=livedata)
 
         logging.info(f"Loaded data for {len(self.drivers)} drivers: {self.drivers}")
 
@@ -1283,7 +1287,7 @@ class Session:
             if integrity_errors > 0:
                 logging.warning(f"Driver {drv: >2}: Lap timing integrity check failed for {integrity_errors} lap(s)")
 
-    def load_telemetry(self):
+    def load_telemetry(self, livedata=None):
         """Load telemetry data from API.
 
         The raw data is divided into car data (Speed, RPM, ...) and position data (coordinates, on/off track). For each
@@ -1297,9 +1301,14 @@ class Session:
 
         Note that this method additionally calculates :attr:`Session.t0_date` and adds a `LapStartDate` column to
         :attr:`Session.laps`.
+
+        Args:
+            response (fastf1.api.LivetimingResponse, optional) :
+                instead of requesting the data from the api, locally saved
+                livetiming data can be used as a data source
         """
-        car_data = api.car_data(self.api_path)
-        pos_data = api.position_data(self.api_path)
+        car_data = api.car_data(self.api_path, livedata=livedata)
+        pos_data = api.position_data(self.api_path, livedata=livedata)
 
         self.drivers = list(set(self.drivers).intersection(set(car_data.keys())).intersection(set(pos_data.keys())))
         # self.drivers should only contain drivers which exist in all parts of the data
