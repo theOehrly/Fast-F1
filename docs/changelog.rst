@@ -3,6 +3,22 @@ Changelog
 =========
 
 
+v2.1.1 Add support for recording and using live timing data
+===========================================================
+
+- Possibly breaking changes:
+
+  - :meth:`fastf1.Session.load_laps`: Data will now be loaded without
+    telemetry by default, i.e. only timing data is loaded.
+    Telemetry data is usually not available anyways, therefore this prevents
+    a confusing error.
+
+- Changes:
+
+  - Possibility to record live timing data
+  - Possibility to use recorded live timing data as a data source
+
+
 v2.1: Refactoring, accuracy improvements and a more accessible interface
 ==========================================================================
 

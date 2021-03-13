@@ -12,21 +12,21 @@ IMPORTANT NOTE: Status of the project (Update 2: 10th March 2021)
 The old way of installing via pip + git directly from the master branch is no
 longer recommended.**
 
-Currently this module is not fully usable which is the result of server issues
-with the F1 API.
+It is no longer possible to download telemetry and car position data after a
+session!
 
 See `this <https://twitter.com/F1Help/status/1335939396240093185>`_ Twitter
 post for some information.
 
-For the 2019 and 2020 seasons this means:
+This means:
 
   - It is still **possible** to load timing data, tire data, track status
     data and session status data.
 
   - It is **not possible** to load car telemetry data
-    (includes position data).
+    (includes position data). You need to record live timing data during
+    a session for this!
 
-What this means for the 2021 season cannot yet be said.
 
 Live timing data
 ----------------
@@ -36,19 +36,12 @@ used to save the live timing telemetry data stream that is available during
 sessions. This can potentially be used to work around the problem of missing
 data on the server.**
 
-  - The live timing client does not and will never parse data in real time!
-    Data can only be parsed and used after a session has completed. This is a
-    limitation of FastF1's api parser. For various reasons there is no
-    intention of changing this.
-
-  - While live timing data can already be saved during a session it is not
-    yet possible to actually use this data. Some changes to FastF1's core
-    and api module are still required. These are not yet completed due to a
-    lack of testing possibilities so far. There will hopefully be an update
-    to fix this within the next few days.
+The live timing client does not and will never parse data in real time!
+Data can only be parsed and used after a session has completed. This is a
+limitation of FastF1's api parser. For various reasons there is no
+intention of changing this.
 
 Consider all live timing related functionality as beta-grade at best.
-(Again, no testing opportunities)
 
 For usage see the documentation.
 

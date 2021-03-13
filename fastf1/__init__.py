@@ -44,7 +44,7 @@ For some more advanced stuff, just a few more steps::
     from matplotlib import pyplot as plt
     from fastf1 import plotting
 
-    laps = monza_quali.load_laps()
+    laps = monza_quali.load_laps(with_telemetry=True)
     fast_leclerc = laps.pick_driver('LEC').pick_fastest()
     t = fast_leclerc.telemetry['Time']
     vCar = fast_leclerc.telemetry['Speed']
