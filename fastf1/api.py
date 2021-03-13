@@ -140,7 +140,7 @@ class Cache:
         Returns:
             The wrapped function
         """
-        def cached_api_request(api_path, **kwargs):
+        def cached_api_request(api_path, response=None, livedata=None):
             if cls._CACHE_DIR:
                 # caching is enabled, extend the cache dir path using the api path
                 cache_dir_path = os.path.join(cls._CACHE_DIR, api_path[8:])  # remove leading '/static/' from api path
@@ -160,7 +160,7 @@ class Cache:
 
                     else:  # created with different version or force renew --> download again and update
                         logging.info(f"Updating cache for {str(func.__name__)}...")
-                        data = func(api_path, **kwargs)
+                        data = func(api_path, response=None, livedata=None)
                         if data is not None:
                             new_cached = {'version': cls._API_CORE_VERSION, 'data': data}
                             pickle.dump(new_cached, open(cache_file_path, 'wb'))
@@ -172,7 +172,7 @@ class Cache:
 
                 else:  # cached data does not yet exist for this request, try to download and create cache
                     logging.info("No cached data found. Downloading...")
-                    data = func(api_path, **kwargs)
+                    data = func(api_path, response=None, livedata=None)
                     if data is not None:
                         new_cached = {'version': cls._API_CORE_VERSION, 'data': data}
                         pickle.dump(new_cached, open(cache_file_path, 'wb'))
@@ -190,7 +190,7 @@ class Cache:
 
                     cls._has_been_warned = True
 
-                return func(api_path, **kwargs)
+                return func(api_path, response=None, livedata=None)
 
         wrapped = cached_api_request
         wrapped.__doc__ = func.__doc__  # necessary to make docstrings work
