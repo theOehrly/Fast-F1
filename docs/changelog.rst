@@ -3,6 +3,13 @@ Changelog
 =========
 
 
+v2.1.3 Improved error handling
+==============================
+
+Added error handling for partially invalid data when loading car data
+and position data.
+
+
 v2.1.2 Hotfixes for loading live timing data
 ============================================
 

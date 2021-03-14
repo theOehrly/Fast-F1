@@ -732,31 +732,42 @@ def car_data(path, response=None, livedata=None):
     columns = {'Time', 'Date', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake', 'DRS'}
 
     data = dict()
+    decode_error_count = 0
 
     for record in response:
-        time = to_timedelta(record[0])
-        if is_livedata:
-            jrecord = parse(record[1], zipped=True)
-        else:
-            jrecord = record[1]
+        try:
+            time = to_timedelta(record[0])
+            if is_livedata:
+                jrecord = parse(record[1], zipped=True)
+            else:
+                jrecord = record[1]  # TODO: decode here, not in .fetch_page
 
-        for entry in jrecord['Entries']:
-            # date format is '2020-08-08T09:45:03.0619797Z' with a varying number of millisecond decimal points
-            # always remove last char ('z'), max len 26, right pad to len 26 with zeroes if shorter
-            date = datetime.fromisoformat('{:<026}'.format(entry['Utc'][:-1][:26]))
+            for entry in jrecord['Entries']:
+                # date format is '2020-08-08T09:45:03.0619797Z' with a varying number of millisecond decimal points
+                # always remove last char ('z'), max len 26, right pad to len 26 with zeroes if shorter
+                date = datetime.fromisoformat('{:<026}'.format(entry['Utc'][:-1][:26]))
 
-            for driver in entry['Cars']:
-                if driver not in data:
-                    data[driver] = {col: list() for col in columns}
+                for driver in entry['Cars']:
+                    if driver not in data:
+                        data[driver] = {col: list() for col in columns}
 
-                data[driver]['Time'].append(time)
-                data[driver]['Date'].append(date)
+                    data[driver]['Time'].append(time)
+                    data[driver]['Date'].append(date)
 
-                for n in channels:
-                    val = recursive_dict_get(entry, 'Cars', driver, 'Channels', n)
-                    if not val:
-                        val = 0
-                    data[driver][channels[n]].append(val)
+                    for n in channels:
+                        val = recursive_dict_get(entry, 'Cars', driver, 'Channels', n)
+                        if not val:
+                            val = 0
+                        data[driver][channels[n]].append(val)
+
+        except Exception:
+            # too risky to specify an exception: unexpected invalid data!
+            decode_error_count += 1
+            continue
+
+    if decode_error_count > 0:
+        logging.warning(f"Car data: failed to decode {decode_error_count} "
+                        f"messages ({len(response)} messages total)")
 
     # create one dataframe per driver and check for the longest dataframe
     most_complete_ref = None
@@ -830,35 +841,46 @@ def position_data(path, response=None, livedata=None):
     columns = ['Time', 'Date', 'Status', 'X', 'Y', 'Z']
 
     data = dict()
+    decode_error_count = 0
 
     for record in response:
-        if is_livedata:
-            time = record[0]
-            jrecord = parse(record[1], zipped=True)
-        else:
-            time = to_timedelta(record[:ts_length])
-            jrecord = parse(record[ts_length:], zipped=True)
+        try:
+            if is_livedata:
+                time = record[0]
+                jrecord = parse(record[1], zipped=True)
+            else:
+                time = to_timedelta(record[:ts_length])
+                jrecord = parse(record[ts_length:], zipped=True)
 
-        for sample in jrecord['Position']:
-            # date format is '2020-08-08T09:45:03.0619797Z' with a varying number of millisecond decimal points
-            # always remove last char ('z'), max len 26, right pad to len 26 with zeroes if shorter
-            date = datetime.fromisoformat('{:<026}'.format(sample['Timestamp'][:-1][:26]))
+            for sample in jrecord['Position']:
+                # date format is '2020-08-08T09:45:03.0619797Z' with a varying number of millisecond decimal points
+                # always remove last char ('z'), max len 26, right pad to len 26 with zeroes if shorter
+                date = datetime.fromisoformat('{:<026}'.format(sample['Timestamp'][:-1][:26]))
 
-            for driver in sample['Entries']:
-                if driver not in data:
-                    data[driver] = {col: list() for col in columns}
+                for driver in sample['Entries']:
+                    if driver not in data:
+                        data[driver] = {col: list() for col in columns}
 
-                data[driver]['Time'].append(time)
-                data[driver]['Date'].append(date)
+                    data[driver]['Time'].append(time)
+                    data[driver]['Date'].append(date)
 
-                for coord in ['X', 'Y', 'Z']:
-                    data[driver][coord].append(recursive_dict_get(sample, 'Entries', driver, coord))
+                    for coord in ['X', 'Y', 'Z']:
+                        data[driver][coord].append(recursive_dict_get(sample, 'Entries', driver, coord))
 
-                status = recursive_dict_get(sample, 'Entries', driver, 'Status')
-                if str(status).isdigit():
-                    # Fallback on older api status mapping and convert
-                    status = 'OffTrack' if int(status) else 'OnTrack'
-                data[driver]['Status'].append(status)
+                    status = recursive_dict_get(sample, 'Entries', driver, 'Status')
+                    if str(status).isdigit():
+                        # Fallback on older api status mapping and convert
+                        status = 'OffTrack' if int(status) else 'OnTrack'
+                    data[driver]['Status'].append(status)
+
+        except Exception:
+            # too risky to specify an exception: unexpected invalid data!
+            decode_error_count += 1
+            continue
+
+    if decode_error_count > 0:
+        logging.warning(f"Position data: failed to decode {decode_error_count} "
+                        f"messages ({len(response)} messages total)")
 
     # create one dataframe per driver and check for the longest dataframe
     most_complete_ref = None
@@ -1010,8 +1032,20 @@ def fetch_page(path, name):
                 # Special case to improve memory efficency
                 return records
             else:
+                # TODO: do not unzip here yet
+                decode_error_count = 0
                 tl = 12  # length of timestamp: len('00:00:00:000')
-                return [[e[:tl], parse(e[tl:], zipped=is_z)] for e in records]
+                ret = list()
+                for e in records:
+                    try:
+                        ret.append([e[:tl], parse(e[tl:], zipped=is_z)])
+                    except json.JSONDecodeError:
+                        decode_error_count += 1
+                        continue
+                if decode_error_count > 0:
+                    logging.warning(f"Failed to decode {decode_error_count}"
+                                    f" messages ({len(records)} messages "
+                                    f"total)")
         else:
             return parse(raw, is_z)
     else:
