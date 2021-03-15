@@ -9,7 +9,9 @@ IMPORTANT NOTE: Status of the project (Update 3: 13th March 2021)
 =================================================================
 
 **NOTE: Please install version 2.1.2 as there is a bug in version 2.1.3.
-`pip install fastf1==2.1.2`***
+Use:**
+
+  `pip install fastf1==2.1.2`
 
 **FastF1 v2.1 is now available for installation through pip.
 The old way of installing via pip + git directly from the master branch is no
