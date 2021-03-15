@@ -20,6 +20,10 @@ from fastf1.utils import recursive_dict_get, to_timedelta
 
 base_url = 'https://livetiming.formula1.com'
 
+requests_session = None
+"""Can be used to create a custom requests session which is then used by
+all api calls"""
+
 headers = {
   'Host': 'livetiming.formula1.com',
   'Connection': 'close',
@@ -1023,7 +1027,11 @@ def fetch_page(path, name):
     page = pages[name]
     is_stream = 'jsonStream' in page
     is_z = '.z.' in page
-    r = requests.get(base_url + path + pages[name], headers=headers)
+    if requests_session is None:
+        session = requests.session()
+    else:
+        session = requests_session
+    r = session.get(base_url + path + pages[name], headers=headers)
     if r.status_code == 200:
         raw = r.content.decode('utf-8-sig')
         if is_stream:
