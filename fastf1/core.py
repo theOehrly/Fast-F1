@@ -556,7 +556,7 @@ class Telemetry(pd.DataFrame):
             resampled_columns['Source'] = res_source
 
             # join resampled columns and make 'Date' a column again
-            merged = Telemetry(resampled_columns).reset_index().rename(columns={'index': 'Date'})
+            merged = Telemetry(resampled_columns, session=self.session).reset_index().rename(columns={'index': 'Date'})
 
             # recalculate the time columns
             merged['SessionTime'] = merged['Date'] - self.session.t0_date
@@ -628,8 +628,10 @@ class Telemetry(pd.DataFrame):
             if ch not in self.columns:
                 continue
             sig_type = self._CHANNELS[ch]['type']
-
             if sig_type == 'continuous':  # yes, this is necessary to prevent pandas from crashing
+                if ret[ch].dtype == 'object':
+                    warnings.warn("Interpolation not possible for telemetry "
+                                  "channel because dtype is 'object'")
                 missing = self._CHANNELS[ch]['missing']
                 ret.loc[:, ch] = ret.loc[:, ch]\
                     .interpolate(method=missing, limit_direction='both', fill_value='extrapolate')
