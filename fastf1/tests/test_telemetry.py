@@ -59,6 +59,19 @@ def test_joining_with_metadata_propagation():
 
 
 @pytest.mark.f1telapi
+def test_merge_channels_with_metadata_propagation(reference_laps_data):
+    session, laps = reference_laps_data
+    lap = laps.pick_fastest()
+    car_data = lap.get_car_data()
+    pos_data = lap.get_pos_data()
+
+    for freq in ('original', 10):
+        merged = car_data.merge_channels(pos_data, frequency=freq)
+        assert hasattr(merged, 'session')
+        assert merged.session is session
+
+
+@pytest.mark.f1telapi
 def test_dtypes_from_api(reference_laps_data):
     session, laps = reference_laps_data
     for drv in session.car_data.keys():
