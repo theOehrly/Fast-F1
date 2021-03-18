@@ -734,17 +734,19 @@ def car_data(path, response=None, livedata=None):
 
     channels = {'0': 'RPM', '2': 'Speed', '3': 'nGear', '4': 'Throttle', '5': 'Brake', '45': 'DRS'}
     columns = {'Time', 'Date', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake', 'DRS'}
+    ts_length = 12  # length of timestamp: len('00:00:00:000')
 
     data = dict()
     decode_error_count = 0
 
     for record in response:
         try:
-            time = to_timedelta(record[0])
             if is_livedata:
+                time = to_timedelta(record[0])
                 jrecord = parse(record[1], zipped=True)
             else:
-                jrecord = record[1]  # TODO: decode here, not in .fetch_page
+                time = to_timedelta(record[:ts_length])
+                jrecord = parse(record[ts_length:], zipped=True)
 
             for entry in jrecord['Entries']:
                 # date format is '2020-08-08T09:45:03.0619797Z' with a varying number of millisecond decimal points
@@ -1036,11 +1038,10 @@ def fetch_page(path, name):
         raw = r.content.decode('utf-8-sig')
         if is_stream:
             records = raw.split('\r\n')[:-1]  # last split is empty
-            if name == 'position':
-                # Special case to improve memory efficency
+            if name in ('position', 'car_data'):
+                # Special case to improve memory efficiency
                 return records
             else:
-                # TODO: do not unzip here yet
                 decode_error_count = 0
                 tl = 12  # length of timestamp: len('00:00:00:000')
                 ret = list()
@@ -1054,6 +1055,7 @@ def fetch_page(path, name):
                     logging.warning(f"Failed to decode {decode_error_count}"
                                     f" messages ({len(records)} messages "
                                     f"total)")
+                return ret
         else:
             return parse(raw, is_z)
     else:
