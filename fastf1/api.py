@@ -590,7 +590,7 @@ def _stream_data_driver(driver_raw, empty_vals, drv):
     for time, resp in driver_raw:
         new_entry = False
         if val := recursive_dict_get(resp, 'Position'):
-            drv_data['Position'][i] = val
+            drv_data['Position'][i] = int(val)
             new_entry = True
         if val := recursive_dict_get(resp, 'GapToLeader'):
             drv_data['GapToLeader'][i] = val
@@ -601,7 +601,7 @@ def _stream_data_driver(driver_raw, empty_vals, drv):
 
         # at least one value was present, create next row
         if new_entry:
-            drv_data['Time'][i] = time
+            drv_data['Time'][i] = to_timedelta(time)
             drv_data['Driver'][i] = drv
             i += 1
 
@@ -674,7 +674,12 @@ def timing_app_data(path, response=None, livedata=None):
                         stint = update[stint]
                     for key in data:
                         if key in stint:
-                            data[key].append(stint[key])
+                            val = stint[key]
+                            if key == 'LapTime':
+                                val = to_timedelta(val)
+                            elif key == 'New':
+                                val = True if val == 'true' else False
+                            data[key].append(val)
                         else:
                             data[key].append(None)
                     for key in stint:
@@ -693,14 +698,15 @@ def car_data(path, response=None, livedata=None):
     """Fetch and parse car data.
 
     Car data provides the following data channels per sample:
-        - Date (pandas.Timestamp): timestamp for this sample as Date + Time; more or less exact
         - Time (pandas.Timedelta): session timestamp (time only); inaccurate, has duplicate values; use Date instead
+        - Date (pandas.Timestamp): timestamp for this sample as Date + Time; more or less exact
         - Speed (int): Km/h
         - RPM (int)
-        - Gear (int) [called 'nGear' in the data!]
+        - Gear (int): [called 'nGear' in the data!]
         - Throttle (int): 0-100%
         - Brake (int): 0-100% (don't trust brake too much)
         - DRS (int): 0=Off, 8=Active; sometimes other values --> to be researched
+        - Source (str): Indicates the source of a sample; 'car' for all values here
 
     The data stream has a sample rate of (usually) 240ms. The samples from the data streams for position data and
     car data do not line up. Resampling/interpolation is required to merge them.
@@ -733,7 +739,7 @@ def car_data(path, response=None, livedata=None):
     logging.info("Parsing car data...")
 
     channels = {'0': 'RPM', '2': 'Speed', '3': 'nGear', '4': 'Throttle', '5': 'Brake', '45': 'DRS'}
-    columns = {'Time', 'Date', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake', 'DRS'}
+    columns = ['Time', 'Date', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake', 'DRS', 'Source']
     ts_length = 12  # length of timestamp: len('00:00:00:000')
 
     data = dict()
@@ -764,7 +770,7 @@ def car_data(path, response=None, livedata=None):
                         val = recursive_dict_get(entry, 'Cars', driver, 'Channels', n)
                         if not val:
                             val = 0
-                        data[driver][channels[n]].append(val)
+                        data[driver][channels[n]].append(int(val))
 
         except Exception:
             # too risky to specify an exception: unexpected invalid data!
@@ -793,7 +799,7 @@ def car_data(path, response=None, livedata=None):
             index_df = pd.DataFrame(data={'Date': most_complete_ref})
             data[driver] = data[driver].merge(index_df, how='outer').sort_values(by='Date').reset_index(drop=True)
             data[driver].loc[:, channels.values()] = \
-                data[driver].loc[:, channels.values()].fillna(value=0, inplace=False)
+                data[driver].loc[:, channels.values()].fillna(value=0, inplace=False).astype('int64')
 
             logging.warning(f"Driver {driver: >2}: Car data is incomplete!")
 
@@ -805,10 +811,11 @@ def position_data(path, response=None, livedata=None):
     """Fetch and parse position data.
 
     Position data provides the following data channels per sample:
-        - Date (pandas.Timestamp): timestamp for this sample as Date + Time; more or less exact
         - Time (pandas.Timedelta): session timestamp (time only); inaccurate, has duplicate values; use Date instead
-        - X, Y, Z (int): Position coordinates; starting from 2020 the coordinates are given in 1/10 meter
+        - Date (pandas.Timestamp): timestamp for this sample as Date + Time; more or less exact
         - Status (str): 'OnTrack' or 'OffTrack'
+        - X, Y, Z (int): Position coordinates; starting from 2020 the coordinates are given in 1/10 meter
+        - Source (str): Indicates the source of a sample; 'pos' for all values here
 
     The data stream has a sample rate of (usually) 220ms. The samples from the data streams for position data and
     car data do not line up. Resampling/interpolation is required to merge them.
@@ -844,7 +851,7 @@ def position_data(path, response=None, livedata=None):
         return {}
 
     ts_length = 12  # length of timestamp: len('00:00:00:000')
-    columns = ['Time', 'Date', 'Status', 'X', 'Y', 'Z']
+    columns = ['Time', 'Date', 'Status', 'X', 'Y', 'Z', 'Source']
 
     data = dict()
     decode_error_count = 0
@@ -921,7 +928,7 @@ def track_status_data(path, response=None, livedata=None):
     Track status contains information on yellow/red/green flags, safety car and virtual safety car. It provides the
     following data channels per sample:
 
-        - Time (pandas.Timedelta): session timestamp (time only)
+        - Time (datetime.timedelta): session timestamp (time only)
         - Status (str): contains track status changes as numeric values (described below)
         - Message (str): contains the same information as status but in easily understandable
           words ('Yellow', 'AllClear',...)
@@ -977,7 +984,7 @@ def session_status_data(path, response=None, livedata=None):
     Session status contains information on when a session was started and when it ended (amongst others). It
     provides the following data channels per sample:
 
-        - Time (pandas.Timedelta): session timestamp (time only)
+        - Time (datetime.timedelta): session timestamp (time only)
         - Status (str): status messages
 
     A new value is sent every time the session status changes.
