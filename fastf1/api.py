@@ -14,9 +14,8 @@ import requests_cache
 import logging
 import pandas as pd
 import numpy as np
-from datetime import datetime  # TODO use utils.to_datetime and add tests!
 
-from fastf1.utils import recursive_dict_get, to_timedelta
+from fastf1.utils import recursive_dict_get, to_timedelta, to_datetime
 
 base_url = 'https://livetiming.formula1.com'
 
@@ -757,7 +756,7 @@ def car_data(path, response=None, livedata=None):
             for entry in jrecord['Entries']:
                 # date format is '2020-08-08T09:45:03.0619797Z' with a varying number of millisecond decimal points
                 # always remove last char ('z'), max len 26, right pad to len 26 with zeroes if shorter
-                date = datetime.fromisoformat('{:<026}'.format(entry['Utc'][:-1][:26]))
+                date = to_datetime(entry['Utc'])
 
                 for driver in entry['Cars']:
                     if driver not in data:
@@ -868,7 +867,7 @@ def position_data(path, response=None, livedata=None):
             for sample in jrecord['Position']:
                 # date format is '2020-08-08T09:45:03.0619797Z' with a varying number of millisecond decimal points
                 # always remove last char ('z'), max len 26, right pad to len 26 with zeroes if shorter
-                date = datetime.fromisoformat('{:<026}'.format(sample['Timestamp'][:-1][:26]))
+                date = to_datetime(sample['Timestamp'])
 
                 for driver in sample['Entries']:
                     if driver not in data:
