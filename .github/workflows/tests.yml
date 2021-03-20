@@ -37,11 +37,6 @@ jobs:
           python3 -m pip install --upgrade pip setuptools wheel
           python3 -m pip install -r requirements-dev.txt
 
-      - name: Install python requirements
-        run: |
-          python3 -m pip install --upgrade pip setuptools wheel
-          python3 -m pip install -r requirements-dev.txt
-
       - name: Install Fast-F1 from sources
         run: |
           python3 -m pip install -e .
