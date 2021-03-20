@@ -44,7 +44,15 @@ def test_cache_used_and_clear(tmpdir, requests_mock, caplog):
                  'session_status', 'car_data', 'position']
     for p in req_pages:
         with open(f'fastf1/testing/reference_data/2020_05_FP2/{p}.raw', 'rb') as fobj:
-            content = fobj.read()
+            lines = fobj.readlines()
+
+        # ensure correct newline character (as expected by api parser)
+        # strip all newline characters and terminate each line with \r\n
+        # needs to work despite os and git newline character substitution
+        content = b''
+        for line in lines:
+            content += line.strip(b'\n').strip(b'\r') + b'\r\n'
+
         path = fastf1.api.base_url + session.api_path + fastf1.api.pages[p]
         requests_mock.get(path, content=content, status_code=200)
 
