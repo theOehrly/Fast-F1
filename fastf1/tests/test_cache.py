@@ -61,12 +61,12 @@ def test_cache_used_and_clear(tmpdir, requests_mock, caplog):
 
     # check cache directory, pickled results should now exist
     cache_dir_path = os.path.join(tmpdir, session.api_path[8:])
-    assert os.listdir(cache_dir_path) == ['car_data.ff1pkl',
-                                          'position_data.ff1pkl',
-                                          'session_status_data.ff1pkl',
-                                          'timing_app_data.ff1pkl',
-                                          'timing_data.ff1pkl',
-                                          'track_status_data.ff1pkl']
+    dir_list = os.listdir(cache_dir_path)
+    expected_dir_list = ['car_data.ff1pkl', 'position_data.ff1pkl',
+                         'session_status_data.ff1pkl',
+                         'timing_app_data.ff1pkl', 'timing_data.ff1pkl',
+                         'track_status_data.ff1pkl']
+    assert all(elem in expected_dir_list for elem in dir_list)
 
     # recreate session and reload data
     # this should use the cache this time
