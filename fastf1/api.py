@@ -296,7 +296,7 @@ def timing_data(path, response=None, livedata=None):
     # split up response per driver for easier iteration and processing later
     resp_per_driver = dict()
     for entry in response:
-        if 'Lines' not in entry[1]:
+        if (len(entry) < 2) or 'Lines' not in entry[1]:
             continue
         for drv in entry[1]['Lines']:
             if drv not in resp_per_driver.keys():
@@ -662,8 +662,10 @@ def timing_app_data(path, response=None, livedata=None):
             'TyresNotChanged': [], 'Time': [], 'LapFlags': [], 'LapCountTime': [], 'StartLaps': [], 'Outlap': []}
 
     for entry in response:
-        time = to_timedelta(entry[0])
+        if (len(entry) < 2) or 'Lines' not in entry[1]:
+            continue
 
+        time = to_timedelta(entry[0])
         row = entry[1]
         for driver_number in row['Lines']:
             if update := recursive_dict_get(row, 'Lines', driver_number, 'Stints'):
@@ -968,10 +970,14 @@ def track_status_data(path, response=None, livedata=None):
     data = {'Time': [], 'Status': [], 'Message': []}
 
     for entry in response:
+        if len(entry) < 2:
+            continue
         row = entry[1]
+        if not isinstance(row, dict):
+            continue
         data['Time'].append(to_timedelta(entry[0]))
-        data['Status'].append(row['Status'])
-        data['Message'].append(row['Message'])
+        data['Status'].append(row.get('Status', ''))
+        data['Message'].append(row.get('Message', ''))
 
     return data
 
@@ -1011,8 +1017,14 @@ def session_status_data(path, response=None, livedata=None):
     data = {'Time': [], 'Status': []}
 
     for entry in response:
+        if len(entry) < 2:
+            continue
+        row = entry[1]
+        if not isinstance(row, dict) or 'Status' not in row:
+            continue
+
         data['Time'].append(to_timedelta(entry[0]))
-        data['Status'].append(entry[1]['Status'])
+        data['Status'].append(row['Status'])
 
     return data
 
