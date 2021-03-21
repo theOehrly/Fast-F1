@@ -34,14 +34,19 @@ def delta_time(reference_lap, compare_lap):
         lec = laps.pick_driver('LEC').pick_fastest()
         ham = laps.pick_driver('HAM').pick_fastest()
 
+        delta_time, ref_tel, compare_tel = utils.delta_time(ham, lec)
+        # ham is reference, lec is compared
+
         fig, ax = plt.subplots()
-        ax.plot(lec.telemetry['Distance'], lec.telemetry['Speed'],
-                color=plotting.TEAM_COLORS[lec['Team']])
-        ax.plot(ham.telemetry['Distance'], ham.telemetry['Speed'],
+        # use telemetry returned by .delta_time for best accuracy,
+        # this ensure the same applied interpolation and resampling
+        ax.plot(ref_tel['Distance'], ref_tel['Speed'],
                 color=plotting.TEAM_COLORS[ham['Team']])
-        delta_time, dt_ref = utils.delta_time(ham, lec)
+        ax.plot(compare_tel['Distance'], compare_tel['Speed'],
+                color=plotting.TEAM_COLORS[lec['Team']])
+
         twin = ax.twinx()
-        twin.plot(dt_ref['Distance'], delta_time, '--', color=plotting.TEAM_COLORS[lec['Team']])
+        twin.plot(ref_tel['Distance'], delta_time, '--', color=plotting.TEAM_COLORS[lec['Team']])
         plt.show()
 
     .. image:: _static/delta_time.svg
@@ -56,8 +61,10 @@ def delta_time(reference_lap, compare_lap):
           - pd.Series of type `float64` with the delta in seconds.
           - :class:`Telemetry` for the reference lap
           - :class:`Telemetry` for the comparison lap
-            Use the return telemetry for plotting to make sure you have
-            telemetry data that was created with the same settings!
+
+          Use the return telemetry for plotting to make sure you have
+          telemetry data that was created with the same interpolation and
+          resampling options!
     """
     ref = reference_lap.get_car_data(interpolate_edges=True).add_distance()
     comp = compare_lap.get_car_data(interpolate_edges=True).add_distance()
