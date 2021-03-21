@@ -87,52 +87,86 @@ def recursive_dict_get(d, *keys):
 def to_timedelta(x):
     """Fast timedelta object creation from a time string
 
-    | String format: hh:mm:ss.ms
-    | Hours or minutes do not necessarily need to be present.
-    | Hours minutes and seconds always need to be zero padded so as to have two digits.
-    | An arbitrary part of the left side can be skipped for example 'mm:ss.ms' is acceptable too
+    Permissible string formats:
+
+        For example: `13:24:46.320215` with:
+
+            - optional hours and minutes
+            - optional microseconds and milliseconds with
+              arbitrary precision (1 to 6 digits)
+
+        Examples of valid formats:
+
+            - `24.3564` (seconds + milli/microseconds)
+            - `36:54` (minutes + seconds)
+            - `8:45:46` (hours, minutes, seconds)
 
     Args:
-        x (str): [hh:][mm:]ss.ms
+        x (str or timedelta):
     Returns:
-        timedelta object
+        datetime.timedelta
     """
-    # TODO should "fix" this; it does work for the given use case but actually does not quite behave as expected
     # this is faster than using pd.timedelta on a string
-    if isinstance(x, str):
-        def tdformat(s):
-            h, m, sms = s.split(':')
-            s, ms = sms.split('.')
-            return {'hours': int(h), 'minutes': int(m), 'seconds': int(s), 'milliseconds': int(ms)}
+    if isinstance(x, str) and len(x):
+        hours, minutes = 0, 0
+        if len(hms := x.split(':')) == 3:
+            hours, minutes, seconds = hms
+        elif len(hms) == 2:
+            minutes, seconds = hms
+        else:
+            seconds = hms[0]
 
-        if len(x) and isinstance(x, str):
-            return timedelta(**tdformat('00:00:00.000'[:-len(x)] + x))
+        if '.' in seconds:
+            seconds, msus = seconds.split('.')
+            if len(msus) < 6:
+                msus = msus + '0' * (6 - len(msus))
+            elif len(msus) > 6:
+                msus = msus[0:6]
+        else:
+            msus = 0
+
+        return timedelta(hours=int(hours), minutes=int(minutes),
+                         seconds=int(seconds), microseconds=int(msus))
     elif isinstance(x, timedelta):
         return x
-    return pd.to_timedelta(x)  # attempted catch-all; slow!
 
 
 def to_datetime(x):
     """Fast datetime object creation from a date string.
 
-    Permissible formats:
-        For example '2020-12-13T13:27:320000Z' with:
-            - seconds or no seconds
-            - optional milliseconds and microseconds with
-              arbitrary precision
-            - with optional trailing letter 'Z'
-    """
-    date, time = x.strip('Z').split('T')
-    year, month, day = date.split('-')
-    hours, minutes, seconds = time.split(':')
-    if '.' in seconds:
-        seconds, msus = seconds.split('.')
-        if len(msus) < 6:
-            msus = msus+'0'*(6-len(msus))
-        elif len(msus) > 6:
-            msus = msus[0:6]
-    else:
-        msus = 0
+    Permissible string formats:
 
-    return datetime(int(year), int(month), int(day), int(hours),
-                    int(minutes), int(seconds), int(msus))
+        For example '2020-12-13T13:27:15.320000Z' with:
+
+            - optional milliseconds and microseconds with
+              arbitrary precision (1 to 6 digits)
+            - with optional trailing letter 'Z'
+
+        Examples of valid formats:
+
+            - `2020-12-13T13:27:15.320000`
+            - `2020-12-13T13:27:15.32Z`
+            - `2020-12-13T13:27:15`
+
+    Args:
+        x (str or datetime)
+    Returns:
+        datetime.datetime
+    """
+    if isinstance(x, str):
+        date, time = x.strip('Z').split('T')
+        year, month, day = date.split('-')
+        hours, minutes, seconds = time.split(':')
+        if '.' in seconds:
+            seconds, msus = seconds.split('.')
+            if len(msus) < 6:
+                msus = msus+'0'*(6-len(msus))
+            elif len(msus) > 6:
+                msus = msus[0:6]
+        else:
+            msus = 0
+
+        return datetime(int(year), int(month), int(day), int(hours),
+                        int(minutes), int(seconds), int(msus))
+    elif isinstance(x, datetime):
+        return x
