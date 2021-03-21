@@ -235,15 +235,19 @@ def timing_data(path, response=None, livedata=None):
       linear data stream into a usable object and because of frequent errors and inaccuracies in said stream.
       Occasionally an "educated guess" needs to be made for judging whether a value belongs to this lap or to another
       lap. Additionally, some values which are considered "obviously" wrong are removed from the data. This can happen
-      with or without warnings, depending on the reason an severity.
-      | Timestamps marking start or end of a lap are postprocessed as the provided values are inaccurate.
-      | Lap and sector times are not modified ever! They are considered as the absolute truth. If necessary,
-      other values are adjusted to fit.
+      with or without warnings, depending on the reason and severity.
+
+      - Timestamps ('SessionTime') marking start or end of a lap are
+        post-processed as the provided values are inaccurate.
+      - Lap and sector times are not modified ever! They are considered as the
+        absolute truth. If necessary, other values are adjusted to fit.
 
 
     Args:
         path: api path base string (see :func:`make_path`)
         response (optional): api response can be passed if data was already downloaded
+        livedata: An instance of :class:`fastf1.livetiming.data.LivetimingData`
+            to use as a source instead of the api
 
     Returns:
         (DataFrame, DataFrame):
@@ -795,8 +799,10 @@ def car_data(path, response=None, livedata=None):
     for driver in data:
         if len(data[driver]['Date']) < len(most_complete_ref):
             # there is missing data for this driver
-            # extend the Date column and fill up missing telemetry values with zero,
-            # except Time which is left as NaT and will be calculated correctly during resampling
+            # extend the Date column and fill up missing telemetry values with
+            # zero, except Time which is left as NaT and will be calculated
+            # correctly based on Session.t0_date anyways when creating Telemetry
+            # instances in Session.load_telemetry
             index_df = pd.DataFrame(data={'Date': most_complete_ref})
             data[driver] = data[driver].merge(index_df, how='outer').sort_values(by='Date').reset_index(drop=True)
             data[driver].loc[:, channels.values()] = \
@@ -909,8 +915,10 @@ def position_data(path, response=None, livedata=None):
     for driver in data:
         if len(data[driver]['Date']) < len(most_complete_ref):
             # there is missing data for this driver
-            # extend the Date column and fill up missing telemetry values with zero,
-            # except Time which is left as NaT and will be calculated correctly during resampling
+            # extend the Date column and fill up missing telemetry values with
+            # zero, except Time which is left as NaT and will be calculated
+            # correctly based on Session.t0_date anyways when creating Telemetry
+            # instances in Session.load_telemetry
             # and except Status which should be 'OffTrack' for missing data
             index_df = pd.DataFrame(data={'Date': most_complete_ref})
             data[driver] = data[driver].merge(index_df, how='outer').sort_values(by='Date').reset_index()

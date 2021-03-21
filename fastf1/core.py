@@ -1114,8 +1114,9 @@ class Session:
             data of different laps.
 
         Args:
-            with_telemetry (bool): Load telemetry data also. (Same as calling :meth:`Session.load_telemetry` manually)
-            livedata (fastf1.api.LivetimingResponse, optional) :
+            with_telemetry (bool): Load telemetry data also.
+                (Same as calling :meth:`Session.load_telemetry` manually)
+            livedata (:class:`fastf1.livetiming.data.LiveTimingData`, optional) :
                 instead of requesting the data from the api, locally saved
                 livetiming data can be used as a data source
 
@@ -1305,7 +1306,7 @@ class Session:
         :attr:`Session.laps`.
 
         Args:
-            response (fastf1.api.LivetimingResponse, optional) :
+            livedata (:class:`fastf1.livetiming.data.LiveTimingData`, optional) :
                 instead of requesting the data from the api, locally saved
                 livetiming data can be used as a data source
         """

@@ -86,10 +86,10 @@ class LiveTimingData:
             self._try_set_correct_start_date(data)
 
         for elem in data:
-            hash = hashlib.md5(elem.encode()).hexdigest()
-            if hash in self._line_hashes:
+            lhash = hashlib.md5(elem.encode()).hexdigest()
+            if lhash in self._line_hashes:
                 continue
-            self._line_hashes.append(hash)
+            self._line_hashes.append(lhash)
 
             # load the three parts of each data element
             elem = self._fix_json(elem)
