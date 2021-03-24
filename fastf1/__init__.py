@@ -11,8 +11,8 @@ Car position, speed traces, tyres, timings and weekend history are some
 of the many available resources. No formula1 account is needed.
 
 The library is designed to be interfaced with matplotlib (although you
-can use whatever you want) but there is a neat :mod:`plots` module which
-you can import and gives some color to your graphs.
+can use whatever you want) but there is a neat :mod:`fastf1.plotting`module which
+you can use to create nice graphs more easily.
 
 Modules handle big chunks of data (~50-100mb per session) so most of the
 information is stored locally as cached requests (be aware).
@@ -44,10 +44,13 @@ For some more advanced stuff, just a few more steps::
     from matplotlib import pyplot as plt
     from fastf1 import plotting
 
+    plotting.setup_mpl()
+
     laps = monza_quali.load_laps(with_telemetry=True)
     fast_leclerc = laps.pick_driver('LEC').pick_fastest()
-    t = fast_leclerc.telemetry['Time']
-    vCar = fast_leclerc.telemetry['Speed']
+    lec_car_data = fast_leclerc.get_car_data()
+    t = lec_car_data['Time']
+    vCar = lec_car_data['Speed']
 
     # The rest is just plotting
     fig, ax = plt.subplots()
@@ -71,6 +74,9 @@ Package functions
 Available functions directly accessible from fastf1 package
 
 .. autofunction:: fastf1.core.get_session
+    :noindex:
+
+.. autofunction:: fastf1.api.Cache.enable_cache
     :noindex:
 
 .. autofunction:: fastf1.api.Cache.clear_cache

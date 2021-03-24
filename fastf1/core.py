@@ -105,6 +105,21 @@ def get_session(year, gp, event=None):
     corresponding to the requested session.
     If no session is specified, the full weekend is returned.
 
+    Examples:
+
+        Get the second free practice of the first race of 2021::
+
+            get_session(2021, 1, 'FP2')
+
+        Get the qualifying of the 2020 Austrian Grand Prix::
+
+            get_session(2020, 'Austria', 'Q')
+
+        Get the second day of pre-season testing of 2021::
+
+            get_session(2021, 'testing', 2)
+
+
     Args:
         year (number): Session year
         gp (number or string): Name or weekend number (1: Australia,
