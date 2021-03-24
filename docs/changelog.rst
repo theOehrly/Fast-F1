@@ -3,6 +3,17 @@ Changelog
 =========
 
 
+v2.1.4 Bug fixes and various minor improvements
+===============================================
+
+- Fix a bug introduced in v2.1.3 which prevented the loading of
+  any data from the api
+
+- Make the api parser more robust and tolerant against invalid data
+
+- various small improvements
+
+
 v2.1.3 Improved error handling
 ==============================
 
