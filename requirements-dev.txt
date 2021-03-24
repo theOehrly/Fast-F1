@@ -3,6 +3,7 @@ pytest-mpl
 requests-mock
 sphinx
 sphinx-rtd-theme
+autodocsumm
 wheel
 pytest-flake8
 readme-renderer

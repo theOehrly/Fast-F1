@@ -11,7 +11,7 @@ Car position, speed traces, tyres, timings and weekend history are some
 of the many available resources. No formula1 account is needed.
 
 The library is designed to be interfaced with matplotlib (although you
-can use whatever you want) but there is a neat :mod:`fastf1.plotting`module which
+can use whatever you want) but there is a neat :mod:`fastf1.plotting` module which
 you can use to create nice graphs more easily.
 
 Modules handle big chunks of data (~50-100mb per session) so most of the

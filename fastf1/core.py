@@ -53,16 +53,6 @@ Functions
     get_session
     get_round
 
-
-Exceptions
-----------
-
-:class:`NoLapDataError` can be raised when calling :meth:`Session.load_laps`
-if the API does not return any usable data.
-
-
-API Reference
--------------
 """
 
 from fastf1 import ergast
