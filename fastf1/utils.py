@@ -21,15 +21,19 @@ def delta_time(reference_lap, compare_lap):
         different way for verification.
 
     Here is an example that compares the quickest laps of Leclerc and
-    Hamilton from Barcelona 2019 Qualifying::
+    Hamilton from Bahrain 2021 Qualifying::
 
         import fastf1 as ff1
         from fastf1 import plotting
         from fastf1 import utils
+        from fastf1.livetiming.data import LiveTimingData
         from matplotlib import pyplot as plt
 
-        quali = ff1.get_session(2019, 'Spain', 'Q')
-        laps = quali.load_laps()
+        plotting.setup_mpl()
+
+        livedata = LiveTimingData('recording.txt')
+        quali = ff1.get_session(2021, 'Bahrain', 'Q')
+        laps = quali.load_laps(with_telemetry=True, livedata=livedata)
         lec = laps.pick_driver('LEC').pick_fastest()
         ham = laps.pick_driver('HAM').pick_fastest()
 
