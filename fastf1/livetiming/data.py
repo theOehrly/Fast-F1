@@ -66,8 +66,8 @@ class LiveTimingData:
         Read all files and parse data.
 
         Should usually not be called manually. This is called
-        automatically the first time :meth:`get` or :meth:`set`
-        are called.
+        automatically the first time :meth:`get`, :meth:`has`
+        or :meth:`list_categories` are called.
         """
         logging.info("Loading live timing data. This may take a bit.")
         for fname in self.files:
@@ -76,6 +76,9 @@ class LiveTimingData:
 
     def _load_single_file(self, fname):
         """
+        This parser reformats the live data stream so that it is
+        compatible with the existing api parser.
+
         Args:
             fname (str) : file name (opt. with path);
                 file from which to read the live timing data from"""
@@ -86,6 +89,8 @@ class LiveTimingData:
             self._try_set_correct_start_date(data)
 
         for elem in data:
+            # prevent duplicates when loading data (slow, but it works...)
+            # allows to load data from overlapping recordings
             lhash = hashlib.md5(elem.encode()).hexdigest()
             if lhash in self._line_hashes:
                 continue
@@ -95,13 +100,20 @@ class LiveTimingData:
             elem = self._fix_json(elem)
             try:
                 cat, msg, dt = json.loads(elem)
-            except json.JSONDecodeError:
+            except (json.JSONDecodeError, ValueError):
                 self.errorcount += 1
                 continue
 
-            # convert string to datetime; need to strip trailing 'Z',
-            # sometimes zero-pad right and sometimes cut to us precision
-            dt = to_datetime(dt)
+            # convert string to datetime
+            try:
+                dt = to_datetime(dt)
+            except (ValueError, TypeError):
+                self.errorcount += 1
+                continue
+
+            # if no start date could be determined beforehand, simply use the
+            # first timestamp as we need to have some date as start date;
+            # convert timestamp to timedelta (SessionTime) base on start date
             if self._start_date is None:
                 self._start_date = dt
                 td = timedelta(seconds=0)
@@ -136,10 +148,14 @@ class LiveTimingData:
         if 'SessionStatus' not in self.data.keys():
             self.data['SessionStatus'] = {'Time': [], 'Status': []}
 
-        if isinstance(msg['StatusSeries'], dict):
+        if ('StatusSeries' in msg) and isinstance(msg['StatusSeries'], dict):
             for entry in msg['StatusSeries'].values():
                 # convert timestamp to timedelta
-                status_dt = to_datetime(entry['Utc'])
+                try:
+                    status_dt = to_datetime(entry['Utc'])
+                except (KeyError, ValueError, TypeError):
+                    self.errorcount += 1
+                    continue
                 status_timedelta = status_dt - self._start_date
 
                 # add data to category
@@ -172,7 +188,7 @@ class LiveTimingData:
         elem = self._fix_json(elem)
         try:
             cat, msg, dt = json.loads(elem)
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, ValueError):
             logging.error("Error while trying to set correct "
                           "session start date!")
             return
@@ -182,12 +198,24 @@ class LiveTimingData:
             for entry in msg['StatusSeries']:
                 status = recursive_dict_get(entry, 'SessionStatus')
                 if status == 'Started':
-                    self._start_date = to_datetime(entry['Utc'])
+                    try:
+                        self._start_date = to_datetime(entry['Utc'])
+                    except (KeyError, ValueError, TypeError):
+                        self.errorcount += 1
+                        logging.error("Error while trying to set correct "
+                                      "session start date!")
+                        return
         except AttributeError:
             for entry in msg['StatusSeries'].values():
                 status = entry.get('SessionStatus', None)
                 if status == 'Started':
-                    self._start_date = to_datetime(entry['Utc'])
+                    try:
+                        self._start_date = to_datetime(entry['Utc'])
+                    except (KeyError, ValueError, TypeError):
+                        self.errorcount += 1
+                        logging.error("Error while trying to set correct "
+                                      "session start date!")
+                        return
 
     def get(self, name):
         """
