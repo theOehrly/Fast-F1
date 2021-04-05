@@ -174,7 +174,7 @@ class Cache:
                         return data
 
                 else:  # cached data does not yet exist for this request, try to download and create cache
-                    logging.info("No cached data found. Downloading...")
+                    logging.info(f"No cached data found for {str(func.__name__)}. Loading data...")
                     data = func(api_path, response=response, livedata=livedata)
                     if data is not None:
                         new_cached = {'version': cls._API_CORE_VERSION, 'data': data}
@@ -187,7 +187,7 @@ class Cache:
 
             else:  # cache was not enabled
                 if not cls._has_been_warned:  # warn only once
-                    logging.warning("\n\nNO CACHE! Api request caching has not been enabled! \n\t"
+                    logging.warning("\n\nNO CACHE! Api caching has not been enabled! \n\t"
                                     "It is highly recommended to enable this feature for much faster data loading!\n\t"
                                     "Use `fastf1.Cache.enable_cache('path/to/cache/')`\n")
 

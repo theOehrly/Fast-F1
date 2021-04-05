@@ -69,7 +69,8 @@ class LiveTimingData:
         automatically the first time :meth:`get`, :meth:`has`
         or :meth:`list_categories` are called.
         """
-        logging.info("Loading live timing data. This may take a bit.")
+        logging.info("Reading live timing data from recording. "
+                     "This may take a bit.")
         for fname in self.files:
             self._load_single_file(fname)
         self._files_read = True
