@@ -43,9 +43,13 @@ class LiveTimingData:
     be loaded.
 
     Args:
-        *files: One or multiple file names
+        *files (str): One or multiple file names
+        remove_duplicates (bool): Remove duplicate lines. Mainly useful when
+            loading multiple overlapping recordings. (Checking for duplicates
+            is currently very slow for large files. Therefore, it can be
+            disabled if this may cause problems.)
     """
-    def __init__(self, *files):
+    def __init__(self, *files, remove_duplicates=True):
         # file names
         self.files = files
         # parsed data
@@ -60,10 +64,11 @@ class LiveTimingData:
         self._previous_files = False
         # hash each line, used to skip duplicates from multiple files
         self._line_hashes = list()
+        self._remove_duplicates = remove_duplicates
 
     def load(self):
         """
-        Read all files and parse data.
+        Read all files, parse the data and store it by category.
 
         Should usually not be called manually. This is called
         automatically the first time :meth:`get`, :meth:`has`
@@ -76,58 +81,65 @@ class LiveTimingData:
         self._files_read = True
 
     def _load_single_file(self, fname):
-        """
-        This parser reformats the live data stream so that it is
-        compatible with the existing api parser.
-
-        Args:
-            fname (str) : file name (opt. with path);
-                file from which to read the live timing data from"""
+        # read one file, parse its content and add it to the already loaded
+        # data (if there is data already)
         with open(fname, 'r') as fobj:
             data = fobj.readlines()
 
+        # try to find the correct start date (only if this is the first file)
         if not self._previous_files:
             self._try_set_correct_start_date(data)
 
-        for elem in data:
+        for line in data:
+            self._parse_line(line)
+
+        # first file was loaded, others are appended if any more are loaded
+        self._previous_files = True
+
+    def _parse_line(self, elem):
+        # parse a single line of data
+
+        if self._remove_duplicates:
             # prevent duplicates when loading data (slow, but it works...)
             # allows to load data from overlapping recordings
             lhash = hashlib.md5(elem.encode()).hexdigest()
             if lhash in self._line_hashes:
-                continue
+                return
             self._line_hashes.append(lhash)
 
-            # load the three parts of each data element
-            elem = self._fix_json(elem)
-            try:
-                cat, msg, dt = json.loads(elem)
-            except (json.JSONDecodeError, ValueError):
-                self.errorcount += 1
-                continue
+        # load the three parts of each data element
+        elem = self._fix_json(elem)
+        try:
+            cat, msg, dt = json.loads(elem)
+        except (json.JSONDecodeError, ValueError):
+            self.errorcount += 1
+            return
 
-            # convert string to datetime
-            try:
-                dt = to_datetime(dt)
-            except (ValueError, TypeError):
-                self.errorcount += 1
-                continue
+        # convert string to datetime
+        try:
+            dt = to_datetime(dt)
+        except (ValueError, TypeError):
+            self.errorcount += 1
+            return
 
-            # if no start date could be determined beforehand, simply use the
-            # first timestamp as we need to have some date as start date;
-            # convert timestamp to timedelta (SessionTime) base on start date
-            if self._start_date is None:
-                self._start_date = dt
-                td = timedelta(seconds=0)
-            else:
-                td = dt - self._start_date
+        # if no start date could be determined beforehand, simply use the
+        # first timestamp as we need to have some date as start date;
+        # convert timestamp to timedelta (SessionTime) base on start date
+        if self._start_date is None:
+            self._start_date = dt
+            td = timedelta(seconds=0)
+        else:
+            td = dt - self._start_date
 
-            if cat == 'SessionData':
-                self._parse_session_data(msg)
-            elif cat not in ('TrackStatus', 'SessionStatus'):
-                self._add_to_category(cat, [td, msg])
+        self._store_message(cat, td, msg)
 
-        # first file was loaded, others are appended if loaded
-        self._previous_files = True
+    def _store_message(self, cat, td, msg):
+        # stores parsed messages by category
+        # TrackStatus and SessionStatus categories need special handling
+        if cat == 'SessionData':
+            self._parse_session_data(msg)
+        elif cat not in ('TrackStatus', 'SessionStatus'):
+            self._add_to_category(cat, [td, msg])
 
     def _fix_json(self, elem):
         # fix F1's not json compliant data
@@ -247,6 +259,8 @@ class LiveTimingData:
     def list_categories(self):
         """
         List all available data categories.
+
+        Will load data on first call, this will take a bit.
 
         Returns:
             list of category names
