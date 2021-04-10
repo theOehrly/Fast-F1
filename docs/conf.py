@@ -8,12 +8,15 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('../'))
 from datetime import datetime
+import re
 
 # -- Project information -----------------------------------------------------
 
-# load version number from file in project root dir
-with open('../VERSION.txt') as vfobj:
-    version = str(vfobj.read())
+# load version number from file in sources dir without importing
+with open('../fastf1/version.py') as vfobj:
+    vstring = str(vfobj.read())
+    version = re.search(r"(\d.\d.\d)", vstring)[0]
+
 
 # project = 'Fast F1'
 # copyright = 'MIT'
