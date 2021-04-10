@@ -31,7 +31,7 @@ def test_cache_used_and_clear(tmpdir, requests_mock, caplog):
     with open('fastf1/testing/reference_data/2020_05_FP2/'
               'ergast_race_result.raw', 'rb') as fobj:
         content = fobj.read()
-    requests_mock.get('http://ergast.com/api/f1/2020/5/result.json',
+    requests_mock.get('http://ergast.com/api/f1/2020/5/results.json',
                       content=content, status_code=200)
 
     with open('fastf1/testing/reference_data/2020_05_FP2/'
