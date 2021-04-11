@@ -968,6 +968,7 @@ def track_status_data(path, response=None, livedata=None):
     """
     if livedata is not None and livedata.has('TrackStatus'):
         # does not need any further processing
+        logging.info("Loading track status data")
         return livedata.get('TrackStatus')
     elif response is None:
         logging.info("Fetching track status data...")
@@ -1015,6 +1016,7 @@ def session_status_data(path, response=None, livedata=None):
     """
     if livedata is not None and livedata.has('SessionStatus'):
         # does not need any further processing
+        logging.info("Loading session status data")
         return livedata.get('SessionStatus')
     elif response is None:
         logging.info("Fetching session status data...")
