@@ -5,8 +5,8 @@ Fast F1
 A python package for accessing F1 historical timing data and telemetry.
 
 
-IMPORTANT NOTE: Status of the project (Update 3: 13th March 2021)
-=================================================================
+General Information
+===================
 
 **FastF1 v2.1 is now available for installation through pip.
 The old way of installing via pip + git directly from the master branch is no
@@ -31,17 +31,14 @@ This means:
 Live timing data
 ----------------
 
-**A livetiming client has been added for the v2.1 release. The client can be
+**A live timing client has been added with the v2.1 release. The client can be
 used to save the live timing telemetry data stream that is available during
-sessions. This can potentially be used to work around the problem of missing
-data on the server.**
+sessions.**
 
-The live timing client does not and will never parse data in real time!
+The live timing client does not parse data in real time!
 Data can only be parsed and used after a session has completed. This is a
 limitation of FastF1's api parser. For various reasons there is no
 intention of changing this.
-
-Consider all live timing related functionality as beta-grade at best.
 
 For usage see the documentation.
 
@@ -63,10 +60,8 @@ Other
 
 Please report bugs if (when) you find them. Feel free to report complaints about
 unclear documentation too.
-The available documentation is updated for this version.
 
-
-Interested in contributing? See below...
+Interested in contributing? There's some info at the end of this document...
 
 
 Installation
@@ -137,9 +132,10 @@ Compatibility
 
 Timing data is available for the 2018, 2019 and 2020 season.
 Very basic weekend information is available for older seasons (limited to
-`Ergast web api <http://ergast.com/mrd/>`_). Live timing and telemetry is only
-available starting from 2018.
-
+`Ergast web api <http://ergast.com/mrd/>`_).
+Car telemetry data is only available as a live stream during a session. This
+means that you need to record this data yourself, using the provided client, if you want
+to have access to it.
 
 
 Roadmap

@@ -3,6 +3,15 @@ Changelog
 =========
 
 
+v2.1.5 Improved robustness and minor fixes
+==========================================
+
+- Make the data parsing in :class:`fastf1.livetiming.data.LiveTimingData` more
+  robust and tolerant against unexpected data.
+
+- some more small improvements regarding logging and other stuff
+
+
 v2.1.4 Bug fixes and various minor improvements
 ===============================================
 
