@@ -55,8 +55,8 @@ Functions
 
 """
 
-from fastf1 import ergast
-from fastf1 import api
+from fastf1 import api, ergast
+import fastf1
 import pandas as pd
 import numpy as np
 import logging
@@ -1128,7 +1128,8 @@ class Session:
         Returns:
             instance of :class:`Laps`
         """
-        logging.info(f"Loading {self.weekend.name} - {self.name}")
+        logging.info(f"Loading laps for {self.weekend.name} - {self.name}"
+                     f" [v{fastf1.__version__}]")
 
         """From `timing_data` and `timing_app_data` a summary table is
         built. Lap by lap, information on tyre, sectors and times are
