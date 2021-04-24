@@ -37,3 +37,82 @@ def test_dtypes_pick(reference_laps_data):
     ensure_data_type(LAP_DTYPES, laps.iloc[:2])
     ensure_data_type(LAP_DTYPES,
                      laps.pick_driver(drv).iloc[:3].pick_quicklaps())
+
+
+@pytest.mark.f1telapi
+def test_laps_get_car_data(reference_laps_data):
+    session, laps = reference_laps_data
+    drv = list(laps['Driver'].unique())[1]  # some driver
+    drv_laps = laps.pick_driver(drv)
+    car = drv_laps.get_car_data()
+    assert car.shape == (26559, 10)
+    assert not car.isna().sum().sum()  # sum rows then columns
+    for col in ('Speed', 'RPM', 'nGear', 'Throttle', 'Brake', 'DRS',
+                'Time', 'SessionTime', 'Date', 'Source'):
+        assert col in car.columns
+
+
+@pytest.mark.f1telapi
+def test_laps_get_pos_data(reference_laps_data):
+    session, laps = reference_laps_data
+    drv = list(laps['Driver'].unique())[1]  # some driver
+    drv_laps = laps.pick_driver(drv)
+    pos = drv_laps.get_pos_data()
+    assert pos.shape == (29330, 8)
+    assert not pos.isna().sum().sum()
+    for col in ('X', 'Y', 'Z', 'Status', 'Time', 'SessionTime', 'Date',
+                'Source'):
+        assert col in pos.columns
+
+
+@pytest.mark.f1telapi
+def test_laps_get_telemetry(reference_laps_data):
+    session, laps = reference_laps_data
+    drv = list(laps['Driver'].unique())[1]  # some driver
+    drv_laps = laps.pick_driver(drv)
+    tel = drv_laps.get_telemetry()
+    assert tel.shape == (55788, 18)
+    assert not tel.isna().sum().sum()
+    for col in ('Speed', 'RPM', 'nGear', 'Throttle', 'Brake', 'DRS',
+                'X', 'Y', 'Z', 'Status', 'Time', 'SessionTime', 'Date',
+                'Source', 'Distance', 'DriverAhead'):
+        assert col in tel.columns
+
+
+@pytest.mark.f1telapi
+def test_lap_get_car_data(reference_laps_data):
+    session, laps = reference_laps_data
+    drv_laps = laps.pick_fastest()
+    car = drv_laps.get_car_data()
+    assert car.shape == (340, 10)
+    assert not car.isna().sum().sum()  # sum rows then columns
+    for col in ('Speed', 'RPM', 'nGear', 'Throttle', 'Brake', 'DRS',
+                'Time', 'SessionTime', 'Date', 'Source'):
+        assert col in car.columns
+
+
+@pytest.mark.f1telapi
+def test_lap_get_pos_data(reference_laps_data):
+    session, laps = reference_laps_data
+    drv_laps = laps.pick_fastest()
+    pos = drv_laps.get_pos_data()
+    assert pos.shape == (377, 8)
+    assert not pos.isna().sum().sum()
+    for col in ('X', 'Y', 'Z', 'Status', 'Time', 'SessionTime', 'Date',
+                'Source'):
+        assert col in pos.columns
+
+
+@pytest.mark.f1telapi
+def test_lap_get_telemetry(reference_laps_data):
+    session, laps = reference_laps_data
+    drv_laps = laps.pick_fastest()
+    tel = drv_laps.get_telemetry()
+    assert tel.shape == (719, 18)
+    # DistanceToDriverAhead may contain nan values
+    assert not tel.loc[:, tel.columns != 'DistanceToDriverAhead']\
+        .isna().sum().sum()
+    for col in ('Speed', 'RPM', 'nGear', 'Throttle', 'Brake', 'DRS',
+                'X', 'Y', 'Z', 'Status', 'Time', 'SessionTime', 'Date',
+                'Source', 'Distance', 'DriverAhead'):
+        assert col in tel.columns

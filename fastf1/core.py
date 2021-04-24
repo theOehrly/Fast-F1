@@ -1570,7 +1570,8 @@ class Laps(pd.DataFrame):
             raise ValueError("Cannot slice telemetry because self contains no driver number!")
         if len(drv_num) > 1:
             raise ValueError("Cannot slice telemetry because self contains Laps of multiple drivers!")
-        pos_data = self.session.pos_data[self['DriverNumber']].slice_by_lap(self, **kwargs).reset_index(drop=True)
+        drv_num = drv_num[0]
+        pos_data = self.session.pos_data[drv_num].slice_by_lap(self, **kwargs).reset_index(drop=True)
         return pos_data
 
     def pick_driver(self, identifier):
