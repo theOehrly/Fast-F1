@@ -795,7 +795,9 @@ class Telemetry(pd.DataFrame):
             d = self
 
         drv_ahead, dist = self.calculate_driver_ahead()
-        return d.join(pd.DataFrame({'DriverAhead': drv_ahead, 'DistanceToDriverAhead': dist}), how='outer')
+        return d.join(pd.DataFrame({'DriverAhead': drv_ahead,
+                                    'DistanceToDriverAhead': dist},
+                                   index=d.index), how='outer')
 
     def calculate_differential_distance(self):
         """Calculate the distance between subsequent samples of self.
@@ -1523,7 +1525,15 @@ class Laps(pd.DataFrame):
         """
         pos_data = self.get_pos_data(pad=1, pad_side='both')
         car_data = self.get_car_data(pad=1, pad_side='both')
-        car_data = car_data.add_distance().add_relative_distance().add_driver_ahead()
+
+        # calculate driver ahead from from data without padding to
+        # prevent out of bounds errors
+        drv_ahead = car_data.iloc[1:-1].add_driver_ahead() \
+            .loc[:, ('DriverAhead', 'DistanceToDriverAhead',
+                     'Date', 'Time', 'SessionTime')]
+
+        car_data = car_data.add_distance().add_relative_distance()
+        car_data = car_data.merge_channels(drv_ahead)
         merged = pos_data.merge_channels(car_data)
         return merged.slice_by_lap(self, interpolate_edges=True)
 
@@ -1791,7 +1801,15 @@ class Lap(pd.Series):
         """
         pos_data = self.get_pos_data(pad=1, pad_side='both')
         car_data = self.get_car_data(pad=1, pad_side='both')
-        car_data = car_data.add_distance().add_relative_distance().add_driver_ahead()
+
+        # calculate driver ahead from from data without padding to
+        # prevent out of bounds errors
+        drv_ahead = car_data.iloc[1:-1].add_driver_ahead() \
+            .loc[:, ('DriverAhead', 'DistanceToDriverAhead',
+                     'Date', 'Time', 'SessionTime')]
+
+        car_data = car_data.add_distance().add_relative_distance()
+        car_data = car_data.merge_channels(drv_ahead)
         merged = pos_data.merge_channels(car_data)
         return merged.slice_by_lap(self, interpolate_edges=True)
 
