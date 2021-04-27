@@ -26,14 +26,12 @@ def delta_time(reference_lap, compare_lap):
         import fastf1 as ff1
         from fastf1 import plotting
         from fastf1 import utils
-        from fastf1.livetiming.data import LiveTimingData
         from matplotlib import pyplot as plt
 
         plotting.setup_mpl()
 
-        livedata = LiveTimingData('recording.txt')
         quali = ff1.get_session(2021, 'Bahrain', 'Q')
-        laps = quali.load_laps(with_telemetry=True, livedata=livedata)
+        laps = quali.load_laps(with_telemetry=True)
         lec = laps.pick_driver('LEC').pick_fastest()
         ham = laps.pick_driver('HAM').pick_fastest()
 

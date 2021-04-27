@@ -5,43 +5,47 @@ Fast F1
 A python package for accessing F1 historical timing data and telemetry.
 
 
+UPDATE: Telemetry data is available for download again!
+=======================================================
+
+Car telemetry and position data can be downloaded after a session again.
+The api problems that caused this data to be unavailable have
+*apparently* been fixed!
+
+This means, that the full functionality of this package is available
+again without the need to record the live timing data stream.
+
+Data seems to be fully available for the 2018 to 2021 season.
+
+A word of caution: I do not have any insight into the server side
+of the api. This problem has solved itself as surprisingly as it had
+started. If you think that you "rely" on this data for some reason, you
+*should* go ahead and **continue recording** the live data stream
+...redundancy and stuff.
+
+
+Installation
+============
+
+It is recommended to install FastF1 using pip:
+
+    pip install fastf1
+
+Note that Python 3.8 is required.
+
+Alternatively, a wheel or a source distribution can be downloaded from the
+Github releases page or from Pypi.
+
+
+Documentation
+=============
+
+... can be found `here <https://theoehrly.github.io/Fast-F1/fastf1.html>`_.
+
+
+
 General Information
 ===================
-
-**FastF1 v2.1 is now available for installation through pip.
-The old way of installing via pip + git directly from the master branch is no
-longer recommended.**
-
-It is no longer possible to download telemetry and car position data after a
-session!
-
-See `this <https://twitter.com/F1Help/status/1335939396240093185>`_ Twitter
-post for some information.
-
-This means:
-
-  - It is still **possible** to load timing data, tire data, track status
-    data and session status data.
-
-  - It is **not possible** to load car telemetry data
-    (includes position data). You need to record live timing data during
-    a session for this!
-
-
-Live timing data
-----------------
-
-**A live timing client has been added with the v2.1 release. The client can be
-used to save the live timing telemetry data stream that is available during
-sessions.**
-
-The live timing client does not parse data in real time!
-Data can only be parsed and used after a session has completed. This is a
-limitation of FastF1's api parser. For various reasons there is no
-intention of changing this.
-
-For usage see the documentation.
-
 
 Changes
 -------
@@ -64,23 +68,8 @@ unclear documentation too.
 Interested in contributing? There's some info at the end of this document...
 
 
-Installation
-============
-
-It is recommended to install FastF1 using pip:
-
-    pip install fastf1
-
-Note that Python 3.8 is required.
-
-Alternatively a wheel or a source distribution can be downloaded from the
-Github releases page.
-
 Usage
 =====
-
-Full documentation can be found
-`here <https://theoehrly.github.io/Fast-F1/fastf1.html>`_.
 
 Creating a simple analysis is not very difficult, especially if you are already familiar
 with pandas and numpy.
@@ -127,15 +116,16 @@ the path to some empty folder on your system.
     :target: docs/_static/readme.svg
 
 
+For more information, check the documentation
+`here <https://theoehrly.github.io/Fast-F1/fastf1.html>`_.
+
+
 Compatibility
 =============
 
-Timing data is available for the 2018, 2019 and 2020 season.
+Timing data, car telemetry and position data is available for the 2018 to 2021 seasons.
 Very basic weekend information is available for older seasons (limited to
 `Ergast web api <http://ergast.com/mrd/>`_).
-Car telemetry data is only available as a live stream during a session. This
-means that you need to record this data yourself, using the provided client, if you want
-to have access to it.
 
 
 Roadmap
@@ -159,4 +149,3 @@ or issue you would like to work on. This way we can coordinate so that no unnece
 Working directly on the core and api code will require some time to understand. Creating nice default plots on the
 other hand does not required as deep of an understanding of the code and is therefore easier to accomplish. Pick
 whatever you like to do.
-

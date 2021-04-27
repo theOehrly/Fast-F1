@@ -3,14 +3,7 @@
 =====================================================
 
 This module can be used to save live timing data during a session.
-
-.. warning:: Receiving and saving the SignalR live timing data is
-    experimental. This functionality is largely untested due to a distinct
-    lack of testing opportunities.
-
-.. note:: While data can be saved, it is not yet possible to actually use
-    the saved data. An update which allows using the data will likely be
-    available after the 2021 pre-season testing.
+It is **not** possible to do real-time processing of the data.
 
 
 There are two ways to interact with this module.

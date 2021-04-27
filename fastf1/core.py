@@ -1299,7 +1299,12 @@ class Session:
                 logging.warning(f"Driver {drv: >2}: Lap timing integrity check failed for {integrity_errors} lap(s)")
 
     def load_telemetry(self, livedata=None):
-        """Load telemetry data from API.
+        """Load telemetry data from the API.
+
+        This method can only be called after :meth:`load_laps` has been
+        called. You will usually just want to call :meth:`load_laps` with
+        the optional ``with_telemetry=True`` argument instead of calling this
+        method separately. The result will be the same.
 
         The raw data is divided into car data (Speed, RPM, ...) and position data (coordinates, on/off track). For each
         of the two types an instance of :class:`Telemetry` is created per driver. The properties
@@ -1418,7 +1423,9 @@ class Laps(pd.DataFrame):
         - **Time** (pandas.Timedelta): Session time when the lap time was set (end of lap)
         - **Driver** (string): Three letter driver identifier
         - **DriverNumber** (str): Driver number
-        - **LapTime** (pandas.Timedelta): Recorded lap time
+        - **LapTime** (pandas.Timedelta): Recorded lap time.
+          Officially deleted lap times will *not* be deleted here.
+          Deleting laps is currently not supported.
         - **LapNumber** (int): Recorded lap number
         - **Stint** (int): Stint number
         - **PitOutTime** (pandas.Timedelta): Session time when car exited the pit
@@ -1654,6 +1661,13 @@ class Laps(pd.DataFrame):
 
     def pick_fastest(self):
         """Select and return the lap with the fastest lap time.
+
+        .. note:: Officially deleted laps (e.g. driver was outside of
+          the track limits) will still show up as normal laps here.
+          The fastest lap returned by this method can therefore be one
+          that was officially deleted after it was set. You need to manually
+          ensure that this is not the case by comparing lap times with a
+          session's official results or some other source of data.
 
         Returns:
             instance of :class:`Lap`

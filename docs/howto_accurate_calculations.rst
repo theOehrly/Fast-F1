@@ -62,7 +62,7 @@ If you simply wish to visualize existing data, slicing laps is rather straight f
 
 .. code-block:: python
 
-    session = ff1.get_session(2020, 4, 'Q')
+    session = fastf1.get_session(2020, 4, 'Q')
     laps = session.load_laps(with_telemetry=True)
     fastest_lap = laps.pick_fastest()
     tel = fastest_lap.telemetry
@@ -76,23 +76,22 @@ To stay away from interpolation before doing any calculations, the following cou
 
 .. code-block:: python
 
-    session = ff1.get_session(2020, 4, 'Q')
+    session = fastf1.get_session(2020, 4, 'Q')
     laps = session.load_laps(with_telemetry=True)
     fastest_lap = laps.pick_fastest()
-    drv_n = fastest_lap['DriverNumber']
 
     # use padding so that there are values outside of the desired range for accurate interpolation later
-    car_data = session.slice_by_lap(session.car_data[drv_n], fastest_lap, pad=1, pad_side='both')
-    pos_data = session.slice_by_lap(session.pos_data[drv_n], fastest_lap, pad=1, pad_side='both')
+    car_data = fastest_lap.get_car_data(pad=1, pad_side='both')
+    pos_data = fastest_lap.get_pos_data(pad=1, pad_side='both')
 
     # do calculations here
     # ...
     # ...
 
-    merged_data = session.merge_channels(car_data, pos_data)
+    merged_data = car_data.merge_channels(pos_data)
 
     # slice again to remove the padding and interpolate the exact first and last value
-    merged_data = session.slice_by_lap(merged_data, fastest_lap, interpolate_edges=True)
+    merged_data = merged_data.slice_by_lap(fastest_lap, interpolate_edges=True)
 
 
 

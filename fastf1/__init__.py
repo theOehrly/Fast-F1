@@ -14,15 +14,11 @@ The library is designed to be interfaced with matplotlib (although you
 can use whatever you want) but there is a neat :mod:`fastf1.plotting` module which
 you can use to create nice graphs more easily.
 
-Modules handle big chunks of data (~50-100mb per session) so most of the
+This package handles big chunks of data (~50-100mb per session) so most of the
 information is stored locally as cached requests (be aware).
 
 Have fun!
 
-This module was originally developed by Ax6.
-
-This fork is maintained by theOehrly.
-I'm very grateful for all the work that was done previously by Ax6!
 
 Getting started
 ===============
