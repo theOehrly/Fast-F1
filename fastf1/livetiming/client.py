@@ -87,6 +87,7 @@ class SignalRClient:
         self.filename = filename
         self.filemode = filemode
         self.timeout = timeout
+        self._connection = None
 
         if not logger:
             logging.basicConfig(
@@ -137,16 +138,16 @@ class SignalRClient:
         # Create connection
         session = requests.Session()
         session.headers = self.headers
-        connection = Connection(self._connection_url, session=session)
+        self._connection = Connection(self._connection_url, session=session)
 
         # Register hub
-        hub = connection.register_hub('Streaming')
+        hub = self._connection.register_hub('Streaming')
 
         if self.debug:
             # Assign error handler
-            connection.error += self._on_debug
+            self._connection.error += self._on_debug
             # Assign debug message handler to save raw responses
-            connection.received += self._on_debug
+            self._connection.received += self._on_debug
             hub.client.on('feed', self._on_do_nothing)  # need to connect an async method
         else:
             # Assign hub message handler
@@ -157,7 +158,7 @@ class SignalRClient:
         # Start the client
         loop = asyncio.get_event_loop()
         with concurrent.futures.ThreadPoolExecutor() as pool:
-            await loop.run_in_executor(pool, connection.start)
+            await loop.run_in_executor(pool, self._connection.start)
 
     async def _supervise(self):
         self._t_last_message = time.time()
@@ -166,7 +167,8 @@ class SignalRClient:
                     and time.time() - self._t_last_message > self.timeout):
                 self.logger.warning(f"Timeout - received no data for more "
                                     f"than {self.timeout} seconds!")
-                break
+                self._connection.close()
+                return
             await asyncio.sleep(1)
 
     async def _async_start(self):
@@ -179,4 +181,8 @@ class SignalRClient:
 
     def start(self):
         """Connect to the data stream and start writing the data to a file."""
-        asyncio.run(self._async_start())
+        try:
+            asyncio.run(self._async_start())
+        except KeyboardInterrupt:
+            self.logger.warning("Keyboard interrupt - exiting...")
+            return
