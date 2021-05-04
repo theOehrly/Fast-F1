@@ -1039,6 +1039,73 @@ def session_status_data(path, response=None, livedata=None):
     return data
 
 
+@Cache.api_request_wrapper
+def weather_data(path, response=None, livedata=None):
+    """Fetch and parse weather data.
+
+    Weather data provides the following data channels per sample:
+
+        - Time (datetime.timedelta): session timestamp (time only)
+        - AirTemp (float): Air temperature [°C]
+        - Humidity (float): Relative humidity [%]
+        - Pressure (float): Air pressure [mbar]
+        - Rainfall (bool): Shows if there is rainfall
+        - TrackTemp (float): Track temperature [°C]
+        - WindDirection (int): Wind direction [°] (0°-359°)
+        - WindSpeed (float): Wind speed [km/h]
+
+    Weather data is updated once per minute.
+
+    Args:
+        path (str): api path base string (see :func:`api.make_path`)
+        response: Response as returned by :func:`api.fetch_page` can
+            be passed if it was downloaded already.
+        livedata: An instance of
+            :class:`fastf1.livetiming.data.LivetimingData`
+            to use as a source instead of the api
+
+    Returns:
+        A dictionary containing one key for each data channel and a list
+        of values per key.
+
+    Raises:
+        SessionNotAvailableError: in case the F1 live timing api
+            returns no data
+    """
+    if livedata is not None and livedata.has('WeatherData'):
+        # does not need any further processing
+        logging.info("Loading weather data")
+        response = livedata.get('WeatherData')
+    elif response is None:
+        logging.info("Fetching weather data...")
+        response = fetch_page(path, 'weather_data')
+        if response is None:  # no response received
+            raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
+
+    data = {
+        'Time': [], 'AirTemp': [], 'Humidity': [], 'Pressure': [],
+        'Rainfall': [], 'TrackTemp': [], 'WindDirection': [], 'WindSpeed': []
+    }
+
+    data_keys = ('AirTemp', 'Humidity', 'Pressure', 'Rainfall',
+                 'TrackTemp', 'WindDirection', 'WindSpeed')
+    data_dtypes = (float, float, float, bool, float, int, float)
+
+    for entry in response:
+        if len(entry) < 2:
+            continue
+        row = entry[1]
+        if not isinstance(row, dict):
+            continue
+
+        data['Time'].append(to_timedelta(entry[0]))
+        for key, dtype in zip(data_keys, data_dtypes):
+            # get with defaul 0 in case the key doesn't exist
+            data[key].append(dtype(row.get(key, 0)))
+
+    return data
+
+
 def fetch_page(path, name):
     """Fetch data from the formula1 livetiming web api, given url base path and page name. An attempt
     to parse json or decode known messages is made.

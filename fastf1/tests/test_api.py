@@ -173,3 +173,26 @@ def test_session_status_data():
     for col, dtype in zip(data.values(), dtypes):
         assert isinstance(col[0], dtype)
         assert len(col) == 5
+
+
+def test_weather_data():
+    response = list()
+    tl = 12  # length of timestamp: len('00:00:00:000')
+    with open('fastf1/testing/reference_data/'
+              '2020_05_FP2/weather_data.raw', 'rb') as fobj:
+        for line in fobj.readlines():
+            dec = line.decode('utf-8-sig')
+            response.append([dec[:tl], api.parse(dec[tl:])])
+
+    # parse data; api path is unused here so it does not need to be valid
+    data = api.weather_data('api/path', response=response)
+
+    # ########## verify lap data
+    assert isinstance(data, dict)
+    assert len(data.keys()) == 8
+    dtypes = [
+        datetime.timedelta, float, float, float, bool, float, int, float
+    ]
+    for col, dtype in zip(data.values(), dtypes):
+        assert isinstance(col[0], dtype)
+        assert len(col) == 100
