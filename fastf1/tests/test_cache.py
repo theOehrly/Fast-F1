@@ -47,7 +47,7 @@ def test_cache_used_and_clear(tmpdir, requests_mock, caplog):
 
     # create mock responses for f1 api requests
     req_pages = ['timing_data', 'timing_app_data', 'track_status',
-                 'session_status', 'car_data', 'position']
+                 'session_status', 'car_data', 'position', 'weather_data']
     for p in req_pages:
         with open(f'fastf1/testing/reference_data/2020_05_FP2/{p}.raw', 'rb') as fobj:
             lines = fobj.readlines()
@@ -71,8 +71,11 @@ def test_cache_used_and_clear(tmpdir, requests_mock, caplog):
     expected_dir_list = ['car_data.ff1pkl', 'position_data.ff1pkl',
                          'session_status_data.ff1pkl',
                          'timing_app_data.ff1pkl', 'timing_data.ff1pkl',
-                         'track_status_data.ff1pkl']
+                         'track_status_data.ff1pkl',
+                         'weather_data.ff1pkl']
+    # test both ways round
     assert all(elem in expected_dir_list for elem in dir_list)
+    assert all(elem in dir_list for elem in expected_dir_list)
 
     # recreate session and reload data
     # this should use the cache this time

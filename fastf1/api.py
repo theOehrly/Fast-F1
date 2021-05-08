@@ -1100,8 +1100,11 @@ def weather_data(path, response=None, livedata=None):
 
         data['Time'].append(to_timedelta(entry[0]))
         for key, dtype in zip(data_keys, data_dtypes):
-            # get with defaul 0 in case the key doesn't exist
-            data[key].append(dtype(row.get(key, 0)))
+            try:
+                data[key].append(dtype(row[key]))
+            except (KeyError, ValueError):
+                # type conversion failed or key is missing
+                data[key].append(dtype(0))
 
     return data
 

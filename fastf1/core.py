@@ -1061,6 +1061,10 @@ class Session:
         """Dictionary of car position data as received from the api by car
         number (where car number is a string and the telemetry
         is an instance of :class:`Telemetry`)"""
+        self.weather_data = pd.DataFrame()
+        """Dataframe containing weather data for this session as received
+        from the api. See :func:`fastf1.api.weather_data` for available data
+        channels. Each data channel is one row of the dataframe."""
 
         self.drivers = list()
         """List of all drivers that took part in this session; contains driver numbers as string. Drivers for which
@@ -1248,6 +1252,13 @@ class Session:
         if with_telemetry:
             self.load_telemetry(livedata=livedata)
 
+        # load weather data; this data is not crucial, just log a warning
+        # in case of an error
+        try:
+            self._load_weather_data(livedata=livedata)
+        except (api.SessionNotAvailableError, ValueError):
+            logging.warning("Failed to load weather data!")
+
         logging.info(f"Loaded data for {len(self.drivers)} drivers: {self.drivers}")
 
         return self.laps
@@ -1297,6 +1308,12 @@ class Session:
 
             if integrity_errors > 0:
                 logging.warning(f"Driver {drv: >2}: Lap timing integrity check failed for {integrity_errors} lap(s)")
+
+    def _load_weather_data(self, livedata=None):
+        """Get weather data from the api and format it into a dataframe"""
+        weather_data = api.weather_data(self.api_path, livedata=livedata)
+        weather_df = pd.DataFrame(weather_data)
+        self.weather_data = weather_df
 
     def load_telemetry(self, livedata=None):
         """Load telemetry data from the API.
@@ -1591,6 +1608,64 @@ class Laps(pd.DataFrame):
         pos_data = self.session.pos_data[drv_num].slice_by_lap(self, **kwargs).reset_index(drop=True)
         return pos_data
 
+    def get_weather_data(self):
+        """Return weather data for each lap in self.
+
+        Weather data is updated once per minute. This means that there are
+        usually one or two data points per lap. This function will always
+        return only one data point per lap:
+
+           - The first value within the duration of a lap
+
+        or
+
+            - the last known value before the end of the lap if there are
+              no values within the duration of a lap
+
+        See :func:`fastf1.api.weather_data` for available data
+        channels.
+
+        If you wish to have more control over the data, you can access the
+        weather data directly in :attr:`Session.weather_data`.
+
+        Returns:
+            pandas.DataFrame
+
+        Example::
+
+            >>> weather_data = laps.get_weather_data()
+            >>> print(weather_data)
+                                 Time AirTemp Humidity  ... TrackTemp WindDirection WindSpeed
+            16 0 days 00:16:20.305000    21.9     55.8  ...      35.5           119       0.2
+            17 0 days 00:17:20.301000    22.0     54.6  ...      35.9           113       0.1
+            ..                    ...     ...      ...  ...       ...           ...       ...
+            75 0 days 01:15:20.525000    22.3     53.5  ...      36.9            76       0.6
+            76 0 days 01:16:20.534000    22.2     53.1  ...      37.1            81       0.6
+            [453 rows x 25 columns]
+
+        Joining weather data with lap timing data::
+
+            >>> # prepare the data for joining
+            >>> laps = laps.reset_index(drop=True)
+            >>> weather_data = weather_data.reset_index(drop=True)
+
+            >>> # exclude the 'Time' column from weather data when joining
+            >>> joined = pandas.concat([laps, weather_data.loc[:, ~(weather_data.columns == 'Time')]], axis=1)
+            >>> print(joined)
+                                  Time DriverNumber  ... WindDirection  WindSpeed
+            0   0 days 00:16:58.221000            3  ...           119        0.2
+            1   0 days 00:19:32.354000            3  ...           113        0.1
+            ..                     ...          ...  ...           ...        ...
+            451 0 days 01:16:01.722000           99  ...            76        0.6
+            452 0 days 01:17:35.072000           99  ...            81        0.6
+            [453 rows x 32 columns]
+        """
+        wd = [lap.get_weather_data() for _, lap in self.iterrows()]
+        if wd:
+            return pd.concat(wd, axis=1).T
+        else:
+            return pd.DataFrame(columns=self.session.weather_data.columns)
+
     def pick_driver(self, identifier):
         """Select and return all laps of a specific driver in self based on the driver's three letters identifier or
         based on the driver number ::
@@ -1857,6 +1932,61 @@ class Lap(pd.Series):
         """
         pos_data = self.session.pos_data[self['DriverNumber']].slice_by_lap(self, **kwargs).reset_index(drop=True)
         return pos_data
+
+    def get_weather_data(self):
+        """Return weather data for this lap.
+
+        Weather data is updated once per minute. This means that there are
+        usually one or two data points per lap. This function will always
+        return only one data point:
+
+            - The first value within the duration of a lap
+
+        or
+
+            - the last known value before the end of the lap if there are
+              no values within the duration of a lap
+
+        See :func:`fastf1.api.weather_data` for available data
+        channels.
+
+        If you wish to have more control over the data, you can access the
+        weather data directly in :attr:`Session.weather_data`.
+
+        Returns:
+            pandas.Series
+
+        Example::
+
+            >>> lap = laps.pick_fastest()
+            >>> lap['LapStartTime']
+            Timedelta('0 days 01:10:29.730000')
+            >>> lap.get_weather_data()
+            Time             0 days 01:11:20.525000
+            AirTemp                            22.1
+            Humidity                           53.5
+            Pressure                         1003.5
+            Rainfall                           True
+            TrackTemp                          36.9
+            WindDirection                        76
+            WindSpeed                           0.6
+            Name: 71, dtype: object
+        """
+        # get first value within the duration of the lap
+        mask = ((self.session.weather_data['Time'] >= self['LapStartTime']) &
+                (self.session.weather_data['Time'] <= self['Time']))
+        samples = self.session.weather_data[mask]
+        if not samples.empty:
+            return samples.iloc[0]
+
+        # fallback: get last value before the lap ended
+        mask = self.session.weather_data['Time'] <= self['Time']
+        samples = self.session.weather_data[mask]
+        if not samples.empty:
+            return samples.iloc[-1]
+
+        # no data: return an empty Series with the correct index names
+        return pd.Series(index=self.session.weather_data.columns)
 
 
 class Driver:

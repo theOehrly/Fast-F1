@@ -1,6 +1,8 @@
+import pandas as pd
 import pytest
 import fastf1
 import pandas
+import datetime
 from fastf1.testing.reference_values import LAP_DTYPES, ensure_data_type
 
 
@@ -80,6 +82,26 @@ def test_laps_get_telemetry(reference_laps_data):
 
 
 @pytest.mark.f1telapi
+def test_laps_get_weather_data(reference_laps_data):
+    session, laps = reference_laps_data
+    wd = laps.get_weather_data()
+    assert wd.shape == (924, 8)
+    for col in ('AirTemp', 'Humidity', 'Pressure', 'Rainfall',
+                'TrackTemp', 'WindDirection', 'WindSpeed', 'Time'):
+        assert col in wd.columns
+
+    # test that an empty laps object returns empty weather data
+    no_laps = fastf1.core.Laps()
+    no_laps.session = session
+    no_wd = no_laps.get_weather_data()
+    assert isinstance(no_wd, pd.DataFrame)
+    assert no_wd.empty
+    for col in ('AirTemp', 'Humidity', 'Pressure', 'Rainfall',
+                'TrackTemp', 'WindDirection', 'WindSpeed', 'Time'):
+        assert col in wd.columns
+
+
+@pytest.mark.f1telapi
 def test_lap_get_car_data(reference_laps_data):
     session, laps = reference_laps_data
     drv_laps = laps.pick_fastest()
@@ -116,3 +138,24 @@ def test_lap_get_telemetry(reference_laps_data):
                 'X', 'Y', 'Z', 'Status', 'Time', 'SessionTime', 'Date',
                 'Source', 'Distance', 'DriverAhead'):
         assert col in tel.columns
+
+
+@pytest.mark.f1telapi
+def test_lap_get_weather_data(reference_laps_data):
+    session, laps = reference_laps_data
+    # check a valid lap
+    fastest = laps.pick_fastest()
+    wd = fastest.get_weather_data()
+    assert wd.shape == (8, )
+    for col in ('AirTemp', 'Humidity', 'Pressure', 'Rainfall',
+                'TrackTemp', 'WindDirection', 'WindSpeed', 'Time'):
+        assert col in wd.index
+
+    # create a 'fake' lap for which no weather data exists
+    # should use last known value
+    lap = fastf1.core.Lap(index=fastest.index)
+    lap.session = session
+    lap['Time'] = datetime.timedelta(days=1/24*3)
+    lap['LapStartTime'] = lap['Time'] - datetime.timedelta(seconds=30)
+    wd_last = lap.get_weather_data()
+    pd.testing.assert_series_equal(wd_last, session.weather_data.iloc[-1])
