@@ -149,3 +149,6 @@ or issue you would like to work on. This way we can coordinate so that no unnece
 Working directly on the core and api code will require some time to understand. Creating nice default plots on the
 other hand does not required as deep of an understanding of the code and is therefore easier to accomplish. Pick
 whatever you like to do.
+
+Also, the documentation needs an examples section. You can provide some snippets of your code as examples for
+others, to help them get started easier.

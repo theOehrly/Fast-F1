@@ -3,6 +3,18 @@ Changelog
 =========
 
 
+v2.1.6 Added weather data, general improvements and bug fixes
+=============================================================
+
+- Add weather data (#26)
+  See: :meth:`.core.Lap.get_weather_data`, :meth:`.core.Laps.get_weather_data`,
+  :attr:`.core.Session.weather_data`
+- Fix: error when calling :meth:`.core.Laps.get_pos_data` (#22)
+- Fix: error when calling `get_telemetry` on the first lap (or a set of laps
+  containing the first lap)
+- Make the live timing client exit more cleanly
+
+
 v2.1.5 Improved robustness and minor fixes
 ==========================================
 
