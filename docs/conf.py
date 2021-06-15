@@ -32,6 +32,7 @@ copyright = f'{datetime.now().year}, theOehrly'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'matplotlib.sphinxext.plot_directive',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.todo',
@@ -67,3 +68,15 @@ html_theme_options = {
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+
+# matplotlib plot directive options
+plot_pre_code = "import numpy as np;" \
+                "from matplotlib import pyplot as plt;" \
+                "import logging;" \
+                "logging.getLogger().setLevel(logging.WARNING);" \
+                "plt.rcParams['figure.figsize'] = [8.0, 4.5];" \
+                "import fastf1;" \
+                "fastf1.Cache.enable_cache('../dev_cache');"
+
+plot_html_show_source_link = False

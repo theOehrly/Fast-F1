@@ -21,7 +21,10 @@ def delta_time(reference_lap, compare_lap):
         different way for verification.
 
     Here is an example that compares the quickest laps of Leclerc and
-    Hamilton from Bahrain 2021 Qualifying::
+    Hamilton from Bahrain 2021 Qualifying:
+
+    .. plot::
+        :include-source:
 
         import fastf1 as ff1
         from fastf1 import plotting
@@ -30,7 +33,7 @@ def delta_time(reference_lap, compare_lap):
 
         plotting.setup_mpl()
 
-        quali = ff1.get_session(2021, 'Bahrain', 'Q')
+        quali = ff1.get_session(2021, 'Emilia Romagna', 'Q')
         laps = quali.load_laps(with_telemetry=True)
         lec = laps.pick_driver('LEC').pick_fastest()
         ham = laps.pick_driver('HAM').pick_fastest()
@@ -47,11 +50,9 @@ def delta_time(reference_lap, compare_lap):
                 color=plotting.TEAM_COLORS[lec['Team']])
 
         twin = ax.twinx()
-        twin.plot(ref_tel['Distance'], delta_time, '--', color=plotting.TEAM_COLORS[lec['Team']])
+        twin.plot(ref_tel['Distance'], delta_time, '--', color='white')
+        twin.set_ylabel("<-- Lec ahead | Ham ahead -->")
         plt.show()
-
-    .. image:: _static/delta_time.svg
-        :target: _static/delta_time.svg
 
     Args:
         reference_lap (pd.Series): The lap taken as reference

@@ -12,7 +12,7 @@ fastf1/tests/mpl-results/
 fastf1/tests/mpl-baseline-new/
 docs/_build/
 build/
-test_cache/
+dev_cache/
 reference/
 var_dumps/
 recordings/

@@ -35,12 +35,18 @@ Setting up a running snippet is straightforward::
     print(f"Pronto {vettel.name}?")
     # Pronto Se🅱️astian?
 
-For some more advanced stuff, just a few more steps::
+For some more advanced stuff, it's just a few more steps.
+
+.. plot::
+    :include-source:
 
     from matplotlib import pyplot as plt
+    import fastf1 as ff1
     from fastf1 import plotting
 
     plotting.setup_mpl()
+
+    monza_quali = ff1.get_session(2019, 'Monza', 'Q')
 
     laps = monza_quali.load_laps(with_telemetry=True)
     fast_leclerc = laps.pick_driver('LEC').pick_fastest()
@@ -56,9 +62,6 @@ For some more advanced stuff, just a few more steps::
     ax.set_title('Leclerc is')
     ax.legend()
     plt.show()
-
-.. image:: _static/gettingstarted.svg
-    :target: _static/gettingstarted.svg
 
 
 It is not necessary to enable the usage of the cache but it is highly recommended. Simply provide

@@ -16,13 +16,16 @@ by lap and the lap data should be concatenated afterwards. Still, the old versio
 The following is an example comparison plot of the legacy version and the new version. It also shows how the two
 versions can be used.
 
-.. code-block::
+.. plot::
+    :include-source:
 
     import fastf1
+    import fastf1.plotting
     import numpy as np
     import matplotlib.pyplot as plt
 
-    fastf1.Cache.enable_cache("test_cache/")
+    fastf1.plotting.setup_mpl()
+    # fastf1.Cache.enable_cache("path/to/cache")
 
     session = fastf1.get_session(2020, 'Italy', 'R')
     laps = session.load_laps(with_telemetry=True)
@@ -34,35 +37,20 @@ versions can be used.
     drv_laps = laps.pick_driver(DRIVER)
     drv_lap = drv_laps[(drv_laps['LapNumber'] == LAP_N)]  # select the lap
 
-
-    # define a function for plotting 'DistanceToDriverAhead' over 'SessionTime' for varying drivers ahead
-    def plot_ahead_over_distance(df, suffix):
-        drvs = df['DriverAhead'].unique()
-
-        for drv in drvs:  # plot a segment for each driver ahead
-            mask = df['DriverAhead'] != drv
-            dist_to_drv = np.ma.masked_array(df['DistanceToDriverAhead'].to_numpy(), mask)
-            ref_time = np.ma.masked_array(df['SessionTime'].to_numpy(), mask)
-            ax.plot(ref_time, dist_to_drv, label=str(drv)+suffix)
-
-
+    # create a matplotlib figure
     fig = plt.figure()
     ax = fig.add_subplot()
 
     # ############### new
     df_new = drv_lap.get_car_data().add_driver_ahead()
-    plot_ahead_over_distance(df_new, '_new')
+    ax.plot(df_new['Time'], df_new['DistanceToDriverAhead'], label='new')
 
     # ############### legacy
     df_legacy = fastf1.legacy.inject_driver_ahead(session)[DRIVER_NUMBER].slice_by_lap(drv_lap)
-    plot_ahead_over_distance(df_legacy, '_legacy')
+    ax.plot(df_legacy['Time'], df_legacy['DistanceToDriverAhead'], label='legacy')
 
     plt.legend()
     plt.show()
-
-.. image:: _static/dist_ahead_new_legacy.svg
-    :target: _static/dist_ahead_new_legacy.svg
-
 """
 
 import numpy as np
