@@ -46,7 +46,7 @@ except ImportError:
 
 TEAM_COLORS = {'Mercedes': '#00d2be', 'Ferrari': '#dc0000',
                'Red Bull': '#0600ef', 'McLaren': '#ff8700',
-               'Alpine': '#0090ff', 'Aston Martin': '#006f62',
+               'Alpine F1 Team': '#0090ff', 'Aston Martin': '#006f62',
                'Alfa Romeo': '#900000', 'AlphaTauri': '#2b4562',
                'Haas F1 Team': '#ffffff', 'Williams': '#005aff'}
 """Mapping of team colors (hex color code) to team names.
@@ -54,7 +54,7 @@ TEAM_COLORS = {'Mercedes': '#00d2be', 'Ferrari': '#dc0000',
 
 TEAM_TRANSLATE = {'MER': 'Mercedes', 'FER': 'Ferrari',
                   'RBR': 'Red Bull', 'MCL': 'McLaren',
-                  'APN': 'Alpine', 'AMR': 'Aston Martin',
+                  'APN': 'Alpine F1 Team', 'AMR': 'Aston Martin',
                   'ARR': 'Alfa Romeo', 'APT': 'AlphaTauri',
                   'HAA': 'Haas F1 Team', 'WIL': 'Williams'}
 """Mapping of team names to theirs respective abbreviations."""
