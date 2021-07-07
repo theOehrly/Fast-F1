@@ -1,20 +1,33 @@
 **/__pycache__/
-**.xlsx
-**.csv
-.actrc
 
+# temporary developement files
+exp*.py
+
+# ide config
 .idea/
-dist/
+
+# environments for development and local test runs
 venv/
 act/
+.actrc
+
+# build output directories
+dist/
+build/
+fastf1.egg-info/
+
+# temporary testrun directories
 fastf1/tests/testenv/
 fastf1/tests/mpl-results/
 fastf1/tests/mpl-baseline-new/
+
+# documentation build directories
 docs/_build/
-build/
-dev_cache/
+docs/examples_gallery/
+
+# all variations of cache directories
+*_cache/
+
+# other data directories
 reference/
-var_dumps/
 recordings/
-tracks/
-fastf1.egg-info/
