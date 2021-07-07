@@ -1020,8 +1020,11 @@ class Session:
     """
     def __init__(self, weekend, session_name):
         self.weekend = weekend
+        """:class:`.Weekend`: Reference to the associated weekend object."""
         self.name = session_name
+        """str: Name of this session, for example 'Qualifying', 'Race', 'FP1', ..."""
         self.date = self._get_session_date()
+        """pandas.Datetime: Date at which this session took place."""
         self.api_path = api.make_path(self.weekend.name,
                                       self.weekend.date,
                                       self.name, self.date)
@@ -1047,11 +1050,14 @@ class Session:
             self._create_empty_ergast_result()
 
         self.laps = Laps(session=self)
-        """Instance of :class:`Laps` containing all laps from all drivers in this session."""
-        self.t0_date = None  # can only be set when/if telemetry has been downloaded
-        """Date timestamp which marks the beginning of the data stream."""
+        """Instance of :class:`Laps` containing all laps from all drivers 
+        in this session."""
+        self.t0_date = None
+        # can only be set when/if telemetry has been downloaded
+        """pandas.Datetime: Date timestamp which marks the beginning of the 
+        data stream."""
         self.session_start_time = None
-        """Session time at which the session was started."""
+        """pandas.Timedelta: Session time at which the session was started."""
 
         self.car_data = dict()
         """Dictionary of car telemetry (Speed, RPM, etc.) as received from

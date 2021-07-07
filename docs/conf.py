@@ -7,6 +7,7 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('../'))
+import os.path
 from datetime import datetime
 import re
 
@@ -33,12 +34,14 @@ copyright = f'{datetime.now().year}, theOehrly'
 # ones.
 extensions = [
     'matplotlib.sphinxext.plot_directive',
+    'sphinx.ext.doctest',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.todo',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'sphinx_rtd_theme',
+    'sphinx_gallery.gen_gallery',
     'autodocsumm'
 ]
 
@@ -69,14 +72,30 @@ html_theme_options = {
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-
+doc_cache = os.path.abspath('../doc_cache')
 # matplotlib plot directive options
-plot_pre_code = "import numpy as np;" \
-                "from matplotlib import pyplot as plt;" \
-                "import logging;" \
-                "logging.getLogger().setLevel(logging.WARNING);" \
-                "plt.rcParams['figure.figsize'] = [8.0, 4.5];" \
-                "import fastf1;" \
-                "fastf1.Cache.enable_cache('../dev_cache');"
+plot_pre_code = f"import numpy as np;" \
+                f"from matplotlib import pyplot as plt;" \
+                f"plt.rcParams['figure.figsize'] = [8.0, 4.5];" \
+                f"import fastf1;" \
+                f"fastf1.Cache.enable_cache('{doc_cache}');" \
+                f"import logging;" \
+                f"logging.getLogger().setLevel(logging.WARNING);"
 
+plot_include_source = True
 plot_html_show_source_link = False
+
+# doctest directive options
+doctest_global_setup = f"import fastf1;" \
+                       f"fastf1.Cache.enable_cache('{doc_cache}');" \
+                       f"import logging;" \
+                       f"logging.getLogger().setLevel(logging.WARNING);"
+
+
+# sphinx gallery configuration
+sphinx_gallery_conf = {
+    'examples_dirs': '../examples',
+    'gallery_dirs': 'examples_gallery',
+    'download_all_examples': False,
+    'remove_config_comments': True,
+}

@@ -2,7 +2,9 @@ pytest
 pytest-mpl
 requests-mock
 sphinx
-sphinx-rtd-theme
+sphinx-rtd-theme==0.5.2  # sphinx-rtd/docutils issues
+docutils==0.16
+sphinx-gallery
 autodocsumm
 wheel
 pytest-flake8
