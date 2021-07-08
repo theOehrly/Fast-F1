@@ -241,3 +241,76 @@ def test_resampling_up(reference_laps_data):
     # check correct timing
     assert test_data['Time'].iloc[0] == pandas.Timedelta(0)
     assert test_data['SessionTime'].iloc[0] != pandas.Timedelta(0)
+
+
+def create_sample_car_data():
+    # create sample telemetry for testing the .add_* methods
+    # which work with distance, only time and speed really needs
+    # to make sense for that
+    t0 = pandas.Timestamp(year=2020, month=5, day=7, hour=14)
+    t1 = pandas.Timestamp(year=2020, month=5, day=7, hour=14, minute=1)
+    dates = pandas.date_range(t0, t1, freq='261 ms')
+    session_times = dates - t0
+    times = session_times
+    t = numpy.linspace(0, len(dates)*0.261, len(dates))
+    speed = 80 + numpy.sqrt(320*t)
+
+    tel = fastf1.core.Telemetry({
+        'Time': times, 'SessionTime': session_times, 'Date': dates,
+        'Source': 'car', 'Speed': speed, 'RPM': 9000, 'nGear': 7,
+        'Throttle': 100, 'Brake': 0, 'DRS': 0
+    })
+    return tel
+
+
+def test_add_distance():
+    car_data = create_sample_car_data()
+    car_data = car_data.add_distance()
+
+    # check that the results make sense
+    assert 'Distance' in car_data.columns
+    assert car_data['Distance'].max() == car_data['Distance'].iloc[-1]
+    # distance is analytically verified (+-10m due to numeric integration)
+    assert car_data['Distance'].max().round(0) == 2867
+
+    # set all distance values to zero and check that they stay zero
+    car_data['Distance'] = 0
+    car_data = car_data.add_distance(drop_existing=False)
+    assert pandas.unique(car_data['Distance']) == [0, ]
+
+    # now without drop_existing=False
+    car_data = car_data.add_distance()
+    assert car_data['Distance'].max().round(0) == 2867
+
+
+def test_add_relative_distance():
+    # test with no existing distance column first
+    car_data = create_sample_car_data()
+    car_data = car_data.add_relative_distance()
+
+    # check that the results make sense
+    assert 'RelativeDistance' in car_data.columns
+    assert car_data['RelativeDistance'].max() == \
+           car_data['RelativeDistance'].iloc[-1]
+    assert car_data['RelativeDistance'].max() == 1.0
+    assert car_data['RelativeDistance'].min() == 0.0
+
+    # set all distance values to zero and check that they stay zero
+    car_data['RelativeDistance'] = 0
+    car_data = car_data.add_relative_distance(drop_existing=False)
+    assert pandas.unique(car_data['RelativeDistance']) == [0, ]
+
+    # now with drop existing = True
+    car_data = car_data.add_relative_distance()
+    assert car_data['RelativeDistance'].max().round(0) == 1.0
+
+    # test with already existing distance column
+    car_data = create_sample_car_data()
+    car_data = car_data.add_distance().add_relative_distance()
+
+    # check that the results make sense
+    assert 'RelativeDistance' in car_data.columns
+    assert car_data['RelativeDistance'].max() == \
+           car_data['RelativeDistance'].iloc[-1]
+    assert car_data['RelativeDistance'].max() == 1.0
+    assert car_data['RelativeDistance'].min() == 0.0

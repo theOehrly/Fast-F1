@@ -705,12 +705,17 @@ class Telemetry(pd.DataFrame):
         Returns:
             :class:`Telemetry`: self joined with new column or self if column exists and `drop_existing` is False.
         """
-        if 'Distance' in self.columns:
-            if drop_existing:
-                return self.drop('DifferentialDistance', 1)\
-                    .join(pd.DataFrame({'DifferentialDistance': self.calculate_differential_distance()}), how='outer')
+        if ('DifferentialDistance' in self.columns) and not drop_existing:
             return self
-        return self.join(pd.DataFrame({'DifferentialDistance': self.calculate_differential_distance()}), how='outer')
+
+        new_dif_dist = pd.DataFrame(
+            {'DifferentialDistance': self.calculate_differential_distance()}
+        )
+        if 'DifferentialDistance' in self.columns:
+            return self.drop(labels='DifferentialDistance', axis=1)\
+                .join(new_dif_dist, how='outer')
+
+        return self.join(new_dif_dist, how='outer')
 
     def add_distance(self, drop_existing=True):
         """Add column 'Distance' to self.
@@ -728,11 +733,14 @@ class Telemetry(pd.DataFrame):
         Returns:
             :class:`Telemetry`: self joined with new column or self if column exists and `drop_existing` is False.
         """
-        if 'Distance' in self.columns:
-            if drop_existing:
-                return self.drop('Distance', 1).join(pd.DataFrame({'Distance': self.integrate_distance()}), how='outer')
+        if ('Distance' in self.columns) and not drop_existing:
             return self
-        return self.join(pd.DataFrame({'Distance': self.integrate_distance()}), how='outer')
+
+        new_dist = pd.DataFrame({'Distance': self.integrate_distance()})
+        if 'Distance' in self.columns:
+            return self.drop(labels='Distance', axis=1).join(new_dist, how='outer')
+
+        return self.join(new_dist, how='outer')
 
     def add_relative_distance(self, drop_existing=True):
         """Add column 'RelativeDistance' to self.
@@ -750,7 +758,7 @@ class Telemetry(pd.DataFrame):
         """
         if 'RelativeDistance' in self.columns:
             if drop_existing:
-                d = self.drop('RelativeDistance', 1)
+                d = self.drop(labels='RelativeDistance', axis=1)
             else:
                 return self
         else:
@@ -760,7 +768,7 @@ class Telemetry(pd.DataFrame):
             rel_dist = d.loc[:, 'Distance'] / d.loc[:, 'Distance'].iloc[-1]
         else:
             dist = d.integrate_distance()
-            rel_dist = dist / dist.iloc[0]
+            rel_dist = dist / dist.iloc[-1]
         return d.join(pd.DataFrame({'RelativeDistance': rel_dist}), how='outer')
 
     def add_driver_ahead(self, drop_existing=True):
@@ -788,7 +796,8 @@ class Telemetry(pd.DataFrame):
         """
         if 'DriverAhead' in self.columns and 'DistanceToDriverAhead' in self.columns:
             if drop_existing:
-                d = self.drop('DriverAhead', 1).drop('DistanceToDriverAhead', 1)
+                d = self.drop(labels='DriverAhead', axis=1)\
+                    .drop(labels='DistanceToDriverAhead', axis=1)
             else:
                 return self
         else:
@@ -1356,8 +1365,10 @@ class Session:
 
         for drv in self.drivers:
             # drop and recalculate time stamps based on 'Date', because 'Date' has a higher resolution
-            drv_car = Telemetry(car_data[drv].drop('Time', 1), session=self, driver=drv)
-            drv_pos = Telemetry(pos_data[drv].drop('Time', 1), session=self, driver=drv)
+            drv_car = Telemetry(car_data[drv].drop(labels='Time', axis=1),
+                                session=self, driver=drv)
+            drv_pos = Telemetry(pos_data[drv].drop(labels='Time', axis=1),
+                                session=self, driver=drv)
 
             drv_car['Date'] = drv_car['Date'].round('ms')
             drv_pos['Date'] = drv_pos['Date'].round('ms')
