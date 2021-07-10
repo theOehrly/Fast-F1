@@ -1059,11 +1059,11 @@ class Session:
             self._create_empty_ergast_result()
 
         self.laps = Laps(session=self)
-        """Instance of :class:`Laps` containing all laps from all drivers 
+        """Instance of :class:`Laps` containing all laps from all drivers
         in this session."""
         self.t0_date = None
         # can only be set when/if telemetry has been downloaded
-        """pandas.Datetime: Date timestamp which marks the beginning of the 
+        """pandas.Datetime: Date timestamp which marks the beginning of the
         data stream."""
         self.session_start_time = None
         """pandas.Timedelta: Session time at which the session was started."""
