@@ -1684,8 +1684,8 @@ class Laps(pd.DataFrame):
             return pd.DataFrame(columns=self.session.weather_data.columns)
 
     def pick_driver(self, identifier):
-        """Select and return all laps of a specific driver in self based on the driver's three letters identifier or
-        based on the driver number ::
+        """Return all laps of a specific driver in self based on the driver's
+        three letters identifier or based on the driver number ::
 
             perez_laps = ff1.pick_driver('PER')
             bottas_laps = ff1.pick_driver(77)
@@ -1704,8 +1704,10 @@ class Laps(pd.DataFrame):
             return self[self['Driver'] == identifier]
 
     def pick_drivers(self, identifiers):
-        """Select and return all laps of the specified drivers in self based on the drivers' three letters identifier
-        or based on the driver number. This is the same as :meth:`Laps.pick_driver` but for multiple drivers at once. ::
+        """Return all laps of the specified drivers in self based on the
+        drivers' three letters identifier or based on the driver number. This
+        is the same as :meth:`Laps.pick_driver` but for multiple drivers
+        at once. ::
 
             some_drivers_laps = ff1.pick_drivers([5, 'BOT', 7])
 
@@ -1722,7 +1724,8 @@ class Laps(pd.DataFrame):
         return self[(drv.isin(names) | num.isin(numbers))]
 
     def pick_team(self, name):
-        """Select and return all laps of a specific team in self based on the team's name ::
+        """Return all laps of a specific team in self based on the
+        team's name ::
 
             mercedes = ff1.pick_team('Mercedes')
             alfa_romeo = ff1.pick_team('Alfa Romeo')
@@ -1738,8 +1741,9 @@ class Laps(pd.DataFrame):
         return self[self['Team'] == name]
 
     def pick_teams(self, names):
-        """Select and return all laps of the specified teams in self based on the teams' name.
-        This is the same as :meth:`Laps.pick_team` but for multiple teams at once. ::
+        """Return all laps of the specified teams in self based on the teams'
+        name. This is the same as :meth:`Laps.pick_team` but for multiple
+        teams at once. ::
 
             some_drivers_laps = ff1.pick_teams(['Mercedes', 'Williams'])
 
@@ -1752,7 +1756,7 @@ class Laps(pd.DataFrame):
         return self[self['Team'].isin(names)]
 
     def pick_fastest(self):
-        """Select and return the lap with the fastest lap time.
+        """Return the lap with the fastest lap time.
 
         .. note:: Officially deleted laps (e.g. driver was outside of
           the track limits) will still show up as normal laps here.
@@ -1772,8 +1776,9 @@ class Laps(pd.DataFrame):
         return lap
 
     def pick_quicklaps(self, threshold=None):
-        """Select and return laps with `LapTime` faster than a certain limit.
-        By default the threshold is 107% of the best `LapTime` of all laps in self.
+        """Return all laps with `LapTime` faster than a certain limit. By
+        default the threshold is 107% of the best `LapTime` of all laps
+        in self.
 
         Args:
             threshold (optional, float): custom threshold coefficent
@@ -1789,7 +1794,7 @@ class Laps(pd.DataFrame):
         return self[self['LapTime'] < time_threshold]
 
     def pick_tyre(self, compound):
-        """Select and return all laps in self which were done on a specific compound.
+        """Return all laps in self which were done on a specific compound.
 
         Args:
             compound (string): may be "SOFT", "MEDIUM", "HARD", "INTERMEDIATE" or "WET"
@@ -1800,7 +1805,7 @@ class Laps(pd.DataFrame):
         return self[self['Compound'] == compound]
 
     def pick_track_status(self, status, how='equals'):
-        """Select and return laps set under a specific track status.
+        """Return all laps set under a specific track status.
 
         Args:
             status (str): The track status as a string, e.g. '1'
@@ -1818,7 +1823,7 @@ class Laps(pd.DataFrame):
             raise ValueError(f"Invalid value '{how}' for kwarg 'how'")
 
     def pick_wo_box(self):
-        """Select laps which are NOT in laps or out laps.
+        """Return all laps which are NOT in laps or out laps.
 
         Returns:
             instance of :class:`Laps`
@@ -1826,7 +1831,8 @@ class Laps(pd.DataFrame):
         return self[pd.isnull(self['PitInTime']) & pd.isnull(self['PitOutTime'])]
 
     def pick_accurate(self):
-        """Select and return laps which pass the accuracy validation check (lap['IsAccurate'] is True).
+        """Return all laps which pass the accuracy validation check
+        (lap['IsAccurate'] is True).
 
         Returns:
             instance of :class:`Laps`
@@ -1845,7 +1851,7 @@ class Laps(pd.DataFrame):
                iterator only yields laps for which this is true. If require is left empty, the iterator will yield
                all laps.
         Yields:
-            instance of :class:`Lap`
+            (index, instance of :class:`Lap`)
         """
         for index, lap in self.iterrows():
             if require:
