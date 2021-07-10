@@ -155,8 +155,18 @@ class Cache:
                 cache_file_path = cache_dir_path + str(func.__name__) + '.ff1pkl'
                 if os.path.isfile(cache_file_path):
                     # file exists already, try to load it
-                    cached = pickle.load(open(cache_file_path, 'rb'))
-                    if ((cached['version'] == cls._API_CORE_VERSION) or cls._IGNORE_VERSION) and not cls._FORCE_RENEW:
+                    try:
+                        cached = pickle.load(open(cache_file_path, 'rb'))
+                    except:  # noqa: E722 (bare except)
+                        # don't like the bare exception clause but who knows
+                        # which dependency will raise which internal exception
+                        # after it was updated
+                        cached = None
+
+                    if (cached is not None and
+                            ((cached['version'] == cls._API_CORE_VERSION) or
+                             cls._IGNORE_VERSION)
+                            and not cls._FORCE_RENEW):
                         # was created with same version or version is ignored
                         logging.info(f"Using cached data for {str(func.__name__)}")
                         return cached['data']
