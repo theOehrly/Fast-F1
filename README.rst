@@ -5,25 +5,6 @@ Fast F1
 A python package for accessing F1 historical timing data and telemetry.
 
 
-UPDATE: Telemetry data is available for download again!
-=======================================================
-
-Car telemetry and position data can be downloaded after a session again.
-The api problems that caused this data to be unavailable have
-*apparently* been fixed!
-
-This means, that the full functionality of this package is available
-again without the need to record the live timing data stream.
-
-Data seems to be fully available for the 2018 to 2021 season.
-
-A word of caution: I do not have any insight into the server side
-of the api. This problem has solved itself as surprisingly as it had
-started. If you think that you "rely" on this data for some reason, you
-*should* go ahead and **continue recording** the live data stream
-...redundancy and stuff.
-
-
 Installation
 ============
 
@@ -43,30 +24,8 @@ Documentation
 ... can be found `here <https://theoehrly.github.io/Fast-F1/fastf1.html>`_.
 
 
-
 General Information
 ===================
-
-Changes
--------
-
-If you have used previous versions of FastF1, please read the changelog in the
-documentation.
-
-V2.1 introduces some new features and some breaking changes.
-The documentation is improved in general. Also, there is a new section
-discussing how to get the most accurate results from the data that is
-available. It may be worth reading if you want to make more complicated
-analyses and visualizations.
-
-Other
------
-
-Please report bugs if (when) you find them. Feel free to report complaints about
-unclear documentation too.
-
-Interested in contributing? There's some info at the end of this document...
-
 
 Usage
 =====
@@ -126,6 +85,27 @@ Compatibility
 Timing data, car telemetry and position data is available for the 2018 to 2021 seasons.
 Very basic weekend information is available for older seasons (limited to
 `Ergast web api <http://ergast.com/mrd/>`_).
+
+
+Data Sources
+============
+
+FastF1 uses data from F1's live timing service.
+
+Data can be downloaded after a session. Alternatively, the actual live timing
+data can be recorded and the recording can be used as a data source.
+
+Usually it is not necessary to record the live timing data. But there have
+been server issues in the past which resulted in the data being unavailable
+for download. Therefore, you only need to record live timing data if you
+want to benefit from the extra redundancy.
+
+
+Bugs and Issues
+===============
+
+Please report bugs if (when) you find them. Feel free to report complaints about
+unclear documentation too.
 
 
 Roadmap
