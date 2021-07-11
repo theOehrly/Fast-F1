@@ -152,3 +152,8 @@ So let's see what the fastest laptime was and who is on pole.
   'SOFT'
   >>> fastest_lap['Driver']
   'VER'
+
+
+Check out this example that shows how you can plot lap times:
+:ref:`sphx_glr_examples_gallery_plot_qualifying_results.py`
+
