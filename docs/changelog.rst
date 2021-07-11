@@ -3,6 +3,15 @@ Changelog
 =========
 
 
+v2.1.7 Various bug fixes
+========================
+
+- fix crash when loading cached data after dependencies have been updated
+- specify minimum versions for pandas and numpy
+- fix incorrect Alpine team name
+- fix future warnings and deprecation warnings caused by Pandas 1.3.0
+
+
 v2.1.6 Added weather data, general improvements and bug fixes
 =============================================================
 
