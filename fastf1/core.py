@@ -1037,6 +1037,10 @@ class Session:
         self.api_path = api.make_path(self.weekend.name,
                                       self.weekend.date,
                                       self.name, self.date)
+
+        self.results = list()
+        """list: Race result with driver information."""
+
         if not self.weekend.is_testing():
             # The Ergast API can provide some general information about weekends, drivers, ...
             # See ergast.com
