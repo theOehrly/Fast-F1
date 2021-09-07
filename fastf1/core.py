@@ -76,6 +76,16 @@ TESTING_LOOKUP = {'2020': [['2020-02-19', '2020-02-20', '2020-02-21'],
                            ['2020-02-26', '2020-02-27', '2020-02-28']],
                   '2021': [['2021-03-12', '2021-03-13', '2021-03-14']]}
 
+# TODO: remove; temporary patch to support sprint qualifying
+SPRINT_QUALIFYING_LOOKUP = {
+    10: {'Practice 1': '2021-07-16', 'Qualifying': '2021-07-16',
+         'Practice 2': '2021-07-17', 'Sprint Qualifying': '2021-07-17',
+         'Race': '2021-07-18'},
+    14: {'Practice 1': '2021-09-10', 'Qualifying': '2021-09-10',
+         'Practice 2': '2021-09-11', 'Sprint Qualifying': '2021-09-11',
+         'Race': '2021-09-12'},
+}
+
 D_LOOKUP = [[44, 'HAM', 'Mercedes'], [77, 'BOT', 'Mercedes'],
             [55, 'SAI', 'Ferrari'], [16, 'LEC', 'Ferrari'],
             [33, 'VER', 'Red Bull'], [11, 'PER', 'Red Bull'],
@@ -125,8 +135,11 @@ def get_session(year, gp, event=None):
                                Pass 'testing' to fetch Barcelona winter
                                tests.
 
-        event (=None): may be 'FP1', 'FP2', 'FP3', 'Q' or 'R', if not
+        event (=None): may be 'FP1', 'FP2', 'FP3', 'Q', 'SQ' or 'R', if not
                        specified you get the full :class:`Weekend`.
+                       'SQ' stands for Sprint Qualifying which is only
+                       available in the 2021 season. Note that 'FP3' does
+                       not exist on these race weekends.
                        If gp is 'testing' event is the test day (1 to 6)
 
     Returns:
@@ -145,6 +158,8 @@ def get_session(year, gp, event=None):
         return Session(weekend, 'Race')
     if event == 'Q':
         return Session(weekend, 'Qualifying')
+    if event == 'SQ':  # TODO: remove; temporary patch to support sprint qualifying
+        return Session(weekend, 'Sprint Qualifying')
     if event == 'FP3':
         return Session(weekend, 'Practice 3')
     if event == 'FP2':
@@ -1108,6 +1123,11 @@ class Session:
             elif year == '2021':
                 day_index = int(self.name[-1]) - 1
                 date = TESTING_LOOKUP[year][0][day_index]
+
+        # TODO: remove; temporary patch to support sprint qualifying
+        elif ((self.weekend.year == 2021) and
+              (self.weekend.gp in SPRINT_QUALIFYING_LOOKUP.keys())):
+            date = SPRINT_QUALIFYING_LOOKUP[self.weekend.gp][self.name]
 
         elif self.name in ('Qualifying', 'Practice 3'):
             # Assuming that quali was one day before race which is not always correct
