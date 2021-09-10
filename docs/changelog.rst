@@ -3,6 +3,17 @@ Changelog
 =========
 
 
+v2.1.8 Add temporary support for sprint qualifying
+==================================================
+
+- This release adds a temporary patch to support weekends with sprint
+  sprint qualifying and their changed order of sessions.
+  To get data for sprint qualifying, you can use the ``fastf1.get_session``
+  function with the argument ``event='SQ'``.
+  Also remember that FP2 is on a Saturday on these weekends. FP3 does
+  not exist.
+
+
 v2.1.7 Various bug fixes
 ========================
 
