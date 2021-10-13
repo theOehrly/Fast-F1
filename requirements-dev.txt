@@ -9,3 +9,4 @@ autodocsumm
 wheel
 pytest-flake8
 readme-renderer
+xdoctest

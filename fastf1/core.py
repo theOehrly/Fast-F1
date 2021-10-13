@@ -1672,17 +1672,29 @@ class Laps(pd.DataFrame):
         Returns:
             pandas.DataFrame
 
+        .. testsetup::
+
+                >>> fastf1.Cache.enable_cache('doc_cache')
+
         Example::
 
+            >>> session = fastf1.get_session(2019, 'Monza', 'Q')
+            >>> laps = session.load_laps()
             >>> weather_data = laps.get_weather_data()
             >>> print(weather_data)
                                  Time AirTemp Humidity  ... TrackTemp WindDirection WindSpeed
-            16 0 days 00:16:20.305000    21.9     55.8  ...      35.5           119       0.2
-            17 0 days 00:17:20.301000    22.0     54.6  ...      35.9           113       0.1
+            20 0 days 00:20:14.613000    22.5     52.0  ...      35.8           212       2.0
+            21 0 days 00:21:15.001000    22.5     52.2  ...      36.1           207       2.7
+            23 0 days 00:23:14.854000    22.7     52.5  ...      37.4           210       2.3
+            24 0 days 00:24:14.430000    23.2     51.5  ...      37.4           207       3.2
+            26 0 days 00:26:14.315000    23.6     50.2  ...      37.2           238       1.8
             ..                    ...     ...      ...  ...       ...           ...       ...
-            75 0 days 01:15:20.525000    22.3     53.5  ...      36.9            76       0.6
-            76 0 days 01:16:20.534000    22.2     53.1  ...      37.1            81       0.6
-            [453 rows x 25 columns]
+            23 0 days 00:23:14.854000    22.7     52.5  ...      37.4           210       2.3
+            24 0 days 00:24:14.430000    23.2     51.5  ...      37.4           207       3.2
+            34 0 days 00:34:14.385000    23.0     51.7  ...      37.7           272       0.8
+            36 0 days 00:36:14.426000    23.0     51.1  ...      38.3           192       0.9
+            37 0 days 00:37:14.391000    23.3     50.0  ...      38.7           213       0.9
+            [269 rows x 8 columns]
 
         Joining weather data with lap timing data::
 
@@ -1691,15 +1703,21 @@ class Laps(pd.DataFrame):
             >>> weather_data = weather_data.reset_index(drop=True)
 
             >>> # exclude the 'Time' column from weather data when joining
-            >>> joined = pandas.concat([laps, weather_data.loc[:, ~(weather_data.columns == 'Time')]], axis=1)
+            >>> joined = pd.concat([laps, weather_data.loc[:, ~(weather_data.columns == 'Time')]], axis=1)
             >>> print(joined)
                                   Time DriverNumber  ... WindDirection  WindSpeed
-            0   0 days 00:16:58.221000            3  ...           119        0.2
-            1   0 days 00:19:32.354000            3  ...           113        0.1
+            0   0 days 00:20:55.333000            5  ...           212        2.0
+            1   0 days 00:22:16.210000            5  ...           207        2.7
+            2   0 days 00:24:01.233000            5  ...           210        2.3
+            3   0 days 00:25:21.611000            5  ...           207        3.2
+            4   0 days 00:27:12.045000            5  ...           238        1.8
             ..                     ...          ...  ...           ...        ...
-            451 0 days 01:16:01.722000           99  ...            76        0.6
-            452 0 days 01:17:35.072000           99  ...            81        0.6
-            [453 rows x 32 columns]
+            264 0 days 00:24:02.127000           88  ...           210        2.3
+            265 0 days 00:33:31.080000           88  ...           207        3.2
+            266 0 days 00:35:15.794000           88  ...           272        0.8
+            267 0 days 00:36:38.150000           88  ...           192        0.9
+            268 0 days 00:38:37.508000           88  ...           213        0.9
+            [269 rows x 32 columns]
         """
         wd = [lap.get_weather_data() for _, lap in self.iterrows()]
         if wd:
@@ -2003,21 +2021,27 @@ class Lap(pd.Series):
         Returns:
             pandas.Series
 
+        .. testsetup::
+
+            >>> fastf1.Cache.enable_cache('doc_cache')
+
         Example::
 
+            >>> session = fastf1.get_session(2019, 'Monza', 'Q')
+            >>> laps = session.load_laps()
             >>> lap = laps.pick_fastest()
             >>> lap['LapStartTime']
-            Timedelta('0 days 01:10:29.730000')
+            Timedelta('0 days 01:09:55.561000')
             >>> lap.get_weather_data()
-            Time             0 days 01:11:20.525000
-            AirTemp                            22.1
-            Humidity                           53.5
-            Pressure                         1003.5
+            Time             0 days 01:10:15.292000
+            AirTemp                            23.0
+            Humidity                           51.9
+            Pressure                          992.4
             Rainfall                           True
-            TrackTemp                          36.9
-            WindDirection                        76
-            WindSpeed                           0.6
-            Name: 71, dtype: object
+            TrackTemp                          37.8
+            WindDirection                       166
+            WindSpeed                           0.8
+            Name: 70, dtype: object
         """
         # get first value within the duration of the lap
         mask = ((self.session.weather_data['Time'] >= self['LapStartTime']) &
