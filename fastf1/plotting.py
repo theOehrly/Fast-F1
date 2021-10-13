@@ -43,20 +43,56 @@ except ImportError:
                   "Plotting of timedelta values will be restricted!",
                   UserWarning)
 
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings('ignore', message="Using slow pure-python SequenceMatcher")
+    # suppress that warning, it's confusing at best here, we don't need fast sequence matching
+    # and the installation (on windows) some effort
+    from thefuzz import fuzz
 
-TEAM_COLORS = {'Mercedes': '#00d2be', 'Ferrari': '#dc0000',
-               'Red Bull': '#0600ef', 'McLaren': '#ff8700',
-               'Alpine F1 Team': '#0090ff', 'Aston Martin': '#006f62',
-               'Alfa Romeo': '#900000', 'AlphaTauri': '#2b4562',
-               'Haas F1 Team': '#ffffff', 'Williams': '#005aff'}
+
+class __TeamColorsWarnDict(dict):
+    """Implements userwarning on KeyError in :any:`TEAM_COLORS` after
+    changing team names."""
+    def get(self, key, default=None):
+        value = super().get(key, default)
+        if value is None:
+            self.warn_change()
+        return value
+
+    def __getitem__(self, item):
+        try:
+            return super().__getitem__(item)
+        except KeyError as err:
+            self.warn_change()
+            raise err
+        except Exception as err:
+            raise err
+
+    def warn_change(self):
+        warnings.warn(
+            "Team names in `TEAM_COLORS` are now lower-case and only contain "
+            "the most identifying part of the name. "
+            "Use function `.team_color` alternatively.", UserWarning
+        )
+
+
+TEAM_COLORS = __TeamColorsWarnDict({
+    'mercedes': '#00d2be', 'ferrari': '#dc0000',
+    'red bull': '#0600ef', 'mclaren': '#ff8700',
+    'alpine': '#0090ff', 'aston martin': '#006f62',
+    'alfa romeo': '#900000', 'alphatauri': '#2b4562',
+    'haas': '#ffffff', 'williams': '#005aff'
+})
 """Mapping of team colors (hex color code) to team names.
 (current season only)"""
 
-TEAM_TRANSLATE = {'MER': 'Mercedes', 'FER': 'Ferrari',
-                  'RBR': 'Red Bull', 'MCL': 'McLaren',
-                  'APN': 'Alpine F1 Team', 'AMR': 'Aston Martin',
-                  'ARR': 'Alfa Romeo', 'APT': 'AlphaTauri',
-                  'HAA': 'Haas F1 Team', 'WIL': 'Williams'}
+
+TEAM_TRANSLATE = {'MER': 'mercedes', 'FER': 'ferrari',
+                  'RBR': 'red bull', 'MCL': 'mclaren',
+                  'APN': 'alpine', 'AMR': 'aston martin',
+                  'ARR': 'alfa romeo', 'APT': 'alphatauri',
+                  'HAA': 'haas', 'WIL': 'williams'}
 """Mapping of team names to theirs respective abbreviations."""
 
 COLOR_PALETTE = ['#FF79C6', '#50FA7B', '#8BE9FD', '#BD93F9',
@@ -104,21 +140,76 @@ def setup_mpl(mpl_timedelta_support=True, color_scheme='fastf1',
 
 
 def team_color(identifier):
-    """Get a teams color.
+    """Get a team's color from a team name or abbreviation.
+
+    This function will try to find a matching team for any identifier string
+    that is passed to it. This involves case insensitive matching and partial
+    string matching.
+
+    If you want exact string matching, you should use the
+    :any:`TEAM_COLORS` dictionary directly, using :any:`TEAM_TRANSLATE` to
+    convert abbreviations to team names if necessary.
+
+    Example::
+
+        >>> team_color('Red Bull')
+        '#0600ef'
+        >>> team_color('redbull')
+        '#0600ef'
+        >>> team_color('Red')
+        '#0600ef'
+        >>> team_color('RBR')
+        '#0600ef'
+
+        shortened team names, included sponsors and typos can be dealt with
+        too (within reason)
+
+        >>> team_color('Mercedes')
+        '#00d2be'
+        >>> team_color('Merc')
+        '#00d2be'
+        >>> team_color('Merecds')
+        '#00d2be'
+        >>> team_color('Mercedes-AMG Petronas F1 Team')
+        '#00d2be'
 
     Args:
-        identifier (str): Abbreviation or full name of the team.
-            For example "RBR" or "Red Bull" would both return the same result.
+        identifier (str): Abbreviation or uniquely identifying name of the team.
 
     Returns:
         str: hex color code
     """
-    if identifier in TEAM_COLORS.keys():
-        return TEAM_COLORS[identifier]
-    elif identifier in TEAM_TRANSLATE:
-        return TEAM_COLORS[TEAM_TRANSLATE[identifier]]
+    if identifier.upper() in TEAM_TRANSLATE:
+        # try short team abbreviations first
+        return TEAM_COLORS[TEAM_TRANSLATE[identifier.upper()]]
     else:
-        return None
+        identifier = identifier.lower()
+        # remove common non-unique words
+        for word in ('racing', 'team', 'f1', 'scuderia'):
+            identifier = identifier.replace(word, "")
+
+        # check for an exact team name match
+        if identifier in TEAM_COLORS:
+            return TEAM_COLORS[identifier]
+
+        # check for exact partial string match
+        for team_name, color in TEAM_COLORS.items():
+            if identifier in team_name:
+                return color
+
+        # do fuzzy string matching
+        key_ratios = list()
+        for existing_key in TEAM_COLORS.keys():
+            ratio = fuzz.ratio(identifier, existing_key)
+            key_ratios.append((ratio, existing_key))
+        key_ratios.sort(reverse=True)
+        if (key_ratios[0][0] < 35) or (key_ratios[0][0]/key_ratios[1][0] < 1.2):
+            # ensure that the best match has a minimum accuracy (35 out of
+            # 100) and that it has a minimum confidence (at least 20% better
+            # than second best)
+            raise KeyError
+        best_matched_key = key_ratios[0][1]
+        return TEAM_COLORS[best_matched_key]
 
 
 def lapnumber_axis(ax, axis='xaxis'):

@@ -68,12 +68,12 @@ def test_doc_example_delta_time():
     ham = laps.pick_driver('HAM').pick_fastest()
 
     fig, ax = plt.subplots()
-    ax.plot(lec.telemetry['Distance'], lec.telemetry['Speed'], color=plotting.TEAM_COLORS[lec['Team']])
-    ax.plot(ham.telemetry['Distance'], ham.telemetry['Speed'], color=plotting.TEAM_COLORS[ham['Team']])
+    ax.plot(lec.telemetry['Distance'], lec.telemetry['Speed'], color=plotting.team_color(lec['Team']))
+    ax.plot(ham.telemetry['Distance'], ham.telemetry['Speed'], color=plotting.team_color(ham['Team']))
     twin = ax.twinx()
     delta_time, ham_car_data, lec_car_data = utils.delta_time(ham, lec)
     ham_car_data = ham_car_data.add_distance()
-    twin.plot(ham_car_data['Distance'], delta_time, '--', color=plotting.TEAM_COLORS[lec['Team']])
+    twin.plot(ham_car_data['Distance'], delta_time, '--', color=plotting.team_color(lec['Team']))
 
     return fig
 
