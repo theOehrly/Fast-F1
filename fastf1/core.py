@@ -67,7 +67,7 @@ with warnings.catch_warnings():
     warnings.filterwarnings('ignore', message="Using slow pure-python SequenceMatcher")
     # suppress that warning, it's confusing at best here, we don't need fast sequence matching
     # and the installation (on windows) some effort
-    from fuzzywuzzy import fuzz
+    from thefuzz import fuzz
 
 logging.basicConfig(level=logging.INFO, style='{', format="{module: <8} {levelname: >10} \t{message}")
 
