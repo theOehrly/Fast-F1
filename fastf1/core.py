@@ -191,7 +191,8 @@ def get_round(year, match):
 
     races = ergast.fetch_season(year)
     to_match = [build_string(block) for block in races]
-    ratios = np.array([fuzz.partial_ratio(match, ref) for ref in to_match])
+    ratios = np.array([fuzz.partial_ratio(match.casefold(), ref.casefold())
+                       for ref in to_match])
 
     return int(races[np.argmax(ratios)]['round'])
 

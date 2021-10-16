@@ -9,6 +9,7 @@ v2.1.9 General maintenance
 - switch renamed dependency 'fuzzywuzzy' to new name 'thefuzz'
 - add support for getting team colors from incomplete or partial team
   names or from team names containing typos or extra words
+- make fuzzy string matching for event names case-insensitive
 
 
 v2.1.8 Add temporary support for sprint qualifying
