@@ -729,7 +729,7 @@ def car_data(path, response=None, livedata=None):
             1 =  Off
             2 =  (?)
             3 =  (?)
-            8 =  Detected (Noted Sometimes)
+            8 =  Detected, Eligible once in Activation Zone (Noted Sometimes)
             10 = On (Unknown Distinction)
             12 = On (Unknown Distinction)
             14 = On (Unknown Distinction)
