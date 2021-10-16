@@ -16,6 +16,16 @@ Or take a look at the gallery for some inspiration:
 :doc:`examples_gallery/index`
 
 
+There are also some great articles and examples written by other people. They
+provide a nice overview about what you can do with FastF1 and might help you
+to get started.
+
+  - `Accessing Formula-1 Race's historical data using Python (medium.com) <https://pandeyparul.medium.com/accessing-formula-1-races-historical-data-using-python-b7c80e544f50>`_
+  - `Formula 1 Data Analysis Tutorial - 2021 Russian GP: "To Box, or Not to Box?" (medium.com) <https://medium.com/@jaspervhat/formula-1-data-analysis-tutorial-2021-russian-gp-to-box-or-not-to-box-da6399bd4a39>`_
+  - `How I Analyze Formula 1 Data With Python: 2021 Italian GP (medium.com) <https://medium.com/@jaspervhat/how-i-analyze-formula-1-data-with-python-2021-italian-gp-dfb11db4b73>`_
+
+
+
 Introduction
 ============
 
