@@ -234,7 +234,7 @@ class Telemetry(pd.DataFrame):
             - `nGear` (int): Car gear number
             - `Throttle` (float): 0-100 Throttle pedal pressure
             - `Brake` (float): 0-100 Brake pedal pressure
-            - `DRS` (int): DRS indicator
+            - `DRS` (int): DRS indicator (See :meth:`car_data` for more info)
 
         - **Position data**:
             - `X` (float): X position
