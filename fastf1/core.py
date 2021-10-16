@@ -1240,9 +1240,11 @@ class Session:
                              'NumberOfLaps': 'LapNumber',
                              'New': 'FreshTyre'}, inplace=True)
         laps['Stint'] += 1  # counting stints from 1
-        t_map = {r['number']: r['Constructor']['name'] for r in self.results}
+        t_map = {r.get('number', ''): r.get('Constructor', {}).get('name', '')
+                 for r in self.results}
         laps['Team'] = laps['DriverNumber'].map(t_map)
-        d_map = {r['number']: r['Driver']['code'] for r in self.results}
+        d_map = {r.get('number', ''): r.get('Driver', {}).get('code', '')
+                 for r in self.results}
         laps['Driver'] = laps['DriverNumber'].map(d_map)
         # add track status data
         ts_data = api.track_status_data(self.api_path, livedata=livedata)
@@ -1420,7 +1422,7 @@ class Session:
         """
         if type(identifier) is str:
             for info in self.results:
-                if info['Driver']['code'] == identifier:
+                if info.get('Driver', {}).get('code') == identifier:
                     return Driver(self, info)
 
         return None
