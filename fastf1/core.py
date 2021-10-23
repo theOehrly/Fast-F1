@@ -1227,6 +1227,11 @@ class Session:
                 laps_start_time.insert(0, pd.NaT)
             result.loc[:, 'LapStartTime'] = pd.Series(laps_start_time, dtype='timedelta64[ns]')
 
+            # set missing lap start times to pit out time where possible
+            mask = pd.isna(result['LapStartTime']) & (~pd.isna(result['PitOutTime']))
+            result.loc[mask, 'LapStartTime'] = result.loc[mask, 'PitOutTime']
+
+            # create total laps counter
             for npit in result['NumberOfPitStops'].unique():
                 sel = result['NumberOfPitStops'] == npit
                 result.loc[sel, 'TotalLaps'] += np.arange(0, sel.sum()) + 1
