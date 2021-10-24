@@ -230,6 +230,17 @@ def make_path(wname, wdate, sname, sdate):
     return '/static/' + smooth_operator.replace(' ', '_')
 
 
+# define all empty columns for timing data
+EMPTY_LAPS = {'Time': pd.NaT, 'Driver': str(), 'LapTime': pd.NaT, 'NumberOfLaps': np.NaN,
+              'NumberOfPitStops': np.NaN, 'PitOutTime': pd.NaT, 'PitInTime': pd.NaT,
+              'Sector1Time': pd.NaT, 'Sector2Time': pd.NaT, 'Sector3Time': pd.NaT,
+              'Sector1SessionTime': pd.NaT, 'Sector2SessionTime': pd.NaT, 'Sector3SessionTime': pd.NaT,
+              'SpeedI1': np.NaN, 'SpeedI2': np.NaN, 'SpeedFL': np.NaN, 'SpeedST': np.NaN}
+
+EMPTY_STREAM = {'Time': pd.NaT, 'Driver': str(), 'Position': np.NaN,
+                'GapToLeader': np.NaN, 'IntervalToPositionAhead': np.NaN}
+
+
 @Cache.api_request_wrapper
 def timing_data(path, response=None, livedata=None):
     """Fetch and parse timing data.
@@ -318,28 +329,18 @@ def timing_data(path, response=None, livedata=None):
             else:
                 resp_per_driver[drv].append((entry[0], entry[1]['Lines'][drv]))
 
-    # define all empty columns
-    empty_laps = {'Time': pd.NaT, 'Driver': str(), 'LapTime': pd.NaT, 'NumberOfLaps': np.NaN,
-                  'NumberOfPitStops': np.NaN, 'PitOutTime': pd.NaT, 'PitInTime': pd.NaT,
-                  'Sector1Time': pd.NaT, 'Sector2Time': pd.NaT, 'Sector3Time': pd.NaT,
-                  'Sector1SessionTime': pd.NaT, 'Sector2SessionTime': pd.NaT, 'Sector3SessionTime': pd.NaT,
-                  'SpeedI1': np.NaN, 'SpeedI2': np.NaN, 'SpeedFL': np.NaN, 'SpeedST': np.NaN}
-
-    empty_stream = {'Time': pd.NaT, 'Driver': str(), 'Position': np.NaN,
-                    'GapToLeader': np.NaN, 'IntervalToPositionAhead': np.NaN}
-
     # create empty data dicts and populate them with data from all drivers after that
-    laps_data = {key: list() for key, val in empty_laps.items()}
-    stream_data = {key: list() for key, val in empty_stream.items()}
+    laps_data = {key: list() for key, val in EMPTY_LAPS.items()}
+    stream_data = {key: list() for key, val in EMPTY_STREAM.items()}
 
     for drv in resp_per_driver.keys():
-        drv_laps_data = _laps_data_driver(resp_per_driver[drv], empty_laps, drv)
-        drv_stream_data = _stream_data_driver(resp_per_driver[drv], empty_stream, drv)
+        drv_laps_data = _laps_data_driver(resp_per_driver[drv], EMPTY_LAPS, drv)
+        drv_stream_data = _stream_data_driver(resp_per_driver[drv], EMPTY_STREAM, drv)
 
-        for key in empty_laps.keys():
+        for key in EMPTY_LAPS.keys():
             laps_data[key].extend(drv_laps_data[key])
 
-        for key in empty_stream.keys():
+        for key in EMPTY_STREAM.keys():
             stream_data[key].extend(drv_stream_data[key])
 
     laps_data = pd.DataFrame(laps_data)
@@ -1047,6 +1048,52 @@ def session_status_data(path, response=None, livedata=None):
         data['Status'].append(row['Status'])
 
     return data
+
+
+@Cache.api_request_wrapper
+def driver_info(path, response=None, livedata=None):
+    """Fetch driver information.
+
+    Driver information contains the following information about each driver:
+
+        `['RacingNumber', 'BroadcastName', 'FullName', 'Tla', 'Line',
+        'TeamName', 'TeamColour', 'FirstName', 'LastName', 'Reference',
+        'HeadshotUrl']`
+
+    Args:
+        path (str): api path base string (see :func:`api.make_path`)
+        response: Response as returned by :func:`api.fetch_page`
+            can be passed if it was downloaded already.
+        livedata: An instance of :class:`fastf1.livetiming.data.LivetimingData`
+            to use as a source instead of the api
+
+    Returns:
+        A dictionary containing one entry for each driver
+        with the drivers racing number as key
+
+    Raises:
+        SessionNotAvailableError: in case the F1 livetiming api returns no data
+    """
+    if livedata is not None and livedata.has('DriverList'):
+        # does not need any further processing
+        logging.info("Loading driver list")
+        response = livedata.get('DriverList')
+    elif response is None:
+        logging.info("Fetching driver list...")
+        response = fetch_page(path, 'driver_list')
+        if response is None:  # no response received
+            raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
+
+    try:
+        drv_info = response[0][1]
+        if not len(drv_info) or not isinstance(drv_info, dict):
+            return dict()
+        if 'RacingNumber' not in list(drv_info.values())[0]:
+            return dict()
+        return drv_info
+
+    except IndexError:
+        return dict()
 
 
 @Cache.api_request_wrapper

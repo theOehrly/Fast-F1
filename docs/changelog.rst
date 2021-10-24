@@ -10,7 +10,8 @@ v2.1.9 General maintenance
 - add support for getting team colors from incomplete or partial team
   names or from team names containing typos or extra words
 - make fuzzy string matching for event names case-insensitive
-- set missing lap start times to pit out time where possible (fixes #29)
+- set missing lap start times to pit out time where possible (fixes issue #29),
+- add new api function :func:`fastf1.api.driver_info`
 
 
 v2.1.8 Add temporary support for sprint qualifying
