@@ -63,6 +63,7 @@ import logging
 from functools import cached_property
 
 import warnings
+
 with warnings.catch_warnings():
     warnings.filterwarnings('ignore', message="Using slow pure-python SequenceMatcher")
     # suppress that warning, it's confusing at best here, we don't need fast sequence matching
@@ -70,7 +71,6 @@ with warnings.catch_warnings():
     from thefuzz import fuzz
 
 logging.basicConfig(level=logging.INFO, style='{', format="{module: <8} {levelname: >10} \t{message}")
-
 
 TESTING_LOOKUP = {'2020': [['2020-02-19', '2020-02-20', '2020-02-21'],
                            ['2020-02-26', '2020-02-27', '2020-02-28']],
@@ -300,8 +300,8 @@ class Telemetry(pd.DataFrame):
         'Y': {'type': 'continuous', 'missing': 'quadratic'},
         'Z': {'type': 'continuous', 'missing': 'quadratic'},
         'Status': {'type': 'discrete'},
-        'Speed': {'type': 'continuous', 'missing': 'linear'},     # linear is often required as quadratic overshoots
-        'RPM': {'type': 'continuous', 'missing': 'linear'},       # on sudden changes like sudden pedal application,
+        'Speed': {'type': 'continuous', 'missing': 'linear'},  # linear is often required as quadratic overshoots
+        'RPM': {'type': 'continuous', 'missing': 'linear'},  # on sudden changes like sudden pedal application,
         'Throttle': {'type': 'continuous', 'missing': 'linear'},  # braking, ...)
         'Brake': {'type': 'continuous', 'missing': 'linear'},
         'DRS': {'type': 'discrete'},
@@ -654,7 +654,7 @@ class Telemetry(pd.DataFrame):
                     warnings.warn("Interpolation not possible for telemetry "
                                   "channel because dtype is 'object'")
                 missing = self._CHANNELS[ch]['missing']
-                ret.loc[:, ch] = ret.loc[:, ch]\
+                ret.loc[:, ch] = ret.loc[:, ch] \
                     .interpolate(method=missing, limit_direction='both', fill_value='extrapolate')
 
             elif sig_type == 'discrete':
@@ -728,7 +728,7 @@ class Telemetry(pd.DataFrame):
             {'DifferentialDistance': self.calculate_differential_distance()}
         )
         if 'DifferentialDistance' in self.columns:
-            return self.drop(labels='DifferentialDistance', axis=1)\
+            return self.drop(labels='DifferentialDistance', axis=1) \
                 .join(new_dif_dist, how='outer')
 
         return self.join(new_dif_dist, how='outer')
@@ -812,7 +812,7 @@ class Telemetry(pd.DataFrame):
         """
         if 'DriverAhead' in self.columns and 'DistanceToDriverAhead' in self.columns:
             if drop_existing:
-                d = self.drop(labels='DriverAhead', axis=1)\
+                d = self.drop(labels='DriverAhead', axis=1) \
                     .drop(labels='DistanceToDriverAhead', axis=1)
             else:
                 return self
@@ -914,7 +914,7 @@ class Telemetry(pd.DataFrame):
 
             # first slice by lap and calculate distance, so that distance is zero at finish line
             drv_tel = self.session.car_data[drv].slice_by_lap(relevant_laps).add_distance() \
-                .loc[:, ('SessionTime', 'Distance')].rename(columns={'Distance': drv})
+                          .loc[:, ('SessionTime', 'Distance')].rename(columns={'Distance': drv})
 
             # now slice again by time to only get the relevant time frame
             drv_tel = drv_tel.slice_by_time(t_start, t_end)
@@ -964,6 +964,7 @@ class Weekend:
         race = weekend.get_race() # R Session
 
     """
+
     def __init__(self, year, gp):
         self.year = year
         self.gp = gp
@@ -1043,6 +1044,7 @@ class Session:
 
     .. note:: For full functionality lap and telemetry data need to be loaded.
     """
+
     def __init__(self, weekend, session_name):
         self.weekend = weekend
         """:class:`.Weekend`: Reference to the associated weekend object."""
@@ -1056,6 +1058,11 @@ class Session:
 
         self.results = list()
         """list: Race result with driver information."""
+
+        self.session_status = dict()
+        """pd.Dataframe: Session status data as returned by
+        `fastf1.api.session_status_data()` as dataframe. Available after
+        calling `Session.load_laps()`"""
 
         if not self.weekend.is_testing():
             # The Ergast API can provide some general information about weekends, drivers, ...
@@ -1157,6 +1164,23 @@ class Session:
         Downloading and parsing of the data takes a considerable amount of time. Therefore, it is highly recommended
         to enable caching so that most of the data processing needs to be done only once.
 
+        .. note:: **Drivers crashing and retiring**
+
+            *During a session:*
+            An additional last lap is added for a driver if the last timed
+            lap of a driver is not an inlap and the session is aborted next.
+            The `Time` for when this lap was "set" will be set to the time at
+            which the session was aborted.
+
+            *First lap in a race:*
+            A single lap with minimal information will be added in race
+            sessions if a driver does not complete at least one timed lap.
+            The `LapStartTime` for this lap will be set to the start time
+            of the session as with all other laps in a race. The `Time` at
+            which this lap was "set" will be set to the time at which the
+            first driver completes their first lap.
+
+
         .. note:: Absolute time is not super accurate. The moment a lap
             is logged is not always the same and there will be some
             jitter. At the moment lap time reference is synchronised
@@ -1196,27 +1220,59 @@ class Session:
         useful = app_data[['Driver', 'Time', 'Compound', 'TotalLaps', 'New']]
         useful = useful[~useful['Compound'].isnull()]
 
-        self.drivers = list(data['Driver'].unique())
+        # get list of drivers
+        try:
+            driver_info = api.driver_info(self.api_path, livedata=livedata)
+        except Exception as exc:
+            logging.warning("Failed to load driver list")
+            logging.debug("Exception while loading driver list", exc_info=exc)
+            driver_info = {}
+        if driver_info:
+            self.drivers = list(driver_info.keys())
+        else:
+            # fallback, misses drivers who crashed on their first lap
+            self.drivers = list(data['Driver'].unique())
+            if "" in self.drivers:
+                self.drivers.remove("")
 
         if not self.drivers:
             raise NoLapDataError
 
-        # check when a session was started; for a race this indicates the start of the race
+        # check when a session was started; for a race this indicates the
+        # start of the race
         session_status = api.session_status_data(self.api_path,
                                                  livedata=livedata)
         for i in range(len(session_status['Status'])):
             if session_status['Status'][i] == 'Started':
                 self.session_start_time = session_status['Time'][i]
                 break
+        self.session_status = pd.DataFrame(session_status)
 
         for i, driver in enumerate(self.drivers):
             d1 = data[data['Driver'] == driver]
             d2 = useful[useful['Driver'] == driver]
+            only_one_lap = False
 
-            if len(d2) == 0:
-                continue  # no data for this driver; skip
+            if (not len(d1)) or (not len(d2)):
+                # add data for drivers who crashed on the very first lap
+                # as a downside, this potentially adds a nonexistent lap for
+                # drivers who could not start the race
+                if self.name == 'Race':
+                    only_one_lap = True
+                    result = d1.copy()
+                    result['Driver'] = [driver, ]
+                    result['NumberOfLaps'] = 0
+                    result['NumberOfPitStops'] = 0
+                    result['Time'] = data['Time'].min()
+                    if len(d2):
+                        result['Compound'] = d2['Compound'].iloc[0]
+                        result['TotalLaps'] = d2['TotalLaps'].iloc[0]
+                        result['New'] = d2['New'].iloc[0]
+                else:
+                    continue  # no data for this driver; skip
 
-            result = pd.merge_asof(d1, d2, on='Time', by='Driver')
+            else:
+                result = pd.merge_asof(d1, d2, on='Time', by='Driver')
 
             # calculate lap start time by setting it to the 'Time' of the previous lap
             laps_start_time = list(result['Time'])[:-1]
@@ -1225,7 +1281,9 @@ class Session:
                 laps_start_time.insert(0, self.session_start_time)
             else:
                 laps_start_time.insert(0, pd.NaT)
-            result.loc[:, 'LapStartTime'] = pd.Series(laps_start_time, dtype='timedelta64[ns]')
+            result.loc[:, 'LapStartTime'] = pd.Series(
+                laps_start_time, dtype='timedelta64[ns]'
+            )
 
             # set missing lap start times to pit out time where possible
             mask = pd.isna(result['LapStartTime']) & (~pd.isna(result['PitOutTime']))
@@ -1235,6 +1293,39 @@ class Session:
             for npit in result['NumberOfPitStops'].unique():
                 sel = result['NumberOfPitStops'] == npit
                 result.loc[sel, 'TotalLaps'] += np.arange(0, sel.sum()) + 1
+
+            # check if there is another lap during which the session was aborted
+            # if yes, add as much data as possible for it
+            # set the time of abort as lap end time given that there is no
+            # accurate time available
+            if pd.isna(result['PitInTime'].iloc[-1]) and not only_one_lap:
+                if not pd.isna(result['Time'].iloc[-1]):
+                    next_status = self.session_status[
+                        self.session_status['Time'] > result['Time'].iloc[-1]
+                    ].iloc[0]
+                else:
+                    next_status = self.session_status[
+                        self.session_status['Time']
+                        > result['LapStartTime'].iloc[-1]
+                    ].iloc[0]
+
+                if next_status['Status'] == 'Aborted':
+                    new_last = pd.DataFrame({
+                        'LapStartTime': [result['Time'].iloc[-1]],
+                        'Time': [next_status['Time']],
+                        'Driver': [result['Driver'].iloc[-1]],
+                        'NumberOfLaps': [result['NumberOfLaps'].iloc[-1] + 1],
+                        'NumberOfPitStops':
+                            [result['NumberOfPitStops'].iloc[-1]],
+                        'Compound': [result['Compound'].iloc[-1]],
+                        'TotalLaps': [result['TotalLaps'].iloc[-1] + 1],
+                        'New': [result['New'].iloc[-1]],
+                    })
+                    if not only_one_lap:
+                        result = result.append(new_last).reset_index(drop=True)
+                    else:
+                        result = new_last
+
             # check if df is defined already before concat (vars is a builtin function)
             df = result if 'df' not in vars() else pd.concat([df, result], sort=False)  # noqa: F821
 
@@ -2075,6 +2166,7 @@ class Driver:
 
     .. note:: Driver data is only available if the Ergast api lookup did not fail.
     """
+
     def __init__(self, session, info):
         self.session = session
         self.info = info
@@ -2116,6 +2208,7 @@ class Driver:
 
 class NoLapDataError(Exception):
     """Raised if the API request does not fail but there is no usable data after processing the result."""
+
     def __init__(self, *args):
         super(NoLapDataError, self).__init__("Failed to load session because the API did not provide any usable data.")
 

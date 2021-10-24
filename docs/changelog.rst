@@ -12,6 +12,9 @@ v2.1.9 General maintenance
 - make fuzzy string matching for event names case-insensitive
 - set missing lap start times to pit out time where possible (fixes issue #29),
 - add new api function :func:`fastf1.api.driver_info`
+- support incomplete laps (not timed) caused by drivers crashing/retiring
+  during a lap: infer as much information as possible so that telemetry
+  can be accessed easily (fixes issues #36 and #41)
 
 
 v2.1.8 Add temporary support for sprint qualifying
