@@ -2,7 +2,10 @@ import json
 import requests
 import warnings
 
+from fastf1.version import __version__
+
 base_url = 'http://ergast.com/api/f1'
+_headers = {'User-Agent': f'FastF1/{__version__}'}
 
 
 def load(year, gp, session):
@@ -16,12 +19,12 @@ def load(year, gp, session):
 
 def fetch_season(year):
     url = f"{base_url}/{year}.json"
-    return _parse_ergast(_parse_json_response(requests.get(url)))
+    return _parse_ergast(_parse_json_response(requests.get(url, headers=_headers)))
 
 
 def fetch_weekend(year, gp):
     url = f"{base_url}/{year}/{gp}.json"
-    data = _parse_ergast(_parse_json_response(requests.get(url)))[0]
+    data = _parse_ergast(_parse_json_response(requests.get(url, headers=_headers)))[0]
     url = ("https://www.mapcoordinates.net/admin/component/edit/"
            + "Vpc_MapCoordinates_Advanced_GoogleMapCoords_Component/"
            + "Component/json-get-elevation")
@@ -36,7 +39,7 @@ def fetch_day(year, gp, day):
     """day can be 'qualifying' or 'results'
     """
     url = f"{base_url}/{year}/{gp}/{day}.json"
-    return _parse_json_response(requests.get(url))
+    return _parse_json_response(requests.get(url, headers=_headers))
 
 
 def _parse_json_response(r):
