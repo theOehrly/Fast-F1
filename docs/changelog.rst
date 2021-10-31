@@ -3,6 +3,12 @@ Changelog
 =========
 
 
+v2.1.10 Ergast compatibility
+============================
+
+- introduce a custom user agent to identify FastF1 when requesting data from the Ergast API
+
+
 v2.1.9 General maintenance
 ==========================
 
