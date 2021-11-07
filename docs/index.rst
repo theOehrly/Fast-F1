@@ -4,17 +4,6 @@
    contain the root `toctree` directive.
 
 
-.. note:: **Update required**
-
-    An update to the latest version of FastF1 (v2.1.10) is **required** to
-    adapt to changes in an external API.
-    Without this update you will only be able to load previously cached data!
-    If you use FastF1 version 2.1.9 or older you need to update to the latest
-    version.
-
-    Use ``pip install --upgrade fastf1`` to update to the latest version.
-
-
 =====================
 Fast F1 documentation
 =====================
