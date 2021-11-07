@@ -30,9 +30,7 @@ def test_timing_data():
 
     # these columns should not contain any NA values
     assert not lap_data.isna().loc[:, ('Time', 'Driver', 'NumberOfLaps',
-                                       'NumberOfPitStops', 'Sector2Time',
-                                       'Sector3Time', 'Sector2SessionTime',
-                                       'Sector3SessionTime')].any().any()
+                                       'NumberOfPitStops')].any().any()
     # double .any(): 1st within column, 2nd column results combined
 
     # these columns need to contain same number of NA values (outlap)

@@ -548,8 +548,11 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
 
     # last lap needs to be removed if it does not have a 'Time' and it could not be calculated (likely an inlap)
     if pd.isnull(drv_data['Time'][-1]):
-        for key in drv_data.keys():
-            drv_data[key] = drv_data[key][:-1]
+        if not pd.isnull(drv_data['PitInTime'][-1]):
+            drv_data['Time'][-1] = drv_data['PitInTime'][-1]
+        else:
+            for key in drv_data.keys():
+                drv_data[key] = drv_data[key][:-1]
 
     # more lap sync, this time check which lap triggered with the lowest latency
     for i in range(len(drv_data['Time'])-1, 0, -1):
