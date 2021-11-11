@@ -84,6 +84,9 @@ SPRINT_QUALIFYING_LOOKUP = {
     14: {'Practice 1': '2021-09-10', 'Qualifying': '2021-09-10',
          'Practice 2': '2021-09-11', 'Sprint Qualifying': '2021-09-11',
          'Race': '2021-09-12'},
+    19: {'Practice 1': '2021-11-12', 'Qualifying': '2021-11-12',
+         'Practice 2': '2021-11-13', 'Sprint Qualifying': '2021-11-13',
+         'Race': '2021-11-14'}
 }
 
 D_LOOKUP = [[44, 'HAM', 'Mercedes'], [77, 'BOT', 'Mercedes'],
