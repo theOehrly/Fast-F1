@@ -1,3 +1,9 @@
+**Note**
+
+An update to v2.1.11 is required to support the schedule of the
+Sprint Race Weekend at the Brazil GP.
+
+
 =======
 Fast F1
 =======
