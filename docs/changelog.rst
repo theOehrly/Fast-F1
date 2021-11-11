@@ -3,6 +3,13 @@ Changelog
 =========
 
 
+v2.1.11 Fixes and Patches
+=========================
+
+- Fix: last inlap missing from ``Laps``
+- Add schedule patch for Sprint Race Weekend at Brazil GP
+
+
 v2.1.10 Ergast compatibility
 ============================
 
