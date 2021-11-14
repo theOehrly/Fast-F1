@@ -3,6 +3,21 @@
 ==============================
 
 A collection of functions to interface with the F1 web api.
+
+.. autosummary::
+   :nosignatures:
+
+   timing_data
+   timing_app_data
+   car_data
+   position_data
+   track_status_data
+   session_status_data
+   driver_info
+   weather_data
+   fetch_page
+   parse
+
 """
 import json
 import base64
@@ -725,14 +740,14 @@ def car_data(path, response=None, livedata=None):
         - Throttle (int): 0-100%
         - Brake (int): 0-100% (don't trust brake too much)
         - DRS (int): 0-14 (Odd DRS is Disabled, Even DRS is Enabled) (More Research Needed)
-            0 =  Off
-            1 =  Off
-            2 =  (?)
-            3 =  (?)
-            8 =  Detected, Eligible once in Activation Zone (Noted Sometimes)
-            10 = On (Unknown Distinction)
-            12 = On (Unknown Distinction)
-            14 = On (Unknown Distinction)
+            | 0 =  Off
+            | 1 =  Off
+            | 2 =  (?)
+            | 3 =  (?)
+            | 8 =  Detected, Eligible once in Activation Zone (Noted Sometimes)
+            | 10 = On (Unknown Distinction)
+            | 12 = On (Unknown Distinction)
+            | 14 = On (Unknown Distinction)
         - Source (str): Indicates the source of a sample; 'car' for all values here
 
     The data stream has a sample rate of (usually) 240ms. The samples from the data streams for position data and
