@@ -894,37 +894,38 @@ class Telemetry(pd.DataFrame):
         for drv in self.session.drivers:
             # find correct first relevant lap; very important for correct zero point in distance
             drv_laps = self.session.laps[self.session.laps['DriverNumber'] == drv]
-            drv_laps_before = drv_laps[(drv_laps['LapStartTime'] <= t_start)]
-            if not drv_laps_before.empty:
-                lap_n_before = drv_laps_before['LapNumber'].iloc[-1]
-                if lap_n_before < first_lap_number:
-                    # driver is behind on track an therefore will cross the finish line AFTER self
-                    # therefore above check for LapStartTime <= t_start is wrong
-                    # the first relevant lap is the first lap with LapStartTime > t_start which is lap_n_before += 1
-                    lap_n_before += 1
-            else:
-                lap_n_before = min(drv_laps['LapNumber'])
+            if not drv_laps.empty: # Only include drivers who participated in this session
+                drv_laps_before = drv_laps[(drv_laps['LapStartTime'] <= t_start)]
+                if not drv_laps_before.empty:
+                    lap_n_before = drv_laps_before['LapNumber'].iloc[-1]
+                    if lap_n_before < first_lap_number:
+                        # driver is behind on track an therefore will cross the finish line AFTER self
+                        # therefore above check for LapStartTime <= t_start is wrong
+                        # the first relevant lap is the first lap with LapStartTime > t_start which is lap_n_before += 1
+                        lap_n_before += 1
+                else:
+                    lap_n_before = min(drv_laps['LapNumber'])
 
-            # find last relevant lap so as to no do too much unnecessary calculation later
-            drv_laps_after = drv_laps[drv_laps['Time'] >= t_end]
-            lap_n_after = drv_laps_after['LapNumber'].iloc[0] \
-                if not drv_laps_after.empty \
-                else max(drv_laps['LapNumber'])
-            relevant_laps = drv_laps[(drv_laps['LapNumber'] >= lap_n_before) & (drv_laps['LapNumber'] <= lap_n_after)]
+                # find last relevant lap so as to no do too much unnecessary calculation later
+                drv_laps_after = drv_laps[drv_laps['Time'] >= t_end]
+                lap_n_after = drv_laps_after['LapNumber'].iloc[0] \
+                    if not drv_laps_after.empty \
+                    else max(drv_laps['LapNumber'])
+                relevant_laps = drv_laps[(drv_laps['LapNumber'] >= lap_n_before) & (drv_laps['LapNumber'] <= lap_n_after)]
 
-            if relevant_laps.empty:
-                continue
+                if relevant_laps.empty:
+                    continue
 
-            # first slice by lap and calculate distance, so that distance is zero at finish line
-            drv_tel = self.session.car_data[drv].slice_by_lap(relevant_laps).add_distance() \
-                          .loc[:, ('SessionTime', 'Distance')].rename(columns={'Distance': drv})
+                # first slice by lap and calculate distance, so that distance is zero at finish line
+                drv_tel = self.session.car_data[drv].slice_by_lap(relevant_laps).add_distance() \
+                            .loc[:, ('SessionTime', 'Distance')].rename(columns={'Distance': drv})
 
-            # now slice again by time to only get the relevant time frame
-            drv_tel = drv_tel.slice_by_time(t_start, t_end)
-            if drv_tel.empty:
-                continue
-            drv_tel = drv_tel.set_index('SessionTime')
-            combined_distance = combined_distance.join(drv_tel, how='outer')
+                # now slice again by time to only get the relevant time frame
+                drv_tel = drv_tel.slice_by_time(t_start, t_end)
+                if drv_tel.empty:
+                    continue
+                drv_tel = drv_tel.set_index('SessionTime')
+                combined_distance = combined_distance.join(drv_tel, how='outer')
 
         # create driver map for array
         drv_map = combined_distance.loc[:, combined_distance.columns != self.driver].columns.to_numpy()
