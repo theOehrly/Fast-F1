@@ -2,6 +2,9 @@
 :mod:`fastf1.livetiming` - Live Timing Client
 =====================================================
 
+.. warning::
+    The live timing client does only support Python 3.8 or 3.9!
+
 This module can be used to save live timing data during a session.
 It is **not** possible to do real-time processing of the data.
 
