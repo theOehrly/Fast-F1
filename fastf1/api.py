@@ -535,6 +535,10 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             drv_data[key] = drv_data[key][1:]
         drv_data['NumberOfLaps'] = list(map(lambda n: n-1, drv_data['NumberOfLaps']))  # reduce each lap count by one
 
+    if not drv_data['Time']:
+        # ensure that there is still data left after potentially removing a lap
+        return drv_data
+
     # lap time sync; check which sector time was triggered with the lowest latency
     # Sector3SessionTime == end of lap
     # Sector2SessionTime + Sector3Time == end of lap
@@ -568,6 +572,10 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         else:
             for key in drv_data.keys():
                 drv_data[key] = drv_data[key][:-1]
+
+    if not drv_data['Time']:
+        # ensure that there is still data left after potentially removing a lap
+        return drv_data
 
     # more lap sync, this time check which lap triggered with the lowest latency
     for i in range(len(drv_data['Time'])-1, 0, -1):
