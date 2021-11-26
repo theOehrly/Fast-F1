@@ -919,7 +919,7 @@ class Telemetry(pd.DataFrame):
 
             # first slice by lap and calculate distance, so that distance is zero at finish line
             drv_tel = self.session.car_data[drv].slice_by_lap(relevant_laps).add_distance() \
-                         .loc[:, ('SessionTime', 'Distance')].rename(columns={'Distance': drv})
+                          .loc[:, ('SessionTime', 'Distance')].rename(columns={'Distance': drv})
 
             # now slice again by time to only get the relevant time frame
             drv_tel = drv_tel.slice_by_time(t_start, t_end)
