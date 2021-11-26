@@ -894,7 +894,7 @@ class Telemetry(pd.DataFrame):
         for drv in self.session.drivers:
             # find correct first relevant lap; very important for correct zero point in distance
             drv_laps = self.session.laps[self.session.laps['DriverNumber'] == drv]
-            if not drv_laps.empty:  # Only include drivers who participated in this session
+            if drv_laps.empty:  # Only include drivers who participated in this session
                 continue
             drv_laps_before = drv_laps[(drv_laps['LapStartTime'] <= t_start)]
             if not drv_laps_before.empty:
