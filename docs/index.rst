@@ -50,6 +50,21 @@ All data is downloaded from two sources:
 Have fun!
 
 
+Installation
+============
+
+It is recommended to install FastF1 using pip:
+
+    pip install fastf1
+
+Note that Python 3.8 or higher is required.
+(The live timing client does not support Python 3.10, therefore full
+functionality is only available with Python 3.8 and 3.9)
+
+Alternatively, a wheel or a source distribution can be downloaded from the
+Github releases page or from Pypi.
+
+
 .. toctree::
    ← Back to Github <https://github.com/theOehrly/Fast-F1>
 
