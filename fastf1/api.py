@@ -47,6 +47,7 @@ headers = {
 }
 
 pages = {
+  'session_data': 'SessionData.json',  # track + session status + lap count
   'session_info': 'SessionInfo.json',  # more rnd
   'archive_status': 'ArchiveStatus.json',  # rnd=1880327548
   'heartbeat': 'Heartbeat.jsonStream',  # Probably time synchronization?
@@ -65,7 +66,7 @@ pages = {
   'content_streams': 'ContentStreams.jsonStream',  # Lap by lap feeds
   'timing_data': 'TimingData.jsonStream',  # Gap to car ahead
   'lap_count': 'LapCount.jsonStream',  # Lap counter
-  'championship_predicion': 'ChampionshipPrediction.jsonStream'  # Points
+  'championship_prediction': 'ChampionshipPrediction.jsonStream'  # Points
 }
 """Known API requests"""
 
