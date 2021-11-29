@@ -19,6 +19,7 @@ A collection of functions to interface with the F1 web api.
    parse
 
 """
+import datetime
 import json
 import base64
 import zlib
@@ -111,11 +112,17 @@ class Cache:
         cls._IGNORE_VERSION = ignore_version
         cls._FORCE_RENEW = force_renew
         if use_requests_cache:
-            cls._install_requests_cache(cache_dir)
+            cls._install_requests_cache(cache_dir, force_renew=force_renew)
 
     @staticmethod
-    def _install_requests_cache(cache_dir):
-        requests_cache.install_cache(os.path.join(cache_dir, 'fastf1_http_cache'), allowable_methods=('GET', 'POST'))
+    def _install_requests_cache(cache_dir, *, force_renew=False):
+        requests_cache.install_cache(
+            os.path.join(cache_dir, 'fastf1_http_cache'),
+            allowable_methods=('GET', 'POST'),
+            expire_after=datetime.timedelta(hours=12)
+        )
+        if force_renew:
+            requests_cache.clear()
 
     @classmethod
     def clear_cache(cls, cache_dir, deep=False):
