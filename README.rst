@@ -1,15 +1,3 @@
-**Note**
-
-See issue `#58 <https://github.com/theOehrly/Fast-F1/issues/58#issuecomment-967336468>`_ for a necessary workaround to load any data for the 2021 Brazilian Grand Prix.
-
-**Note 2**
-
-An update to v2.1.11 is required to support the schedule of the
-Sprint Race Weekend at the Brazil GP.
-
-
-Apologies for the inconveniences.
-
 
 =======
 Fast F1
