@@ -1111,7 +1111,9 @@ class Session:
         self.weather_data = pd.DataFrame()
         """Dataframe containing weather data for this session as received
         from the api. See :func:`fastf1.api.weather_data` for available data
-        channels. Each data channel is one row of the dataframe."""
+        channels. Each data channel is one row of the dataframe.
+        Weather data is only loaded once :func:`Session.load_laps` has been 
+        called."""
 
         self.drivers = list()
         """List of all drivers that took part in this session; contains driver numbers as string. Drivers for which
