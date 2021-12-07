@@ -79,7 +79,7 @@ ax.invert_yaxis()
 
 # draw vertical lines behind the bars
 ax.set_axisbelow(True)
-ax.xaxis.grid(True, linestyle='--', color='black', zorder=-1000)
+ax.xaxis.grid(True, which='major', linestyle='--', color='black', zorder=-1000)
 # sphinx_gallery_defer_figures
 
 
