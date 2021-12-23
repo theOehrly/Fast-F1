@@ -1255,6 +1255,7 @@ class Session:
                 break
         self.session_status = pd.DataFrame(session_status)
 
+        df = None
         for i, driver in enumerate(self.drivers):
             d1 = data[data['Driver'] == driver]
             d2 = useful[useful['Driver'] == driver]
@@ -1342,8 +1343,7 @@ class Session:
                     else:
                         result = new_last
 
-            # check if df is defined already before concat (vars is a builtin function)
-            df = result if 'df' not in vars() else pd.concat([df, result], sort=False)  # noqa: F821
+            df = pd.concat([df, result], sort=False)
 
         laps = df.reset_index(drop=True)  # noqa: F821
         laps.rename(columns={'TotalLaps': 'TyreLife',
