@@ -1112,7 +1112,7 @@ class Session:
         """Dataframe containing weather data for this session as received
         from the api. See :func:`fastf1.api.weather_data` for available data
         channels. Each data channel is one row of the dataframe.
-        Weather data is only loaded once :func:`Session.load_laps` has been 
+        Weather data is only loaded once :func:`Session.load_laps` has been
         called."""
 
         self.drivers = list()
