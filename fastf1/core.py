@@ -1302,21 +1302,30 @@ class Session:
                 result.loc[sel, 'TotalLaps'] += np.arange(0, sel.sum()) + 1
 
             # check if there is another lap during which the session was aborted
+            # but which is not in the data
             # if yes, add as much data as possible for it
             # set the time of abort as lap end time given that there is no
             # accurate time available
+            # this block of code has no tests; testing would require to mock
+            # the data as the actual data may be updated on the server after
+            # some time and the problem no longer occurs
             if pd.isna(result['PitInTime'].iloc[-1]) and not only_one_lap:
                 if not pd.isna(result['Time'].iloc[-1]):
-                    next_status = self.session_status[
+                    next_statuses = self.session_status[
                         self.session_status['Time'] > result['Time'].iloc[-1]
-                    ].iloc[0]
+                    ]
                 else:
-                    next_status = self.session_status[
+                    next_statuses = self.session_status[
                         self.session_status['Time']
                         > result['LapStartTime'].iloc[-1]
-                    ].iloc[0]
+                    ]
 
-                if next_status['Status'] == 'Aborted':
+                aborted = False
+                if not next_statuses.empty:
+                    next_status = next_statuses.iloc[0]
+                    aborted = (next_status['Status'] == 'Aborted')
+
+                if aborted:
                     new_last = pd.DataFrame({
                         'LapStartTime': [result['Time'].iloc[-1]],
                         'Time': [next_status['Time']],
