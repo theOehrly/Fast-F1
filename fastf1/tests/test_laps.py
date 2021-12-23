@@ -85,7 +85,7 @@ def test_laps_get_telemetry(reference_laps_data):
 def test_laps_get_weather_data(reference_laps_data):
     session, laps = reference_laps_data
     wd = laps.get_weather_data()
-    assert wd.shape == (924, 8)
+    assert wd.shape == (926, 8)
     for col in ('AirTemp', 'Humidity', 'Pressure', 'Rainfall',
                 'TrackTemp', 'WindDirection', 'WindSpeed', 'Time'):
         assert col in wd.columns
