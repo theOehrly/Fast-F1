@@ -159,16 +159,20 @@ def get_session(year, gp, event=None):
     weekend = Weekend(year, gp)
     if event == 'R':
         return Session(weekend, 'Race')
-    if event == 'Q':
+    elif event == 'Q':
         return Session(weekend, 'Qualifying')
-    if event == 'SQ':  # TODO: remove; temporary patch to support sprint qualifying
+    elif event == 'SQ':  # TODO: remove; temporary patch to support sprint qualifying
         return Session(weekend, 'Sprint Qualifying')
-    if event == 'FP3':
+    elif event == 'FP3':
         return Session(weekend, 'Practice 3')
-    if event == 'FP2':
+    elif event == 'FP2':
         return Session(weekend, 'Practice 2')
-    if event == 'FP1':
+    elif event == 'FP1':
         return Session(weekend, 'Practice 1')
+    elif event is not None:
+        raise ValueError(f"Invalid name '{event}' given for argument "
+                         f"'event'. Valid options are: "
+                         f"['R', 'Q', 'SQ', 'FP1', 'FP2', 'FP3']")
     return weekend
 
 
