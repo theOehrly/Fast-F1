@@ -1277,6 +1277,7 @@ class Session:
                         result['TotalLaps'] = d2['TotalLaps'].iloc[0]
                         result['New'] = d2['New'].iloc[0]
                 else:
+                    logging.warning(f"No lap data for driver {driver}")
                     continue  # no data for this driver; skip
 
             else:
@@ -1344,6 +1345,9 @@ class Session:
                         result = new_last
 
             df = pd.concat([df, result], sort=False)
+
+        if df is None:
+            raise NoLapDataError
 
         laps = df.reset_index(drop=True)  # noqa: F821
         laps.rename(columns={'TotalLaps': 'TyreLife',
