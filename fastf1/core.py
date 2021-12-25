@@ -1098,9 +1098,9 @@ class Session:
         """Instance of :class:`Laps` containing all laps from all drivers
         in this session."""
         self.t0_date = None
-        # can only be set when/if telemetry has been downloaded
         """pandas.Datetime: Date timestamp which marks the beginning of the
-        data stream."""
+        data stream. This value needs to be calculated from telemetry data
+        and is therefore only available after telemetry data was loaded."""
         self.session_start_time = None
         """pandas.Timedelta: Session time at which the session was started."""
 
