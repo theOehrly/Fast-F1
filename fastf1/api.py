@@ -89,7 +89,7 @@ class Cache:
           data and the code don't match. Stage 2 is only used for some api functions.
     """
     _CACHE_DIR = ''
-    _API_CORE_VERSION = 1  # version of the api parser code (unrelated to release version number)
+    _API_CORE_VERSION = 2  # version of the api parser code (unrelated to release version number)
     _IGNORE_VERSION = False
     _FORCE_RENEW = False
 
@@ -1188,7 +1188,9 @@ def weather_data(path, response=None, livedata=None):
 
     data_keys = ('AirTemp', 'Humidity', 'Pressure', 'Rainfall',
                  'TrackTemp', 'WindDirection', 'WindSpeed')
-    data_dtypes = (float, float, float, bool, float, int, float)
+    converters = (float, float, float,
+                  lambda v: True if v == '1' else False,  # rain: str -> bool
+                  float, int, float)
 
     for entry in response:
         if len(entry) < 2:
@@ -1198,12 +1200,12 @@ def weather_data(path, response=None, livedata=None):
             continue
 
         data['Time'].append(to_timedelta(entry[0]))
-        for key, dtype in zip(data_keys, data_dtypes):
+        for key, conv in zip(data_keys, converters):
             try:
-                data[key].append(dtype(row[key]))
+                data[key].append(conv(row[key]))
             except (KeyError, ValueError):
                 # type conversion failed or key is missing
-                data[key].append(dtype(0))
+                data[key].append(conv(0))
 
     return data
 

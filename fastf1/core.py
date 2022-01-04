@@ -1817,7 +1817,7 @@ class Laps(pd.DataFrame):
             34 0 days 00:34:14.385000    23.0     51.7  ...      37.7           272       0.8
             36 0 days 00:36:14.426000    23.0     51.1  ...      38.3           192       0.9
             37 0 days 00:37:14.391000    23.3     50.0  ...      38.7           213       0.9
-            [269 rows x 8 columns]
+            [275 rows x 8 columns]
 
         Joining weather data with lap timing data::
 
@@ -1835,12 +1835,12 @@ class Laps(pd.DataFrame):
             3   0 days 00:25:21.611000            5  ...           207        3.2
             4   0 days 00:27:12.045000            5  ...           238        1.8
             ..                     ...          ...  ...           ...        ...
-            264 0 days 00:24:02.127000           88  ...           210        2.3
-            265 0 days 00:33:31.080000           88  ...           207        3.2
-            266 0 days 00:35:15.794000           88  ...           272        0.8
-            267 0 days 00:36:38.150000           88  ...           192        0.9
-            268 0 days 00:38:37.508000           88  ...           213        0.9
-            [269 rows x 32 columns]
+            270 0 days 00:24:02.127000           88  ...           210        2.3
+            271 0 days 00:33:31.080000           88  ...           207        3.2
+            272 0 days 00:35:15.794000           88  ...           272        0.8
+            273 0 days 00:36:38.150000           88  ...           192        0.9
+            274 0 days 00:38:37.508000           88  ...           213        0.9
+            [275 rows x 32 columns]
         """
         wd = [lap.get_weather_data() for _, lap in self.iterrows()]
         if wd:
@@ -2160,7 +2160,7 @@ class Lap(pd.Series):
             AirTemp                            23.0
             Humidity                           51.9
             Pressure                          992.4
-            Rainfall                           True
+            Rainfall                          False
             TrackTemp                          37.8
             WindDirection                       166
             WindSpeed                           0.8
