@@ -33,7 +33,7 @@ body:
   attributes:
     label: "Error message:"
     description: >
-      Please include full error message including all logging output.
+      Please include the full output including the complete traceback and all logging output.
     placeholder: |
-      << Full traceback starting from `Traceback: ...` >>
+      << Output of your script here >>
     render: shell
