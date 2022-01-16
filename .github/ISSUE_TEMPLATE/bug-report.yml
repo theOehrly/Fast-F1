@@ -1,11 +1,11 @@
 name: Bug report
 description: Report a bug.
-title: "[BUG] - <Please write a descriptive title here>"
+title: "[BUG] <Please write a descriptive title here>"
 
 body:
 - type: markdown
   attributes:
-    value: >
+    value: |
       Thank you for taking the time to file a bug report. Before you create a new issue please do the following:
       - Consider if the problem you have is a (suspected) bug. If not, you should open a discussion [here](https://github.com/theOehrly/Fast-F1/discussions) instead.
       - Ensure that you have updated to the latest version of FastF1.
