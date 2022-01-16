@@ -1,0 +1,15 @@
+name: Feature request
+description: Please submit your ideas for improving FastF1 here.
+title: "[ENH] <Please write a descriptive title here>"
+
+body:
+- type: markdown
+  attributes:
+    value: >
+      Describe the feature or improvement.
+
+- type: textarea
+  attributes:
+    label: "Proposed new feature or change:"
+  validations:
+    required: true

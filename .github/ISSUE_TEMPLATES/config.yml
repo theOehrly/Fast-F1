@@ -1,0 +1,7 @@
+contact_links:
+  - name: Documentation
+    url: https://theoehrly.github.io/Fast-F1/
+    about: "The documentation provides information on how to use FastF1"
+  - name: Question/Help/Support
+    url: https://github.com/theOehrly/Fast-F1/discussions
+    about: "If you have a question, you can open a discussion."
