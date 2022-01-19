@@ -288,9 +288,9 @@ def timing_data(path, response=None, livedata=None):
 
 
     Args:
-        path: api path base string (see :func:`make_path`)
+        path: api path base string (usually ``Session.api_path``)
         response (optional): api response can be passed if data was already downloaded
-        livedata: An instance of :class:`fastf1.livetiming.data.LivetimingData`
+        livedata: An instance of :class:`fastf1.livetiming.data.LiveTimingData`
             to use as a source instead of the api
 
     Returns:
@@ -689,9 +689,9 @@ def timing_app_data(path, response=None, livedata=None):
     frequently (for example 'Compound' only after tire changes).
 
     Args:
-        path (str): api path base string (see :func:`make_path`)
+        path (str): api path base string (usually ``Session.api_path``)
         response: Response as returned by :func:`fetch_page` can be passed if it was downloaded already.
-        livedata: An instance of :class:`fastf1.livetiming.data.LivetimingData` to use as a source instead of the api
+        livedata: An instance of :class:`fastf1.livetiming.data.LiveTimingData` to use as a source instead of the api
 
     Returns:
         A DataFrame contianing one column for each data channel as listed above.
@@ -770,9 +770,9 @@ def car_data(path, response=None, livedata=None):
     car data do not line up. Resampling/interpolation is required to merge them.
 
     Args:
-        path (str): api path base string (see :func:`make_path`)
+        path (str): api path base string (usually ``Session.api_path``)
         response: Response as returned by :func:`fetch_page` can be passed if it was downloaded already.
-        livedata: An instance of :class:`fastf1.livetiming.data.LivetimingData` to use as a source instead of the api
+        livedata: An instance of :class:`fastf1.livetiming.data.LiveTimingData` to use as a source instead of the api
 
     Returns:
         | A dictionary containing one pandas DataFrame per driver. Dictionary keys are the driver's numbers as
@@ -881,9 +881,9 @@ def position_data(path, response=None, livedata=None):
     car data do not line up. Resampling/interpolation is required to merge them.
 
     Args:
-        path (str): api path base string (see :func:`api.make_path`)
-        response: Response as returned by :func:`api.fetch_page` can be passed if it was downloaded already.
-        livedata: An instance of :class:`fastf1.livetiming.data.LivetimingData` to use as a source instead of the api
+        path (str): api path base string (usually ``Session.api_path``)
+        response: Response as returned by :func:`fetch_page` can be passed if it was downloaded already.
+        livedata: An instance of :class:`fastf1.livetiming.data.LiveTimingData` to use as a source instead of the api
 
     Returns:
         | A dictionary containing one pandas DataFrame per driver. Dictionary keys are the driver's numbers as
@@ -1009,9 +1009,9 @@ def track_status_data(path, response=None, livedata=None):
           will mark the actual end)
 
     Args:
-        path (str): api path base string (see :func:`api.make_path`)
-        response: Response as returned by :func:`api.fetch_page` can be passed if it was downloaded already.
-        livedata: An instance of :class:`fastf1.livetiming.data.LivetimingData` to use as a source instead of the api
+        path (str): api path base string (usually ``Session.api_path``)
+        response: Response as returned by :func:`fetch_page` can be passed if it was downloaded already.
+        livedata: An instance of :class:`fastf1.livetiming.data.LiveTimingData` to use as a source instead of the api
 
     Returns:
         A dictionary containing one key for each data channel and a list of values per key.
@@ -1057,9 +1057,9 @@ def session_status_data(path, response=None, livedata=None):
     A new value is sent every time the session status changes.
 
     Args:
-        path (str): api path base string (see :func:`api.make_path`)
-        response: Response as returned by :func:`api.fetch_page` can be passed if it was downloaded already.
-        livedata: An instance of :class:`fastf1.livetiming.data.LivetimingData` to use as a source instead of the api
+        path (str): api path base string (usually ``Session.api_path``)
+        response: Response as returned by :func:`fetch_page` can be passed if it was downloaded already.
+        livedata: An instance of :class:`fastf1.livetiming.data.LiveTimingData` to use as a source instead of the api
 
     Returns:
         A dictionary containing one key for each data channel and a list of values per key.
@@ -1103,10 +1103,10 @@ def driver_info(path, response=None, livedata=None):
         'HeadshotUrl']`
 
     Args:
-        path (str): api path base string (see :func:`api.make_path`)
-        response: Response as returned by :func:`api.fetch_page`
+        path (str): api path base string (usually ``Session.api_path``)
+        response: Response as returned by :func:`fetch_page`
             can be passed if it was downloaded already.
-        livedata: An instance of :class:`fastf1.livetiming.data.LivetimingData`
+        livedata: An instance of :class:`fastf1.livetiming.data.LiveTimingData`
             to use as a source instead of the api
 
     Returns:
@@ -1156,11 +1156,11 @@ def weather_data(path, response=None, livedata=None):
     Weather data is updated once per minute.
 
     Args:
-        path (str): api path base string (see :func:`api.make_path`)
-        response: Response as returned by :func:`api.fetch_page` can
+        path (str): api path base string (usually ``Session.api_path``)
+        response: Response as returned by :func:`fetch_page` can
             be passed if it was downloaded already.
         livedata: An instance of
-            :class:`fastf1.livetiming.data.LivetimingData`
+            :class:`fastf1.livetiming.data.LiveTimingData`
             to use as a source instead of the api
 
     Returns:
@@ -1215,7 +1215,7 @@ def fetch_page(path, name):
     to parse json or decode known messages is made.
 
     Args:
-        path (str): api path base string (see :func:`api.make_path`)
+        path (str): api path base string (usually ``Session.api_path``)
         name (str): page name (see :attr:`pages` for all known pages)
 
     Returns:

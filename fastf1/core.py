@@ -1064,6 +1064,7 @@ class Session:
         self.api_path = api.make_path(self.weekend.name,
                                       self.weekend.date,
                                       self.name, self.date)
+        """str: API base path for this session"""
 
         self.results = list()
         """list: Race result with driver information."""
