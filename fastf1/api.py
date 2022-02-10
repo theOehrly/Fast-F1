@@ -20,6 +20,7 @@ A collection of functions to interface with the F1 web api.
 
 """
 import datetime
+import functools
 import json
 import base64
 import zlib
@@ -119,7 +120,8 @@ class Cache:
         requests_cache.install_cache(
             os.path.join(cache_dir, 'fastf1_http_cache'),
             allowable_methods=('GET', 'POST'),
-            expire_after=datetime.timedelta(hours=12)
+            expire_after=datetime.timedelta(hours=12),
+            cache_control=True
         )
         if force_renew:
             requests_cache.clear()
@@ -166,16 +168,13 @@ class Cache:
         Returns:
             The wrapped function
         """
-        def cached_api_request(api_path, response=None, livedata=None):
+        @functools.wraps(func)
+        def _cached_api_request(api_path, response=None, livedata=None):
             if cls._CACHE_DIR:
-                # caching is enabled, extend the cache dir path using the api path
-                cache_dir_path = os.path.join(cls._CACHE_DIR, api_path[8:])  # remove leading '/static/' from api path
-                if not os.path.exists(cache_dir_path):
-                    os.makedirs(cache_dir_path)  # create subfolders if they don't yet exist
+                # caching is enabled
+                func_name = str(func.__name__)
+                cache_file_path = cls._get_cache_file_path(api_path, func_name)
 
-                # create cache file path for this specific request by extending cache dir path with file named after
-                # requesting api function
-                cache_file_path = cache_dir_path + str(func.__name__) + '.ff1pkl'
                 if os.path.isfile(cache_file_path):
                     # file exists already, try to load it
                     try:
@@ -186,52 +185,95 @@ class Cache:
                         # after it was updated
                         cached = None
 
-                    if (cached is not None and
-                            ((cached['version'] == cls._API_CORE_VERSION) or
-                             cls._IGNORE_VERSION)
-                            and not cls._FORCE_RENEW):
-                        # was created with same version or version is ignored
-                        logging.info(f"Using cached data for {str(func.__name__)}")
+                    if cached is not None and cls._data_ok_for_use(cached):
+                        # cached data is ok for use, return it
+                        logging.info(f"Using cached data for {func_name}")
                         return cached['data']
 
-                    else:  # created with different version or force renew --> download again and update
-                        logging.info(f"Updating cache for {str(func.__name__)}...")
-                        data = func(api_path, response=response, livedata=livedata)
-                        if data is not None:
-                            new_cached = {'version': cls._API_CORE_VERSION, 'data': data}
-                            pickle.dump(new_cached, open(cache_file_path, 'wb'))
-                            logging.info("Cache updated!")
-                        else:  # downloading data failed, cannot proceed because of missing critical data
-                            logging.critical("Failed to update cache! No data received! Cannot continue!")
-                            exit()
-                        return data
-
-                else:  # cached data does not yet exist for this request, try to download and create cache
-                    logging.info(f"No cached data found for {str(func.__name__)}. Loading data...")
-                    data = func(api_path, response=response, livedata=livedata)
-                    if data is not None:
-                        new_cached = {'version': cls._API_CORE_VERSION, 'data': data}
-                        pickle.dump(new_cached, open(cache_file_path, 'wb'))
-                        logging.info("Data has been written to cache!")
-                        return data
                     else:
-                        logging.critical("Failed to load data!")
+                        # cached data needs to be downloaded again and updated
+                        logging.info(f"Updating cache for {func_name}...")
+                        data = func(
+                            api_path, response=response, livedata=livedata
+                        )
+
+                        if data is not None:
+                            cls._write_cache(data, cache_file_path)
+                            logging.info("Cache updated!")
+                            return data
+
+                        logging.critical(
+                            "A cache update is required but the data failed "
+                            "to download. Cannot continue!\nYou may force to "
+                            "ignore a cache version mismatch by using the "
+                            "`ignore_version=True` keyword when enabling the "
+                            "cache (not recommended)."
+                        )
                         exit()
 
+                else:  # cached data does not yet exist for this api request
+                    logging.info(f"No cached data found for {func_name}. "
+                                 f"Loading data...")
+                    data = func(
+                        api_path, response=response, livedata=livedata
+                    )
+                    if data is not None:
+                        cls._write_cache(data, cache_file_path)
+                        logging.info("Data has been written to cache!")
+                        return data
+
+                    logging.critical("Failed to load data!")
+                    exit()
+
             else:  # cache was not enabled
-                if not cls._has_been_warned:  # warn only once
-                    logging.warning("\n\nNO CACHE! Api caching has not been enabled! \n\t"
-                                    "It is highly recommended to enable this feature for much faster data loading!\n\t"
-                                    "Use `fastf1.Cache.enable_cache('path/to/cache/')`\n")
-
-                    cls._has_been_warned = True
-
+                cls._show_not_enabled_warning()
                 return func(api_path, response=response, livedata=livedata)
 
-        wrapped = cached_api_request
-        wrapped.__doc__ = func.__doc__  # necessary to make docstrings work
+        return _cached_api_request
 
-        return wrapped
+    @classmethod
+    def _get_cache_file_path(cls, api_path, name):
+        # extend the cache dir path using the api path and a file name
+        # leading '/static/' is dropped form api path
+        cache_dir_path = os.path.join(cls._CACHE_DIR, api_path[8:])
+        if not os.path.exists(cache_dir_path):
+            # create subfolders if they don't yet exist
+            os.makedirs(cache_dir_path)
+
+        file_name = name + '.ff1pkl'
+        cache_file_path = os.path.join(cache_dir_path, file_name)
+        return cache_file_path
+
+    @classmethod
+    def _data_ok_for_use(cls, cached):
+        # check if cached data is ok or needs to be downloaded again
+        if cls._FORCE_RENEW:
+            return False
+        elif cls._IGNORE_VERSION:
+            return True
+        elif cached['version'] == cls._API_CORE_VERSION:
+            return True
+        return False
+
+    @classmethod
+    def _write_cache(cls, data, cache_file_path, **kwargs):
+        new_cached = dict(
+            **{'version': cls._API_CORE_VERSION, 'data': data},
+            **kwargs
+        )
+        with open(cache_file_path, 'wb') as cache_file_obj:
+            pickle.dump(new_cached, cache_file_obj)
+
+    @classmethod
+    def _show_not_enabled_warning(cls):
+        if not cls._has_been_warned:  # warn only once
+            logging.warning(
+                "\n\nNO CACHE! Api caching has not been enabled! \n\t"
+                "It is highly recommended to enable this feature for much "
+                "faster data loading!\n\t"
+                "Use `fastf1.Cache.enable_cache('path/to/cache/')`\n")
+
+            cls._has_been_warned = True
 
 
 def make_path(wname, wdate, sname, sdate):
@@ -368,9 +410,6 @@ def timing_data(path, response=None, livedata=None):
 
     laps_data = pd.DataFrame(laps_data)
     stream_data = pd.DataFrame(stream_data)
-
-    if ((laps_data.to_numpy() == '') | (pd.isna(laps_data.to_numpy()))).all():  # if all values of the frame are nan/...
-        raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
 
     return laps_data, stream_data
 
