@@ -19,26 +19,24 @@ A collection of functions to interface with the F1 web api.
    parse
 
 """
+import base64
 import datetime
 import functools
 import json
-import base64
-import zlib
+import logging
 import os
 import pickle
+import zlib
+
+import numpy as np
+import pandas as pd
 import requests
 import requests_cache
-import logging
-import pandas as pd
-import numpy as np
 
 from fastf1.utils import recursive_dict_get, to_timedelta, to_datetime
 
-base_url = 'https://livetiming.formula1.com'
 
-requests_session = None
-"""Can be used to create a custom requests session which is then used by
-all api calls"""
+base_url = 'https://livetiming.formula1.com'
 
 headers = {
   'Host': 'livetiming.formula1.com',
@@ -94,6 +92,7 @@ class Cache:
     _IGNORE_VERSION = False
     _FORCE_RENEW = False
 
+    _requests_session = None
     _has_been_warned = False  # flag to ensure that warning about disabled cache is logged once only
 
     @classmethod
@@ -113,18 +112,29 @@ class Cache:
         cls._IGNORE_VERSION = ignore_version
         cls._FORCE_RENEW = force_renew
         if use_requests_cache:
-            cls._install_requests_cache(cache_dir, force_renew=force_renew)
+            cls._requests_session = requests_cache.CachedSession(
+                cache_name=os.path.join(cache_dir, 'fastf1_http_cache'),
+                backend='sqlite',
+                allowable_methods=('GET', 'POST'),
+                expire_after=datetime.timedelta(hours=12),
+                cache_control=True,
+            )
+            if force_renew:
+                cls._requests_session.cache.clear()
 
-    @staticmethod
-    def _install_requests_cache(cache_dir, *, force_renew=False):
-        requests_cache.install_cache(
-            os.path.join(cache_dir, 'fastf1_http_cache'),
-            allowable_methods=('GET', 'POST'),
-            expire_after=datetime.timedelta(hours=12),
-            cache_control=True
-        )
-        if force_renew:
-            requests_cache.clear()
+    @classmethod
+    def requests_get(cls, *args, **kwargs):
+        """Wraps `requests.Session().get()` with caching if enabled.
+
+        All api requests that require caching should be performed through this
+        wrapper. Caching will be done if the module-wide cache has been
+        enabled. Else, `requests.Session().get()` will be called without any
+        caching.
+        """
+        cls._show_not_enabled_warning()
+        if cls._requests_session is None:
+            cls._requests_session = requests.Session()
+        return cls._requests_session.get(*args, **kwargs)
 
     @classmethod
     def clear_cache(cls, cache_dir, deep=False):
@@ -266,7 +276,8 @@ class Cache:
 
     @classmethod
     def _show_not_enabled_warning(cls):
-        if not cls._has_been_warned:  # warn only once
+        if not cls._CACHE_DIR and not cls._has_been_warned:
+            # warn only once and only if cache is not enabled
             logging.warning(
                 "\n\nNO CACHE! Api caching has not been enabled! \n\t"
                 "It is highly recommended to enable this feature for much "
@@ -1267,11 +1278,7 @@ def fetch_page(path, name):
     page = pages[name]
     is_stream = 'jsonStream' in page
     is_z = '.z.' in page
-    if requests_session is None:
-        session = requests.session()
-    else:
-        session = requests_session
-    r = session.get(base_url + path + pages[name], headers=headers)
+    r = Cache.requests_get(base_url + path + pages[name], headers=headers)
     if r.status_code == 200:
         raw = r.content.decode('utf-8-sig')
         if is_stream:

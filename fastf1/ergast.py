@@ -2,6 +2,7 @@ import json
 import requests
 import warnings
 
+from fastf1.api import Cache
 from fastf1.version import __version__
 
 base_url = 'http://ergast.com/api/f1'
@@ -19,7 +20,9 @@ def load(year, gp, session):
 
 def fetch_season(year):
     url = f"{base_url}/{year}.json"
-    return _parse_ergast(_parse_json_response(requests.get(url, headers=_headers)))
+    return _parse_ergast(_parse_json_response(
+        Cache.requests_get(url, headers=_headers))
+    )
 
 
 def fetch_weekend(year, gp):
