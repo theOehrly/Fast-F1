@@ -1,6 +1,6 @@
 """
-:mod:`fastf1.livetiming` - Live Timing Client
-=====================================================
+Live Timing Client - :mod:`fastf1.livetiming`
+=============================================
 
 .. warning::
     The live timing client does only support Python 3.8 or 3.9!

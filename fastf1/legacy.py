@@ -1,6 +1,6 @@
 """
-:mod:`fastf1.legacy` - Provides access to legacy functionality
-==============================================================
+Legacy Functionality - :mod:`fastf1.legacy`
+===========================================
 
 This module contains the legacy implementation for calculating distance to driver ahead.
 

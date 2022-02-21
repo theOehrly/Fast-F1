@@ -3,6 +3,101 @@ Changelog
 =========
 
 
+v2.2.0-alpha-220228
+===================
+
+This release introduces a range of new features, bug fixes and improvements.
+While backwards compatibility has been kept in mind, some breaking changes
+are required.
+
+
+Changes and New Features:
+
+  - New :class:`fastf1.events.EventSchedule`: The event schedule provides
+    information about session start times, event format, name and location of
+    upcoming events as well as previous event. The schedule data for the
+    current season is pulled from an external source that is updated regularly.
+    This should solve issues caused by schedule changes during the seasons
+    or even during a race weekend.
+
+  - New :class:`fastf1.events.Event`: This object represents a single event
+    and holds the same information as the event schedule, but for individual
+    events.
+
+  - New methods :meth:`fastf1.get_testing_session`,
+    :meth:`fastf1.get_event`, :meth:`fastf1.get_testing_event` and
+    :meth:`fastf1.get_event_schedule`
+
+  - The cache now implements better automatic cache control and is used for
+    all requests throughout FastF1.
+
+  - The combination of improved caching and the implementation of the new
+    event schedule now allow fastf1 to be used even if the Ergast API is not
+    accessible. This improves reliability in case of temporary server or
+    network problems.
+
+  - Full offline support: Scripts can be run offline if they have been run
+    at least once with an active internet connection and caching enabled.
+
+
+Bug Fixes:
+
+  - Fixed a bug that caused rain fall to always be true in weather data (#76)
+
+
+Breaking Changes:
+
+  - For testing events :class:`fastf1.core.Session` objects can no longer be
+    created through :func:`fastf1.get_session`. You need to use
+    :func:`fastf1.get_testing_session` instead.
+
+  - :attr:`fastf1.core.Session.date` is now a :class:`pandas.Timestamp`
+    instead of a string.
+
+
+Potentially breaking changes:
+
+  - The signature ``fastf1.core.Session.__init__(weekend, session_name)``
+    has been changed to
+    ``fastf1.core.Session.__init__(event, session_name)`` to adhere to
+    new naming conventions. This is a breaking change if the arguments are
+    given as keyword arguments.
+
+  - :func:`fastf1.get_session` may return a different session now for some
+    edge cases, if you load sessions by name instead of by round number.
+
+
+Deprecations:
+
+  **Objects, methods and attributes deprecated in v2.2 will be removed
+  in v2.3.** Until then accessing them will still work but a FutureWarning
+  is shown, reminding you of the deprecation.
+
+  - :class:`fastf1.core.Weekend` has been replaced with
+    :class:`fastf1.events.Event`. All previously available methods and
+    properties are implemented by the replacement object, although they have
+    been partially deprecated.
+
+  - The attributes ``name``, ``date`` and ``gp`` of
+    :class:`fastf1.core.Weekend` have been deprecated.
+    The replacement object :class:`fastf1.events.Event` subclasses
+    :class:`pandas.Series`. The standard ways for accessing pandas Series'
+    values should be used. The attributes have been additionally renamed in
+    their Series representation.
+    For example:
+
+      - ``Weekend.name`` --> ``Event.event_name`` or ``Event['event_name']``
+      - ``Weekend.date`` --> ``Event.event_date`` or ``Event['event_date']``
+      - ``Weekend.gp`` --> ``Event.round_number`` or ``Event['round_number']``
+
+  - The attribute :attr:`fastf1.core.Session.weekend` has been replaced by
+    :attr:`fastf1.core.Session.event` to adhere to new naming conventions.
+
+  - The function :func:`fastf1.core.get_round` has been deprecated and will be
+    removed without replacement in v2.3. Use :func:`fastf1.get_event`
+    instead and and get the round number from the returned event object.
+
+
 v2.1.13 More Bug Fixes
 ======================
 

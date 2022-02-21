@@ -76,6 +76,7 @@ Github releases page or from Pypi.
    examples_gallery/index
    fastf1
    core
+   events
    api
    utils
    plotting

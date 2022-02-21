@@ -1,8 +1,12 @@
 import pytest
-import fastf1 as ff1
-from fastf1 import plotting, utils
+
 from matplotlib import pyplot as plt
-plotting.setup_mpl()
+
+import fastf1
+import fastf1.plotting
+import fastf1.utils
+
+fastf1.plotting.setup_mpl()
 
 # generate baseline with
 # >pytest tests --mpl-generate-path=tests/mpl-baseline
@@ -11,8 +15,7 @@ plotting.setup_mpl()
 @pytest.mark.f1telapi
 @pytest.mark.mpl_image_compare(style='default')
 def test_readme_example():
-    ff1.Cache.enable_cache("test_cache/")
-    race = ff1.get_session(2020, 'Belgian', 'R')
+    race = fastf1.get_session(2020, 'Belgian', 'R')
     laps = race.load_laps()
 
     lec = laps.pick_driver('LEC')
@@ -30,8 +33,7 @@ def test_readme_example():
 
 @pytest.mark.f1telapi
 def test_doc_example_pronto_seb():
-    ff1.Cache.enable_cache("test_cache/")
-    session = ff1.get_session(2020, 'Belgian', 'R')
+    session = fastf1.get_session(2020, 'Belgian', 'R')
 
     vettel = session.get_driver('VET')
     assert f"Pronto {vettel.name}?" == "Pronto Sebastian?"
@@ -40,8 +42,8 @@ def test_doc_example_pronto_seb():
 @pytest.mark.f1telapi
 @pytest.mark.mpl_image_compare(style='default')
 def test_doc_example_fast_lec():
-    ff1.Cache.enable_cache("test_cache/")
-    session = ff1.get_session(2020, 'Belgian', 'R')
+    fastf1.Cache.enable_cache("test_cache/")
+    session = fastf1.get_session(2020, 'Belgian', 'R')
 
     laps = session.load_laps(with_telemetry=True)
     fast_leclerc = laps.pick_driver('LEC').pick_fastest()
@@ -61,19 +63,22 @@ def test_doc_example_fast_lec():
 @pytest.mark.f1telapi
 @pytest.mark.mpl_image_compare(style='default')
 def test_doc_example_delta_time():
-    ff1.Cache.enable_cache("test_cache/")
-    quali = ff1.get_session(2020, 'Belgian', 'R')
+    fastf1.Cache.enable_cache("test_cache/")
+    quali = fastf1.get_session(2020, 'Belgian', 'R')
     laps = quali.load_laps(with_telemetry=True)
     lec = laps.pick_driver('LEC').pick_fastest()
     ham = laps.pick_driver('HAM').pick_fastest()
 
     fig, ax = plt.subplots()
-    ax.plot(lec.telemetry['Distance'], lec.telemetry['Speed'], color=plotting.team_color(lec['Team']))
-    ax.plot(ham.telemetry['Distance'], ham.telemetry['Speed'], color=plotting.team_color(ham['Team']))
+    ax.plot(lec.telemetry['Distance'], lec.telemetry['Speed'],
+            color=fastf1.plotting.team_color(lec['Team']))
+    ax.plot(ham.telemetry['Distance'], ham.telemetry['Speed'],
+            color=fastf1.plotting.team_color(ham['Team']))
     twin = ax.twinx()
-    delta_time, ham_car_data, lec_car_data = utils.delta_time(ham, lec)
+    delta_time, ham_car_data, lec_car_data = fastf1.utils.delta_time(ham, lec)
     ham_car_data = ham_car_data.add_distance()
-    twin.plot(ham_car_data['Distance'], delta_time, '--', color=plotting.team_color(lec['Team']))
+    twin.plot(ham_car_data['Distance'], delta_time, '--',
+              color=fastf1.plotting.team_color(lec['Team']))
 
     return fig
 
@@ -81,8 +86,8 @@ def test_doc_example_delta_time():
 @pytest.mark.f1telapi
 @pytest.mark.mpl_image_compare(style='default')
 def test_speed_trace():
-    ff1.Cache.enable_cache("test_cache/")
-    session = ff1.get_session(2020, 'Belgian', 'R')
+    fastf1.Cache.enable_cache("test_cache/")
+    session = fastf1.get_session(2020, 'Belgian', 'R')
     session.load_laps(with_telemetry=True)
 
     fastest = session.laps.pick_fastest().telemetry

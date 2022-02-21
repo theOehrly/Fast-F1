@@ -49,6 +49,6 @@ ax.set_ylabel('Speed in km/h')
 
 ax.legend()
 plt.suptitle(f"Fastest Lap Comparison \n "
-             f"{quali.weekend.name} {quali.weekend.year} Qualifying")
+             f"{quali.event.name} {quali.event.year} Qualifying")
 
 plt.show()

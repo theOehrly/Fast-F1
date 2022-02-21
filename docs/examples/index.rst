@@ -23,9 +23,9 @@ Let's get started with a very simple script:
 
 .. doctest::
 
-    >>> import fastf1 as ff1
-    >>> ff1.Cache.enable_cache('path/to/folder/for/cache')  # doctest: +SKIP
-    >>> monza_quali = ff1.get_session(2019, 'Monza', 'Q')
+    >>> import fastf1
+    >>> fastf1.Cache.enable_cache('path/to/folder/for/cache')  # doctest: +SKIP
+    >>> monza_quali = fastf1.get_session(2019, 'Monza', 'Q')
     >>> vettel = monza_quali.get_driver('VET')
     >>> print(f"Pronto {vettel.name}?")
     Pronto Sebastian?
@@ -36,12 +36,12 @@ For some more advanced stuff, it's just a few more steps.
     :include-source:
 
     from matplotlib import pyplot as plt
-    import fastf1 as ff1
-    from fastf1 import plotting
+    import fastf1
+    import fastf1.plotting
 
-    plotting.setup_mpl()
+    fastf1.plotting.setup_mpl()
 
-    monza_quali = ff1.get_session(2019, 'Monza', 'Q')
+    monza_quali = fastf1.get_session(2019, 'Monza', 'Q')
 
     laps = monza_quali.load_laps(with_telemetry=True)
     fast_leclerc = laps.pick_driver('LEC').pick_fastest()

@@ -1,5 +1,5 @@
 """
-:mod:`fastf1.utils` - Utils module
+Utils module - :mod:`fastf1.utils`
 ==================================
 """
 from functools import reduce

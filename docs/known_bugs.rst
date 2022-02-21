@@ -1,13 +1,6 @@
 Known bugs and caveats
 ======================
 
-
-- This module does not work if the Ergast API is not available.
-
-    If the Ergast server is down, this module does not work. Fixing this is high up on the ToDo list but
-    not necessarily easy to accomplish.
-
-
 - Unexpected car numbers being parsed from :func:`fastf1.api.car_data`:
 
     There are some cases like 2019 Germany Q where the returned structure of

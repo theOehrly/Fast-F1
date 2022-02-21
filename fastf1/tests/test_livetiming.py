@@ -1,6 +1,6 @@
 import os
 
-from fastf1.core import Session, Weekend
+import fastf1.events
 from fastf1.livetiming.data import LiveTimingData
 
 
@@ -15,8 +15,7 @@ def test_file_loading():
     livedata = LiveTimingData('fastf1/testing/reference_data/livedata/2021_1_FP3.txt')
     livedata.load()
 
-    weekend = Weekend(2021, 1)
-    session = Session(weekend=weekend, session_name='test_session')
+    session = fastf1.get_session(2021, 1, 'Practice 3')
     session.load_laps(with_telemetry=True, livedata=livedata)
 
     assert session.laps.shape == (274, 26)

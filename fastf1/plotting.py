@@ -1,6 +1,6 @@
 """
-:mod:`fastf1.plotting` - Plotting module
-========================================
+Plotting - :mod:`fastf1.plotting`
+=================================
 
 Helper functions for creating data plots.
 
@@ -282,8 +282,10 @@ def _enable_misc_mpl_mods():
         else:
             ax.minorticks_on()
             grid = getattr(ax, 'grid')
-            grid(b=True, which='major', color='#4f4845', linestyle='-', linewidth=1)
-            grid(b=True, which='minor', color='#3f3a38', linestyle='--', linewidth=0.5)
+            grid(visible=True, which='major', color='#4f4845',
+                 linestyle='-', linewidth=1)
+            grid(visible=True, which='minor', color='#3f3a38',
+                 linestyle='--', linewidth=0.5)
 
     _subplots_placeholder = plt.subplots
 

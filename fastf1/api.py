@@ -1,6 +1,11 @@
 """
-:mod:`fastf1.api` - Api module
-==============================
+Api Functions - :mod:`fastf1.api`
+=================================
+
+.. note:: The functions listed here are primarily for internal use within
+    FastF1. While you can use these functions directly, it is usually
+    better to use the functionality provided by the data objects
+    in :mod:`fastf1.core` instead.
 
 A collection of functions to interface with the F1 web api.
 
@@ -75,17 +80,33 @@ class Cache:
     """Pickle and requests based API cache.
 
     The parsed API data will be saved as a pickled object.
-    Raw GET and POST requests are cached by requests-cache in a sqlite db.
+    Raw GET requests are cached in a sqlite db using the 'requests-cache'
+    module.
+
+    Caching should almost always be enabled to speed up the runtime of your
+    scripts and to prevent exceeding the rate limit of api servers.
+    FastF1 will print an annoyingly obnoxious warning message if you do not
+    enable caching.
 
     The cache has two "stages".
 
-        - Stage 1: Caching of raw GET and POST requests. This works for all requests. The returned data is unlikely
-          to ever change.
-        - Stage 2: Caching of the parsed data. This saves a lot of time when running as parsing of the data is
-          computationally expensive. This data can change whenever the API parser code is updated.
-          Cache data is saved together with a version number. Updates of the code are automatically detected
-          (comparing version numbers). The cache is updated in case the version numbers of the cached
-          data and the code don't match. Stage 2 is only used for some api functions.
+        - Stage 1: Caching of raw GET requests. This works for all requests.
+          Cache control is employed to refresh the cached data periodically.
+        - Stage 2: Caching of the parsed data. This saves a lot of time when
+          running your scripts,  as parsing of the data is computationally
+          expensive. Stage 2 caching is only used for some api functions.
+
+    Most commonly, you will enable caching right at the beginning of your script:
+
+        >>> import fastf1
+        >>> fastf1.Cache.enable_cache('path/to/cache')  # doctest: +SKIP
+        # change cache directory to an exisitng empty directory on your machine
+        >>> session = fastf1.get_session(2021, 5, 'Q')
+        >>> # ...
+
+    Note that you should always enable caching except for very rare
+    circumstances which are usually limited to doing core developement
+    on FastF1.
     """
     _CACHE_DIR = ''
     _API_CORE_VERSION = 2  # version of the api parser code (unrelated to release version number)
@@ -94,6 +115,7 @@ class Cache:
 
     _requests_session = None
     _has_been_warned = False  # flag to ensure that warning about disabled cache is logged once only
+    _tmp_disabled = False
 
     @classmethod
     def enable_cache(cls, cache_dir, ignore_version=False, force_renew=False, use_requests_cache=True):
@@ -118,6 +140,7 @@ class Cache:
                 allowable_methods=('GET', 'POST'),
                 expire_after=datetime.timedelta(hours=12),
                 cache_control=True,
+                stale_if_error=True
             )
             if force_renew:
                 cls._requests_session.cache.clear()
@@ -126,15 +149,29 @@ class Cache:
     def requests_get(cls, *args, **kwargs):
         """Wraps `requests.Session().get()` with caching if enabled.
 
-        All api requests that require caching should be performed through this
+        All GET requests that require caching should be performed through this
         wrapper. Caching will be done if the module-wide cache has been
         enabled. Else, `requests.Session().get()` will be called without any
         caching.
         """
         cls._show_not_enabled_warning()
-        if cls._requests_session is None:
-            cls._requests_session = requests.Session()
+        if (cls._requests_session is None) or cls._tmp_disabled:
+            return requests.get(*args, **kwargs)
         return cls._requests_session.get(*args, **kwargs)
+
+    @classmethod
+    def requests_post(cls, *args, **kwargs):
+        """Wraps `requests.Session().post()` with caching if enabled.
+
+        All POST requests that require caching should be performed through this
+        wrapper. Caching will be done if the module-wide cache has been
+        enabled. Else, `requests.Session().get()` will be called without any
+        caching.
+        """
+        cls._show_not_enabled_warning()
+        if (cls._requests_session is None) or cls._tmp_disabled:
+            return requests.post(*args, **kwargs)
+        return cls._requests_session.post(*args, **kwargs)
 
     @classmethod
     def clear_cache(cls, cache_dir, deep=False):
@@ -180,7 +217,7 @@ class Cache:
         """
         @functools.wraps(func)
         def _cached_api_request(api_path, response=None, livedata=None):
-            if cls._CACHE_DIR:
+            if cls._CACHE_DIR and not cls._tmp_disabled:
                 # caching is enabled
                 func_name = str(func.__name__)
                 cache_file_path = cls._get_cache_file_path(api_path, func_name)
@@ -236,7 +273,8 @@ class Cache:
                     exit()
 
             else:  # cache was not enabled
-                cls._show_not_enabled_warning()
+                if not cls._tmp_disabled:
+                    cls._show_not_enabled_warning()
                 return func(api_path, response=response, livedata=livedata)
 
         return _cached_api_request
@@ -285,6 +323,64 @@ class Cache:
                 "Use `fastf1.Cache.enable_cache('path/to/cache/')`\n")
 
             cls._has_been_warned = True
+
+    @classmethod
+    def disabled(cls):
+        """Returns a context manager object that creates a context within
+        which the cache is temporarily disabled.
+
+        Example::
+
+            with Cache.disabled():
+                # no caching takes place here
+                ...
+
+        .. note::
+            The context manager is not multithreading-safe
+        """
+        return _NoCacheContext()
+
+    @classmethod
+    def set_disabled(cls):
+        """Disable the cache while keeping the configuration intact.
+
+        This disables stage 1 and stage 2 caching!
+
+        You can enable the cache at any time using :func:`set_enabled`
+
+        .. note:: You may prefer to use :func:`disabled` to get a context
+            manager object and disable the cache only within a specific
+            context.
+
+        .. note::
+            This function is not multithreading-safe
+        """
+        cls._tmp_disabled = True
+
+    @classmethod
+    def set_enabled(cls):
+        """Enable the cache after it has been disabled with
+        :func:`set_disabled`.
+
+        .. warning::
+            To enable the cache it needs to be configured properly. You need
+            to call :func`enable_cache` once to enable the cache initially.
+            :func:`set_enabled` and :func:`set_disabled` only serve to
+            (temporarily) disable the cache for specific parts of code that
+            should be run without caching.
+
+        .. note::
+            This function is not multithreading-safe
+        """
+        cls._tmp_disabled = False
+
+
+class _NoCacheContext:
+    def __enter__(self):
+        Cache.set_disabled()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        Cache.set_enabled()
 
 
 def make_path(wname, wdate, sname, sdate):

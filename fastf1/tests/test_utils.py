@@ -1,4 +1,5 @@
 import datetime
+
 from fastf1.utils import to_datetime, to_timedelta
 
 

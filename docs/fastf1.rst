@@ -1,6 +1,3 @@
-.. automodule:: fastf1
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
+.. automodule:: fastf1
 

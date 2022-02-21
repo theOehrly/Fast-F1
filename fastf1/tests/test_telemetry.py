@@ -1,9 +1,11 @@
 import pytest
-import fastf1
+
 import pandas
 import numpy
 
-from fastf1.testing.reference_values import CAR_DATA_DTYPES, POS_DATA_DTYPES, ensure_data_type
+import fastf1.core
+from fastf1.testing.reference_values import \
+    (CAR_DATA_DTYPES, POS_DATA_DTYPES, ensure_data_type)
 
 
 def test_constructor():

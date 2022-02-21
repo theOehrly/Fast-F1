@@ -20,7 +20,7 @@ For example, let's load the Qualifying of the 7th race of the 2021 season:
   >>> session.name
   'Qualifying'
   >>> session.date
-  '2021-06-19'
+  Timestamp('2021-06-19 00:00:00')
 
 
 Now, which race weekend are we actually looking at here?
@@ -30,17 +30,35 @@ session object.
 
 .. doctest::
 
-  >>> session.weekend  # doctest: +ELLIPSIS
-  <fastf1.core.Weekend object at ...>
+  >>> session.event
+  round_number                                                      7
+  country                                                      France
+  location                                               Le Castellet
+  official_event_name    FORMULA 1 EMIRATES GRAND PRIX DE FRANCE 2021
+  event_date                                      2021-06-20 00:00:00
+  event_name                                        French Grand Prix
+  event_format                                           conventional
+  session1                                                 Practice 1
+  session1_date                                   2021-06-18 00:00:00
+  session2                                                 Practice 2
+  session2_date                                   2021-06-18 00:00:00
+  session3                                                 Practice 3
+  session3_date                                   2021-06-19 00:00:00
+  session4                                                 Qualifying
+  session4_date                                   2021-06-19 00:00:00
+  session5                                                       Race
+  session5_date                                   2021-06-20 00:00:00
+  f1_api_support                                                 True
+  Name: French Grand Prix, dtype: object
 
 Let's see which race weekend this actually is.
 
 .. doctest::
 
-  >>> session.weekend.name
+  >>> session.event.event_name
   'French Grand Prix'
-  >>> session.weekend.date  # this is the date of the race day
-  '2021-06-20'
+  >>> session.event.event_date  # this is the date of the race day
+  Timestamp('2021-06-20 00:00:00')
 
 If you do not specify which session you want to load, ``.get_session()``
 will return a :class:`fastf1.core.Weekend` object instead of a session.
@@ -48,9 +66,27 @@ The weekend object provides methods which return the individual sessions.
 
 .. doctest::
 
-  >>> weekend = fastf1.get_session(2021, 7)
-  >>> weekend # doctest: +ELLIPSIS
-  <fastf1.core.Weekend object at ...>
+  >>> weekend = fastf1.get_event(2021, 7)
+  >>> weekend
+  round_number                                                      7
+  country                                                      France
+  location                                               Le Castellet
+  official_event_name    FORMULA 1 EMIRATES GRAND PRIX DE FRANCE 2021
+  event_date                                      2021-06-20 00:00:00
+  event_name                                        French Grand Prix
+  event_format                                           conventional
+  session1                                                 Practice 1
+  session1_date                                   2021-06-18 00:00:00
+  session2                                                 Practice 2
+  session2_date                                   2021-06-18 00:00:00
+  session3                                                 Practice 3
+  session3_date                                   2021-06-19 00:00:00
+  session4                                                 Qualifying
+  session4_date                                   2021-06-19 00:00:00
+  session5                                                       Race
+  session5_date                                   2021-06-20 00:00:00
+  f1_api_support                                                 True
+  Name: French Grand Prix, dtype: object
   >>> session = weekend.get_race()
   >>> session.name
   'Race'
@@ -64,8 +100,8 @@ weekends by their official name.
 
 .. doctest::
 
-  >>> weekend = fastf1.get_session(2021, 'French Grand Prix')
-  >>> weekend.name
+  >>> event = fastf1.get_event(2021, 'French Grand Prix')
+  >>> event.event_name
   'French Grand Prix'
 
 You do not need to provide the exact name. FastF1 will return the weekend or
@@ -73,24 +109,24 @@ session that matches your provided name best. Even if you don't specify the
 correct name chances are high that FastF1 will find the event you are looking
 for.
 
-  >>> weekend = fastf1.get_session(2021, 'Barcelona GP')
-  >>> weekend.name
+  >>> event = fastf1.get_event(2021, 'Spain')
+  >>> event.event_name
   'Spanish Grand Prix'
 
 But be aware that this does not always work. Sometimes another name just
 matches the provided string better. For example, what we actually want is the
-'Emiligia Romagna Grand Prix' but we get the 'Brazilian Grand Prix' if we don't
-specify the name fully. Why? Because FastF1 is not a proper intelligent search
-engine. So check your results.
+'Emiligia Romagna Grand Prix' but we get the 'Belgian Grand Prix' if we don't
+specify the name fully and/or correct enough. Why? Because FastF1 is not a
+proper intelligent search engine. So check your results.
 
-  >>> weekend = fastf1.get_session(2021, 'Emilia Grand Prix')
-  >>> weekend.name
-  'Brazilian Grand Prix'
+  >>> event = fastf1.get_event(2021, 'Emilian')
+  >>> event.event_name
+  'Belgian Grand Prix'
 
 We need to be a bit more precise here.
 
-  >>> weekend = fastf1.get_session(2021, 'Emilia Romagna Grand Prix')
-  >>> weekend.name
+  >>> event = fastf1.get_event(2021, 'Emilia Romagna')
+  >>> event.event_name
   'Emilia Romagna Grand Prix'
 
 
@@ -104,19 +140,19 @@ a bit more interesting and take a look at some individual laps.
   >>> laps = quali.load_laps()
   >>> laps
                         Time DriverNumber  ... TrackStatus  IsAccurate
-  0   0 days 00:28:44.908000           33  ...           1       False
+  0   0 days 00:28:44.908000           33  ...          25       False
   1   0 days 00:31:14.909000           33  ...           1       False
   2   0 days 00:32:45.910000           33  ...           1        True
   3   0 days 00:50:42.329000           33  ...          25       False
   4   0 days 00:52:59.529000           33  ...           1       False
   ..                     ...          ...  ...         ...         ...
-  245 0 days 00:28:51.659000            9  ...          25       False
-  246 0 days 00:31:39.717000            9  ...           1       False
-  247 0 days 00:33:13.271000            9  ...           1        True
-  248 0 days 00:38:02.565000            9  ...           1       False
-  249 0 days 00:40:30.783000            9  ...           1       False
+  265 0 days 00:31:39.717000            9  ...           1       False
+  266 0 days 00:33:13.271000            9  ...           1        True
+  267 0 days 00:38:02.565000            9  ...           1       False
+  268 0 days 00:40:30.783000            9  ...           1       False
+  269 0 days 00:42:11.850000            9  ...          25       False
   <BLANKLINE>
-  [250 rows x 25 columns]
+  [270 rows x 25 columns]
 
 That's 250 laps right there and 25 columns of information. If you are familiar
 with Pandas you'll immediately recognize this output as a DataFrame. (If you're

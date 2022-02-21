@@ -32,6 +32,11 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "slow: extremely slow tests (multiple minutes)")
 
 
+def pytest_sessionstart(session):
+    import fastf1.api
+    fastf1.api.Cache.enable_cache('test_cache')
+
+
 def pytest_collection_modifyitems(config, items):
     # cli conditional skip extremely slow tests
     if not config.getoption("--slow"):
@@ -40,7 +45,8 @@ def pytest_collection_modifyitems(config, items):
             if "slow" in item.keywords:
                 item.add_marker(skip_slow)
 
-    # cli conditional skip test that connect to the f1 telemetry api
+    # cli conditional skip test that use the cache or connect to the
+    # f1 api directly
     if not config.getoption("--f1-tel-api"):
         skip_f1_tel = pytest.mark.skip(reason="need --f1-tel-api option to run")
         for item in items:

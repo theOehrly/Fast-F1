@@ -1,6 +1,6 @@
 """
-:mod:`fastf1.core` - Core module
-================================
+Timing and Telemetry Data - :mod:`fastf1.core`
+==============================================
 
 The Fast-F1 core is a collection of functions and data objects for accessing
 and analyzing F1 timing and telemetry data.
@@ -21,22 +21,18 @@ All data is provided through the following data objects:
        Driver
 
 
-The :class:`Weekend` object holds some generic information about the race
-weekend. Furthermore, :class:`Session` objects for the various sessions of
-a weekend can be created from a :class:`Weekend` object.
-
 The :class:`Session` object is mainly used as an entry point for loading
 timing data and telemetry data. The :class:`Session` can create a
 :class:`Laps` object which contains all timing, track and session status
 data for a whole session.
 
-Usually you will be using :func:`get_session` to to get a :class:`Session`
-or :class:`Weekend` object.
+Usually you will be using :func:`get_session` to get a :class:`Session`
+object.
 
 The :class:`Laps` object holds detailed information about multiples laps.
 
 The :class:`Lap` object holds the same information as :class:`Laps` but only
-for one single lap. When selecting a singel lap from a :class:`Laps` object,
+for one single lap. When selecting a single lap from a :class:`Laps` object,
 an object of type :class:`Lap` will be returned.
 
 Apart from only providing data, the :class:`Laps`, :class:`Lap` and
@@ -64,30 +60,10 @@ from functools import cached_property
 
 import warnings
 
-with warnings.catch_warnings():
-    warnings.filterwarnings('ignore', message="Using slow pure-python SequenceMatcher")
-    # suppress that warning, it's confusing at best here, we don't need fast sequence matching
-    # and the installation (on windows) some effort
-    from thefuzz import fuzz
 
-logging.basicConfig(level=logging.INFO, style='{', format="{module: <8} {levelname: >10} \t{message}")
+logging.basicConfig(level=logging.INFO, style='{',
+                    format="{module: <8} {levelname: >10} \t{message}")
 
-TESTING_LOOKUP = {'2020': [['2020-02-19', '2020-02-20', '2020-02-21'],
-                           ['2020-02-26', '2020-02-27', '2020-02-28']],
-                  '2021': [['2021-03-12', '2021-03-13', '2021-03-14']]}
-
-# TODO: remove; temporary patch to support sprint qualifying
-SPRINT_QUALIFYING_LOOKUP = {
-    10: {'Practice 1': '2021-07-16', 'Qualifying': '2021-07-16',
-         'Practice 2': '2021-07-17', 'Sprint Qualifying': '2021-07-17',
-         'Race': '2021-07-18'},
-    14: {'Practice 1': '2021-09-10', 'Qualifying': '2021-09-10',
-         'Practice 2': '2021-09-11', 'Sprint Qualifying': '2021-09-11',
-         'Race': '2021-09-12'},
-    19: {'Practice 1': '2021-11-12', 'Qualifying': '2021-11-12',
-         'Practice 2': '2021-11-13', 'Sprint Qualifying': '2021-11-13',
-         'Race': '2021-11-14'}
-}
 
 D_LOOKUP = [[44, 'HAM', 'Mercedes'], [77, 'BOT', 'Mercedes'],
             [55, 'SAI', 'Ferrari'], [16, 'LEC', 'Ferrari'],
@@ -101,129 +77,37 @@ D_LOOKUP = [[44, 'HAM', 'Mercedes'], [77, 'BOT', 'Mercedes'],
             [6, 'LAT', 'Williams'], [63, 'RUS', 'Williams']]
 
 
-def get_session(year, gp, event=None):
-    """Create a :class:`Session` or :class:`Weekend` object based on year,
-    event name and session name.
-    This function will take care of crafting an object
-    corresponding to the requested session.
-    If no session is specified, the full weekend is returned.
-
-    Examples:
-
-        Get the second free practice of the first race of 2021::
-
-            get_session(2021, 1, 'FP2')
-
-        Get the qualifying of the 2020 Austrian Grand Prix::
-
-            get_session(2020, 'Austria', 'Q')
-
-        Get the second day of pre-season testing of 2021::
-
-            get_session(2021, 'testing', 2)
-
-
-    Args:
-        year (number): Session year
-        gp (number or string): Name or weekend number (1: Australia,
-                               ..., 21: Abu Dhabi). If gp is a string,
-                               a fuzzy match will be performed on the
-                               season rounds and the most likely will be
-                               selected.
-
-                               Some examples that will be correctly
-                               interpreted: 'bahrain', 'australia',
-                               'abudabi', 'monza'.
-
-                               Pass 'testing' to fetch Barcelona winter
-                               tests.
-
-        event (=None): may be 'FP1', 'FP2', 'FP3', 'Q', 'SQ' or 'R', if not
-                       specified you get the full :class:`Weekend`.
-                       'SQ' stands for Sprint Qualifying which is only
-                       available in the 2021 season. Note that 'FP3' does
-                       not exist on these race weekends.
-                       If gp is 'testing' event is the test day (1 to 6)
-
-    Returns:
-        :class:`Weekend` or :class:`Session`
-
+def get_session(*args, **kwargs):
     """
-    if type(gp) is str and gp == 'testing':
-        pre_season_week, event = _get_testing_week_event(year, event)
-        weekend = Weekend(year, pre_season_week)
-        return Session(weekend, event)
-
-    if type(gp) is str:
-        gp = get_round(year, gp)
-    weekend = Weekend(year, gp)
-    if event == 'R':
-        return Session(weekend, 'Race')
-    elif event == 'Q':
-        return Session(weekend, 'Qualifying')
-    elif event == 'SQ':  # TODO: remove; temporary patch to support sprint qualifying
-        return Session(weekend, 'Sprint Qualifying')
-    elif event == 'FP3':
-        return Session(weekend, 'Practice 3')
-    elif event == 'FP2':
-        return Session(weekend, 'Practice 2')
-    elif event == 'FP1':
-        return Session(weekend, 'Practice 1')
-    elif event is not None:
-        raise ValueError(f"Invalid name '{event}' given for argument "
-                         f"'event'. Valid options are: "
-                         f"['R', 'Q', 'SQ', 'FP1', 'FP2', 'FP3']")
-    return weekend
+    .. deprecated:: 2.2
+        replaced by :func:`fastf1.get_session`
+    """
+    # TODO remove
+    warnings.warn("`fastf1.core.get_session` has been deprecated and will be"
+                  "removed in a future version.\n"
+                  "Use `fastf1.get_session` instead.", FutureWarning)
+    from fastf1 import events
+    return events.get_session(*args, **kwargs)
 
 
 def get_round(year, match):
-    """Get event number by year and (partial) event name
-
-    A fuzzy match is performed to find the most likely event for the provided name.
-
-    Args:
-        year (int): Year of the event
-        match (string): Name of the race or gp (e.g. 'Bahrain')
-
-    Returns:
-        The round number. (2019, 'Bahrain') -> 2
     """
-
-    def build_string(d):
-        r = len('https://en.wikipedia.org/wiki/')  # TODO what the hell is this
-        c, l = d['Circuit'], d['Circuit']['Location']  # noqa: E741 (for now...)
-        return (f"{d['url'][r:]} {d['raceName']} {c['circuitId']} "
-                + f"{c['url'][r:]} {c['circuitName']} {l['locality']} "
-                + f"{l['country']}")
-
-    races = ergast.fetch_season(year)
-    to_match = [build_string(block) for block in races]
-    ratios = np.array([fuzz.partial_ratio(match.casefold(), ref.casefold())
-                       for ref in to_match])
-
-    return int(races[np.argmax(ratios)]['round'])
-
-
-def _get_testing_week_event(year, day):
-    """Get the correct weekend and event for testing from the
-    year and day of the test. (where day is 1, 2, 3, ...)
+    .. deprecated:: 2.2
+        will be removed without replacement;
+        Use :func:`fastf1.get_event` instead to get an
+        :class:`~fastf1.events.Event` object which provides
+        information including the round number for the event.
     """
-    if year == 2020:
-        try:
-            day = int(day)
-            week = 1 if day < 4 else 2
-        except:  # noqa: E722 TODO: improve
-            raise InvalidSessionError
-        week_day = ((day - 1) % 3) + 1
-        pre_season_week = f'Pre-Season Test {week}'
-        event = f'Practice {week_day}'
-    elif year == 2021 and int(day) in (1, 2, 3):
-        pre_season_week = 'Pre-Season Test'
-        event = f'Practice {day}'
-    else:
-        raise InvalidSessionError
-
-    return pre_season_week, event
+    # TODO remove
+    warnings.warn("_func:`fastf1.core.get_round` has been deprecated and will "
+                  "be removed without replacement in a future version.\n"
+                  "Use :func:`fastf1.get_event` instead to get an "
+                  ":class:`~fastf1.events.Event` object which provides "
+                  "information including the round number for the event.",
+                  FutureWarning)
+    from fastf1 import events
+    event = events.get_event(year, match)
+    return event.round_number
 
 
 class Telemetry(pd.DataFrame):
@@ -960,89 +844,16 @@ class Telemetry(pd.DataFrame):
 
 
 class Weekend:
-    """Object for accessing weekend specific data.
-
-    If you want to handle multiple sessions from the same race event you can use a :class:Weekend instance.
-
-    For example you could do the following::
-
-        import fastf1 as ff1
-
-        weekend = ff1.get_session(2019, 'Monza')
-        quali = weekend.get_quali() # Q Session
-        race = weekend.get_race() # R Session
-
     """
-
-    def __init__(self, year, gp):
-        self.year = year
-        self.gp = gp
-        if self.is_testing():
-            logging.warning("The Ergast API is not supported for testing")
-            if year == 2020:
-                date = TESTING_LOOKUP[str(year)][int(gp[-1]) - 1][-1]
-            elif year == 2021:
-                date = TESTING_LOOKUP[str(year)][0][-1]
-            else:
-                raise InvalidSessionError
-            self.data = {'raceName': gp, 'date': date}
-        else:
-            try:
-                self.data = ergast.fetch_weekend(self.year, self.gp)
-            except Exception as exception:
-                logging.critical("Failed to load critical data from Ergast!\n\n Cannot determine the date and name "
-                                 "of the event. Cannot proceed!\n")  # TODO some backup strategy for this
-                logging.critical(str(exception))
-                logging.debug("", exc_info=exception)
-                exit()
-
-    def get_practice(self, number):
-        """Return the specified practice session.
-        Args:
-            number: 1, 2 or 3 - Free practice session number
-        Returns:
-            :class:`Session` instance
-        """
-        return Session(self, f'Practice {number}')
-
-    def get_quali(self):
-        """Return the qualifying session.
-
-        Returns:
-            :class:`Session` instance
-        """
-        return Session(self, 'Qualifying')
-
-    def get_race(self):
-        """Return the race session.
-
-        Returns:
-            :class:`Session` instance
-        """
-        return Session(self, 'Race')
-
-    def is_testing(self):
-        """Indicates whether this 'weekend' is a testing event. (In which case is usually is not an actual weekend.)
-
-        Returns:
-            bool
-        """
-        if type(self.gp) is str:
-            return 'Test' in self.gp
-        else:
-            return False
-
-    @property
-    def name(self):
-        """Weekend name, e.g. "British Grand Prix"
-        """
-        return self.data['raceName']
-
-    @property
-    def date(self):
-        """Weekend race date (YYYY-MM-DD)
-        """
-        return self.data['date']
+    .. deprecated:: 2.2
+        Use :class:`fastf1.events.Event` instead
+    """
+    def __new__(cls, year, gp):
+        warnings.warn("`fastf1.core.Weekend` has been deprecated and will be"
+                      "removed in a future version.\n"
+                      "Use `fastf1.events.Event` instead.", FutureWarning)
+        from fastf1 import events
+        return events.get_event(year, gp)
 
 
 class Session:
@@ -1054,16 +865,17 @@ class Session:
     .. note:: For full functionality lap and telemetry data need to be loaded.
     """
 
-    def __init__(self, weekend, session_name):
-        self.weekend = weekend
-        """:class:`.Weekend`: Reference to the associated weekend object."""
+    def __init__(self, event, session_name):
+        self.event = event
+        """:class:`~fastf1.events.Event`: Reference to the associated event
+        object."""
         self.name = session_name
         """str: Name of this session, for example 'Qualifying', 'Race', 'FP1', ..."""
-        self.date = self._get_session_date()
+        self.date = self.event.get_session_date(session_name)
         """pandas.Datetime: Date at which this session took place."""
-        self.api_path = api.make_path(self.weekend.name,
-                                      self.weekend.date,
-                                      self.name, self.date)
+        self.api_path = api.make_path(self.event.event_name,
+                                      self.event.event_date.strftime('%Y-%m-%d'),
+                                      self.name, self.date.strftime('%Y-%m-%d'))
         """str: API base path for this session"""
 
         self.results = list()
@@ -1074,12 +886,12 @@ class Session:
         `fastf1.api.session_status_data()` as dataframe. Available after
         calling `Session.load_laps()`"""
 
-        if not self.weekend.is_testing():
+        if not self.event.is_testing():
             # The Ergast API can provide some general information about weekends, drivers, ...
             # See ergast.com
             try:
-                self.results = ergast.load(self.weekend.year,
-                                           self.weekend.gp,
+                self.results = ergast.load(self.event.year,
+                                           self.event.round_number,
                                            self.name)
             except IndexError:
                 # Ergast will take some time after a session until the data is available
@@ -1103,7 +915,8 @@ class Session:
         data stream. This value needs to be calculated from telemetry data
         and is therefore only available after telemetry data was loaded."""
         self.session_start_time = None
-        """pandas.Timedelta: Session time at which the session was started."""
+        """pandas.Timedelta: Session time at which the session was started
+        according to the session status data."""
 
         self.car_data = dict()
         """Dictionary of car telemetry (Speed, RPM, etc.) as received from
@@ -1133,36 +946,12 @@ class Session:
                 'Driver': {'code': driver[1]},
                 'Constructor': {'name': driver[2]}})
 
-    def _get_session_date(self):
-        """Session date formatted as '%Y-%m-%d' (e.g. '2019-03-12')"""
-        if self.weekend.is_testing():
-            if (year := str(self.weekend.year)) == '2020':
-                week_index = int(self.weekend.name[-1]) - 1
-                day_index = int(self.name[-1]) - 1
-                date = TESTING_LOOKUP[year][week_index][day_index]
-            elif year == '2021':
-                day_index = int(self.name[-1]) - 1
-                date = TESTING_LOOKUP[year][0][day_index]
-
-        # TODO: remove; temporary patch to support sprint qualifying
-        elif ((self.weekend.year == 2021) and
-              (self.weekend.gp in SPRINT_QUALIFYING_LOOKUP.keys())):
-            date = SPRINT_QUALIFYING_LOOKUP[self.weekend.gp][self.name]
-
-        elif self.name in ('Qualifying', 'Practice 3'):
-            # Assuming that quali was one day before race which is not always correct
-            # TODO Should check if also formula1 makes this assumption
-            offset_date = pd.to_datetime(self.weekend.date) + pd.DateOffset(-1)
-            date = offset_date.strftime('%Y-%m-%d')
-        elif self.name in ('Practice 1', 'Practice 2'):
-            # Again, assuming that practice 1/2 are the day before quali (except Monaco)
-            _ = -3 if self.weekend.name == 'Monaco Grand Prix' else -2
-            offset_date = pd.to_datetime(self.weekend.date) + pd.DateOffset(_)
-            date = offset_date.strftime('%Y-%m-%d')
-        else:  # Race
-            date = self.weekend.date
-
-        return date
+    @property
+    def weekend(self):
+        warnings.warn("The property `Session.weekend` has been renamed to "
+                      "`Session.event`.\n The old property will be removed in"
+                      "a future version.", FutureWarning)
+        return self.event
 
     def load_laps(self, with_telemetry=False, livedata=None):
         """Load lap timing information and telemetry data.
@@ -1210,7 +999,7 @@ class Session:
         Returns:
             instance of :class:`Laps`
         """
-        logging.info(f"Loading laps for {self.weekend.name} - {self.name}"
+        logging.info(f"Loading laps for {self.event.event_name} - {self.name}"
                      f" [v{fastf1.__version__}]")
 
         """From `timing_data` and `timing_app_data` a summary table is
@@ -1796,11 +1585,7 @@ class Laps(pd.DataFrame):
         Returns:
             pandas.DataFrame
 
-        .. testsetup::
-
-                >>> fastf1.Cache.enable_cache('doc_cache')
-
-        Example::
+        .. doctest::
 
             >>> session = fastf1.get_session(2019, 'Monza', 'Q')
             >>> laps = session.load_laps()
@@ -1818,15 +1603,20 @@ class Laps(pd.DataFrame):
             34 0 days 00:34:14.385000    23.0     51.7  ...      37.7           272       0.8
             36 0 days 00:36:14.426000    23.0     51.1  ...      38.3           192       0.9
             37 0 days 00:37:14.391000    23.3     50.0  ...      38.7           213       0.9
+            <BLANKLINE>
             [275 rows x 8 columns]
 
-        Joining weather data with lap timing data::
+        Joining weather data with lap timing data:
 
-            >>> # prepare the data for joining
+        .. doctest::
+
+            >>> import pandas as pd  # needed additionally to fastf1
+
+            # prepare the data for joining
             >>> laps = laps.reset_index(drop=True)
             >>> weather_data = weather_data.reset_index(drop=True)
 
-            >>> # exclude the 'Time' column from weather data when joining
+            # exclude the 'Time' column from weather data when joining
             >>> joined = pd.concat([laps, weather_data.loc[:, ~(weather_data.columns == 'Time')]], axis=1)
             >>> print(joined)
                                   Time DriverNumber  ... WindDirection  WindSpeed
@@ -1841,6 +1631,7 @@ class Laps(pd.DataFrame):
             272 0 days 00:35:15.794000           88  ...           272        0.8
             273 0 days 00:36:38.150000           88  ...           192        0.9
             274 0 days 00:38:37.508000           88  ...           213        0.9
+            <BLANKLINE>
             [275 rows x 32 columns]
         """
         wd = [lap.get_weather_data() for _, lap in self.iterrows()]
@@ -2145,11 +1936,7 @@ class Lap(pd.Series):
         Returns:
             pandas.Series
 
-        .. testsetup::
-
-            >>> fastf1.Cache.enable_cache('doc_cache')
-
-        Example::
+        .. doctest::
 
             >>> session = fastf1.get_session(2019, 'Monza', 'Q')
             >>> laps = session.load_laps()
