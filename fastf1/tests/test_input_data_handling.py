@@ -1,10 +1,13 @@
 # test some known special cases
 
 import pytest
+import logging
+
+import pandas as pd
+
+import fastf1.testing
 import fastf1 as ff1
 from fastf1 import core
-import logging
-import pandas as pd
 
 
 @pytest.mark.f1telapi
@@ -38,10 +41,15 @@ def test_history_mod_1(caplog):
 
 
 @pytest.mark.f1telapi
-def test_ergast_lookup_fail(caplog):
+def test_ergast_lookup_fail():
+    fastf1.testing.run_in_subprocess(_test_ergast_lookup_fail)
+
+
+def _test_ergast_lookup_fail():
+    log_handle = fastf1.testing.capture_log()
+
     ff1.Cache.enable_cache("test_cache/")
     # ergast lookup fails if data is requested to soon after a session ends
-    caplog.set_level(logging.INFO)
 
     def fail_load(*args, **kwargs):
         raise Exception
@@ -50,8 +58,8 @@ def test_ergast_lookup_fail(caplog):
     session = core.get_session(2020, 3, 'FP2')  # rainy and short session, good for fast test/quick loading
     session.load_laps()
 
-    assert "Failed to load data from Ergast API!" in caplog.text  # the warning
-    assert "Loaded data for" in caplog.text  # indicates success
+    assert "Failed to load data from Ergast API!" in log_handle.text  # the warning
+    assert "Loaded data for" in log_handle.text  # indicates success
 
 
 @pytest.mark.f1telapi
