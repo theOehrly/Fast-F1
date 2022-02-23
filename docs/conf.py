@@ -99,3 +99,8 @@ sphinx_gallery_conf = {
     'download_all_examples': False,
     'remove_config_comments': True,
 }
+
+# options for latexpdf build
+latex_elements = {
+    'preamble': r'\usepackage{enumitem}\setlistdepth{99}',
+}
