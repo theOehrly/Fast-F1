@@ -1,3 +1,9 @@
+Info
+----
+
+Pre-release versions for FastF1 v2.2 are now available in this `discussion <https://github.com/theOehrly/Fast-F1/discussions/105>`_.
+You can test the upcoming changes before the final release and leave feedback in the discussion.
+
 
 =======
 Fast F1
@@ -45,20 +51,20 @@ Usage
 Creating a simple analysis is not very difficult, especially if you are already familiar
 with pandas and numpy.
 
-Suppose that we want to analyse the race pace of Leclerc compared to 
-Hamilton from the Bahrain GP (weekend number 2) of 2019.
+Suppose that we want to analyse the race pace of Leclerc compared to
+Hamilton for the Turkish GP 2020.
 
 .. code:: python
 
-    import fastf1 as ff1
+    import fastf1
     from fastf1 import plotting
     from matplotlib import pyplot as plt
 
     plotting.setup_mpl()
 
-    ff1.Cache.enable_cache('path/to/folder/for/cache')  # optional but recommended
+    fastf1.Cache.enable_cache('path/to/folder/for/cache')  # optional but recommended
 
-    race = ff1.get_session(2020, 'Turkish Grand Prix', 'R')
+    race = fastf1.get_session(2020, 'Turkish Grand Prix', 'R')
     laps = race.load_laps()
 
     lec = laps.pick_driver('LEC')
