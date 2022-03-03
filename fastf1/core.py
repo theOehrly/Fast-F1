@@ -218,7 +218,10 @@ class Telemetry(pd.DataFrame):
 
     @property
     def _constructor(self):
-        return Telemetry
+        def _new(*args, **kwargs):
+            return Telemetry(*args, **kwargs).__finalize__(self)
+
+        return _new
 
     @property
     def base_class_view(self):
@@ -1450,14 +1453,17 @@ class Laps(pd.DataFrame):
 
     @property
     def _constructor(self):
-        return Laps
+        def _new(*args, **kwargs):
+            return Laps(*args, **kwargs).__finalize__(self)
+
+        return _new
 
     @property
     def _constructor_sliced(self):
-        # this is effectively 'return Lap' but I need to pass a reference to the session instance too
-        # what this actually does is to dynamically subclass Lap with the new class being called Lap again,
-        # additionally the class variable session is added
-        return type('Lap', (Lap,), {'session': self.session})
+        def _new(*args, **kwargs):
+            return Lap(*args, **kwargs).__finalize__(self)
+
+        return _new
 
     @property
     def base_class_view(self):
@@ -1834,7 +1840,10 @@ class Lap(pd.Series):
 
     @property
     def _constructor(self):
-        return Lap
+        def _new(*args, **kwargs):
+            return Lap(*args, **kwargs).__finalize__(self)
+
+        return _new
 
     @cached_property
     def telemetry(self):
