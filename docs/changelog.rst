@@ -3,8 +3,19 @@ Changelog
 =========
 
 
-v2.2.0-alpha-220228
-===================
+v2.2.0-alpha1
+=============
+
+Potentially breaking changes:
+
+  - The datatype of the telemetry 'Brake' data channel is changed from
+    ``int`` to ``bool``, as brake data was never actually more accurate
+    than this. The representation as integer (percentage) values was
+    misleading.
+
+
+v2.2.0-alpha0
+=============
 
 This release introduces a range of new features, bug fixes and improvements.
 While backwards compatibility has been kept in mind, some breaking changes

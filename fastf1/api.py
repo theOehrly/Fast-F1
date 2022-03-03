@@ -109,7 +109,7 @@ class Cache:
     on FastF1.
     """
     _CACHE_DIR = ''
-    _API_CORE_VERSION = 2  # version of the api parser code (unrelated to release version number)
+    _API_CORE_VERSION = 3  # version of the api parser code (unrelated to release version number)
     _IGNORE_VERSION = False
     _FORCE_RENEW = False
 
@@ -900,7 +900,7 @@ def car_data(path, response=None, livedata=None):
         - RPM (int)
         - Gear (int): [called 'nGear' in the data!]
         - Throttle (int): 0-100%
-        - Brake (int): 0-100% (don't trust brake too much)
+        - Brake (bool)
         - DRS (int): 0-14 (Odd DRS is Disabled, Even DRS is Enabled) (More Research Needed)
             | 0 =  Off
             | 1 =  Off
@@ -943,6 +943,8 @@ def car_data(path, response=None, livedata=None):
     logging.info("Parsing car data...")
 
     channels = {'0': 'RPM', '2': 'Speed', '3': 'nGear', '4': 'Throttle', '5': 'Brake', '45': 'DRS'}
+    num_channels = ['RPM', 'Speed', 'nGear', 'Throttle', 'DRS']
+    bool_channels = ['Brake']
     columns = ['Time', 'Date', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake', 'DRS', 'Source']
     ts_length = 12  # length of timestamp: len('00:00:00:000')
 
@@ -988,14 +990,16 @@ def car_data(path, response=None, livedata=None):
     # create one dataframe per driver and check for the longest dataframe
     most_complete_ref = None
     for driver in data:
-        data[driver]['Source'] = ['car', ] * len(data[driver]['Date'])  # add source reference for each sample
+        # add source reference for each sample
+        data[driver]['Source'] = ['car', ] * len(data[driver]['Date'])
         data[driver] = pd.DataFrame(data[driver])  # convert dict to dataframe
         # check length of dataframe; sometimes there can be missing data
         if most_complete_ref is None or len(data[driver]['Date']) > len(most_complete_ref):
             most_complete_ref = data[driver]['Date']
 
-    # if everything is well, all dataframes should have the same length and no postprocessing is necessary
     for driver in data:
+        # if everything is well, all dataframes should have the same length
+        # and no postprocessing is necessary
         if len(data[driver]['Date']) < len(most_complete_ref):
             # there is missing data for this driver
             # extend the Date column and fill up missing telemetry values with
@@ -1003,11 +1007,30 @@ def car_data(path, response=None, livedata=None):
             # correctly based on Session.t0_date anyways when creating Telemetry
             # instances in Session.load_telemetry
             index_df = pd.DataFrame(data={'Date': most_complete_ref})
-            data[driver] = data[driver].merge(index_df, how='outer').sort_values(by='Date').reset_index(drop=True)
-            data[driver].loc[:, channels.values()] = \
-                data[driver].loc[:, channels.values()].fillna(value=0, inplace=False).astype('int64')
+            data[driver] = data[driver]\
+                .merge(index_df, how='outer')\
+                .sort_values(by='Date')\
+                .reset_index(drop=True)
 
             logging.warning(f"Driver {driver: >2}: Car data is incomplete!")
+
+        # ensure that brake data is 'boolean-compatible' in case that this is
+        # ever changed
+        _unique_brake_values = data[driver].loc[:, 'Brake'].unique()
+        if ((_unique_brake_values > 0) & (_unique_brake_values < 100)).any():
+            logging.warning(f"Driver {driver: >2}: Raw brake data contains "
+                            f"non-boolean values!")
+
+        # convert to correct datatypes
+        data[driver].loc[:, num_channels] = data[driver] \
+            .loc[:, num_channels]\
+            .fillna(value=0, inplace=False)\
+            .astype('int64')
+
+        data[driver].loc[:, bool_channels] = data[driver] \
+            .loc[:, bool_channels]\
+            .fillna(value=False, inplace=False)\
+            .astype('bool')
 
     return data
 

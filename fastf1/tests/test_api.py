@@ -100,7 +100,7 @@ def test_car_data(caplog):
         assert list(data.values())[0].shape == (27897, 9)  # dataframe shape
         assert (list(data.values())[0].dtypes == [
             'timedelta64[ns]', 'datetime64[ns]', 'int64', 'int64', 'int64',
-            'int64', 'int64', 'int64', 'object']).all()
+            'int64', 'bool', 'int64', 'object']).all()
 
         response = response[:50]  # use less samples to speed test up
         # truncate one response: missing data -> cannot be decoded

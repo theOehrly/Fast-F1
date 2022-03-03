@@ -36,7 +36,7 @@ LAP_DTYPES = {'Time': '<m8[ns]',
               'IsAccurate': 'O',
               'LapStartDate': '<M8[ns]'}
 
-CAR_DATA_DTYPES = {'Brake': 'int64',
+CAR_DATA_DTYPES = {'Brake': 'bool',
                    'nGear': 'int64',
                    'DRS': 'int64',
                    'Date': '<M8[ns]',

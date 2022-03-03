@@ -192,9 +192,9 @@ class Telemetry(pd.DataFrame):
         'Z': {'type': 'continuous', 'missing': 'quadratic'},
         'Status': {'type': 'discrete'},
         'Speed': {'type': 'continuous', 'missing': 'linear'},  # linear is often required as quadratic overshoots
-        'RPM': {'type': 'continuous', 'missing': 'linear'},  # on sudden changes like sudden pedal application,
-        'Throttle': {'type': 'continuous', 'missing': 'linear'},  # braking, ...)
-        'Brake': {'type': 'continuous', 'missing': 'linear'},
+        'RPM': {'type': 'continuous', 'missing': 'linear'},  # on sudden changes like sudden pedal application)
+        'Throttle': {'type': 'continuous', 'missing': 'linear'},
+        'Brake': {'type': 'discrete'},
         'DRS': {'type': 'discrete'},
         'nGear': {'type': 'discrete'},
         'Source': {'type': 'excluded'},  # special case, custom handling
