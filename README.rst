@@ -1,8 +1,16 @@
-Info
-----
+**INFO: Pre-Season Testing Bahrain 2022**
 
-Pre-release versions for FastF1 v2.2 are now available in this `discussion <https://github.com/theOehrly/Fast-F1/discussions/105>`_.
-You can test the upcoming changes before the final release and leave feedback in the discussion.
+  You should use the pre-release version of FastF1 v2.2 if you want to access
+  data from the pre-season testing sessions in Bahrain. See the note below
+  for more information on the pre-release versions.
+  (Note though, that it is not yet clear whether this data will be available
+  at all.)
+
+
+**NOTE: Upcoming Release v2.2**
+
+  Pre-release versions for FastF1 v2.2 are now available in this `discussion <https://github.com/theOehrly/Fast-F1/discussions/105>`_.
+  You can test the upcoming changes before the final release and leave feedback in the discussion.
 
 
 =======
