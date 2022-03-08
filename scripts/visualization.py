@@ -53,7 +53,7 @@ def show_deviation_minima_on_track(res, track, sector_number):
 
 
 def plot_lap_time_integrity(laps_data, suffix=''):
-    drivers_series = laps_data.Driver
+    drivers_series = laps_data.DriverResult
     drivers = list(drivers_series.drop_duplicates())
 
     deltas = list()
@@ -62,7 +62,7 @@ def plot_lap_time_integrity(laps_data, suffix=''):
 
     if 'Date' in laps_data.columns:
         for driver in drivers:
-            i_max = len(laps_data[laps_data.Driver == driver])
+            i_max = len(laps_data[laps_data.DriverResult == driver])
             for i in range(1, i_max):
                 delta = (laps_data.iloc[i].Date - laps_data.iloc[i].LapTime - laps_data.iloc[i-1].Date).total_seconds()
                 deltas.append(delta)
@@ -70,7 +70,7 @@ def plot_lap_time_integrity(laps_data, suffix=''):
                 n += 1
     else:
         for driver in drivers:
-            i_max = len(laps_data[laps_data.Driver == driver])
+            i_max = len(laps_data[laps_data.DriverResult == driver])
             for i in range(1, i_max):
                 delta = (laps_data.iloc[i].Time - laps_data.iloc[i].LapTime - laps_data.iloc[i-1].Time).total_seconds()
                 deltas.append(delta)

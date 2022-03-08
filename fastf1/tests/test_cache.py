@@ -81,7 +81,7 @@ def _test_cache_used_and_clear(tmpdir):
             mocker.get(path, content=content, status_code=200)
 
         # load the data
-        session.load_laps(with_telemetry=True)
+        session.load()
 
         # check cache directory, pickled results should now exist
         cache_dir_path = os.path.join(tmpdir, session.api_path[8:])
@@ -100,7 +100,7 @@ def _test_cache_used_and_clear(tmpdir):
         # this should use the cache this time
         log_handle = fastf1.testing.capture_log(logging.INFO)
         session = fastf1.get_session(2020, 5, 'FP2')
-        session.load_laps(with_telemetry=True)
+        session.load()
         assert "Using cached data for" in log_handle.text
 
         fastf1.Cache.clear_cache(tmpdir)  # should delete pickle files

@@ -486,8 +486,10 @@ def timing_data(path, response=None, livedata=None):
         logging.info("Fetching timing data...")
         response = fetch_page(path, 'timing_data')
         if response is None:  # no response received
-            raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
-
+            raise SessionNotAvailableError(
+                "No data for this session! If this session only finished "
+                "recently, please try again in a few minutes."
+            )
     logging.info("Parsing timing data...")
 
     # split up response per driver for easier iteration and processing later
@@ -851,7 +853,10 @@ def timing_app_data(path, response=None, livedata=None):
         logging.info("Fetching timing app data...")
         response = fetch_page(path, 'timing_app_data')
         if response is None:  # no response received
-            raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
+            raise SessionNotAvailableError(
+                "No data for this session! If this session only finished "
+                "recently, please try again in a few minutes."
+            )
 
     data = {'LapNumber': [], 'Driver': [], 'LapTime': [], 'Stint': [], 'TotalLaps': [], 'Compound': [], 'New': [],
             'TyresNotChanged': [], 'Time': [], 'LapFlags': [], 'LapCountTime': [], 'StartLaps': [], 'Outlap': []}
@@ -938,7 +943,10 @@ def car_data(path, response=None, livedata=None):
         logging.info("Fetching car data...")
         response = fetch_page(path, 'car_data')
         if response is None:  # no response received
-            raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
+            raise SessionNotAvailableError(
+                "No data for this session! If this session only finished "
+                "recently, please try again in a few minutes."
+            )
 
     logging.info("Parsing car data...")
 
@@ -1072,7 +1080,10 @@ def position_data(path, response=None, livedata=None):
         logging.info("Fetching position data...")
         response = fetch_page(path, 'position')
         if response is None:  # no response received
-            raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
+            raise SessionNotAvailableError(
+                "No data for this session! If this session only finished "
+                "recently, please try again in a few minutes."
+            )
 
     logging.info("Parsing position data...")
 
@@ -1196,7 +1207,10 @@ def track_status_data(path, response=None, livedata=None):
         logging.info("Fetching track status data...")
         response = fetch_page(path, 'track_status')
         if response is None:  # no response received
-            raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
+            raise SessionNotAvailableError(
+                "No data for this session! If this session only finished "
+                "recently, please try again in a few minutes."
+            )
 
     data = {'Time': [], 'Status': [], 'Message': []}
 
@@ -1244,7 +1258,10 @@ def session_status_data(path, response=None, livedata=None):
         logging.info("Fetching session status data...")
         response = fetch_page(path, 'session_status')
         if response is None:  # no response received
-            raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
+            raise SessionNotAvailableError(
+                "No data for this session! If this session only finished "
+                "recently, please try again in a few minutes."
+            )
 
     data = {'Time': [], 'Status': []}
 
@@ -1293,10 +1310,16 @@ def driver_info(path, response=None, livedata=None):
         logging.info("Fetching driver list...")
         response = fetch_page(path, 'driver_list')
         if response is None:  # no response received
-            raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
+            raise SessionNotAvailableError(
+                "No data for this session! If this session only finished "
+                "recently, please try again in a few minutes."
+            )
 
     try:
         drv_info = response[0][1]
+        team_info = response[1][1]
+        for drv in drv_info:
+            drv_info[drv].update(team_info.get(drv, {}))
         if not len(drv_info) or not isinstance(drv_info, dict):
             return dict()
         if 'RacingNumber' not in list(drv_info.values())[0]:
@@ -1348,7 +1371,10 @@ def weather_data(path, response=None, livedata=None):
         logging.info("Fetching weather data...")
         response = fetch_page(path, 'weather_data')
         if response is None:  # no response received
-            raise SessionNotAvailableError("No data for this session! Are you sure this session wasn't cancelled?")
+            raise SessionNotAvailableError(
+                "No data for this session! If this session only finished "
+                "recently, please try again in a few minutes."
+            )
 
     data = {
         'Time': [], 'AirTemp': [], 'Humidity': [], 'Pressure': [],

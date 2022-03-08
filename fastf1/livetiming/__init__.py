@@ -38,7 +38,7 @@ Usage Example
 
     livedata = LiveTimingData('saved_data.txt')
     session = fastf1.get_session(2021, 'testing', 1)
-    session.load_laps(with_telemetry=True, livedata=livedata)
+    session.load(livedata=livedata)
 
 optionally you can load live timing data from two or more files
 

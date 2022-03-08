@@ -18,14 +18,14 @@ fastf1.Cache.enable_cache('../doc_cache')  # replace with your cache directory
 # we only want support for timedelta plotting in this example
 fastf1.plotting.setup_mpl(mpl_timedelta_support=True, color_scheme=None, misc_mpl_mods=False)
 
-quali = fastf1.get_session(2021, 'Spanish Grand Prix', 'Q')
-laps = quali.load_laps()
+session = fastf1.get_session(2021, 'Spanish Grand Prix', 'Q')
+session.load()
 
 
 ##############################################################################
 # First, we need to get an array of all drivers.
 
-drivers = pd.unique(laps['Driver'])
+drivers = pd.unique(session.laps['Driver'])
 print(drivers)
 
 
@@ -36,7 +36,7 @@ print(drivers)
 
 list_fastest_laps = list()
 for drv in drivers:
-    drvs_fastest_lap = laps.pick_driver(drv).pick_fastest()
+    drvs_fastest_lap = session.laps.pick_driver(drv).pick_fastest()
     list_fastest_laps.append(drvs_fastest_lap)
 fastest_laps = Laps(list_fastest_laps).sort_values(by='LapTime').reset_index(drop=True)
 
@@ -88,7 +88,7 @@ ax.xaxis.grid(True, which='major', linestyle='--', color='black', zorder=-1000)
 
 lap_time_string = strftimedelta(pole_lap['LapTime'], '%m:%s.%ms')
 
-plt.suptitle(f"{quali.event.name} {quali.event.year} Qualifying\n"
+plt.suptitle(f"{session.event.name} {session.event.year} Qualifying\n"
              f"Fastest Lap: {lap_time_string} ({pole_lap['Driver']})")
 
 plt.show()

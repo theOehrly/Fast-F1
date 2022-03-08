@@ -20,7 +20,7 @@ for evn in range(1, 22):  # 21 races
         try:
             print(evn, ses)
             session = ff1.get_session(2019, evn, ses)
-            session.load_laps()
+            session.load()
 
         except Exception as e:
             with open(f'logs/2019_{evn}_{ses}.txt', 'w') as f:
@@ -34,7 +34,7 @@ for ses in range(1, 7):
     try:
         print(evn, ses)
         session = ff1.get_session(2020, evn, ses)
-        session.load_laps()
+        session.load()
 
     except Exception as e:
         with open(f'logs/2020_{evn}_{ses}.txt', 'w') as f:
@@ -57,7 +57,7 @@ for evn in range(1, 18):  # 17 races
         try:
             print(evn, ses)
             session = ff1.get_session(2020, evn, ses)
-            session.load_laps()
+            session.load()
 
         except Exception as e:
             with open(f'logs/2020_{evn}_{ses}.txt', 'w') as f:

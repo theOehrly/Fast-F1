@@ -6,12 +6,65 @@ Changelog
 v2.2.0-alpha1
 =============
 
-Potentially breaking changes:
+Changes and New Features:
+
+  - Introduces the new objects :class:`fastf1.core.SessionResults` and
+    :class:`fastf1.core.DriverResult`. These classes are built on top of
+    :class:`pandas.DataFrame` and :class:`pandas.Series`. They provide
+    information about all drivers that participated in a session.
+    This information includes driver numbers, names, team names, finishing
+    results, ...
+    Session results are available for all sessions supported by the
+    Ergast database.
+
+  - A hard coded list of drivers is no longer required for testing sessions.
+    This data can now be pulled from the api as well.
+
+  - A more understandable error will be raised if properties of the
+    :class:`~fastf1.core.Session` object are accessed which are not yet
+    available because the relevant data has not been loaded.
+
+Breaking Changes:
+
+  - The property :attr:`fastf1.core.Session.results` is now an instance of
+    :class:`fastf1.core.SessionResults` instead of :class:`dict`.
 
   - The datatype of the telemetry 'Brake' data channel is changed from
     ``int`` to ``bool``, as brake data was never actually more accurate
     than this. The representation as integer (percentage) values was
     misleading.
+
+
+Deprecations:
+
+  - :func:`fastf1.core.Session.load_laps` has been deprecated. Use
+    :func:`fastf1.core.Session.load` instead, which offers more flexibility
+    for deciding which data should be loaded. The new method will no longer
+    return a :class:`~fastf1.core.Laps` object! You should access the
+    :class:`~fastf1.core.Laps` object through
+    :attr:`fastf1.core.Session.laps`
+
+  - :class:`fastf1.core.Driver` has been replace with
+    :class:`fastf1.core.DriverResult` which has a different signature.
+
+  - The attributes ``grid``, ``position``, ``name``, ``familyname`` and
+    ``team`` of :class:`fastf1.core.Driver` have been deprecated.
+    The replacement object :class:`fastf1.core.DriverResult` subclasses
+    :class:`pandas.Series`. The standard ways for accessing pandas Series'
+    values should be used. The attributes have been additionally renamed in
+    their Series representation.
+    For example:
+
+      - ``Driver.name`` --> ``DriverResult.FirstName`` or
+        ``DriverResult['FirstName']``
+      - ``Driver.familyname`` --> ``DriverResult.LastName`` or
+        ``DriverResult['LastName']``
+      - ``Driver.team`` --> ``DriverResult.TeamName`` or
+        ``DriverResult['TeamName']``
+      - ``Driver.grid`` --> ``DriverResult.GridPosition`` or
+        ``DriverResult['GridPosition']``
+      - ``Driver.position`` --> ``DriverResult.Position`` or
+        ``DriverResult['Position']``
 
 
 v2.2.0-alpha0
@@ -64,9 +117,6 @@ Breaking Changes:
 
   - :attr:`fastf1.core.Session.date` is now a :class:`pandas.Timestamp`
     instead of a string.
-
-
-Potentially breaking changes:
 
   - The signature ``fastf1.core.Session.__init__(weekend, session_name)``
     has been changed to

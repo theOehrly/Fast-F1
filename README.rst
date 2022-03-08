@@ -73,7 +73,7 @@ Hamilton for the Turkish GP 2020.
     fastf1.Cache.enable_cache('path/to/folder/for/cache')  # optional but recommended
 
     race = fastf1.get_session(2020, 'Turkish Grand Prix', 'R')
-    laps = race.load_laps()
+    race.load()
 
     lec = laps.pick_driver('LEC')
     ham = laps.pick_driver('HAM')

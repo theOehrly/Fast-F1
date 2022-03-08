@@ -64,10 +64,15 @@
       :autosummary:
       :show-inheritance:
 
-  Driver
-  ++++++
+  Results
+  +++++++
 
-    .. autoclass:: fastf1.core.Driver
+    .. autoclass:: fastf1.core.SessionResults
+      :members:
+      :autosummary:
+      :show-inheritance:
+
+    .. autoclass:: fastf1.core.DriverResult
       :members:
       :autosummary:
       :show-inheritance:

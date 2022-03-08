@@ -63,8 +63,8 @@ If you simply wish to visualize existing data, slicing laps is rather straight f
 .. code-block:: python
 
     session = fastf1.get_session(2020, 4, 'Q')
-    laps = session.load_laps(with_telemetry=True)
-    fastest_lap = laps.pick_fastest()
+    session.load()
+    fastest_lap = session.laps.pick_fastest()
     tel = fastest_lap.telemetry
 
 This will give you the merged telemetry with a first and last value being interpolated additionally so as to exactly
@@ -77,8 +77,8 @@ To stay away from interpolation before doing any calculations, the following cou
 .. code-block:: python
 
     session = fastf1.get_session(2020, 4, 'Q')
-    laps = session.load_laps(with_telemetry=True)
-    fastest_lap = laps.pick_fastest()
+    session.load()
+    fastest_lap = session.laps.pick_fastest()
 
     # use padding so that there are values outside of the desired range for accurate interpolation later
     car_data = fastest_lap.get_car_data(pad=1, pad_side='both')

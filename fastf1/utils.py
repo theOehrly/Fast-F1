@@ -34,9 +34,9 @@ def delta_time(reference_lap, compare_lap):
         plotting.setup_mpl()
 
         quali = ff1.get_session(2021, 'Emilia Romagna', 'Q')
-        laps = quali.load_laps(with_telemetry=True)
-        lec = laps.pick_driver('LEC').pick_fastest()
-        ham = laps.pick_driver('HAM').pick_fastest()
+        quali.load()
+        lec = session.laps.pick_driver('LEC').pick_fastest()
+        ham = session.laps.pick_driver('HAM').pick_fastest()
 
         delta_time, ref_tel, compare_tel = utils.delta_time(ham, lec)
         # ham is reference, lec is compared
@@ -86,11 +86,15 @@ def delta_time(reference_lap, compare_lap):
     return delta, ref, comp
 
 
-def recursive_dict_get(d, *keys):
+def recursive_dict_get(d, *keys, default_none=False):
     """Recursive dict get. Can take an arbitrary number of keys and returns an empty
     dict if any key does not exist.
     https://stackoverflow.com/a/28225747"""
-    return reduce(lambda c, k: c.get(k, {}), keys, d)
+    ret = reduce(lambda c, k: c.get(k, {}), keys, d)
+    if default_none and ret == {}:
+        return None
+    else:
+        return ret
 
 
 def to_timedelta(x):

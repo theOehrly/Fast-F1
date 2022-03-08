@@ -8,12 +8,20 @@ base_url = 'http://ergast.com/api/f1'
 _headers = {'User-Agent': f'FastF1/{__version__}'}
 
 
-def load(year, gp, session):
+def fetch_results(year, gp, session):
     """session can be 'Qualifying' or 'Race'
     mainly to port on upper level libraries
     """
-    day = 'qualifying' if session == 'Qualifying' else 'results'
-    sel = 'QualifyingResults' if session == 'Qualifying' else 'Results'
+    if session == 'Race':
+        day = 'results'
+        sel = 'Results'
+    elif session == 'Qualifying':
+        day = 'qualifying'
+        sel = 'QualifyingResults'
+    elif session == 'Sprint Qualifying':
+        day = 'sprint'
+        sel = 'SprintResults'
+
     return _parse_ergast(fetch_day(year, gp, day))[0][sel]
 
 

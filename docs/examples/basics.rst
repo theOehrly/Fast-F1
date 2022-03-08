@@ -66,8 +66,8 @@ The weekend object provides methods which return the individual sessions.
 
 .. doctest::
 
-  >>> weekend = fastf1.get_event(2021, 7)
-  >>> weekend
+  >>> event = fastf1.get_event(2021, 7)
+  >>> event
   round_number                                                      7
   country                                                      France
   location                                               Le Castellet
@@ -87,7 +87,7 @@ The weekend object provides methods which return the individual sessions.
   session5_date                                   2021-06-20 00:00:00
   f1_api_support                                                 True
   Name: French Grand Prix, dtype: object
-  >>> session = weekend.get_race()
+  >>> session = event.get_race()
   >>> session.name
   'Race'
 
@@ -136,23 +136,23 @@ Working with laps and lap times
 We have loaded a session now but it has been rather boring so far. So lets make it
 a bit more interesting and take a look at some individual laps.
 
-  >>> quali = fastf1.get_session(2021, 'French Grand Prix', 'Q')
-  >>> laps = quali.load_laps()
-  >>> laps
-                        Time DriverNumber  ... TrackStatus  IsAccurate
-  0   0 days 00:28:44.908000           33  ...          25       False
-  1   0 days 00:31:14.909000           33  ...           1       False
-  2   0 days 00:32:45.910000           33  ...           1        True
-  3   0 days 00:50:42.329000           33  ...          25       False
-  4   0 days 00:52:59.529000           33  ...           1       False
-  ..                     ...          ...  ...         ...         ...
-  265 0 days 00:31:39.717000            9  ...           1       False
-  266 0 days 00:33:13.271000            9  ...           1        True
-  267 0 days 00:38:02.565000            9  ...           1       False
-  268 0 days 00:40:30.783000            9  ...           1       False
-  269 0 days 00:42:11.850000            9  ...          25       False
+  >>> session = fastf1.get_session(2021, 'French Grand Prix', 'Q')
+  >>> session.load()
+  >>> session.laps
+                        Time DriverNumber  ... IsAccurate            LapStartDate
+  0   0 days 00:28:44.908000           33  ...      False 2021-06-19 13:03:06.950
+  1   0 days 00:31:14.909000           33  ...      False 2021-06-19 13:14:12.111
+  2   0 days 00:32:45.910000           33  ...       True 2021-06-19 13:16:42.112
+  3   0 days 00:50:42.329000           33  ...      False 2021-06-19 13:18:13.113
+  4   0 days 00:52:59.529000           33  ...      False 2021-06-19 13:36:09.532
+  ..                     ...          ...  ...        ...                     ...
+  265 0 days 00:39:10.594000           18  ...      False 2021-06-19 13:22:15.102
+  266 0 days 00:41:23.178000           18  ...       True 2021-06-19 13:24:37.797
+  267 0 days 00:41:30.642000           18  ...      False 2021-06-19 13:26:50.381
+  268 0 days 00:17:40.791000           22  ...      False 2021-06-19 13:00:22.952
+  269 0 days 00:26:20.982000           22  ...      False 2021-06-19 13:03:07.994
   <BLANKLINE>
-  [270 rows x 25 columns]
+  [270 rows x 26 columns]
 
 That's 250 laps right there and 25 columns of information. If you are familiar
 with Pandas you'll immediately recognize this output as a DataFrame. (If you're
@@ -162,14 +162,14 @@ tutorial.)
 As this is basically a Pandas DataFrame we can take a look at what columns
 there are.
 
-  >>> laps.columns  # doctest: +NORMALIZE_WHITESPACE
+  >>> session.laps.columns  # doctest: +NORMALIZE_WHITESPACE
   Index(['Time', 'DriverNumber', 'LapTime', 'LapNumber', 'Stint', 'PitOutTime',
          'PitInTime', 'Sector1Time', 'Sector2Time', 'Sector3Time',
          'Sector1SessionTime', 'Sector2SessionTime', 'Sector3SessionTime',
          'SpeedI1', 'SpeedI2', 'SpeedFL', 'SpeedST', 'Compound', 'TyreLife',
          'FreshTyre', 'LapStartTime', 'Team', 'Driver', 'TrackStatus',
-         'IsAccurate'],
-         dtype='object')
+         'IsAccurate', 'LapStartDate'],
+        dtype='object')
 
 The detailed explanation for all these columns can be found in the
 docuemntation of the :class:`.core.Laps` class.
@@ -181,7 +181,7 @@ with F1 data.
 One of these additional features are methods for selecting specific laps.
 So let's see what the fastest laptime was and who is on pole.
 
-  >>> fastest_lap = laps.pick_fastest()
+  >>> fastest_lap = session.laps.pick_fastest()
   >>> fastest_lap['LapTime']
   Timedelta('0 days 00:01:29.990000')
   >>> fastest_lap['Compound']

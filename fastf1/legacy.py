@@ -28,13 +28,13 @@ versions can be used.
     # fastf1.Cache.enable_cache("path/to/cache")
 
     session = fastf1.get_session(2020, 'Italy', 'R')
-    laps = session.load_laps(with_telemetry=True)
+    session.load()
 
     DRIVER = 'VER'  # which driver; need to specify number and abbreviation
     DRIVER_NUMBER = '33'
     LAP_N = 10  # which lap number to plot
 
-    drv_laps = laps.pick_driver(DRIVER)
+    drv_laps = session.laps.pick_driver(DRIVER)
     drv_lap = drv_laps[(drv_laps['LapNumber'] == LAP_N)]  # select the lap
 
     # create a matplotlib figure
@@ -160,7 +160,7 @@ def _make_trajectory(session, ref_lap):
         track[:, 2] = reference_z
 
         track_tree = scipy.spatial.cKDTree(track)
-        drivers_list = np.array(list(session.drivers))
+        drivers_list = np.array(list(session.drivers.driver_number))
         stream_length = len(session.pos_data[drivers_list[0]])
         dmap = np.empty((stream_length, len(drivers_list)), dtype=int)
 
@@ -242,7 +242,7 @@ def _make_trajectory(session, ref_lap):
     else:
         # no data to base calculations on; create empty results
         driver_ahead = dict()
-        for drv in session.drivers:
+        for drv in session.drivers.driver_number:
             data = {'DistanceToDriverAhead': (), 'DriverAhead': ()}
             driver_ahead[drv] = session.pos_data[drv].join(pd.DataFrame(data), how='outer')
 

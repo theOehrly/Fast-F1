@@ -18,9 +18,9 @@ import numpy as np
 fastf1.Cache.enable_cache('../doc_cache')  # replace with your cache directory
 
 session = fastf1.get_session(2021, 'Austrian Grand Prix', 'Q')
-laps = session.load_laps(with_telemetry=True)
+session.load()
 
-lap = laps.pick_fastest()
+lap = session.laps.pick_fastest()
 tel = lap.get_telemetry()
 # sphinx_gallery_defer_figures
 

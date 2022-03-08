@@ -16,15 +16,14 @@ fastf1.Cache.enable_cache('../doc_cache')  # replace with your cache directory
 fastf1.plotting.setup_mpl()
 
 # load a session and its telemetry data
-quali = fastf1.get_session(2021, 'Spanish Grand Prix', 'Q')
-laps = quali.load_laps(with_telemetry=True)
-
+session = fastf1.get_session(2021, 'Spanish Grand Prix', 'Q')
+session.load()
 
 ##############################################################################
 # First, we select the two laps that we want to compare
 
-ver_lap = laps.pick_driver('VER').pick_fastest()
-ham_lap = laps.pick_driver('HAM').pick_fastest()
+ver_lap = session.laps.pick_driver('VER').pick_fastest()
+ham_lap = session.laps.pick_driver('HAM').pick_fastest()
 
 ##############################################################################
 # Next we get the telemetry data for each lap. We also add a 'Distance' column
@@ -49,6 +48,6 @@ ax.set_ylabel('Speed in km/h')
 
 ax.legend()
 plt.suptitle(f"Fastest Lap Comparison \n "
-             f"{quali.event.name} {quali.event.year} Qualifying")
+             f"{session.event.name} {session.event.year} Qualifying")
 
 plt.show()

@@ -187,6 +187,11 @@ def get_session(year, gp, identifier=None, *, force_ergast=False, event=None):
     """Create a :class:`~fastf1.core.Session` object based on year, event name
     and session identifier.
 
+    .. note:: This function will return a :class:`~fastf1.core.Session`
+        object, but it will not load any session specific data like lap timing,
+        telemetry, ... yet. For this, you will need to call
+        :func:`~fastf1.core.Session.load` on the returned object.
+
     .. deprecated:: 2.2
         Creating :class:`~fastf1.events.Event` objects (previously
         :class:`fastf1.core.Weekend`) by not specifying an ``identifier`` has
@@ -774,7 +779,8 @@ class Event(pd.Series):
                 raise ValueError(f"Session number {num} does not "
                                  f"exist for this event")
 
-        return Session(event=self, session_name=session_name)
+        return Session(event=self, session_name=session_name,
+                       f1_api_support=self.f1_api_support)
 
     def get_race(self):
         """Return the race session.

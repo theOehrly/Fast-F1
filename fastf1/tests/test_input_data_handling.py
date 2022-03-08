@@ -20,7 +20,7 @@ def test_partial_position_data(caplog):
     caplog.set_level(logging.INFO)
 
     session = fastf1.get_session(2020, 'Barcelona', 'FP2')
-    session.load_laps()
+    session.load()
 
     assert "Car data for driver 63 is incomplete!" in caplog.text  # the warning
     assert "Laps loaded and saved!" in caplog.text  # indicates success
@@ -33,7 +33,7 @@ def test_history_mod_1(caplog):
     caplog.set_level(logging.INFO)
 
     session = fastf1.get_session(2020, 'testing', 3)
-    session.load_laps()
+    session.load()
 
     assert "The api attempted to rewrite history" in caplog.text  # the warning
     assert "Laps loaded and saved!" in caplog.text  # indicates success
@@ -52,13 +52,13 @@ def _test_ergast_lookup_fail():
 
     def fail_load(*args, **kwargs):
         raise Exception
-    fastf1.ergast.load = fail_load  # force function call to fail
+    fastf1.ergast.fetch_results = fail_load  # force function call to fail
 
     session = fastf1.get_session(2020, 3, 'FP2')  # rainy and short session, good for fast test/quick loading
-    session.load_laps()
+    session.load(telemetry=False, weather=False)
 
     assert "Failed to load data from Ergast API!" in log_handle.text  # the warning
-    assert "Loaded data for" in log_handle.text  # indicates success
+    assert "Finished loading data" in log_handle.text  # indicates success
 
 
 @pytest.mark.f1telapi
@@ -66,8 +66,8 @@ def test_crash_lap_added_1():
     # sainz crashed in his 14th lap, there need to be all 14 laps
     session = fastf1.get_session(2021, "Monza", 'FP2')
 
-    laps = session.load_laps(with_telemetry=False)
-    assert laps.pick_driver('SAI').shape[0] == 14
+    session.load(telemetry=False)
+    assert session.laps.pick_driver('SAI').shape[0] == 14
 
 
 @pytest.mark.f1telapi
@@ -75,8 +75,8 @@ def test_crash_lap_added_2():
     # verstappen crashed on his first lap, the lap needs to exist
     session = fastf1.get_session(2021, 'British Grand Prix', 'R')
 
-    laps = session.load_laps(with_telemetry=False)
-    assert laps.pick_driver('VER').shape[0] == 1
+    session.load(telemetry=False)
+    assert session.laps.pick_driver('VER').shape[0] == 1
 
 
 @pytest.mark.f1telapi
@@ -92,8 +92,8 @@ def _test_inlap_added():
 
     session = fastf1.get_session(2021, 'Mexico City', 'Q')
 
-    laps = session.load_laps(with_telemetry=False)
-    last = laps.pick_driver('PER').iloc[-1]
+    session.load(telemetry=False)
+    last = session.laps.pick_driver('PER').iloc[-1]
     assert not pd.isnull(last['PitInTime'])
     assert not pd.isnull(last['Time'])
 

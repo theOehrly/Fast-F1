@@ -15,11 +15,11 @@ fastf1.plotting.setup_mpl()
 @pytest.mark.f1telapi
 @pytest.mark.mpl_image_compare(style='default')
 def test_readme_example():
-    race = fastf1.get_session(2020, 'Belgian', 'R')
-    laps = race.load_laps()
+    session = fastf1.get_session(2020, 'Belgian', 'R')
+    session.load()
 
-    lec = laps.pick_driver('LEC')
-    ham = laps.pick_driver('HAM')
+    lec = session.laps.pick_driver('LEC')
+    ham = session.laps.pick_driver('HAM')
 
     fig, ax = plt.subplots()
     ax.plot(lec['LapNumber'], lec['LapTime'], color='red')
@@ -32,21 +32,13 @@ def test_readme_example():
 
 
 @pytest.mark.f1telapi
-def test_doc_example_pronto_seb():
-    session = fastf1.get_session(2020, 'Belgian', 'R')
-
-    vettel = session.get_driver('VET')
-    assert f"Pronto {vettel.name}?" == "Pronto Sebastian?"
-
-
-@pytest.mark.f1telapi
 @pytest.mark.mpl_image_compare(style='default')
 def test_doc_example_fast_lec():
     fastf1.Cache.enable_cache("test_cache/")
     session = fastf1.get_session(2020, 'Belgian', 'R')
 
-    laps = session.load_laps(with_telemetry=True)
-    fast_leclerc = laps.pick_driver('LEC').pick_fastest()
+    session.load()
+    fast_leclerc = session.laps.pick_driver('LEC').pick_fastest()
     t = fast_leclerc.telemetry['Time']
     vCar = fast_leclerc.telemetry['Speed']
 
@@ -64,10 +56,10 @@ def test_doc_example_fast_lec():
 @pytest.mark.mpl_image_compare(style='default')
 def test_doc_example_delta_time():
     fastf1.Cache.enable_cache("test_cache/")
-    quali = fastf1.get_session(2020, 'Belgian', 'R')
-    laps = quali.load_laps(with_telemetry=True)
-    lec = laps.pick_driver('LEC').pick_fastest()
-    ham = laps.pick_driver('HAM').pick_fastest()
+    session = fastf1.get_session(2020, 'Belgian', 'R')
+    session.load()
+    lec = session.laps.pick_driver('LEC').pick_fastest()
+    ham = session.laps.pick_driver('HAM').pick_fastest()
 
     fig, ax = plt.subplots()
     ax.plot(lec.telemetry['Distance'], lec.telemetry['Speed'],
@@ -88,7 +80,7 @@ def test_doc_example_delta_time():
 def test_speed_trace():
     fastf1.Cache.enable_cache("test_cache/")
     session = fastf1.get_session(2020, 'Belgian', 'R')
-    session.load_laps(with_telemetry=True)
+    session.load()
 
     fastest = session.laps.pick_fastest().telemetry
 

@@ -18,7 +18,8 @@ All data is provided through the following data objects:
        Laps
        Lap
        Telemetry
-       Driver
+       SessionResults
+       DriverResult
 
 
 The :class:`Session` object is mainly used as an entry point for loading
@@ -50,16 +51,17 @@ Functions
     get_round
 
 """
-
-from fastf1 import api, ergast
-import fastf1
-import pandas as pd
-import numpy as np
-import logging
+import collections
 from functools import cached_property
-
+import logging
 import warnings
 
+import numpy as np
+import pandas as pd
+
+import fastf1
+from fastf1 import api, ergast
+from fastf1.utils import recursive_dict_get, to_timedelta
 
 logging.basicConfig(level=logging.INFO, style='{',
                     format="{module: <8} {levelname: >10} \t{message}")
@@ -862,18 +864,24 @@ class Weekend:
 class Session:
     """Object for accessing session specific data.
 
-    The session class will usually be your starting point. This object will have various information about
-    the session such as `name` and `date`. To get the session's laps use :meth:`Session.load_laps`.
+    The session class will usually be your starting point. This object will
+    have various information about the session.
 
-    .. note:: For full functionality lap and telemetry data need to be loaded.
+    .. note:: Most of the data is only available after calling
+        :func:`Session.load`
     """
 
-    def __init__(self, event, session_name):
+    def __init__(self, event, session_name, f1_api_support=False):
+        # TODO: load drivers immediately
+        # TODO: load driver list for older seasons through ergast
         self.event = event
         """:class:`~fastf1.events.Event`: Reference to the associated event
         object."""
         self.name = session_name
         """str: Name of this session, for example 'Qualifying', 'Race', 'FP1', ..."""
+        self.f1_api_support = f1_api_support
+        """bool: The official F1 API supports this event and lap timing data and
+        telemetry data are available."""
         self.date = self.event.get_session_date(session_name)
         """pandas.Datetime: Date at which this session took place."""
         self.api_path = api.make_path(self.event.event_name,
@@ -881,94 +889,130 @@ class Session:
                                       self.name, self.date.strftime('%Y-%m-%d'))
         """str: API base path for this session"""
 
-        self.results = list()
-        """list: Race result with driver information."""
+        self._session_status = dict()
 
-        self.session_status = dict()
-        """pd.Dataframe: Session status data as returned by
-        `fastf1.api.session_status_data()` as dataframe. Available after
-        calling `Session.load_laps()`"""
+        self._laps: Laps
+        self._t0_date: pd.Timestamp
 
-        if not self.event.is_testing():
-            # The Ergast API can provide some general information about weekends, drivers, ...
-            # See ergast.com
-            try:
-                self.results = ergast.load(self.event.year,
-                                           self.event.round_number,
-                                           self.name)
-            except IndexError:
-                # Ergast will take some time after a session until the data is available
-                # while the data is not yet available, an error will be raised
-                logging.warning("Ergast API lookup failed. The session is very recent and not yet available or does "
-                                "not exist.")
-                self._create_empty_ergast_result()
-            except Exception as exception:
-                logging.error("Failed to load data from Ergast API!")
-                logging.exception(exception)
-                self._create_empty_ergast_result()
+        self._session_start_time: pd.Timedelta
 
-        else:
-            self._create_empty_ergast_result()
+        self._car_data = dict()
+        self._pos_data = dict()
 
-        self.laps = Laps(session=self)
-        """Instance of :class:`Laps` containing all laps from all drivers
-        in this session."""
-        self.t0_date = None
-        """pandas.Datetime: Date timestamp which marks the beginning of the
-        data stream. This value needs to be calculated from telemetry data
-        and is therefore only available after telemetry data was loaded."""
-        self.session_start_time = None
-        """pandas.Timedelta: Session time at which the session was started
-        according to the session status data."""
+        self._weather_data: pd.DataFrame
+        self._results: SessionResults
 
-        self.car_data = dict()
-        """Dictionary of car telemetry (Speed, RPM, etc.) as received from
-        the api by car number (where car number is a string and the telemetry
-        is an instance of :class:`Telemetry`)"""
-        self.pos_data = dict()
-        """Dictionary of car position data as received from the api by car
-        number (where car number is a string and the telemetry
-        is an instance of :class:`Telemetry`)"""
-        self.weather_data = pd.DataFrame()
-        """Dataframe containing weather data for this session as received
-        from the api. See :func:`fastf1.api.weather_data` for available data
-        channels. Each data channel is one row of the dataframe.
-        Weather data is only loaded once :func:`Session.load_laps` has been
-        called."""
-
-        self.drivers = list()
-        """List of all drivers that took part in this session; contains driver numbers as string. Drivers for which
-        lap or telemetry data is missing completely are not listed!"""
-
-    def _create_empty_ergast_result(self):
-        """In case Ergast has no data, this function creates an empty result to emulate the structure."""
-        self.results = []
-        for driver in D_LOOKUP:
-            self.results.append({
-                'number': str(driver[0]),
-                'Driver': {'code': driver[1]},
-                'Constructor': {'name': driver[2]}})
+    def _get_property_warn_not_loaded(self, name):
+        d = getattr(self, name, None)
+        if d is None:
+            raise DataNotLoadedError("The data you are trying to access has not "
+                                     "been loaded yet. See `Session.load`")
+        return d
 
     @property
     def weekend(self):
+        """Deprecated: use :attr:`Session.event` instead"""
         warnings.warn("The property `Session.weekend` has been renamed to "
                       "`Session.event`.\n The old property will be removed in"
                       "a future version.", FutureWarning)
         return self.event
 
-    def load_laps(self, with_telemetry=False, livedata=None):
-        """Load lap timing information and telemetry data.
+    @property
+    def drivers(self):
+        """:class:`list`: List of all drivers that took part in this
+        session; contains driver numbers as string.
 
-        This method creates a :class:`Laps` instance (:attr:`Session.laps`) which subclasses :class:`pandas.DataFrame`
-        and contains information on a per lap basis. (The dataframe is additionally returned by this method.)
+        Data is available after calling `Session.load`
+        """
+        return list(self.results['DriverNumber'])
 
-        The returned :class:`Laps` instance can be used just like a pandas DataFrame but offers some
-        additional functionality.
+    @property
+    def results(self):
+        """:class:`SessionResults`: Session result with driver information.
 
-        Downloading and parsing of the data takes a considerable amount of time. Therefore, it is highly recommended
-        to enable caching so that most of the data processing needs to be done only once.
+        Data is available after calling `Session.load`
+        """
+        return self._get_property_warn_not_loaded('_results')
 
-        .. note:: **Drivers crashing and retiring**
+    @property
+    def laps(self):
+        """:class:`Laps`: All laps from all drivers driven in this session.
+
+        Data is available after calling `Session.load` with ``laps=True``
+        """
+        return self._get_property_warn_not_loaded('_laps')
+
+    @property
+    def weather_data(self):
+        """Dataframe containing weather data for this session as received
+        from the api. See :func:`fastf1.api.weather_data` for available data
+        channels. Each data channel is one row of the dataframe.
+
+        Data is available after calling `Session.load` with ``weather=True``
+        """
+        return self._get_property_warn_not_loaded('_weather_data')
+
+    @property
+    def car_data(self):
+        """Dictionary of car telemetry (Speed, RPM, etc.) as received from
+        the api by car number (where car number is a string and the telemetry
+        is an instance of :class:`Telemetry`)
+
+        Data is available after calling `Session.load` with ``telemetry=True``
+        """
+        return self._get_property_warn_not_loaded('_car_data')
+
+    @property
+    def pos_data(self):
+        """Dictionary of car position data as received from the api by car
+        number (where car number is a string and the telemetry
+        is an instance of :class:`Telemetry`)
+
+        Data is available after calling `Session.load` with ``telemetry=True``
+        """
+        return self._get_property_warn_not_loaded('_pos_data')
+
+    @property
+    def session_status(self):
+        """:class:`pandas.Dataframe`: Session status data as returned by
+        :func:`fastf1.api.session_status_data`
+
+        Data is available after calling `Session.load` with ``laps=True``
+        """
+        return self._get_property_warn_not_loaded('_session_status')
+
+    @property
+    def session_start_time(self):
+        """:class:`pandas.Timedelta`: Session time at which the session was
+        started according to the session status data. This is not the
+        time at which the session is scheduled to be started!
+
+        Data is available after calling `Session.load` with ``laps=True``
+        """
+        return self._get_property_warn_not_loaded('_session_start_time')
+
+    @property
+    def t0_date(self):
+        """:class:`pandas.Datetime`: Date timestamp which marks the beginning
+        of the data stream (the moment at which the session time is zero).
+
+        Data is available after calling `Session.load` with ``telemetry=True``
+        """
+        return self._get_property_warn_not_loaded('_t0_date')
+
+    def load(self, *, laps=True, telemetry=True, weather=True,
+             livedata=None):
+        """Load session data from the supported APIs.
+
+        This method allows to flexibly load some or all data that FastF1 can
+        give you access to. Without specifying any further options, all data
+        is loaded by default.
+
+        Downloading and parsing of the data takes a considerable amount of
+        time. Therefore, it is highly recommended to enable caching so that
+        most of the data processing needs to be done only once.
+
+        .. note:: **Lap data: drivers crashing and retiring**
 
             *During a session:*
             An additional last lap is added for a driver if the last timed
@@ -993,67 +1037,96 @@ class Session:
             data of different laps.
 
         Args:
-            with_telemetry (bool): Load telemetry data also.
-                (Same as calling :meth:`Session.load_telemetry` manually)
+            laps (bool): Load laps and session status data.
+            telemetry (bool): Load telemetry data.
+            weather (bool): Load weather data.
             livedata (:class:`fastf1.livetiming.data.LiveTimingData`, optional) :
                 instead of requesting the data from the api, locally saved
                 livetiming data can be used as a data source
-
-        Returns:
-            instance of :class:`Laps`
         """
-        logging.info(f"Loading laps for {self.event.event_name} - {self.name}"
+        logging.info(f"Loading data for {self.event.event_name} - {self.name}"
                      f" [v{fastf1.__version__}]")
 
-        """From `timing_data` and `timing_app_data` a summary table is
-        built. Lap by lap, information on tyre, sectors and times are
-        organised in an accessible pandas data frame.
+        self._load_drivers_results(livedata=livedata)
 
-        Returns:
-            pandas dataframe
+        if self.results.empty:
+            raise NoLapDataError
 
+        if self.f1_api_support:
+            if laps:
+                try:
+                    self._load_laps_data(livedata)
+                except Exception as exc:
+                    logging.warning("Failed to load lap data!")
+                    logging.debug("Lap data failure traceback:", exc_info=exc)
+
+            if telemetry:
+                try:
+                    self._load_telemetry(livedata=livedata)
+                except Exception as exc:
+                    logging.warning("Failed to load telemetry data!")
+                    logging.debug("Telemetry data failure traceback:", exc_info=exc)
+
+            if weather:
+                try:
+                    self._load_weather_data(livedata=livedata)
+                except Exception as exc:
+                    logging.warning("Failed to load weather data!")
+                    logging.debug("Weather data failure traceback:", exc_info=exc)
+
+        else:
+            if any((laps, telemetry, weather)):
+                logging.warning(
+                    "Cannot load laps, telemetry and weather data because "
+                    "the relevant API is not supported for this session."
+                )
+
+        logging.info(f"Finished loading data for {len(self.drivers)} "
+                     f"drivers: {self.drivers}")
+
+    def load_laps(self, with_telemetry=False, livedata=None):
         """
+        .. deprecated:: 2.2
+            use :func:`Session.load` instead
+        """
+        # TODO: remove in v2.3
+        warnings.warn("`Session.load_laps` is deprecated and will be"
+                      "removed in a future version.\n"
+                      "Use `Session.load` instead.", FutureWarning)
+        self.load(telemetry=with_telemetry, livedata=livedata)
+        return self.laps
+
+    def load_telemetry(self, livedata=None):
+        """
+        .. deprecated:: 2.2
+            use :func:`Session.load` instead
+        """
+        # TODO: remove in v2.3
+        warnings.warn("`Session.load_laps` is deprecated and will be"
+                      "removed in a future version.\n"
+                      "Use `Session.load` instead.", FutureWarning)
+        self._load_telemetry(livedata=livedata)
+
+    def _load_laps_data(self, livedata):
         data, _ = api.timing_data(self.api_path, livedata=livedata)
         app_data = api.timing_app_data(self.api_path, livedata=livedata)
-        # Now we do some manipulation to make it beautiful
         logging.info("Processing timing data...")
-
         # Matching data and app_data. Not super straightforward
         # Sometimes a car may enter the pit without changing tyres, so
         # new compound is associated with the help of logging time.
         useful = app_data[['Driver', 'Time', 'Compound', 'TotalLaps', 'New']]
         useful = useful[~useful['Compound'].isnull()]
-
-        # get list of drivers
-        try:
-            driver_info = api.driver_info(self.api_path, livedata=livedata)
-        except Exception as exc:
-            logging.warning("Failed to load driver list")
-            logging.debug("Exception while loading driver list", exc_info=exc)
-            driver_info = {}
-        if driver_info:
-            self.drivers = list(driver_info.keys())
-        else:
-            # fallback, misses drivers who crashed on their first lap
-            self.drivers = list(data['Driver'].unique())
-            if "" in self.drivers:
-                self.drivers.remove("")
-
-        if not self.drivers:
-            raise NoLapDataError
-
         # check when a session was started; for a race this indicates the
         # start of the race
         session_status = api.session_status_data(self.api_path,
                                                  livedata=livedata)
         for i in range(len(session_status['Status'])):
             if session_status['Status'][i] == 'Started':
-                self.session_start_time = session_status['Time'][i]
+                self._session_start_time = session_status['Time'][i]
                 break
-        self.session_status = pd.DataFrame(session_status)
-
+        self._session_status = pd.DataFrame(session_status)
         df = None
-        for i, driver in enumerate(self.drivers):
+        for i, driver in enumerate(self.results['DriverNumber']):
             d1 = data[data['Driver'] == driver]
             d2 = useful[useful['Driver'] == driver]
             only_one_lap = False
@@ -1112,12 +1185,12 @@ class Session:
                 if not pd.isna(result['Time'].iloc[-1]):
                     next_statuses = self.session_status[
                         self.session_status['Time'] > result['Time'].iloc[-1]
-                    ]
+                        ]
                 else:
                     next_statuses = self.session_status[
                         self.session_status['Time']
                         > result['LapStartTime'].iloc[-1]
-                    ]
+                        ]
 
                 aborted = False
                 if not next_statuses.empty:
@@ -1142,10 +1215,8 @@ class Session:
                         result = new_last
 
             df = pd.concat([df, result], sort=False)
-
         if df is None:
             raise NoLapDataError
-
         laps = df.reset_index(drop=True)  # noqa: F821
         laps.rename(columns={'TotalLaps': 'TyreLife',
                              'NumberOfPitStops': 'Stint',
@@ -1153,11 +1224,11 @@ class Session:
                              'NumberOfLaps': 'LapNumber',
                              'New': 'FreshTyre'}, inplace=True)
         laps['Stint'] += 1  # counting stints from 1
-        t_map = {r.get('number', ''): r.get('Constructor', {}).get('name', '')
-                 for r in self.results}
+        t_map = {r['DriverNumber']: r['TeamName']
+                 for _, r in self.results.iterrows()}
         laps['Team'] = laps['DriverNumber'].map(t_map)
-        d_map = {r.get('number', ''): r.get('Driver', {}).get('code', '')
-                 for r in self.results}
+        d_map = {r['DriverNumber']: r['Abbreviation']
+                 for _, r in self.results.iterrows()}
         laps['Driver'] = laps['DriverNumber'].map(d_map)
         # add track status data
         ts_data = api.track_status_data(self.api_path, livedata=livedata)
@@ -1199,24 +1270,8 @@ class Session:
 
         else:
             logging.warning("Could not load any valid session status information!")
-
-        self.laps = Laps(laps, session=self)
-
+        self._laps = Laps(laps, session=self)
         self._check_lap_accuracy()
-
-        if with_telemetry:
-            self.load_telemetry(livedata=livedata)
-
-        # load weather data; this data is not crucial, just log a warning
-        # in case of an error
-        try:
-            self._load_weather_data(livedata=livedata)
-        except (api.SessionNotAvailableError, ValueError):
-            logging.warning("Failed to load weather data!")
-
-        logging.info(f"Loaded data for {len(self.drivers)} drivers: {self.drivers}")
-
-        return self.laps
 
     def _check_lap_accuracy(self):
         """Accuracy validation; simples yes/no validation
@@ -1259,18 +1314,148 @@ class Session:
                 prev_lap = lap
 
             if len(is_accurate) > 0:
-                self.laps.loc[self.laps['DriverNumber'] == drv, 'IsAccurate'] = is_accurate
+                self._laps.loc[self.laps['DriverNumber'] == drv, 'IsAccurate'] = is_accurate
 
             if integrity_errors > 0:
                 logging.warning(f"Driver {drv: >2}: Lap timing integrity check failed for {integrity_errors} lap(s)")
 
+    def _load_drivers_results(self, *, livedata=None):
+        # get list of drivers
+        driver_info = None
+        if self.f1_api_support:
+            # load driver info from f1 api
+            driver_info = self._drivers_from_f1_api(livedata=livedata)
+
+        if not driver_info:
+            if not self.event.is_testing():
+                # load driver info and results from ergast
+                # (season 2017 and older or fallback from f1 api)
+                driver_info = self._drivers_results_from_ergast(
+                    load_drivers=True, load_results=True
+                )
+                self._results = SessionResults(
+                    driver_info, index=driver_info['DriverNumber']
+                ).sort_values('Position')
+            else:
+                logging.warning(
+                    "Failed to load driver info and session results!"
+                )
+
+        else:
+            # extend existing driver info (f1 api) with results from ergast
+            drivers = pd.DataFrame(driver_info,
+                                   index=driver_info['DriverNumber'])
+            if not self.event.is_testing():
+                r = self._drivers_results_from_ergast(load_results=True)
+            else:
+                r = None
+
+            if r:
+                # join driver info and session results
+                results = pd.DataFrame(r).set_index('DriverNumber')
+                self._results = SessionResults(drivers.join(results))\
+                    .sort_values('Position')
+            else:
+                # return driver info without session results
+                self._results = SessionResults(drivers)\
+                    .sort_values('Position')
+
+    def _drivers_from_f1_api(self, *, livedata=None):
+        try:
+            f1di = api.driver_info(self.api_path, livedata=livedata)
+        except Exception as exc:
+            logging.warning("Failed to load extended driver information!")
+            logging.debug("Exception while loading driver list", exc_info=exc)
+            driver_info = {}
+        else:
+            driver_info = collections.defaultdict(list)
+            for key1, key2 in {
+                'RacingNumber': 'DriverNumber',
+                'BroadcastName': 'BroadcastName',
+                'Tla': 'Abbreviation', 'TeamName': 'TeamName',
+                'TeamColour': 'TeamColor', 'FirstName': 'FirstName',
+                'LastName': 'LastName'
+            }.items():
+                for entry in f1di.values():
+                    driver_info[key2].append(entry.get(key1))
+            if 'FirstName' in driver_info and 'LastName' in driver_info:
+                for first, last in zip(driver_info['FirstName'],
+                                       driver_info['LastName']):
+                    driver_info['FullName'].append(f"{first} {last}")
+        return driver_info
+
+    def _drivers_results_from_ergast(self, *, load_drivers=False,
+                                     load_results=False):
+        if self.name in ('Qualifying', 'Sprint Qualifying', 'Race'):
+            session_name = self.name
+        else:
+            # this is a practice session, use drivers from race session but
+            # don't load results
+            session_name = 'Race'
+            load_results = False
+
+        d = collections.defaultdict(list)
+        try:
+            data = ergast.fetch_results(
+                self.event.year, self.event.round_number, session_name
+            )
+        except Exception as exc:
+            logging.exception("Failed to load data from Ergast API!",
+                              exc_info=exc)
+            return d
+
+        time0 = None
+        for r in data:
+            d['DriverNumber'].append(
+                recursive_dict_get(r, 'Driver', 'permanentNumber',
+                                   default_none=True))
+            if load_drivers:
+                d['Abbreviation'].append(
+                    recursive_dict_get(r, 'Driver', 'code',
+                                       default_none=True))
+                first_name = recursive_dict_get(r, 'Driver', 'givenName',
+                                                default_none=True)
+                last_name = recursive_dict_get(r, 'Driver', 'familyName',
+                                               default_none=True)
+                d['FirstName'].append(first_name)
+                d['LastName'].append(last_name)
+                d['FullName'].append(f"{first_name} {last_name}")
+                d['TeamName'].append(
+                    recursive_dict_get(r, 'Constructor', 'name',
+                                       default_none=True))
+            if load_results:
+                d['Position'].append(r.get('position'))
+                d['GridPosition'].append(r.get('grid'))
+                d['Q1'].append(to_timedelta(r.get('Q1')))
+                d['Q2'].append(to_timedelta(r.get('Q2')))
+                d['Q3'].append(to_timedelta(r.get('Q3')))
+                if time0 is None:
+                    ts = recursive_dict_get(r, 'Time', 'time',
+                                            default_none=True)
+                    if ts:
+                        time0 = to_timedelta(ts)
+                    else:
+                        time0 = pd.NaT
+                    d['Time'].append(time0)
+                else:
+                    ts = recursive_dict_get(r, 'Time', 'time',
+                                            default_none=True)
+                    if ts:
+                        dt = to_timedelta(ts)
+                    else:
+                        dt = pd.NaT
+                    d['Time'].append(time0 + dt)
+                d['Status'].append(r.get('status'))
+                d['Points'].append(r.get('points'))
+
+        return d
+
     def _load_weather_data(self, livedata=None):
-        """Get weather data from the api and format it into a dataframe"""
         weather_data = api.weather_data(self.api_path, livedata=livedata)
         weather_df = pd.DataFrame(weather_data)
-        self.weather_data = weather_df
+        self._weather_data = weather_df
 
-    def load_telemetry(self, livedata=None):
+    def _load_telemetry(self, livedata=None):
         """Load telemetry data from the API.
 
         This method can only be called after :meth:`load_laps` has been
@@ -1298,17 +1483,18 @@ class Session:
         car_data = api.car_data(self.api_path, livedata=livedata)
         pos_data = api.position_data(self.api_path, livedata=livedata)
 
-        self.drivers = list(set(self.drivers).intersection(set(car_data.keys())).intersection(set(pos_data.keys())))
-        # self.drivers should only contain drivers which exist in all parts of the data
-
         self._calculate_t0_date(car_data, pos_data)
 
         for drv in self.drivers:
-            # drop and recalculate time stamps based on 'Date', because 'Date' has a higher resolution
-            drv_car = Telemetry(car_data[drv].drop(labels='Time', axis=1),
-                                session=self, driver=drv)
-            drv_pos = Telemetry(pos_data[drv].drop(labels='Time', axis=1),
-                                session=self, driver=drv)
+            try:
+                # drop and recalculate time stamps based on 'Date', because 'Date' has a higher resolution
+                drv_car = Telemetry(car_data[drv].drop(labels='Time', axis=1),
+                                    session=self, driver=drv)
+                drv_pos = Telemetry(pos_data[drv].drop(labels='Time', axis=1),
+                                    session=self, driver=drv)
+            except KeyError:
+                # not pos data or car data exists for this driver
+                continue
 
             drv_car['Date'] = drv_car['Date'].round('ms')
             drv_pos['Date'] = drv_pos['Date'].round('ms')
@@ -1318,27 +1504,27 @@ class Session:
             drv_car['SessionTime'] = drv_car['Time']
             drv_pos['SessionTime'] = drv_pos['Time']
 
-            self.car_data[drv] = drv_car
-            self.pos_data[drv] = drv_pos
+            self._car_data[drv] = drv_car
+            self._pos_data[drv] = drv_pos
 
-        self.laps['LapStartDate'] = self.laps['LapStartTime'] + self.t0_date
+        self._laps['LapStartDate'] = self._laps['LapStartTime'] + self.t0_date
 
     def get_driver(self, identifier):
         """
         Get a driver object which contains additional information about a driver.
 
         Args:
-            identifier (str): driver's three letter identifier (for example 'VER')
+            identifier (str): driver's three letter identifier (for
+                example 'VER') or driver number as string
 
         Returns:
             instance of :class:`Driver`
         """
-        if type(identifier) is str:
-            for info in self.results:
-                if info.get('Driver', {}).get('code') == identifier:
-                    return Driver(self, info)
-
-        return None
+        mask = ((self.results['Abbreviation'] == identifier)
+                | (self.results['DriverNumber'] == identifier))
+        if not mask.any():
+            raise ValueError(f"Invalid driver identifier '{identifier}'")
+        return self.results[mask].iloc[0]
 
     def _calculate_t0_date(self, car_data, pos_data):
         """Calculate the date timestamp at which data for this session is starting.
@@ -1363,7 +1549,7 @@ class Session:
                 if date_offset is None or new_offset > date_offset:
                     date_offset = new_offset
 
-        self.t0_date = date_offset.round('ms')
+        self._t0_date = date_offset.round('ms')
 
 
 class Laps(pd.DataFrame):
@@ -1382,10 +1568,11 @@ class Laps(pd.DataFrame):
 
     If for example you want to get the fastest lap of Bottas you can narrow it down like this::
 
-        import fastf1 as ff1
+        import fastf1
 
-        laps = ff1.get_session(2019, 'Bahrain', 'Q').load_laps()
-        best_bottas = laps.pick_driver('BOT').pick_fastest()
+        session = fastf1.get_session(2019, 'Bahrain', 'Q')
+        session.load()
+        best_bottas = session.laps.pick_driver('BOT').pick_fastest()
 
         print(best_bottas['LapTime'])
         # Timedelta('0 days 00:01:28.256000')
@@ -1594,8 +1781,8 @@ class Laps(pd.DataFrame):
         .. doctest::
 
             >>> session = fastf1.get_session(2019, 'Monza', 'Q')
-            >>> laps = session.load_laps()
-            >>> weather_data = laps.get_weather_data()
+            >>> session.load(telemetry=False)
+            >>> weather_data = session.laps.get_weather_data()
             >>> print(weather_data)
                                  Time AirTemp Humidity  ... TrackTemp WindDirection WindSpeed
             20 0 days 00:20:14.613000    22.5     52.0  ...      35.8           212       2.0
@@ -1604,11 +1791,11 @@ class Laps(pd.DataFrame):
             24 0 days 00:24:14.430000    23.2     51.5  ...      37.4           207       3.2
             26 0 days 00:26:14.315000    23.6     50.2  ...      37.2           238       1.8
             ..                    ...     ...      ...  ...       ...           ...       ...
-            23 0 days 00:23:14.854000    22.7     52.5  ...      37.4           210       2.3
-            24 0 days 00:24:14.430000    23.2     51.5  ...      37.4           207       3.2
-            34 0 days 00:34:14.385000    23.0     51.7  ...      37.7           272       0.8
             36 0 days 00:36:14.426000    23.0     51.1  ...      38.3           192       0.9
             37 0 days 00:37:14.391000    23.3     50.0  ...      38.7           213       0.9
+            28 0 days 00:28:14.324000    23.5     49.9  ...      37.5           183       1.3
+            34 0 days 00:34:14.385000    23.0     51.7  ...      37.7           272       0.8
+            35 0 days 00:35:14.460000    23.2     50.3  ...      38.0           339       1.1
             <BLANKLINE>
             [275 rows x 8 columns]
 
@@ -1619,6 +1806,7 @@ class Laps(pd.DataFrame):
             >>> import pandas as pd  # needed additionally to fastf1
 
             # prepare the data for joining
+            >>> laps = session.laps
             >>> laps = laps.reset_index(drop=True)
             >>> weather_data = weather_data.reset_index(drop=True)
 
@@ -1626,17 +1814,17 @@ class Laps(pd.DataFrame):
             >>> joined = pd.concat([laps, weather_data.loc[:, ~(weather_data.columns == 'Time')]], axis=1)
             >>> print(joined)
                                   Time DriverNumber  ... WindDirection  WindSpeed
-            0   0 days 00:20:55.333000            5  ...           212        2.0
-            1   0 days 00:22:16.210000            5  ...           207        2.7
-            2   0 days 00:24:01.233000            5  ...           210        2.3
-            3   0 days 00:25:21.611000            5  ...           207        3.2
-            4   0 days 00:27:12.045000            5  ...           238        1.8
+            0   0 days 00:21:01.358000           16  ...           212        2.0
+            1   0 days 00:22:21.775000           16  ...           207        2.7
+            2   0 days 00:24:03.991000           16  ...           210        2.3
+            3   0 days 00:25:24.117000           16  ...           207        3.2
+            4   0 days 00:27:09.461000           16  ...           238        1.8
             ..                     ...          ...  ...           ...        ...
-            270 0 days 00:24:02.127000           88  ...           210        2.3
-            271 0 days 00:33:31.080000           88  ...           207        3.2
-            272 0 days 00:35:15.794000           88  ...           272        0.8
-            273 0 days 00:36:38.150000           88  ...           192        0.9
-            274 0 days 00:38:37.508000           88  ...           213        0.9
+            270 0 days 00:36:38.150000           88  ...           192        0.9
+            271 0 days 00:38:37.508000           88  ...           213        0.9
+            272 0 days 00:33:27.227000           33  ...           183        1.3
+            273 0 days 00:35:05.865000           33  ...           272        0.8
+            274 0 days 00:36:47.787000           33  ...           339        1.1
             <BLANKLINE>
             [275 rows x 32 columns]
         """
@@ -1948,8 +2136,8 @@ class Lap(pd.Series):
         .. doctest::
 
             >>> session = fastf1.get_session(2019, 'Monza', 'Q')
-            >>> laps = session.load_laps()
-            >>> lap = laps.pick_fastest()
+            >>> session.load(telemetry=False)
+            >>> lap = session.laps.pick_fastest()
             >>> lap['LapStartTime']
             Timedelta('0 days 01:09:55.561000')
             >>> lap.get_weather_data()
@@ -1980,51 +2168,283 @@ class Lap(pd.Series):
         return pd.Series(index=self.session.weather_data.columns)
 
 
-class Driver:
-    """Driver class that provides some information on drivers and their finishing results.
+class SessionResults(pd.DataFrame):
+    """This class provides driver and result information for all drivers that
+    participated in a session.
 
-    see also :meth:`Session.get_driver`
+    This class subclasses a :class:`pandas.DataFrame` and the usual methods
+    provided by pandas can be used to work with the data.
 
-    .. note:: Driver data is only available if the Ergast api lookup did not fail.
+    **All dataframe columns will always exist even if they are not relevant
+    for the current session!**
+
+    The following information is provided for each driver as a column of the
+    dataframe:
+
+        - ``DriverNumber`` | :class:`str` |
+          The number associated with this driver in this session (usually the
+          drivers permanent number)
+
+        - ``BroadcastName`` | :class:`str` |
+          First letter of the drivers first name plus the drivers full last name
+          in all capital letters. (e.g. 'P GASLY')
+
+        - ``FullName`` | :class:`str` |
+          The drivers full name (e.g. "Pierre Gasly")
+
+        - ``Abbreviation`` | :class:`str` |
+          The drivers three letter abbreviation (e.g. "GAS")
+
+        - ``TeamName`` | :class:`str` |
+          The team name (short version without title sponsors)
+
+        - ``TeamColor`` | :class:`str` |
+          The color commonly associated with this team (hex value)
+
+        - ``FirstName`` | :class:`str` |
+          The drivers first name
+
+        - ``LastName`` | :class:`str` |
+          The drivers last name
+
+        - ``Position`` | :class:`float` |
+          The drivers finishing position (values only given if session is
+          'Race', 'Qualifying' or 'Sprint Qualifying')
+
+        - ``GridPosition`` | :class:`float` |
+          The drivers starting position (values only given if session is
+          'Race' or 'Sprint Qualifying')
+
+        - ``Q1`` | :class:`pd.Timedelta` |
+          The drivers best Q1 time (values only given if session is
+          'Qualifying')
+
+        - ``Q2`` | :class:`pd.Timedelta` |
+          The drivers best Q2 time (values only given if session is
+          'Qualifying')
+
+        - ``Q3`` | :class:`pd.Timedelta` |
+          The drivers best Q3 time (values only given if session is
+          'Qualifying')
+
+        - ``Time`` | :class:`pd.Timedelta` |
+          The drivers total race time (values only given if session is
+          'Race' or 'Sprint Qualifying' and the driver was not more than one lap
+          behind the leader)
+
+        - ``Status`` | :class:`str` |
+          A status message to indicate if and how the driver finished the race
+          or to indicate the cause of a DNF. Possible values include but are not
+          limited to 'Finished', '+ 1 Lap', 'Crash', 'Gearbox', ...
+          (values only given if session is 'Race' or 'Sprint Qualifying')
+
+        - ``Status`` | :class:`float` |
+          The number of points received by each driver for their finishing result.
+
+
+    .. note:: This class is usually not instantiated directly. You should
+        create a session and access the session result through the
+        :attr:`Session.results` property.
+
+    Args:
+        *args: passed on to :class:`pandas.DataFrame` superclass
+        **kwargs: passed on to :class:`pandas.DataFrame` superclass
+            (except 'columns' which is unsupported for this object)
+
+    .. versionadded:: 2.2
     """
 
-    def __init__(self, session, info):
-        self.session = session
-        self.info = info
-        """`Driver.info` contains some more info from the Ergast api"""
-        self.identifier = info['Driver']['code']
-        self.number = info['number']
+    _COL_TYPES = {
+        'DriverNumber': str,
+        'BroadcastName': str,
+        'FullName': str,
+        'Abbreviation': str,
+        'TeamName': str,
+        'TeamColor': str,
+        'FirstName': str,
+        'LastName': str,
+        'Position': float,
+        'GridPosition': float,
+        'Q1': 'timedelta64[ns]',
+        'Q2': 'timedelta64[ns]',
+        'Q3': 'timedelta64[ns]',
+        'Time': 'timedelta64[ns]',
+        'Status': str,
+        'Points': float
+    }
+
+    _internal_names = ['base_class_view']
+
+    def __init__(self, *args, **kwargs):
+        kwargs['columns'] = list(self._COL_TYPES.keys())
+        super().__init__(*args, **kwargs)
+
+        # apply column specific dtypes and create missing columns
+        for col, _type in self._COL_TYPES.items():
+            if self[col].isna().all():
+                if _type == 'timedelta64[ns]':
+                    self[col] = pd.Series(dtype='timedelta64[ns]')
+                else:
+                    self[col] = _type()
+
+            self[col] = self[col].astype(_type)
+
+    def __repr__(self):
+        return self.base_class_view.__repr__()
+
+    @property
+    def _constructor(self):
+        def _new(*args, **kwargs):
+            return SessionResults(*args, **kwargs).__finalize__(self)
+
+        return _new
+
+    @property
+    def _constructor_sliced(self):
+        def _new(*args, **kwargs):
+            return DriverResult(*args, **kwargs).__finalize__(self)
+
+        return _new
+
+    @property
+    def base_class_view(self):
+        """For a nicer debugging experience; can view DataFrame through
+        this property in various IDEs"""
+        return pd.DataFrame(self)
+
+
+class DriverResult(pd.Series):
+    """This class provides driver and result information for a single driver.
+
+    This class subclasses a :class:`pandas.Series` and the usual methods
+    provided by pandas can be used to work with the data.
+
+    For information on which data is available, see :class:`SessionResult`.
+
+    .. note:: This class is usually not instantiated directly. You should
+        create a session and access the driver result through
+        :func:`Session.get_driver` or by slicing the session result.
+
+    Args:
+        *args: passed on to :class:`pandas.Series` superclass
+        **kwargs: passed on to :class:`pandas.Series` superclass
+
+    .. versionadded:: 2.2
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._getattr_override = True  # TODO: remove in v2.3
+
+    @property
+    def _constructor(self):
+        def _new(*args, **kwargs):
+            return DriverResult(*args, **kwargs).__finalize__(self)
+
+        return _new
+
+    def __getattribute__(self, name):
+        # TODO: remove in v2.3
+        if name == 'name' and getattr(self, '_getattr_override', False):
+            if 'FirstName' in self:
+                warnings.warn(
+                    "The `Driver.name` property is deprecated and will be"
+                    "removed in a future version.\n"
+                    "Use `Driver['FirstName']` or `Driver.FirstName` instead.",
+                    FutureWarning
+                )
+                # name may be accessed by pandas internals to, when data
+                # does not exist yet
+                return self['FirstName']
+
+        return super().__getattribute__(name)
+
+    def __repr__(self):
+        # don't show .name deprecation message when .name is accessed internally
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore',
+                                    message=r".*property is deprecated.*")
+            return super().__repr__()
 
     @property
     def dnf(self):
         """True if driver did not finish"""
-        s = self.info['status']
-        return not (s[3:6] == 'Lap' or s == 'Finished')
+        return not (self.Status[3:6] == 'Lap' or self.Status == 'Finished')
 
     @property
     def grid(self):
-        """Grid position"""
-        return int(self.info['grid'])
+        """Grid position
+
+        .. deprecated:: 2.2
+            Use ``Driver['GridPosition']`` instead
+        """
+        # TODO: remove in v2.3
+        warnings.warn("The `Driver.grid` property is deprecated and will be"
+                      "removed in a future version.\n"
+                      "Use `Driver['GridPosition']` or `Driver.GridPosition` "
+                      "instead.", FutureWarning)
+        return self['GridPosition']
 
     @property
     def position(self):
-        """Finishing position"""
-        return int(self.info['position'])
+        """Finishing position
 
-    @property
-    def name(self):
-        """Driver first name"""
-        return self.info['Driver']['givenName']
+        .. deprecated:: 2.2
+            Use ``Driver['Position']`` instead
+        """
+        # TODO: remove in v2.3
+        warnings.warn("The `Driver.position` property is deprecated and will be"
+                      "removed in a future version.\n"
+                      "Use `Driver['Position']` or `Driver.Position` "
+                      "instead.", FutureWarning)
+        return self['Position']
 
     @property
     def familyname(self):
-        """Driver family name"""
-        return self.info['Driver']['familyName']
+        """Driver family name
+
+        .. deprecated:: 2.2
+            Use ``Driver['LastName']`` instead
+        """
+        # TODO: remove in v2.3
+        warnings.warn("The `Driver.position` property is deprecated and will be"
+                      "removed in a future version.\n"
+                      "Use `Driver['LastName']` or `Driver.LastName` "
+                      "instead.", FutureWarning)
+        return self['LastName']
 
     @property
     def team(self):
-        """Team name"""
-        return self.info['Constructor']['name']
+        """Team name
+
+        .. deprecated:: 2.2
+            Use ``Driver['TeamName']`` instead
+        """
+        # TODO: remove in v2.3
+        warnings.warn("The `Driver.team` property is deprecated and will be"
+                      "removed in a future version.\n"
+                      "Use `Driver['TeamName']` or `Driver.TeamName` "
+                      "instead.", FutureWarning)
+        return self['TeamName']
+
+
+class Driver:
+    """
+    .. deprecated:: 2.2
+        Use :class:`fastf1.core.DriverResult` instead
+    """
+    def __new__(cls, *args, **kwargs):
+        warnings.warn("`fastf1.core.Driver` has been deprecated and will be"
+                      "removed in a future version.\n"
+                      "Use `fastf1.core.DriverResult` instead.",
+                      FutureWarning)
+        return DriverResult()
+
+
+class DataNotLoadedError(Exception):
+    """Raised if an attempt is made to access data that has not been loaded
+    yet."""
+    pass
 
 
 class NoLapDataError(Exception):

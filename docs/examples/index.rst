@@ -25,9 +25,10 @@ Let's get started with a very simple script:
 
     >>> import fastf1
     >>> fastf1.Cache.enable_cache('path/to/folder/for/cache')  # doctest: +SKIP
-    >>> monza_quali = fastf1.get_session(2019, 'Monza', 'Q')
-    >>> vettel = monza_quali.get_driver('VET')
-    >>> print(f"Pronto {vettel.name}?")
+    >>> session = fastf1.get_session(2019, 'Monza', 'Q')
+    >>> session.load(telemetry=False, laps=False, weather=False)
+    >>> vettel = session.get_driver('VET')
+    >>> print(f"Pronto {vettel['FirstName']}?")
     Pronto Sebastian?
 
 For some more advanced stuff, it's just a few more steps.
@@ -41,10 +42,10 @@ For some more advanced stuff, it's just a few more steps.
 
     fastf1.plotting.setup_mpl()
 
-    monza_quali = fastf1.get_session(2019, 'Monza', 'Q')
+    session = fastf1.get_session(2019, 'Monza', 'Q')
 
-    laps = monza_quali.load_laps(with_telemetry=True)
-    fast_leclerc = laps.pick_driver('LEC').pick_fastest()
+    session.load()
+    fast_leclerc = session.laps.pick_driver('LEC').pick_fastest()
     lec_car_data = fast_leclerc.get_car_data()
     t = lec_car_data['Time']
     vCar = lec_car_data['Speed']
