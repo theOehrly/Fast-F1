@@ -2,14 +2,20 @@
 Getting started with the basics
 ===============================
 
+FastF1 is built mainly around Pandas DataFrame and Series objects.
+If you are familiar with Pandas you'll immediately recognize this and working
+with the data will be fairly straight forward. (If you're
+not familiar with Pandas at all, it might be helpful to check out a short
+tutorial.)
 
-Loading a session
------------------
+
+Loading a session or an event
+------------------------------
 
 The :class:`fastf1.core.Session` object is an important starting point for
 everything you do with FastF1. Usually the first thing you want to do
 is loading a session. For this, you should use
-:func:`fastf1.get_session() <fastf1.core.get_session>`.
+:func:`fastf1.get_session`.
 
 For example, let's load the Qualifying of the 7th race of the 2021 season:
 
@@ -24,8 +30,9 @@ For example, let's load the Qualifying of the 7th race of the 2021 season:
 
 
 Now, which race weekend are we actually looking at here?
-For this we have the :class:`fastf1.events.Event` object which holds
-information about each race weekend. It is accessible through the
+For this we have the :class:`~fastf1.events.Event` object which holds
+information about each event. An event can be a race weekend or a testing
+event and usually consists of multiple sessions. It is accessible through the
 session object.
 
 .. doctest::
@@ -51,18 +58,20 @@ session object.
   F1ApiSupport                                                 True
   Name: French Grand Prix, dtype: object
 
-Let's see which race weekend this actually is.
+The :class:`~fastf1.events.Event` object is a subclass of a
+:class:`pandas.Series`. The individual values can therefore be accessed as it
+is common for pandas objects:
 
 .. doctest::
 
-  >>> session.event.EventName
+  >>> session.event['EventName']
   'French Grand Prix'
-  >>> session.event.EventDate  # this is the date of the race day
+  >>> session.event['EventDate']  # this is the date of the race day
   Timestamp('2021-06-20 00:00:00')
 
-If you do not specify which session you want to load, ``.get_session()``
-will return a :class:`fastf1.events.Event` object instead of a session.
-The weekend object provides methods which return the individual sessions.
+You can also load an event directly, by using the function
+:func:`fastf1.get_session`. The :class:`~fastf1.events.Event` object in turn
+provides methods for accessing the individual associated sessions.
 
 .. doctest::
 
@@ -92,25 +101,25 @@ The weekend object provides methods which return the individual sessions.
   'Race'
 
 
-Loading a session by name
--------------------------
+Loading a session or and event by name
+--------------------------------------
 
-As an alternative to specifying a race weekends number you can also load
-weekends by their official name.
+As an alternative to specifying an event number you can also load
+events by using a clearly identifying name.
 
 .. doctest::
 
   >>> event = fastf1.get_event(2021, 'French Grand Prix')
-  >>> event.EventName
+  >>> event['EventName']
   'French Grand Prix'
 
-You do not need to provide the exact name. FastF1 will return the weekend or
-session that matches your provided name best. Even if you don't specify the
-correct name chances are high that FastF1 will find the event you are looking
-for.
+You do not need to provide the exact event name. FastF1 will return the
+event (or session) that matches your provided name best. Even if you don't
+specify the correct name chances are high that FastF1 will find the event
+you are looking for.
 
   >>> event = fastf1.get_event(2021, 'Spain')
-  >>> event.EventName
+  >>> event['EventName']
   'Spanish Grand Prix'
 
 But be aware that this does not always work. Sometimes another name just
@@ -120,23 +129,99 @@ specify the name fully and/or correct enough. Why? Because FastF1 is not a
 proper intelligent search engine. So check your results.
 
   >>> event = fastf1.get_event(2021, 'Emilian')
-  >>> event.EventName
+  >>> event['EventName']
   'Belgian Grand Prix'
 
 We need to be a bit more precise here.
 
   >>> event = fastf1.get_event(2021, 'Emilia Romagna')
-  >>> event.EventName
+  >>> event['EventName']
   'Emilia Romagna Grand Prix'
+
+Events and sessions can also be loaded by their country or location.
+
+  >>> session = fastf1.get_session(2021, 'Silverstone', 'Q')
+  >>> session.event['EventName']
+  'British Grand Prix'
+
+
+Displaying driver info and session results
+------------------------------------------
+
+We have created a session now but everything has been rather boring so far.
+So lets make it a bit more interesting and by taking a look at the results of
+this session. For this, it is first necessary to call
+:func:`fastf1.core.Session.load`. This will load all available data for the
+session from various APIs. Downloading and processing of the data may take a
+few seconds. It is highly recommended to utilize FastF1's builtin caching
+functionality to speed up data loading and to prevent excessive API requests.
+
+  >>> fastf1.Cache.enable_cache("path/to/empty/folder")  # doctest: +SKIP
+  >>> session = fastf1.get_session(2021, 'French Grand Prix', 'Q')
+  >>> session.load()
+  >>> session.results
+     DriverNumber BroadcastName Abbreviation  ... Time Status Points
+  33           33  M VERSTAPPEN          VER  ...  NaT           0.0
+  44           44    L HAMILTON          HAM  ...  NaT           0.0
+  77           77      V BOTTAS          BOT  ...  NaT           0.0
+  11           11       S PEREZ          PER  ...  NaT           0.0
+  55           55       C SAINZ          SAI  ...  NaT           0.0
+  10           10       P GASLY          GAS  ...  NaT           0.0
+  16           16     C LECLERC          LEC  ...  NaT           0.0
+  4             4      L NORRIS          NOR  ...  NaT           0.0
+  14           14      F ALONSO          ALO  ...  NaT           0.0
+  3             3   D RICCIARDO          RIC  ...  NaT           0.0
+  31           31        E OCON          OCO  ...  NaT           0.0
+  5             5      S VETTEL          VET  ...  NaT           0.0
+  99           99  A GIOVINAZZI          GIO  ...  NaT           0.0
+  63           63     G RUSSELL          RUS  ...  NaT           0.0
+  47           47  M SCHUMACHER          MSC  ...  NaT           0.0
+  6             6      N LATIFI          LAT  ...  NaT           0.0
+  7             7   K RAIKKONEN          RAI  ...  NaT           0.0
+  9             9     N MAZEPIN          MAZ  ...  NaT           0.0
+  18           18      L STROLL          STR  ...  NaT           0.0
+  22           22     Y TSUNODA          TSU  ...  NaT           0.0
+  <BLANKLINE>
+  [20 rows x 16 columns]
+
+The results object (:class:`fastf1.core.SessionResults`) is a subclass of a
+:class:`pandas.DataFrame`. Therefore, we can take a look at what data columns
+there are:
+
+  >>> session.results.columns  # doctest: +NORMALIZE_WHITESPACE
+  Index(['DriverNumber', 'BroadcastName', 'Abbreviation', 'TeamName',
+         'TeamColor', 'FirstName', 'LastName', 'FullName', 'Position',
+         'GridPosition', 'Q1', 'Q2', 'Q3', 'Time', 'Status', 'Points'],
+        dtype='object')
+
+As an example, lets display the top ten drivers and their
+respective Q3 times. The results are sorted by finishing position, therefore,
+this is easy.
+
+  >>> session.results.iloc[0:10].loc[:, ['Abbreviation', 'Q3']]
+     Abbreviation                     Q3
+  33          VER 0 days 00:01:29.990000
+  44          HAM 0 days 00:01:30.248000
+  77          BOT 0 days 00:01:30.376000
+  11          PER 0 days 00:01:30.445000
+  55          SAI 0 days 00:01:30.840000
+  10          GAS 0 days 00:01:30.868000
+  16          LEC 0 days 00:01:30.987000
+  4           NOR 0 days 00:01:31.252000
+  14          ALO 0 days 00:01:31.340000
+  3           RIC 0 days 00:01:31.382000
 
 
 Working with laps and lap times
 -------------------------------
 
-We have loaded a session now but it has been rather boring so far. So lets make it
-a bit more interesting and take a look at some individual laps.
+All individual laps of a session can be accessed through the property
+:attr:`Session.laps <fastf1.core.Session.laps>`. The laps are represented in
+as :class:`~fastf1.core.Laps` object which again is a subclass of a
+:class:`pandas.DataFrame`.
 
   >>> session = fastf1.get_session(2021, 'French Grand Prix', 'Q')
+  >>> fastf1.Cache.enable_cache("path/to/empty/folder")  # doctest: +SKIP
   >>> session.load()
   >>> session.laps
                         Time DriverNumber  ... IsAccurate            LapStartDate
@@ -154,13 +239,9 @@ a bit more interesting and take a look at some individual laps.
   <BLANKLINE>
   [270 rows x 26 columns]
 
-That's 250 laps right there and 25 columns of information. If you are familiar
-with Pandas you'll immediately recognize this output as a DataFrame. (If you're
-not familiar with Pandas at all, it might be helpful to check out a short
-tutorial.)
+That's more than 250 laps right there and 26 columns of information.
 
-As this is basically a Pandas DataFrame we can take a look at what columns
-there are.
+The following data columns are available:
 
   >>> session.laps.columns  # doctest: +NORMALIZE_WHITESPACE
   Index(['Time', 'DriverNumber', 'LapTime', 'LapNumber', 'Stint', 'PitOutTime',
@@ -172,11 +253,11 @@ there are.
         dtype='object')
 
 The detailed explanation for all these columns can be found in the
-docuemntation of the :class:`.core.Laps` class.
+documentation of the :class:`~fastf1.core.Laps` class.
 
-The :class:`.core.Laps` object is not a simple DataFrame though. Like FastF1's
-other data objects it provides some more features specifically for working
-with F1 data.
+The :class:`~fastf1.core.Laps` object is not a simple DataFrame though.
+Like FastF1's other data objects it provides some more features specifically
+for working with Formula 1 data.
 
 One of these additional features are methods for selecting specific laps.
 So let's see what the fastest laptime was and who is on pole.
@@ -184,8 +265,6 @@ So let's see what the fastest laptime was and who is on pole.
   >>> fastest_lap = session.laps.pick_fastest()
   >>> fastest_lap['LapTime']
   Timedelta('0 days 00:01:29.990000')
-  >>> fastest_lap['Compound']
-  'SOFT'
   >>> fastest_lap['Driver']
   'VER'
 
