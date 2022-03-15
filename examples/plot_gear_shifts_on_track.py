@@ -55,7 +55,7 @@ plt.tick_params(labelleft=False, left=False, labelbottom=False, bottom=False)
 
 title = plt.suptitle(
     f"Fastest Lap Gear Shift Visualization\n"
-    f"{lap['Driver']} - {session.event.name} {session.event.year}"
+    f"{lap['Driver']} - {session.event['EventName']} {session.event.year}"
 )
 # sphinx_gallery_defer_figures
 

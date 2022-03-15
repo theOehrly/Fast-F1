@@ -109,7 +109,7 @@ def get_round(year, match):
                   FutureWarning)
     from fastf1 import events
     event = events.get_event(year, match)
-    return event.round_number
+    return event.RoundNumber
 
 
 class Telemetry(pd.DataFrame):
@@ -884,9 +884,11 @@ class Session:
         telemetry data are available."""
         self.date = self.event.get_session_date(session_name)
         """pandas.Datetime: Date at which this session took place."""
-        self.api_path = api.make_path(self.event.event_name,
-                                      self.event.event_date.strftime('%Y-%m-%d'),
-                                      self.name, self.date.strftime('%Y-%m-%d'))
+        self.api_path = api.make_path(
+            self.event['EventName'],
+            self.event['EventDate'].strftime('%Y-%m-%d'),
+            self.name, self.date.strftime('%Y-%m-%d')
+        )
         """str: API base path for this session"""
 
         self._session_status = dict()
@@ -1044,7 +1046,8 @@ class Session:
                 instead of requesting the data from the api, locally saved
                 livetiming data can be used as a data source
         """
-        logging.info(f"Loading data for {self.event.event_name} - {self.name}"
+        logging.info(f"Loading data for "
+                     f"{self.event['EventName']} - {self.name}"
                      f" [v{fastf1.__version__}]")
 
         self._load_drivers_results(livedata=livedata)
@@ -1397,7 +1400,7 @@ class Session:
         d = collections.defaultdict(list)
         try:
             data = ergast.fetch_results(
-                self.event.year, self.event.round_number, session_name
+                self.event.year, self.event['RoundNumber'], session_name
             )
         except Exception as exc:
             logging.exception("Failed to load data from Ergast API!",

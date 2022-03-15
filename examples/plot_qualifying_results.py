@@ -88,7 +88,7 @@ ax.xaxis.grid(True, which='major', linestyle='--', color='black', zorder=-1000)
 
 lap_time_string = strftimedelta(pole_lap['LapTime'], '%m:%s.%ms')
 
-plt.suptitle(f"{session.event.name} {session.event.year} Qualifying\n"
+plt.suptitle(f"{session.event['EventName']} {session.event.year} Qualifying\n"
              f"Fastest Lap: {lap_time_string} ({pole_lap['Driver']})")
 
 plt.show()

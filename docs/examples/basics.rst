@@ -24,68 +24,68 @@ For example, let's load the Qualifying of the 7th race of the 2021 season:
 
 
 Now, which race weekend are we actually looking at here?
-For this we have the :class:`fastf1.core.Weekend` object which holds
+For this we have the :class:`fastf1.events.Event` object which holds
 information about each race weekend. It is accessible through the
 session object.
 
 .. doctest::
 
   >>> session.event
-  round_number                                                      7
-  country                                                      France
-  location                                               Le Castellet
-  official_event_name    FORMULA 1 EMIRATES GRAND PRIX DE FRANCE 2021
-  event_date                                      2021-06-20 00:00:00
-  event_name                                        French Grand Prix
-  event_format                                           conventional
-  session1                                                 Practice 1
-  session1_date                                   2021-06-18 00:00:00
-  session2                                                 Practice 2
-  session2_date                                   2021-06-18 00:00:00
-  session3                                                 Practice 3
-  session3_date                                   2021-06-19 00:00:00
-  session4                                                 Qualifying
-  session4_date                                   2021-06-19 00:00:00
-  session5                                                       Race
-  session5_date                                   2021-06-20 00:00:00
-  f1_api_support                                                 True
+  RoundNumber                                                     7
+  Country                                                    France
+  Location                                             Le Castellet
+  OfficialEventName    FORMULA 1 EMIRATES GRAND PRIX DE FRANCE 2021
+  EventDate                                     2021-06-20 00:00:00
+  EventName                                       French Grand Prix
+  EventFormat                                          conventional
+  Session1                                               Practice 1
+  Session1Date                                  2021-06-18 00:00:00
+  Session2                                               Practice 2
+  Session2Date                                  2021-06-18 00:00:00
+  Session3                                               Practice 3
+  Session3Date                                  2021-06-19 00:00:00
+  Session4                                               Qualifying
+  Session4Date                                  2021-06-19 00:00:00
+  Session5                                                     Race
+  Session5Date                                  2021-06-20 00:00:00
+  F1ApiSupport                                                 True
   Name: French Grand Prix, dtype: object
 
 Let's see which race weekend this actually is.
 
 .. doctest::
 
-  >>> session.event.event_name
+  >>> session.event.EventName
   'French Grand Prix'
-  >>> session.event.event_date  # this is the date of the race day
+  >>> session.event.EventDate  # this is the date of the race day
   Timestamp('2021-06-20 00:00:00')
 
 If you do not specify which session you want to load, ``.get_session()``
-will return a :class:`fastf1.core.Weekend` object instead of a session.
+will return a :class:`fastf1.events.Event` object instead of a session.
 The weekend object provides methods which return the individual sessions.
 
 .. doctest::
 
   >>> event = fastf1.get_event(2021, 7)
   >>> event
-  round_number                                                      7
-  country                                                      France
-  location                                               Le Castellet
-  official_event_name    FORMULA 1 EMIRATES GRAND PRIX DE FRANCE 2021
-  event_date                                      2021-06-20 00:00:00
-  event_name                                        French Grand Prix
-  event_format                                           conventional
-  session1                                                 Practice 1
-  session1_date                                   2021-06-18 00:00:00
-  session2                                                 Practice 2
-  session2_date                                   2021-06-18 00:00:00
-  session3                                                 Practice 3
-  session3_date                                   2021-06-19 00:00:00
-  session4                                                 Qualifying
-  session4_date                                   2021-06-19 00:00:00
-  session5                                                       Race
-  session5_date                                   2021-06-20 00:00:00
-  f1_api_support                                                 True
+  RoundNumber                                                     7
+  Country                                                    France
+  Location                                             Le Castellet
+  OfficialEventName    FORMULA 1 EMIRATES GRAND PRIX DE FRANCE 2021
+  EventDate                                     2021-06-20 00:00:00
+  EventName                                       French Grand Prix
+  EventFormat                                          conventional
+  Session1                                               Practice 1
+  Session1Date                                  2021-06-18 00:00:00
+  Session2                                               Practice 2
+  Session2Date                                  2021-06-18 00:00:00
+  Session3                                               Practice 3
+  Session3Date                                  2021-06-19 00:00:00
+  Session4                                               Qualifying
+  Session4Date                                  2021-06-19 00:00:00
+  Session5                                                     Race
+  Session5Date                                  2021-06-20 00:00:00
+  F1ApiSupport                                                 True
   Name: French Grand Prix, dtype: object
   >>> session = event.get_race()
   >>> session.name
@@ -101,7 +101,7 @@ weekends by their official name.
 .. doctest::
 
   >>> event = fastf1.get_event(2021, 'French Grand Prix')
-  >>> event.event_name
+  >>> event.EventName
   'French Grand Prix'
 
 You do not need to provide the exact name. FastF1 will return the weekend or
@@ -110,7 +110,7 @@ correct name chances are high that FastF1 will find the event you are looking
 for.
 
   >>> event = fastf1.get_event(2021, 'Spain')
-  >>> event.event_name
+  >>> event.EventName
   'Spanish Grand Prix'
 
 But be aware that this does not always work. Sometimes another name just
@@ -120,13 +120,13 @@ specify the name fully and/or correct enough. Why? Because FastF1 is not a
 proper intelligent search engine. So check your results.
 
   >>> event = fastf1.get_event(2021, 'Emilian')
-  >>> event.event_name
+  >>> event.EventName
   'Belgian Grand Prix'
 
 We need to be a bit more precise here.
 
   >>> event = fastf1.get_event(2021, 'Emilia Romagna')
-  >>> event.event_name
+  >>> event.EventName
   'Emilia Romagna Grand Prix'
 
 

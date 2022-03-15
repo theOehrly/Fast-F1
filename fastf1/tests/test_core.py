@@ -9,7 +9,7 @@ def test_get_session_deprecated():
         session = fastf1.core.get_session(2021, 1, 'FP1')
     assert isinstance(session, fastf1.core.Session)
     assert session.event.year == 2021
-    assert session.event.round_number == 1
+    assert session.event['RoundNumber'] == 1
 
 
 def test_get_round_deprecated():
@@ -23,7 +23,7 @@ def test_weekend_deprecated():
         weekend = fastf1.core.Weekend(2021, 1)
     assert isinstance(weekend, fastf1.events.Event)
     assert weekend.year == 2021
-    assert weekend.round_number == 1
+    assert weekend.RoundNumber == 1
 
 
 def test_laps_constructor_metadata_propagation(reference_laps_data):

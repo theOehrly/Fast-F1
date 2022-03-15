@@ -36,7 +36,7 @@ def test_get_session_deprecations():
 @pytest.mark.parametrize("identifier", ['Q', 4, 'Qualifying'])
 def test_get_session(gp, identifier):
     session = fastf1.get_session(2021, gp, identifier)
-    assert session.event.event_name == 'Bahrain Grand Prix'
+    assert session.event['EventName'] == 'Bahrain Grand Prix'
     assert session.name == 'Qualifying'
 
 
@@ -58,7 +58,7 @@ def test_get_testing_session(test_n, session_n, pass_1, pass_2):
 @pytest.mark.parametrize("gp", ['Bahrain', 'Bharain', 'Sakhir', 1])
 def test_get_event(gp):
     event = fastf1.get_event(2021, gp)
-    assert event.event_name == 'Bahrain Grand Prix'
+    assert event.EventName == 'Bahrain Grand Prix'
 
 
 def test_get_event_round_zero():
@@ -80,15 +80,15 @@ def test_get_testing_event():
 
 
 def test_event_schedule_partial_data_init():
-    schedule = fastf1.events.EventSchedule({'event_name': ['A', 'B', 'C']})
+    schedule = fastf1.events.EventSchedule({'EventName': ['A', 'B', 'C']})
     assert np.all([col in fastf1.events.EventSchedule._COL_TYPES.keys()
                    for col in schedule.columns])
-    assert schedule.dtypes['session1'] == 'object'
-    assert schedule.dtypes['session1_date'] == '<M8[ns]'
+    assert schedule.dtypes['Session1'] == 'object'
+    assert schedule.dtypes['Session1Date'] == '<M8[ns]'
 
 
 def test_event_schedule_constructor_sliced():
-    schedule = fastf1.events.EventSchedule({'event_name': ['A', 'B', 'C']},
+    schedule = fastf1.events.EventSchedule({'EventName': ['A', 'B', 'C']},
                                            year=2020)
     event = schedule.iloc[0]
     assert isinstance(event, fastf1.events.Event)
@@ -97,17 +97,17 @@ def test_event_schedule_constructor_sliced():
 
 def test_event_schedule_is_testing():
     schedule = fastf1.events.EventSchedule(
-        {'event_format': ['conventional', 'testing']}
+        {'EventFormat': ['conventional', 'testing']}
     )
     assert (schedule.is_testing() == [False, True]).all()
 
 
 def test_event_schedule_get_event_by_round_number():
     schedule = fastf1.events.EventSchedule(
-        {'event_name': ['T1', 'A', 'B', 'C', 'D'],
-         'round_number': [0, 1, 2, 3, 4]}
+        {'EventName': ['T1', 'A', 'B', 'C', 'D'],
+         'RoundNumber': [0, 1, 2, 3, 4]}
     )
-    assert schedule.get_event_by_round(2).event_name == 'B'
+    assert schedule.get_event_by_round(2).EventName == 'B'
 
     with pytest.raises(ValueError, match="testing event by round number"):
         schedule.get_event_by_round(0)
@@ -119,7 +119,7 @@ def test_event_schedule_get_event_by_round_number():
 def test_event_schedule_get_by_name():
     schedule = fastf1.events.EventSchedule(
         {
-            'event_name': [
+            'EventName': [
                 'testA',
                 'TESTB',
                 'test_test'
@@ -127,10 +127,10 @@ def test_event_schedule_get_by_name():
         }
     )
 
-    assert schedule.get_event_by_name('testA').event_name == 'testA'
-    assert schedule.get_event_by_name('TESTA').event_name == 'testA'
-    assert schedule.get_event_by_name('testb').event_name == 'TESTB'
-    assert schedule.get_event_by_name('test-test').event_name == 'test_test'
+    assert schedule.get_event_by_name('testA').EventName == 'testA'
+    assert schedule.get_event_by_name('TESTA').EventName == 'testA'
+    assert schedule.get_event_by_name('testb').EventName == 'TESTB'
+    assert schedule.get_event_by_name('test-test').EventName == 'test_test'
 
 
 def test_event_is_testing():
@@ -148,7 +148,7 @@ def test_event_get_session_name():
 def test_event_get_session_date():
     event = fastf1.get_event(2021, 1)
     sd = event.get_session_date('Q')
-    assert sd == event.session4_date
+    assert sd == event.Session4Date
     assert isinstance(sd, pd.Timestamp)
 
 

@@ -147,9 +147,9 @@ Deprecations:
     their Series representation.
     For example:
 
-      - ``Weekend.name`` --> ``Event.event_name`` or ``Event['event_name']``
-      - ``Weekend.date`` --> ``Event.event_date`` or ``Event['event_date']``
-      - ``Weekend.gp`` --> ``Event.round_number`` or ``Event['round_number']``
+      - ``Weekend.name`` --> ``Event.EventName`` or ``Event['EventName']``
+      - ``Weekend.date`` --> ``Event.EventDate`` or ``Event['EventDate']``
+      - ``Weekend.gp`` --> ``Event.RoundNumber`` or ``Event['RoundNumber']``
 
   - The attribute :attr:`fastf1.core.Session.weekend` has been replaced by
     :attr:`fastf1.core.Session.event` to adhere to new naming conventions.
