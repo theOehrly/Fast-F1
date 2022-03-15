@@ -1315,9 +1315,21 @@ def driver_info(path, response=None, livedata=None):
                 "recently, please try again in a few minutes."
             )
 
+    # search for the correct entries that contain driver and team info
+    drv_idx = None
+    team_idx = None
+    for i, entry in enumerate(response):
+        if 'RacingNumber' in str(entry):
+            drv_idx = i
+        if 'TeamName' in str(entry):
+            team_idx = i
+        if drv_idx and team_idx:
+            break
+
+    # parse data
     try:
-        drv_info = response[0][1]
-        team_info = response[1][1]
+        drv_info = response[drv_idx][1]
+        team_info = response[team_idx][1]
         for drv in drv_info:
             drv_info[drv].update(team_info.get(drv, {}))
         if not len(drv_info) or not isinstance(drv_info, dict):
