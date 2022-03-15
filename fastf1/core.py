@@ -1052,7 +1052,7 @@ class Session:
 
         self._load_drivers_results(livedata=livedata)
 
-        if self.results.empty:
+        if self._results.empty:
             raise NoLapDataError
 
         if self.f1_api_support:
@@ -1340,8 +1340,9 @@ class Session:
                     driver_info, index=driver_info['DriverNumber']
                 ).sort_values('Position')
             else:
-                logging.warning(
-                    "Failed to load driver info and session results!"
+                raise api.SessionNotAvailableError(
+                    "No data for this session! If this session only finished "
+                    "recently, please try again in a few minutes."
                 )
 
         else:
