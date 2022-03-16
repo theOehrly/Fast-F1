@@ -2237,18 +2237,21 @@ class SessionResults(pd.DataFrame):
 
         - ``Time`` | :class:`pd.Timedelta` |
           The drivers total race time (values only given if session is
-          'Race' or 'Sprint Qualifying' and the driver was not more than one lap
-          behind the leader)
+          'Race' or 'Sprint Qualifying' and the driver was not more than one
+          lap behind the leader)
 
         - ``Status`` | :class:`str` |
           A status message to indicate if and how the driver finished the race
-          or to indicate the cause of a DNF. Possible values include but are not
-          limited to 'Finished', '+ 1 Lap', 'Crash', 'Gearbox', ...
+          or to indicate the cause of a DNF. Possible values include but are
+          not limited to 'Finished', '+ 1 Lap', 'Crash', 'Gearbox', ...
           (values only given if session is 'Race' or 'Sprint Qualifying')
 
         - ``Status`` | :class:`float` |
-          The number of points received by each driver for their finishing result.
+          The number of points received by each driver for their finishing
+          result.
 
+    By default, the session results are indexed by driver number and sorted by
+    finishing position.
 
     .. note:: This class is usually not instantiated directly. You should
         create a session and access the session result through the

@@ -3,8 +3,6 @@ import pytest
 
 import warnings
 
-import numpy as np
-
 import fastf1.core
 import fastf1.events
 

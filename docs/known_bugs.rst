@@ -1,14 +1,13 @@
 Known bugs and caveats
 ======================
 
-- Unexpected car numbers being parsed from :func:`fastf1.api.car_data`:
+- Deleted Laps
 
-    There are some cases like 2019 Germany Q where the returned structure of
-    :func:`fastf1.api.car_data` contains also telemetry data from inexistent
-    drivers like driver number 1, 6 and so on. Telemetry is empty so this might
-    just be a mishandled single entry. Currently an attempt to bypass is
-    referring to timing_data drivers. For winter test we have driver number
-    65535 and it is not bypassed.
+    It is currently not possible to determine if a lap time was deleted
+    (usually because track limits were violated).
+    :func:`Laps.pick_fastest <fastf1.core.Laps.pick_fastest>` may therefore
+    return a lap that is not actually relevant for the final result of
+    qualifying.
 
 
 - Missing telemetry

@@ -94,6 +94,33 @@ Github releases page or from Pypi.
    changelog
 
 
+==============
+Available Data
+==============
+
+The following is a short overview over the available data with some references
+to functions and objects used to work with this data.
+
+- The event schedule for past seasons and the current season, including
+  upcoming events. The schedule provides event names, countries, locations,
+  dates, scheduled starting times and more.
+  See :func:`fastf1.get_event_schedule`, :class:`~fastf1.events.EventSchedule`
+
+  This data is also available for individual events.
+  See :func:`fastf1.get_event`, :class:`~fastf1.events.Event`
+
+- Driver information and session results, including driver names, team names,
+  finishing and grid positions, points, and more.
+  See :class:`~fastf1.core.SessionResults`, :class:`~fastf1.core.DriverResult`
+
+- Lap timing data including sector times, lap times, pit stops, tyre data and
+  more.
+  See :class:`~fastf1.core.Laps`
+
+- Telemetry data including speed, rpm, gear and more.
+  See :class:`~fastf1.core.Telemetry`
+
+
 ==================
 Indices and tables
 ==================

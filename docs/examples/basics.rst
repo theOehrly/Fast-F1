@@ -145,13 +145,65 @@ Events and sessions can also be loaded by their country or location.
   'British Grand Prix'
 
 
+Working with the event schedule
+-------------------------------
+
+Instead of loading a specific session or event, it is possible to load the
+full event schedule for a season. The :class:`~fastf1.events.EventSchedule`
+is a subclass of a :class:`pandas.DataFrame`.
+
+  >>> schedule = fastf1.get_event_schedule(2021)
+  >>> schedule
+      RoundNumber       Country      Location  ... Session5 Session5Date F1ApiSupport
+  0             0       Bahrain        Sakhir  ...     None          NaT         True
+  1             1       Bahrain        Sakhir  ...     Race   2021-03-28         True
+  2             2         Italy         Imola  ...     Race   2021-04-18         True
+  3             3      Portugal      Portimão  ...     Race   2021-05-02         True
+  4             4         Spain      Montmeló  ...     Race   2021-05-09         True
+  5             5        Monaco   Monte-Carlo  ...     Race   2021-05-23         True
+  6             6    Azerbaijan          Baku  ...     Race   2021-06-06         True
+  7             7        France  Le Castellet  ...     Race   2021-06-20         True
+  8             8       Austria     Spielberg  ...     Race   2021-06-27         True
+  9             9       Austria     Spielberg  ...     Race   2021-07-04         True
+  10           10            UK   Silverstone  ...     Race   2021-07-18         True
+  11           11       Hungary      Budapest  ...     Race   2021-08-01         True
+  12           12       Belgium           Spa  ...     Race   2021-08-29         True
+  13           13   Netherlands     Zandvoort  ...     Race   2021-09-05         True
+  14           14         Italy         Monza  ...     Race   2021-09-12         True
+  15           15        Russia         Sochi  ...     Race   2021-09-26         True
+  16           16        Turkey      Istanbul  ...     Race   2021-10-10         True
+  17           17           USA        Austin  ...     Race   2021-10-24         True
+  18           18        Mexico   Mexico City  ...     Race   2021-11-07         True
+  19           19        Brazil     São Paulo  ...     Race   2021-11-14         True
+  20           20         Qatar     Al Daayen  ...     Race   2021-11-21         True
+  21           21  Saudi Arabia        Jeddah  ...     Race   2021-12-05         True
+  22           22           UAE     Abu Dhabi  ...     Race   2021-12-12         True
+  <BLANKLINE>
+  [23 rows x 18 columns]
+  >>> schedule.columns  # doctest: +NORMALIZE_WHITESPACE
+  Index(['RoundNumber', 'Country', 'Location', 'OfficialEventName', 'EventDate',
+       'EventName', 'EventFormat', 'Session1', 'Session1Date', 'Session2',
+       'Session2Date', 'Session3', 'Session3Date', 'Session4', 'Session4Date',
+       'Session5', 'Session5Date', 'F1ApiSupport'],
+      dtype='object')
+
+The event schedule provides methods for selecting specific events:
+
+  >>> gp_12 = schedule.get_event_by_round(12)
+  >>> gp_12['Country']
+  'Belgium'
+  >>> gp_austin = schedule.get_event_by_name('Austin')
+  >>> gp_austin['Country']
+  'USA'
+
+
 Displaying driver info and session results
 ------------------------------------------
 
 We have created a session now but everything has been rather boring so far.
-So lets make it a bit more interesting and by taking a look at the results of
+So lets make it a bit more interesting by taking a look at the results of
 this session. For this, it is first necessary to call
-:func:`fastf1.core.Session.load`. This will load all available data for the
+:func:`Session.load <fastf1.core.Session.load>`. This will load all available data for the
 session from various APIs. Downloading and processing of the data may take a
 few seconds. It is highly recommended to utilize FastF1's builtin caching
 functionality to speed up data loading and to prevent excessive API requests.
