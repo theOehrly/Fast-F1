@@ -80,10 +80,10 @@ def test_get_testing_event():
 
 
 def test_event_schedule_partial_data_init():
-    schedule = fastf1.events.EventSchedule({'EventName': ['A', 'B', 'C']})
-    assert np.all([col in fastf1.events.EventSchedule._COL_TYPES.keys()
-                   for col in schedule.columns])
-    assert schedule.dtypes['Session1'] == 'object'
+    schedule = fastf1.events.EventSchedule(
+        {'EventName': ['A', 'B', 'C'], 'Session1Date': [None, None, None]}
+    )
+    assert schedule.dtypes['EventName'] == 'object'
     assert schedule.dtypes['Session1Date'] == '<M8[ns]'
 
 

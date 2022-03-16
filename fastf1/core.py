@@ -1337,8 +1337,9 @@ class Session:
                     load_drivers=True, load_results=True
                 )
                 self._results = SessionResults(
-                    driver_info, index=driver_info['DriverNumber']
-                ).sort_values('Position')
+                    driver_info, index=driver_info['DriverNumber'],
+                    force_default_cols=True
+                )
             else:
                 raise api.SessionNotAvailableError(
                     "No data for this session! If this session only finished "
@@ -1357,12 +1358,15 @@ class Session:
             if r:
                 # join driver info and session results
                 results = pd.DataFrame(r).set_index('DriverNumber')
-                self._results = SessionResults(drivers.join(results))\
-                    .sort_values('Position')
+                self._results = SessionResults(drivers.join(results),
+                                               force_default_cols=True)
             else:
                 # return driver info without session results
-                self._results = SessionResults(drivers)\
-                    .sort_values('Position')
+                self._results = SessionResults(drivers,
+                                               force_default_cols=True)
+
+        if 'Position' in self._results:
+            self._results = self._results.sort_values('Position')
 
     def _drivers_from_f1_api(self, *, livedata=None):
         try:
@@ -2252,6 +2256,8 @@ class SessionResults(pd.DataFrame):
 
     Args:
         *args: passed on to :class:`pandas.DataFrame` superclass
+        force_default_cols (bool): Enforce that all default columns and only
+            the default columns exist
         **kwargs: passed on to :class:`pandas.DataFrame` superclass
             (except 'columns' which is unsupported for this object)
 
@@ -2261,12 +2267,12 @@ class SessionResults(pd.DataFrame):
     _COL_TYPES = {
         'DriverNumber': str,
         'BroadcastName': str,
-        'FullName': str,
         'Abbreviation': str,
         'TeamName': str,
         'TeamColor': str,
         'FirstName': str,
         'LastName': str,
+        'FullName': str,
         'Position': float,
         'GridPosition': float,
         'Q1': 'timedelta64[ns]',
@@ -2279,12 +2285,15 @@ class SessionResults(pd.DataFrame):
 
     _internal_names = ['base_class_view']
 
-    def __init__(self, *args, **kwargs):
-        kwargs['columns'] = list(self._COL_TYPES.keys())
+    def __init__(self, *args, force_default_cols=False, **kwargs):
+        if force_default_cols:
+            kwargs['columns'] = list(self._COL_TYPES.keys())
         super().__init__(*args, **kwargs)
 
-        # apply column specific dtypes and create missing columns
+        # apply column specific dtypes
         for col, _type in self._COL_TYPES.items():
+            if col not in self.columns:
+                continue
             if self[col].isna().all():
                 if _type == 'timedelta64[ns]':
                     self[col] = pd.Series(dtype='timedelta64[ns]')

@@ -394,7 +394,7 @@ def _get_schedule(year):
                    for col in df.columns}
     df = df.rename(columns=col_renames)
 
-    schedule = EventSchedule(df, year=year)
+    schedule = EventSchedule(df, year=year, force_default_cols=True)
     return schedule
 
 
@@ -440,7 +440,7 @@ def _get_schedule_from_ergast(year):
         # simplified; this is only true most of the time
 
     df = pd.DataFrame(data)
-    schedule = EventSchedule(df, year=year)
+    schedule = EventSchedule(df, year=year, force_default_cols=True)
     return schedule
 
 
@@ -454,6 +454,8 @@ class EventSchedule(pd.DataFrame):
     Args:
         *args: passed on to :class:`pandas.DataFrame` superclass
         year (int): Championship year
+        force_default_cols (bool): Enforce that all default columns and only
+            the default columns exist
         **kwargs: passed on to :class:`pandas.DataFrame` superclass
             (except 'columns' which is unsupported for the event schedule)
 
@@ -485,13 +487,16 @@ class EventSchedule(pd.DataFrame):
 
     _internal_names = ['base_class_view']
 
-    def __init__(self, *args, year=0, **kwargs):
-        kwargs['columns'] = list(self._COL_TYPES)
+    def __init__(self, *args, year=0, force_default_cols=False, **kwargs):
+        if force_default_cols:
+            kwargs['columns'] = list(self._COL_TYPES)
         super().__init__(*args, **kwargs)
         self.year = year
 
         # apply column specific dtypes
         for col, _type in self._COL_TYPES.items():
+            if col not in self.columns:
+                continue
             if self[col].isna().all():
                 if _type == 'datetime64[ns]':
                     self[col] = pd.NaT
@@ -568,13 +573,17 @@ class EventSchedule(pd.DataFrame):
         """
         def _matcher_strings(ev):
             strings = list()
-            strings.append(ev['Location'])
-            strings.append(ev['Country'])
-            strings.append(ev['EventName'].replace("Grand Prix", ""))
-            strings.append(ev['OfficialEventName']
-                           .replace("FORMULA 1", "")
-                           .replace(str(self.year), "")
-                           .replace("GRAND PRIX", ""))
+            if 'Location' in ev:
+                strings.append(ev['Location'])
+            if 'Country' in ev:
+                strings.append(ev['Country'])
+            if 'EventName' in ev:
+                strings.append(ev['EventName'].replace("Grand Prix", ""))
+            if 'OfficialEventName' in ev:
+                strings.append(ev['OfficialEventName']
+                               .replace("FORMULA 1", "")
+                               .replace(str(self.year), "")
+                               .replace("GRAND PRIX", ""))
             return strings
 
         max_ratio = 0
