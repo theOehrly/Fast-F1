@@ -3,72 +3,8 @@ Changelog
 =========
 
 
-v2.2.0-alpha1
-=============
-
-Changes and New Features:
-
-  - Introduces the new objects :class:`fastf1.core.SessionResults` and
-    :class:`fastf1.core.DriverResult`. These classes are built on top of
-    :class:`pandas.DataFrame` and :class:`pandas.Series`. They provide
-    information about all drivers that participated in a session.
-    This information includes driver numbers, names, team names, finishing
-    results, ...
-    Session results are available for all sessions supported by the
-    Ergast database.
-
-  - A hard coded list of drivers is no longer required for testing sessions.
-    This data can now be pulled from the api as well.
-
-  - A more understandable error will be raised if properties of the
-    :class:`~fastf1.core.Session` object are accessed which are not yet
-    available because the relevant data has not been loaded.
-
-Breaking Changes:
-
-  - The property :attr:`fastf1.core.Session.results` is now an instance of
-    :class:`fastf1.core.SessionResults` instead of :class:`dict`.
-
-  - The datatype of the telemetry 'Brake' data channel is changed from
-    ``int`` to ``bool``, as brake data was never actually more accurate
-    than this. The representation as integer (percentage) values was
-    misleading.
-
-
-Deprecations:
-
-  - :func:`fastf1.core.Session.load_laps` has been deprecated. Use
-    :func:`fastf1.core.Session.load` instead, which offers more flexibility
-    for deciding which data should be loaded. The new method will no longer
-    return a :class:`~fastf1.core.Laps` object! You should access the
-    :class:`~fastf1.core.Laps` object through
-    :attr:`fastf1.core.Session.laps`
-
-  - :class:`fastf1.core.Driver` has been replace with
-    :class:`fastf1.core.DriverResult` which has a different signature.
-
-  - The attributes ``grid``, ``position``, ``name``, ``familyname`` and
-    ``team`` of :class:`fastf1.core.Driver` have been deprecated.
-    The replacement object :class:`fastf1.core.DriverResult` subclasses
-    :class:`pandas.Series`. The standard ways for accessing pandas Series'
-    values should be used. The attributes have been additionally renamed in
-    their Series representation.
-    For example:
-
-      - ``Driver.name`` --> ``DriverResult.FirstName`` or
-        ``DriverResult['FirstName']``
-      - ``Driver.familyname`` --> ``DriverResult.LastName`` or
-        ``DriverResult['LastName']``
-      - ``Driver.team`` --> ``DriverResult.TeamName`` or
-        ``DriverResult['TeamName']``
-      - ``Driver.grid`` --> ``DriverResult.GridPosition`` or
-        ``DriverResult['GridPosition']``
-      - ``Driver.position`` --> ``DriverResult.Position`` or
-        ``DriverResult['Position']``
-
-
-v2.2.0-alpha0
-=============
+v2.2.0
+======
 
 This release introduces a range of new features, bug fixes and improvements.
 While backwards compatibility has been kept in mind, some breaking changes
@@ -103,6 +39,22 @@ Changes and New Features:
   - Full offline support: Scripts can be run offline if they have been run
     at least once with an active internet connection and caching enabled.
 
+  - Introduces the new objects :class:`fastf1.core.SessionResults` and
+    :class:`fastf1.core.DriverResult`. These classes are built on top of
+    :class:`pandas.DataFrame` and :class:`pandas.Series`. They provide
+    information about all drivers that participated in a session.
+    This information includes driver numbers, names, team names, finishing
+    results, ...
+    Session results are available for all sessions supported by the
+    Ergast database.
+
+  - A hard coded list of drivers is no longer required for testing sessions.
+    This data can now be pulled from the api as well.
+
+  - A more understandable error will be raised if properties of the
+    :class:`~fastf1.core.Session` object are accessed which are not yet
+    available because the relevant data has not been loaded.
+
 
 Bug Fixes:
 
@@ -111,7 +63,7 @@ Bug Fixes:
 
 Breaking Changes:
 
-  - For testing events :class:`fastf1.core.Session` objects can no longer be
+  - For **testing events**, :class:`fastf1.core.Session` objects can no longer be
     created through :func:`fastf1.get_session`. You need to use
     :func:`fastf1.get_testing_session` instead.
 
@@ -127,11 +79,23 @@ Breaking Changes:
   - :func:`fastf1.get_session` may return a different session now for some
     edge cases, if you load sessions by name instead of by round number.
 
+  - The property :attr:`fastf1.core.Session.results` is now an instance of
+    :class:`fastf1.core.SessionResults` instead of :class:`dict`. Most of the
+    previously available data is accessible through the new data replacement
+    object. Some special information like GPS coordinates and altitude are no
+    longer available though. If you think that this data should still be
+    provided by FastF1 in the future, please open an issue for that.
+
+  - The datatype of the telemetry 'Brake' data channel is changed from
+    ``int`` to ``bool``, as brake data was never actually more accurate
+    than this. The representation as integer (percentage) values was
+    misleading.
+
 
 Deprecations:
 
   **Objects, methods and attributes deprecated in v2.2 will be removed
-  in v2.3.** Until then accessing them will still work but a FutureWarning
+  in v2.3.** Until then, accessing them will still work but a FutureWarning
   is shown, reminding you of the deprecation.
 
   - :class:`fastf1.core.Weekend` has been replaced with
@@ -157,6 +121,36 @@ Deprecations:
   - The function :func:`fastf1.core.get_round` has been deprecated and will be
     removed without replacement in v2.3. Use :func:`fastf1.get_event`
     instead and and get the round number from the returned event object.
+
+  - :func:`fastf1.core.Session.load_laps` has been deprecated. Use
+    :func:`fastf1.core.Session.load` instead, which offers more flexibility
+    for deciding which data should be loaded. The new method will no longer
+    return a :class:`~fastf1.core.Laps` object! You should access the
+    :class:`~fastf1.core.Laps` object through
+    :attr:`fastf1.core.Session.laps`
+
+  - :class:`fastf1.core.Driver` has been replace with
+    :class:`fastf1.core.DriverResult` which has a different signature.
+
+  - The attributes ``grid``, ``position``, ``name``, ``familyname`` and
+    ``team`` of :class:`fastf1.core.Driver` have been deprecated.
+    The replacement object :class:`fastf1.core.DriverResult` subclasses
+    :class:`pandas.Series`. The standard ways for accessing pandas Series'
+    values should be used. The attributes have been additionally renamed in
+    their Series representation.
+    For example:
+
+      - ``Driver.name`` --> ``DriverResult.FirstName`` or
+        ``DriverResult['FirstName']``
+      - ``Driver.familyname`` --> ``DriverResult.LastName`` or
+        ``DriverResult['LastName']``
+      - ``Driver.team`` --> ``DriverResult.TeamName`` or
+        ``DriverResult['TeamName']``
+      - ``Driver.grid`` --> ``DriverResult.GridPosition`` or
+        ``DriverResult['GridPosition']``
+      - ``Driver.position`` --> ``DriverResult.Position`` or
+        ``DriverResult['Position']``
+
 
 
 v2.1.13 More Bug Fixes

@@ -1,9 +1,3 @@
-.. F1 Telemetry documentation master file, created by
-   sphinx-quickstart on Fri Nov 29 01:37:14 2019.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-
 =====================
 Fast F1 documentation
 =====================
@@ -11,13 +5,11 @@ Fast F1 documentation
 For the passionate F1 nerds.
 
 
-Check out the examples: :doc:`examples/index`
-
-Or take a look at the gallery for some inspiration:
-:doc:`examples_gallery/index`
+To get a quick overview over how to use FastF1, check out
+:doc:`examples/index` or the :doc:`examples_gallery/index`.
 
 
-There are also some great articles and examples written by other people. They
+Furthermore, there are some great articles and examples written by other people. They
 provide a nice overview about what you can do with FastF1 and might help you
 to get started.
 
@@ -31,8 +23,7 @@ Introduction
 ============
 
 FastF1 gives you access to F1 lap timing, car telemetry and position,
-tyre data, weather data and weekend information among others.
-No formula1 account is needed.
+tyre data, weather data, the event schedule and session results.
 
 The module is designed around Pandas, Numpy and Matplotlib. This makes it easy
 to use while offering lots of possibilities for data analysis and
@@ -61,8 +52,7 @@ Note that Python 3.8 or higher is required.
 (The live timing client does not support Python 3.10, therefore full
 functionality is only available with Python 3.8 and 3.9)
 
-Alternatively, a wheel or a source distribution can be downloaded from the
-Github releases page or from Pypi.
+Alternatively, a wheel or a source distribution can be downloaded from Pypi.
 
 
 .. toctree::
@@ -121,7 +111,6 @@ to functions and objects used to work with this data.
   See :class:`~fastf1.core.Telemetry`
 
 
-==================
 Indices and tables
 ==================
 
@@ -132,3 +121,9 @@ Indices and tables
 
 For questions feel free to contact me:
 oehrly@mailbox.org
+
+
+Notice
+------
+FastF1 is unofficial software and in no way associated with the Formula 1
+group of companies.

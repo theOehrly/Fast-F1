@@ -1,23 +1,14 @@
-**INFO: Pre-Season Testing Bahrain 2022**
-
-  You should use the pre-release version of FastF1 v2.2 if you want to access
-  data from the pre-season testing sessions in Bahrain. See the note below
-  for more information on the pre-release versions.
-  (Note though, that it is not yet clear whether this data will be available
-  at all.)
-
-
-**NOTE: Upcoming Release v2.2**
-
-  Pre-release versions for FastF1 v2.2 are now available in this `discussion <https://github.com/theOehrly/Fast-F1/discussions/105>`_.
-  You can test the upcoming changes before the final release and leave feedback in the discussion.
-
-
 =======
 Fast F1
 =======
 
-A python package for accessing F1 historical timing data and telemetry.
+**FastF1 version 2.2.0 has been release. A few breaking changes were required.
+Please read the** `changelog <https://theoehrly.github.io/Fast-F1/changelog.html>`_.
+
+**Enjoy the 2022 to season!**
+
+FastF1 is a python package for accessing and analyzing Formula 1 results,
+schedules, timing data and telemetry.
 
 
 Installation
@@ -31,30 +22,30 @@ Note that Python 3.8 or higher is required.
 (The live timing client does not support Python 3.10, therefore full
 functionality is only available with Python 3.8 and 3.9)
 
-Alternatively, a wheel or a source distribution can be downloaded from the
-Github releases page or from Pypi.
+Alternatively, a wheel or a source distribution can be downloaded from Pypi.
 
 
 Getting Started: Documentation and Examples
 ===========================================
 
-The documentation can be found `here <https://theoehrly.github.io/Fast-F1/fastf1.html>`_.
-It provides in depth information about the functionality that is available in
-FastF1 as well as some examples.
+ - `Documentation <https://theoehrly.github.io/Fast-F1/>`_.
+ - `Examples <https://theoehrly.github.io/Fast-F1/examples/index.html>`_.
+ - `Changelog <https://theoehrly.github.io/Fast-F1/changelog.html>`_.
 
-There are also some great articles and examples written by other people. They
-provide a nice overview about what you can do with FastF1 and might help you
-to get started.
+Furthermore, there are  some great articles and examples written by other
+people. They provide a nice overview about what you can do with FastF1 and
+might help you to get started.
 
   - `Accessing Formula-1 Race's historical data using Python (medium.com) <https://pandeyparul.medium.com/accessing-formula-1-races-historical-data-using-python-b7c80e544f50>`_
   - `Formula 1 Data Analysis Tutorial - 2021 Russian GP: "To Box, or Not to Box?" (medium.com) <https://medium.com/@jaspervhat/formula-1-data-analysis-tutorial-2021-russian-gp-to-box-or-not-to-box-da6399bd4a39>`_
   - `How I Analyze Formula 1 Data With Python: 2021 Italian GP (medium.com) <https://medium.com/@jaspervhat/how-i-analyze-formula-1-data-with-python-2021-italian-gp-dfb11db4b73>`_
 
+
 General Information
 ===================
 
 Usage
-=====
+-----
 
 Creating a simple analysis is not very difficult, especially if you are already familiar
 with pandas and numpy.
@@ -75,8 +66,8 @@ Hamilton for the Turkish GP 2020.
     race = fastf1.get_session(2020, 'Turkish Grand Prix', 'R')
     race.load()
 
-    lec = laps.pick_driver('LEC')
-    ham = laps.pick_driver('HAM')
+    lec = race.laps.pick_driver('LEC')
+    ham = race.laps.pick_driver('HAM')
 
 Once the session is loaded, and drivers are selected, you can plot the
 information.
@@ -101,20 +92,17 @@ the path to some empty folder on your system.
     :target: docs/_static/readme.svg
 
 
-For more information, check the documentation
-`here <https://theoehrly.github.io/Fast-F1/fastf1.html>`_.
-
-
 Compatibility
-=============
+-------------
 
-Timing data, car telemetry and position data is available for the 2018 to 2021 seasons.
-Very basic weekend information is available for older seasons (limited to
-`Ergast web api <http://ergast.com/mrd/>`_).
+Timing data, car telemetry and position data is available for the 2018 and
+later seasons. Schedule information and session results are available for
+older seasons too.
+(limited to `Ergast web api <http://ergast.com/mrd/>`_).
 
 
 Data Sources
-============
+------------
 
 FastF1 uses data from F1's live timing service.
 
@@ -128,26 +116,14 @@ want to benefit from the extra redundancy.
 
 
 Bugs and Issues
-===============
+---------------
 
 Please report bugs if (when) you find them. Feel free to report complaints about
 unclear documentation too.
 
 
-Roadmap
-=======
-
-This is a rather loose roadmap with no fixed timeline whatsoever.
-
-  - Improvements to the current plotting functionality
-  - Some default plots to easily allow creating nice visualizations and interesting comparisons
-  - General improvements and smaller additions to the current core functionality
-  - Support for F1's own data api to get information about events, sessions, drivers and venues
-
-
-
 Contributing
-============
+------------
 
 Contributions are welcome of course. If you are interested in contributing, open an issue for the proposed feature
 or issue you would like to work on. This way we can coordinate so that no unnecessary work is done.
@@ -158,3 +134,10 @@ whatever you like to do.
 
 Also, the documentation needs an examples section. You can provide some snippets of your code as examples for
 others, to help them get started easier.
+
+
+Notice
+------
+
+FastF1 is unofficial software and in no way associated with the Formula 1
+group of companies.
