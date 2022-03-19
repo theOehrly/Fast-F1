@@ -1408,8 +1408,9 @@ class Session:
                 self.event.year, self.event['RoundNumber'], session_name
             )
         except Exception as exc:
-            logging.exception("Failed to load data from Ergast API!",
-                              exc_info=exc)
+            logging.warning("Failed to load data from Ergast API! "
+                            "(This is expected for recent sessions)")
+            logging.debug("Ergast failure traceback:", exc_info=exc)
             return d
 
         time0 = None
