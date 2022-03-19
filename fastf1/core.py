@@ -308,8 +308,8 @@ class Telemetry(pd.DataFrame):
             if not len(ref_laps['DriverNumber'].unique()) <= 1:
                 raise ValueError("Cannot create telemetry for multiple drivers at once!")
 
-            end_time = max(ref_laps['Time'])
-            start_time = min(ref_laps['LapStartTime'])
+            end_time = ref_laps['Time'].max()
+            start_time = ref_laps['LapStartTime'].min()
 
         elif isinstance(ref_laps, (Lap, Laps)):
             if isinstance(ref_laps, Laps):  # one lap in Laps
