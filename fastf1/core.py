@@ -1052,9 +1052,6 @@ class Session:
 
         self._load_drivers_results(livedata=livedata)
 
-        if self._results.empty:
-            raise NoLapDataError
-
         if self.f1_api_support:
             if laps:
                 try:
@@ -1129,7 +1126,24 @@ class Session:
                 break
         self._session_status = pd.DataFrame(session_status)
         df = None
-        for i, driver in enumerate(self.results['DriverNumber']):
+
+        drivers = self.drivers
+        if not drivers:
+            # no driver list, generate from lap data
+            drivers = set(data['Driver'].unique())\
+                .intersection(set(useful['Driver'].unique()))
+
+            _nums_df = pd.DataFrame({'DriverNumber': list(drivers)},
+                                    index=list(drivers))
+            _info_df = pd.DataFrame(fastf1._DRIVER_TEAM_MAPPING).T
+
+            self._results = SessionResults(_nums_df.join(_info_df),
+                                           force_default_cols=True)
+
+            logging.warning("Generating minimal driver "
+                            "list from timing data.")
+
+        for i, driver in enumerate(drivers):
             d1 = data[data['Driver'] == driver]
             d2 = useful[useful['Driver'] == driver]
             only_one_lap = False
@@ -1341,10 +1355,9 @@ class Session:
                     force_default_cols=True
                 )
             else:
-                raise api.SessionNotAvailableError(
-                    "No data for this session! If this session only finished "
-                    "recently, please try again in a few minutes."
-                )
+                logging.warning("Failed to load driver list and "
+                                "session results!")
+                self._results = SessionResults(force_default_cols=True)
 
         else:
             # extend existing driver info (f1 api) with results from ergast

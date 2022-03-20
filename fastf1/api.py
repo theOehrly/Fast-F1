@@ -1329,7 +1329,14 @@ def driver_info(path, response=None, livedata=None):
     # parse data
     try:
         drv_info = response[drv_idx][1]
+    except (IndexError, TypeError):
+        return dict()
+
+    try:
         team_info = response[team_idx][1]
+    except (IndexError, TypeError):
+        return dict()
+    else:
         for drv in drv_info:
             drv_info[drv].update(team_info.get(drv, {}))
         if not len(drv_info) or not isinstance(drv_info, dict):
@@ -1337,9 +1344,6 @@ def driver_info(path, response=None, livedata=None):
         if 'RacingNumber' not in list(drv_info.values())[0]:
             return dict()
         return drv_info
-
-    except IndexError:
-        return dict()
 
 
 @Cache.api_request_wrapper
