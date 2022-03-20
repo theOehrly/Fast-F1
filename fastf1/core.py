@@ -1414,9 +1414,7 @@ class Session:
 
         time0 = None
         for r in data:
-            d['DriverNumber'].append(
-                recursive_dict_get(r, 'Driver', 'permanentNumber',
-                                   default_none=True))
+            d['DriverNumber'].append(r.get('number'))
             if load_drivers:
                 d['Abbreviation'].append(
                     recursive_dict_get(r, 'Driver', 'code',
