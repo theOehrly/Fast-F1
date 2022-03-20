@@ -21,6 +21,7 @@ versions can be used.
 
     import fastf1
     import fastf1.plotting
+    import fastf1.legacy
     import numpy as np
     import matplotlib.pyplot as plt
 
@@ -160,7 +161,7 @@ def _make_trajectory(session, ref_lap):
         track[:, 2] = reference_z
 
         track_tree = scipy.spatial.cKDTree(track)
-        drivers_list = np.array(list(session.drivers.driver_number))
+        drivers_list = np.array(list(session.drivers))
         stream_length = len(session.pos_data[drivers_list[0]])
         dmap = np.empty((stream_length, len(drivers_list)), dtype=int)
 
