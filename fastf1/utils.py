@@ -33,8 +33,8 @@ def delta_time(reference_lap, compare_lap):
 
         plotting.setup_mpl()
 
-        quali = ff1.get_session(2021, 'Emilia Romagna', 'Q')
-        quali.load()
+        session = ff1.get_session(2021, 'Emilia Romagna', 'Q')
+        session.load()
         lec = session.laps.pick_driver('LEC').pick_fastest()
         ham = session.laps.pick_driver('HAM').pick_fastest()
 
