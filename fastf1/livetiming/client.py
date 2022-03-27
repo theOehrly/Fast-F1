@@ -75,7 +75,7 @@ class SignalRClient:
 
     def __init__(self, filename, filemode='w', debug=False,
                  timeout=60, logger=None):
-        if (ver := sys.version_info) > (3, 9):
+        if (ver := sys.version_info) >= (3, 10):
             raise RuntimeError(
                 f"The live timing client does only support Python 3.8 and "
                 f"3.9 but you are using version "
