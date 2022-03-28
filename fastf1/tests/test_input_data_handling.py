@@ -9,6 +9,7 @@ import pandas as pd
 import fastf1
 import fastf1.ergast
 import fastf1.testing
+from fastf1.testing.reference_values import LAP_DTYPES
 
 
 @pytest.mark.f1telapi
@@ -77,6 +78,46 @@ def test_crash_lap_added_2():
 
     session.load(telemetry=False)
     assert session.laps.pick_driver('VER').shape[0] == 1
+
+
+@pytest.mark.f1telapi
+def test_no_extra_lap_if_race_not_started():
+    # tsunoda had a technical issue shortly before the race and could not
+    # start even though he is listed in the drivers list
+    session = fastf1.get_session(2022, 2, 'R')
+
+    session.load(telemetry=False, weather=False)
+    assert session.laps.size
+    assert session.laps.pick_driver('TSU').size == 0
+
+
+@pytest.mark.f1telapi
+def test_no_timing_app_data():
+    fastf1.testing.run_in_subprocess(_test_no_timing_app_data)
+
+
+def _test_no_timing_app_data():
+    # subprocess test because api parser function is overwritten
+    log_handle = fastf1.testing.capture_log(logging.WARNING)
+
+    def _mock(*args, **kwargs):
+        return pd.DataFrame(
+            {'LapNumber': [], 'Driver': [], 'LapTime': [], 'Stint': [],
+             'TotalLaps': [], 'Compound': [], 'New': [],
+             'TyresNotChanged': [], 'Time': [], 'LapFlags': [],
+             'LapCountTime': [], 'StartLaps': [], 'Outlap': []}
+        )
+
+    fastf1.api.timing_app_data = _mock
+
+    session = fastf1.get_session(2020, 'Italy', 'R')
+    session.load(telemetry=False, weather=False)
+
+    assert 'Failed to load lap data!' not in log_handle.text
+    assert 'No tyre data for driver' in log_handle.text
+
+    assert session.laps.size
+    assert all([col in session.laps.columns for col in LAP_DTYPES.keys()])
 
 
 @pytest.mark.f1telapi

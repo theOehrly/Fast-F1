@@ -1148,24 +1148,30 @@ class Session:
             d2 = useful[useful['Driver'] == driver]
             only_one_lap = False
 
-            if (not len(d1)) or (not len(d2)):
-                # add data for drivers who crashed on the very first lap
-                # as a downside, this potentially adds a nonexistent lap for
-                # drivers who could not start the race
-                if self.name == 'Race':
+            if not len(d1):
+                if (self.name == 'Race') and len(d2):
+                    # add data for drivers who crashed on the very first lap
+                    # as a downside, this potentially adds a nonexistent lap
+                    # for drivers who could not start the race
                     only_one_lap = True
                     result = d1.copy()
                     result['Driver'] = [driver, ]
                     result['NumberOfLaps'] = 0
                     result['NumberOfPitStops'] = 0
                     result['Time'] = data['Time'].min()
-                    if len(d2):
-                        result['Compound'] = d2['Compound'].iloc[0]
-                        result['TotalLaps'] = d2['TotalLaps'].iloc[0]
-                        result['New'] = d2['New'].iloc[0]
+                    result['Compound'] = d2['Compound'].iloc[0]
+                    result['TotalLaps'] = d2['TotalLaps'].iloc[0]
+                    result['New'] = d2['New'].iloc[0]
                 else:
                     logging.warning(f"No lap data for driver {driver}")
                     continue  # no data for this driver; skip
+
+            elif not len(d2):
+                result = d1.copy()
+                result['Compound'] = str()
+                result['TotalLaps'] = np.nan
+                result['New'] = False
+                logging.warning(f"No tyre data for driver {driver}")
 
             else:
                 result = pd.merge_asof(d1, d2, on='Time', by='Driver')
