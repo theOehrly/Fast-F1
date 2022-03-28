@@ -289,7 +289,7 @@ as :class:`~fastf1.core.Laps` object which again is a subclass of a
   268 0 days 00:17:40.791000           22  ...      False 2021-06-19 13:00:22.952
   269 0 days 00:26:20.982000           22  ...      False 2021-06-19 13:03:07.994
   <BLANKLINE>
-  [270 rows x 26 columns]
+  [270 rows x 27 columns]
 
 That's more than 250 laps right there and 26 columns of information.
 
@@ -299,9 +299,9 @@ The following data columns are available:
   Index(['Time', 'DriverNumber', 'LapTime', 'LapNumber', 'Stint', 'PitOutTime',
          'PitInTime', 'Sector1Time', 'Sector2Time', 'Sector3Time',
          'Sector1SessionTime', 'Sector2SessionTime', 'Sector3SessionTime',
-         'SpeedI1', 'SpeedI2', 'SpeedFL', 'SpeedST', 'Compound', 'TyreLife',
-         'FreshTyre', 'LapStartTime', 'Team', 'Driver', 'TrackStatus',
-         'IsAccurate', 'LapStartDate'],
+         'SpeedI1', 'SpeedI2', 'SpeedFL', 'SpeedST', 'IsPersonalBest',
+         'Compound', 'TyreLife', 'FreshTyre', 'LapStartTime', 'Team', 'Driver',
+         'TrackStatus', 'IsAccurate', 'LapStartDate'],
         dtype='object')
 
 The detailed explanation for all these columns can be found in the

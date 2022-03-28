@@ -1229,6 +1229,7 @@ class Session:
                         'NumberOfLaps': [result['NumberOfLaps'].iloc[-1] + 1],
                         'NumberOfPitStops':
                             [result['NumberOfPitStops'].iloc[-1]],
+                        # 'IsPersonalBest': False,
                         'Compound': [result['Compound'].iloc[-1]],
                         'TotalLaps': [result['TotalLaps'].iloc[-1] + 1],
                         'New': [result['New'].iloc[-1]],
@@ -1966,7 +1967,7 @@ class Laps(pd.DataFrame):
             laps = self  # all laps
         else:
             # select only laps marked as personal fastest
-            laps = self.loc[self['IsPersonalBest']]
+            laps = self.loc[self['IsPersonalBest'] == True]  # noqa: E712 comparison with True
 
         if not laps.size:
             return Lap(index=self.columns)
