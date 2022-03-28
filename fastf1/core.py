@@ -1159,6 +1159,7 @@ class Session:
                     result['NumberOfLaps'] = 0
                     result['NumberOfPitStops'] = 0
                     result['Time'] = data['Time'].min()
+                    result['IsPersonalBest'] = False
                     result['Compound'] = d2['Compound'].iloc[0]
                     result['TotalLaps'] = d2['TotalLaps'].iloc[0]
                     result['New'] = d2['New'].iloc[0]
@@ -1627,6 +1628,11 @@ class Laps(pd.DataFrame):
         - **SpeedI2** (float): Speedtrap sector 2
         - **SpeedFL** (float): Speedtrap at finish line
         - **SpeedST** (float): Speedtrap on longest straight (Not sure)
+        - **IsPersonalBest** (bool): Flag that indicates whether this lap is
+            the official personal best lap of a driver. If any lap of a driver
+            is quicker than their respective personal best lap, this means that
+            the quicker lap is invalid and not counted. This can happen it the
+            track limits were execeeded, for example.
         - **Compound** (str): Tyre compound name: SOFT, MEDIUM ..
         - **TyreLife** (float): Laps driven on this tire (includes laps in other sessions for used sets of tires)
         - **FreshTyre** (bool): Tyre had TyreLife=0 at stint start, i.e. was a new tire
@@ -1852,7 +1858,7 @@ class Laps(pd.DataFrame):
             273 0 days 00:35:05.865000           33  ...           272        0.8
             274 0 days 00:36:47.787000           33  ...           339        1.1
             <BLANKLINE>
-            [275 rows x 32 columns]
+            [275 rows x 33 columns]
         """
         wd = [lap.get_weather_data() for _, lap in self.iterrows()]
         if wd:
@@ -1932,20 +1938,40 @@ class Laps(pd.DataFrame):
         """
         return self[self['Team'].isin(names)]
 
-    def pick_fastest(self):
+    def pick_fastest(self, only_by_time=False):
         """Return the lap with the fastest lap time.
 
-        .. note:: Officially deleted laps (e.g. driver was outside of
-          the track limits) will still show up as normal laps here.
-          The fastest lap returned by this method can therefore be one
-          that was officially deleted after it was set. You need to manually
-          ensure that this is not the case by comparing lap times with a
-          session's official results or some other source of data.
+        This method will by default return the quickest lap out of self, that
+        is also marked as personal best lap of a driver.
+
+        If the quickest lap by lap time is not marked as personal best, this
+        means that it was not counted. This can be the case for example, if
+        the driver exceeded track limits and the lap time was deleted.
+
+        If no lap is marked as personal best lap or self contains no laps,
+        an empty Lap object will be returned.
+
+        The check for personal best lap can be disabled, so that any quickest
+        lap will be returned.
+
+        Args:
+            only_by_time (bool): Ignore whether any laps are marked as
+                personal best laps and simply return the lap that has the
+                lowest lap time.
 
         Returns:
             instance of :class:`Lap`
         """
-        lap = self.loc[self['LapTime'].idxmin()]
+        if only_by_time:
+            laps = self  # all laps
+        else:
+            # select only laps marked as personal fastest
+            laps = self.loc[self['IsPersonalBest']]
+
+        if not laps.size:
+            return Lap(index=self.columns)
+
+        lap = laps.loc[laps['LapTime'].idxmin()]
         if isinstance(lap, pd.DataFrame):
             # More laps, same time
             lap = lap.iloc[0]  # take first clocked

@@ -109,7 +109,7 @@ class Cache:
     on FastF1.
     """
     _CACHE_DIR = ''
-    _API_CORE_VERSION = 3  # version of the api parser code (unrelated to release version number)
+    _API_CORE_VERSION = 4  # version of the api parser code (unrelated to release version number)
     _IGNORE_VERSION = False
     _FORCE_RENEW = False
 
@@ -403,11 +403,14 @@ def make_path(wname, wdate, sname, sdate):
 
 
 # define all empty columns for timing data
-EMPTY_LAPS = {'Time': pd.NaT, 'Driver': str(), 'LapTime': pd.NaT, 'NumberOfLaps': np.NaN,
-              'NumberOfPitStops': np.NaN, 'PitOutTime': pd.NaT, 'PitInTime': pd.NaT,
-              'Sector1Time': pd.NaT, 'Sector2Time': pd.NaT, 'Sector3Time': pd.NaT,
-              'Sector1SessionTime': pd.NaT, 'Sector2SessionTime': pd.NaT, 'Sector3SessionTime': pd.NaT,
-              'SpeedI1': np.NaN, 'SpeedI2': np.NaN, 'SpeedFL': np.NaN, 'SpeedST': np.NaN}
+EMPTY_LAPS = {'Time': pd.NaT, 'Driver': str(), 'LapTime': pd.NaT,
+              'NumberOfLaps': np.NaN, 'NumberOfPitStops': np.NaN,
+              'PitOutTime': pd.NaT, 'PitInTime': pd.NaT,
+              'Sector1Time': pd.NaT, 'Sector2Time': pd.NaT,
+              'Sector3Time': pd.NaT, 'Sector1SessionTime': pd.NaT,
+              'Sector2SessionTime': pd.NaT, 'Sector3SessionTime': pd.NaT,
+              'SpeedI1': np.NaN, 'SpeedI2': np.NaN, 'SpeedFL': np.NaN,
+              'SpeedST': np.NaN, 'IsPersonalBest': False}
 
 EMPTY_STREAM = {'Time': pd.NaT, 'Driver': str(), 'Position': np.NaN,
                 'GapToLeader': np.NaN, 'IntervalToPositionAhead': np.NaN}
@@ -589,6 +592,8 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
     # api_lapcnt does not count backwards even if the source data does
     in_past = False  # flag for when the data went back in time
 
+    personal_best_lap_time = None
+
     pitstops = -1  # start with -1 because first is out lap, needs to be zero after that
 
     # iterate through the data; new lap triggers next row in data
@@ -651,6 +656,9 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             else:
                 drv_data['PitOutTime'][lapcnt] = to_timedelta(time)  # add to current lap
                 pitstops += 1
+
+        if val := recursive_dict_get(resp, 'BestLapTime', 'Value'):
+            personal_best_lap_time = to_timedelta(val)
 
         # new lap; create next row
         if 'NumberOfLaps' in resp and resp['NumberOfLaps'] > api_lapcnt:
@@ -757,6 +765,11 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         if (new_s3_time := drv_data['Time'][i] + drv_data['Sector1Time'][i+1] + drv_data['Sector2Time'][i+1] +
                 drv_data['Sector3Time'][i+1]) < drv_data['Sector3SessionTime'][i+1]:
             drv_data['Sector3SessionTime'][i+1] = new_s3_time
+
+    for i, time in enumerate(drv_data['LapTime']):
+        if time == personal_best_lap_time:
+            drv_data['IsPersonalBest'][i] = True
+            break
 
     if integrity_errors:
         logging.warning(f"Driver {drv: >2}: Encountered {len(integrity_errors)} timing integrity error(s) "

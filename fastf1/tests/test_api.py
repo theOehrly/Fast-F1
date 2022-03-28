@@ -23,13 +23,13 @@ def test_timing_data():
     assert (isinstance(lap_data, pd.DataFrame)
             and isinstance(stream_data, pd.DataFrame))
     assert len(lap_data['Driver'].unique()) == 20  # 20 drivers
-    assert len(lap_data.columns) == 17
+    assert len(lap_data.columns) == 18
     assert (lap_data.dtypes == [
         'timedelta64[ns]', 'object', 'timedelta64[ns]', 'int64', 'int64',
         'timedelta64[ns]', 'timedelta64[ns]', 'timedelta64[ns]',
         'timedelta64[ns]', 'timedelta64[ns]', 'timedelta64[ns]',
         'timedelta64[ns]', 'timedelta64[ns]', 'float64', 'float64',
-        'float64', 'float64']).all()
+        'float64', 'float64', 'bool']).all()
 
     # these columns should not contain any NA values
     assert not lap_data.isna().loc[:, ('Time', 'Driver', 'NumberOfLaps',
