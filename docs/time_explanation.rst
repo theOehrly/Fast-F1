@@ -40,8 +40,17 @@ For a sample of telemetry data this means, that the sample will always have the 
 Take the following set of example telemetry. Lets assume the variable `tel` holds previously loaded telemetry data
 for one driver an for a full session (only time data is shown for simplification).
 
+.. testsetup::
+
+  >>> import fastf1
+  >>> import pandas
+  >>> fastf1.Cache.enable_cache('test_cache')
+  >>> session = fastf1.get_session(2020, 8, 'R')
+  >>> session.load()
+
 .. code-block::
 
+  >>> tel = session.car_data['33'].loc[:, ['Time', 'SessionTime', 'Date']]
   >>> tel
                           Time            SessionTime                    Date
   0     0 days 00:00:02.984000 0 days 00:00:02.984000 2020-09-06 12:40:03.180
@@ -49,16 +58,20 @@ for one driver an for a full session (only time data is shown for simplification
   2     0 days 00:00:03.464000 0 days 00:00:03.464000 2020-09-06 12:40:03.660
   3     0 days 00:00:03.704000 0 days 00:00:03.704000 2020-09-06 12:40:03.900
   4     0 days 00:00:03.944000 0 days 00:00:03.944000 2020-09-06 12:40:04.140
-                        ...                    ...                     ...
+  ...                      ...                    ...                     ...
   35533 0 days 02:23:27.764000 0 days 02:23:27.764000 2020-09-06 15:03:27.960
   35534 0 days 02:23:28.004000 0 days 02:23:28.004000 2020-09-06 15:03:28.200
   35535 0 days 02:23:28.244000 0 days 02:23:28.244000 2020-09-06 15:03:28.440
   35536 0 days 02:23:28.484000 0 days 02:23:28.484000 2020-09-06 15:03:28.680
   35537 0 days 02:23:28.724000 0 days 02:23:28.724000 2020-09-06 15:03:28.920
+  <BLANKLINE>
   [35538 rows x 3 columns]
 
-The session (a race in this case) lasted about 2 hours and 23 minutes. `SessionTime` and `Time` are exactly the same
-for this set of data. This is how the data looks as it is created by the api functions.
+The telemetry comprises approximately 2 hours and 23 minutes of data.
+The session (a race in this case) did not last this long, but the data starts
+before the beginning of the session and ends after the end.
+`SessionTime` and `Time` are exactly the same for this set of data.
+This is how the data looks as it is created by the api functions.
 Next, the data is sliced to only include a subset of the full session.
 
 .. code-block::
@@ -72,12 +85,13 @@ Next, the data is sliced to only include a subset of the full session.
   19813 0 days 00:00:00.676000 0 days 01:20:00.676000 2020-09-06 14:00:00.872
   19814 0 days 00:00:00.916000 0 days 01:20:00.916000 2020-09-06 14:00:01.112
   19815 0 days 00:00:01.156000 0 days 01:20:01.156000 2020-09-06 14:00:01.352
-                        ...                    ...                     ...
+  ...                      ...                    ...                     ...
   22288 0 days 00:09:59.076000 0 days 01:29:59.076000 2020-09-06 14:09:59.272
   22289 0 days 00:09:59.277000 0 days 01:29:59.277000 2020-09-06 14:09:59.473
   22290 0 days 00:09:59.517000 0 days 01:29:59.517000 2020-09-06 14:09:59.713
   22291 0 days 00:09:59.757000 0 days 01:29:59.757000 2020-09-06 14:09:59.953
   22292 0 days 00:09:59.997000 0 days 01:29:59.997000 2020-09-06 14:10:00.193
+  <BLANKLINE>
   [2482 rows x 3 columns]
 
 `SessionTime` and `Date` have kept there reference point. But the reference point for `Time` has changed and its new
