@@ -52,13 +52,13 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ./test_cache
-          key: fastf1-cache-v${{ secrets.CACHE_VERSION }}-${{ matrix.python-version }}-${{ hashFiles('*.*') }}
+          key: fastf1-${{ secrets.CACHE_VERSION }}-${{ matrix.python-version }}-${{ hashFiles('*.*') }}
           restore-keys: |
-            fastf1-cache-v${{ secrets.CACHE_VERSION }}-${{ matrix.python-version }}
+            fastf1-${{ secrets.CACHE_VERSION }}-${{ matrix.python-version }}
 
       - name: Run tests
         run: |
-          pytest -rf
+          pytest -ra
 
   run-lint-checks:
     runs-on: ubuntu-latest
