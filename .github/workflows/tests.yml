@@ -127,7 +127,7 @@ jobs:
       - name: Cache FastF1
         uses: actions/cache@v2
         with:
-          path: ./test_cache
+          path: ./doc_cache
           key: fastf1-${{ secrets.CACHE_VERSION }}-doc-cache-${{ hashFiles('*.*') }}
           restore-keys: |
             fastf1-${{ secrets.CACHE_VERSION }}-doc-cache
