@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 
 
@@ -33,8 +35,8 @@ def pytest_configure(config):
 
 
 def pytest_sessionstart(session):
-    import fastf1.api
-    fastf1.api.Cache.enable_cache('test_cache')
+    import fastf1
+    fastf1.Cache.enable_cache('test_cache')
 
 
 def pytest_collection_modifyitems(config, items):

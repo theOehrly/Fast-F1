@@ -47,46 +47,7 @@ jobs:
       - name: Run tests
         run: |
           mkdir test_cache  # make sure cache dir exists
-          pytest -rf
-
-  run-doc-tests:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [ '3.8', '3.9', '3.10' ]
-    name: Doctests on ${{ matrix.python-version }}
-    steps:
-      - name: Setup python
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Checkout repo
-        uses: actions/checkout@v2
-
-      - name: Cache pip
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache/pip
-          key: pip-cache-${{ hashFiles('requirements/*/*.txt') }}
-          restore-keys: |
-            pip-cache
-
-      - name: Install Python dev dependencies
-        run: |
-          python3 -m pip install --upgrade pip setuptools wheel
-          python3 -m pip install -r requirements-dev.txt
-
-      - name: Install Fast-F1 from sources
-        run: |
-          python3 -m pip install -e .
-
-      - name: Run tests
-        run: |
-          mkdir test_cache  # make sure cache dir exists
-          pytest -rf --xdoctest --ignore=fastf1/tests
-          pytest -rf --doctest-glob="*.rst" --ignore=fastf1/tests
-
+          pytest -rf -n auto
 
   run-lint-checks:
     runs-on: ubuntu-latest

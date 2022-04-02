@@ -40,15 +40,15 @@ For a sample of telemetry data this means, that the sample will always have the 
 Take the following set of example telemetry. Lets assume the variable `tel` holds previously loaded telemetry data
 for one driver an for a full session (only time data is shown for simplification).
 
-.. testsetup::
+.. doctest::
+  :hide:
 
   >>> import fastf1
   >>> import pandas
-  >>> fastf1.Cache.enable_cache('test_cache')
   >>> session = fastf1.get_session(2020, 8, 'R')
   >>> session.load()
 
-.. code-block::
+.. doctest::
 
   >>> tel = session.car_data['33'].loc[:, ['Time', 'SessionTime', 'Date']]
   >>> tel
@@ -74,7 +74,7 @@ before the beginning of the session and ends after the end.
 This is how the data looks as it is created by the api functions.
 Next, the data is sliced to only include a subset of the full session.
 
-.. code-block::
+.. doctest::
 
   >>> t1 = pandas.Timedelta(hours=1, minutes=20)
   >>> t2 = pandas.Timedelta(hours=1, minutes=30)
@@ -109,7 +109,7 @@ a common zero point.
 
 The relation between `SessionTime` and `Date` is a constant offset. This value is available through the session class.
 
-.. code-block::
+.. doctest::
 
   >>> session.t0_date
   Timestamp('2020-09-06 12:40:00.196000')
@@ -117,7 +117,7 @@ The relation between `SessionTime` and `Date` is a constant offset. This value i
 As already mentioned above, the zero point of the session time is before the actual start of a session. The session
 itself officially starts at some later point in time. This value is also available through the session class.
 
-.. code-block::
+.. doctest::
 
   >>> session.session_start_time
   datetime.timedelta(seconds=2008, microseconds=79000)
