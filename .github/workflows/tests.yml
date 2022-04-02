@@ -35,7 +35,7 @@ jobs:
           restore-keys: |
             pip-cache
 
-      - name: Install Python dev dependencies
+      - name: Install python requirements
         run: |
           python3 -m pip install --upgrade pip setuptools wheel
           python3 -m pip install -r requirements-dev.txt
@@ -102,7 +102,7 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: '3.9'
 
       - name: Checkout repo
         uses: actions/checkout@v2
@@ -115,15 +115,22 @@ jobs:
           restore-keys: |
             pip-cache
 
-      - name: Install Python dev dependencies
-        run: |
-          python3 -m pip install --upgrade pip setuptools wheel
-          python3 -m pip install -r requirements-dev.txt
-
       - name: Install python requirements
         run: |
           python3 -m pip install --upgrade pip setuptools wheel
           python3 -m pip install -r requirements-dev.txt
+
+      - name: Create cache directory
+        run: |
+          mkdir doc_cache  # make sure cache dir exists
+
+      - name: Cache FastF1
+        uses: actions/cache@v2
+        with:
+          path: ./test_cache
+          key: fastf1-${{ secrets.CACHE_VERSION }}-doc-cache-${{ hashFiles('*.*') }}
+          restore-keys: |
+            fastf1-${{ secrets.CACHE_VERSION }}-doc-cache
 
       - name: Install Fast-F1 from sources
         run: |
@@ -131,5 +138,6 @@ jobs:
 
       - name: Run tests
         run: |
-          mkdir test_cache  # make sure cache dir exists
+          mkdir test_cache  # not really need but pytest setup relies on it 
           pytest -rf --prj-doc
+          python setup.py build_sphinx
