@@ -44,9 +44,20 @@ jobs:
         run: |
           python3 -m pip install -e .
 
-      - name: Run tests
+      - name: Create cache directory
         run: |
           mkdir test_cache  # make sure cache dir exists
+
+      - name: Cache FastF1
+        uses: actions/cache@v2
+        with:
+          path: ./test_cache
+          key: fastf1-cache-v${{ secrets.CACHE_VERSION }}-${{ matrix.python-version }}-${{ hashFiles('*.*') }}
+          restore-keys: |
+            fastf1-cache-v${{ secrets.CACHE_VERSION }}-${{ matrix.python-version }}
+
+      - name: Run tests
+        run: |
           pytest -rf
 
   run-lint-checks:
