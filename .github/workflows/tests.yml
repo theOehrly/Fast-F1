@@ -47,7 +47,7 @@ jobs:
       - name: Run tests
         run: |
           mkdir test_cache  # make sure cache dir exists
-          pytest -rf -n auto
+          pytest -rf
 
   run-lint-checks:
     runs-on: ubuntu-latest
