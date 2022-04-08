@@ -3,6 +3,15 @@ Changelog
 =========
 
 
+v0.2.3
+======
+
+Bug Fixes:
+
+  - Fixed crash in :func:`fastf1.Telemetry.calculate_driver_ahead` in case
+    of missing car data (#146)
+
+
 v2.2.2
 ======
 
