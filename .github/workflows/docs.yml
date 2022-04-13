@@ -61,14 +61,15 @@ jobs:
         run: |
           python3 -m pip install -e .
 
-      - name: Checkout current docs
+      - name: Create doc build dir
         run: |
           mkdir -p docs/_build/html
-          cd docs/_build/html
-          git init
-          git remote add origin "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
-          git checkout -b gh-pages
-          git pull origin gh-pages
+
+      - name: Checkout current docs
+        uses: actions/checkout@v3
+        with:
+          ref: gh-pages
+          path: docs/_build/html
 
       - name: Build docs
         run: |
