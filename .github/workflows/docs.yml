@@ -1,20 +1,17 @@
-name: Run tests
+name: Build Documentation
 
 # Controls when the action will run.
 on:
   # run on push, manual dispatch and on a schedule
   workflow_dispatch:
-  push:
-    branches-ignore:
-      - gh-pages
-  pull_request:
+  workflow_call:
   release:
     types: [ released ]
 
 
 jobs:
-  run-prj-and-doc-tests:
-    name: Test doc and project structure
+  build_docs:
+    name: Build Documentation
     runs-on: ubuntu-latest
     steps:
       - name: Setup python
@@ -79,5 +76,5 @@ jobs:
         uses: actions/upload-artifact@v3
         if: github.event_name != 'release'
         with:
-          name: doc-build-$GITHUB_REF_NAME-$GITHUB_JOB
+          name: doc-build-${{ GITHUB_REF_NAME }}-${{ GITHUB_JOB }}
           path: docs/build/_html

@@ -94,8 +94,8 @@ jobs:
           pytest -rf --flake8 --lint-only
 
 
-  run-prj-and-doc-tests:
-    name: Test doc and project structure
+  run-readme-render-test:
+    name: Test readme renders on PyPi
     runs-on: ubuntu-latest
     steps:
       - name: Setup python
@@ -119,18 +119,6 @@ jobs:
           python3 -m pip install --upgrade pip setuptools wheel
           python3 -m pip install -r requirements-dev.txt
 
-      - name: Create cache directory
-        run: |
-          mkdir doc_cache  # make sure cache dir exists
-
-      - name: Cache FastF1
-        uses: actions/cache@v2
-        with:
-          path: ./doc_cache
-          key: fastf1-${{ secrets.CACHE_VERSION }}-doc-cache-${{ hashFiles('*.*') }}
-          restore-keys: |
-            fastf1-${{ secrets.CACHE_VERSION }}-doc-cache
-
       - name: Install Fast-F1 from sources
         run: |
           python3 -m pip install -e .
@@ -139,4 +127,6 @@ jobs:
         run: |
           mkdir test_cache  # not really need but pytest setup relies on it 
           pytest -rf --prj-doc
-          python setup.py build_sphinx
+
+  run-sphinx-build-test:
+    uses: ./.github/workflows/docs.yml
