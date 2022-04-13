@@ -1,8 +1,6 @@
 name: Run tests
 
-# Controls when the action will run.
 on:
-  # run on push, manual dispatch and on a schedule
   workflow_dispatch:
   push:
     branches-ignore:
@@ -129,4 +127,9 @@ jobs:
           pytest -rf --prj-doc
 
   run-sphinx-build-test:
+    name: Test Docs
     uses: ./.github/workflows/docs.yml
+    with:
+      publish: false
+    secrets:
+      CACHE_VERSION: ${{ secrets.CACHE_VERSION }}

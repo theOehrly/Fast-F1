@@ -1,10 +1,15 @@
 name: Build Documentation
 
-# Controls when the action will run.
 on:
-  # run on push, manual dispatch and on a schedule
   workflow_dispatch:
   workflow_call:
+    inputs:
+      publish:
+        required: true
+        type: boolean
+    secrets:
+      CACHE_VERSION:
+        required: true
   release:
     types: [ released ]
 
@@ -29,6 +34,11 @@ jobs:
           key: pip-cache-${{ hashFiles('requirements/*/*.txt') }}
           restore-keys: |
             pip-cache
+
+      - name: Install patched autodocsumm
+        # TODO: remove this step once PR is merged
+        run: |
+          python3 -m pip install git+https://github.com/theOehrly/autodocsumm.git@fixed-for-prod-0
 
       - name: Install python requirements
         run: |
@@ -65,7 +75,7 @@ jobs:
           python setup.py build_sphinx -a -E
 
       - name: Publish docs
-        if: github.event_name == 'release'
+        if: (github.event_name == 'release') || inputs.publish
         run: |
           cd docs/build/_html
           git add .
@@ -76,5 +86,5 @@ jobs:
         uses: actions/upload-artifact@v3
         if: github.event_name != 'release'
         with:
-          name: "doc-build-$GITHUB_REF_NAME-$GITHUB_JOB"
+          name: Documentation Build
           path: docs/build/_html
