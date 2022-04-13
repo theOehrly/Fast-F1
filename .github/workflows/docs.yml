@@ -79,6 +79,8 @@ jobs:
         run: |
           cd docs/_build/html
           git add .
+          git config user.name github-actions
+          git config user.email github-actions@github.com
           git commit -m "$GITHUB_REF_NAME ($GITHUB_JOB) ci release"
           git push origin gh-pages --force
 
