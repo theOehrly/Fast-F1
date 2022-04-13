@@ -63,8 +63,8 @@ jobs:
 
       - name: Checkout current docs
         run: |
-          mkdir -p docs/build/_html
-          cd docs/build/_html
+          mkdir -p docs/_build/html
+          cd docs/_build/html
           git init
           git remote add origin "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
           git pull origin gh-pages
@@ -77,7 +77,7 @@ jobs:
       - name: Publish docs
         if: (github.event_name == 'release') || inputs.publish
         run: |
-          cd docs/build/_html
+          cd docs/_build/html
           git add .
           git commit -m "$GITHUB_REF_NAME ($GITHUB_JOB) ci release"
           git push origin gh-pages --force
@@ -87,4 +87,4 @@ jobs:
         if: github.event_name != 'release'
         with:
           name: Documentation Build
-          path: docs/build/_html
+          path: docs/_build/html
