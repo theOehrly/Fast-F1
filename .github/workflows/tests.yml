@@ -3,7 +3,6 @@ name: Run tests
 # Controls when the action will run.
 on:
   # run on push, manual dispatch and on a schedule
-  # when run on schedule, tests will only be run if a new matplotlib release was found
   workflow_dispatch:
   push:
     branches-ignore:
