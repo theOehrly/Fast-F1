@@ -76,5 +76,5 @@ jobs:
         uses: actions/upload-artifact@v3
         if: github.event_name != 'release'
         with:
-          name: doc-build-${{ GITHUB_REF_NAME }}-${{ GITHUB_JOB }}
+          name: "doc-build-$GITHUB_REF_NAME-$GITHUB_JOB"
           path: docs/build/_html
