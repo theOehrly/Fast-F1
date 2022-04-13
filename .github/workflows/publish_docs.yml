@@ -1,4 +1,4 @@
-name: Publish Documentation from master
+name: Publish Documentatio
 
 on:
   workflow_dispatch:

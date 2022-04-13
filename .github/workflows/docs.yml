@@ -67,8 +67,8 @@ jobs:
           cd docs/_build/html
           git init
           git remote add origin "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
-          git pull
-          git checkout gh-pages
+          git checkout -b gh-pages
+          git pull origin gh-pages
 
       - name: Build docs
         run: |
