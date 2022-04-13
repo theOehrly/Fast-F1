@@ -1,0 +1,90 @@
+name: Build Documentation
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      publish:
+        required: true
+        type: boolean
+    secrets:
+      CACHE_VERSION:
+        required: true
+  release:
+    types: [ released ]
+
+
+jobs:
+  build_docs:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: pip-cache-${{ hashFiles('requirements/*/*.txt') }}
+          restore-keys: |
+            pip-cache
+
+      - name: Install patched autodocsumm
+        # TODO: remove this step once PR is merged
+        run: |
+          python3 -m pip install git+https://github.com/theOehrly/autodocsumm.git@fixed-for-prod-0
+
+      - name: Install python requirements
+        run: |
+          python3 -m pip install --upgrade pip setuptools wheel
+          python3 -m pip install -r requirements-dev.txt
+
+      - name: Create cache directory
+        run: |
+          mkdir doc_cache  # make sure cache dir exists
+
+      - name: Cache FastF1
+        uses: actions/cache@v2
+        with:
+          path: ./doc_cache
+          key: fastf1-${{ secrets.CACHE_VERSION }}-doc-cache-${{ hashFiles('*.*') }}
+          restore-keys: |
+            fastf1-${{ secrets.CACHE_VERSION }}-doc-cache
+
+      - name: Install Fast-F1 from sources
+        run: |
+          python3 -m pip install -e .
+
+      - name: Checkout current docs
+        run: |
+          mkdir -p docs/build/_html
+          cd docs/build/_html
+          git init
+          git remote add origin "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
+          git pull origin gh-pages
+
+      - name: Build docs
+        run: |
+          mkdir test_cache  # not really need but pytest setup relies on it 
+          python setup.py build_sphinx -a -E
+
+      - name: Publish docs
+        if: (github.event_name == 'release') || inputs.publish
+        run: |
+          cd docs/build/_html
+          git add .
+          git commit -m "$GITHUB_REF_NAME ($GITHUB_JOB) ci release"
+          git push origin gh-pages --force
+
+      - name: Upload docs as artifact
+        uses: actions/upload-artifact@v3
+        if: github.event_name != 'release'
+        with:
+          name: Documentation Build
+          path: docs/build/_html

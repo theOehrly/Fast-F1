@@ -1,0 +1,13 @@
+name: Publish Documentation from master
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish-docs:
+    name: Build and Publish Docs
+    uses: ./.github/workflows/docs.yml
+    with:
+      publish: true
+    secrets:
+      CACHE_VERSION: ${{ secrets.CACHE_VERSION }}

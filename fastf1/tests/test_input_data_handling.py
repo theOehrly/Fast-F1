@@ -111,7 +111,8 @@ def _test_no_timing_app_data():
     fastf1.api.timing_app_data = _mock
 
     session = fastf1.get_session(2020, 'Italy', 'R')
-    session.load(telemetry=False, weather=False)
+    with fastf1.Cache.disabled():
+        session.load(telemetry=False, weather=False)
 
     assert 'Failed to load lap data!' not in log_handle.text
     assert 'No tyre data for driver' in log_handle.text
@@ -122,21 +123,11 @@ def _test_no_timing_app_data():
 
 @pytest.mark.f1telapi
 def test_inlap_added():
-    fastf1.testing.run_in_subprocess(_test_inlap_added)
-
-
-def _test_inlap_added():
-    # !! API parser test - require running without cache !!
-    # perez aborted his last q3 run and went straight into the pits
-    # lap data needs to be added so that telemetry can be loaded
-    log_handle = fastf1.testing.capture_log(logging.WARNING)
-
     session = fastf1.get_session(2021, 'Mexico City', 'Q')
 
-    session.load(telemetry=False)
+    with fastf1.Cache.disabled():
+        session.load(telemetry=False)
+
     last = session.laps.pick_driver('PER').iloc[-1]
     assert not pd.isnull(last['PitInTime'])
     assert not pd.isnull(last['Time'])
-
-    # verify that the test was actually run without caching enabled
-    assert 'NO CACHE' in log_handle.text

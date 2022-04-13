@@ -1,10 +1,12 @@
+import sys
+
 import pytest
 
 
 def pytest_addoption(parser):
     parser.addoption(
-        "--f1-tel-api", action="store_true", default=False,
-        help="run tests which require connecting to the f1 telemetry api"
+        "--no-f1-tel-api", action="store_true", default=False,
+        help="skip tests which require connecting to the f1 telemetry api"
     )
     parser.addoption(
         "--ergast-api", action="store_true", default=False,
@@ -33,8 +35,8 @@ def pytest_configure(config):
 
 
 def pytest_sessionstart(session):
-    import fastf1.api
-    fastf1.api.Cache.enable_cache('test_cache')
+    import fastf1
+    fastf1.Cache.enable_cache('test_cache')
 
 
 def pytest_collection_modifyitems(config, items):
@@ -47,8 +49,8 @@ def pytest_collection_modifyitems(config, items):
 
     # cli conditional skip test that use the cache or connect to the
     # f1 api directly
-    if not config.getoption("--f1-tel-api"):
-        skip_f1_tel = pytest.mark.skip(reason="need --f1-tel-api option to run")
+    if config.getoption("--no-f1-tel-api"):
+        skip_f1_tel = pytest.mark.skip(reason="--no-f1-tel-api set")
         for item in items:
             if "f1telapi" in item.keywords:
                 item.add_marker(skip_f1_tel)

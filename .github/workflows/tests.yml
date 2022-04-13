@@ -1,9 +1,6 @@
 name: Run tests
 
-# Controls when the action will run.
 on:
-  # run on push, manual dispatch and on a schedule
-  # when run on schedule, tests will only be run if a new matplotlib release was found
   workflow_dispatch:
   push:
     branches-ignore:
@@ -17,7 +14,7 @@ jobs:
     strategy:
       matrix:
         python-version: [ '3.8', '3.9', '3.10' ]
-    name: Run code tests on ${{ matrix.python-version }}
+    name: Tests on ${{ matrix.python-version }}
     steps:
       - name: Setup python
         uses: actions/setup-python@v2
@@ -35,7 +32,7 @@ jobs:
           restore-keys: |
             pip-cache
 
-      - name: Install Python dev dependencies
+      - name: Install python requirements
         run: |
           python3 -m pip install --upgrade pip setuptools wheel
           python3 -m pip install -r requirements-dev.txt
@@ -44,11 +41,21 @@ jobs:
         run: |
           python3 -m pip install -e .
 
-      - name: Run tests
+      - name: Create cache directory
         run: |
           mkdir test_cache  # make sure cache dir exists
-          pytest -rf
 
+      - name: Cache FastF1
+        uses: actions/cache@v2
+        with:
+          path: ./test_cache
+          key: fastf1-${{ secrets.CACHE_VERSION }}-${{ matrix.python-version }}-${{ hashFiles('*.*') }}
+          restore-keys: |
+            fastf1-${{ secrets.CACHE_VERSION }}-${{ matrix.python-version }}
+
+      - name: Run tests
+        run: |
+          pytest -ra
 
   run-lint-checks:
     runs-on: ubuntu-latest
@@ -85,14 +92,14 @@ jobs:
           pytest -rf --flake8 --lint-only
 
 
-  run-prj-and-doc-tests:
-    name: Test doc and project structure
+  run-readme-render-test:
+    name: Test readme renders on PyPi
     runs-on: ubuntu-latest
     steps:
       - name: Setup python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: '3.9'
 
       - name: Checkout repo
         uses: actions/checkout@v2
@@ -105,11 +112,6 @@ jobs:
           restore-keys: |
             pip-cache
 
-      - name: Install Python dev dependencies
-        run: |
-          python3 -m pip install --upgrade pip setuptools wheel
-          python3 -m pip install -r requirements-dev.txt
-
       - name: Install python requirements
         run: |
           python3 -m pip install --upgrade pip setuptools wheel
@@ -121,5 +123,13 @@ jobs:
 
       - name: Run tests
         run: |
-          mkdir test_cache  # make sure cache dir exists
+          mkdir test_cache  # not really need but pytest setup relies on it 
           pytest -rf --prj-doc
+
+  run-sphinx-build-test:
+    name: Test Docs
+    uses: ./.github/workflows/docs.yml
+    with:
+      publish: false
+    secrets:
+      CACHE_VERSION: ${{ secrets.CACHE_VERSION }}
