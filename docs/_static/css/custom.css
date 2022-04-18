@@ -1,0 +1,20 @@
+.ff1-button {
+    background: #297fb9;
+    font-weight: normal;
+    display: inline-block;
+    padding: 0 1em;
+    line-height: 2.8;
+    font-size: 16px;
+    text-align: center;
+    cursor: pointer;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 6px;
+    z-index: 1;
+    transition: background .25s ease;
+}
+
+.ff1-button:hover, .ff1-button:active, .ff1-button:focus {
+    background: #297fb9;
+    outline-color: #297fb9;
+}
