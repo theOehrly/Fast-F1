@@ -1,6 +1,6 @@
-=====================
-Fast F1 documentation
-=====================
+====================
+FastF1 documentation
+====================
 
 For the passionate F1 nerds.
 
@@ -81,6 +81,7 @@ Alternatively, a wheel or a source distribution can be downloaded from Pypi.
    howto_accurate_calculations
    known_bugs
    troubleshooting
+   contributing/index
    changelog
 
 

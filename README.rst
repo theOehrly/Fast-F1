@@ -2,11 +2,6 @@
 Fast F1
 =======
 
-**FastF1 version 2.2.0 has been release. A few breaking changes were required.
-Please read the** `changelog <https://theoehrly.github.io/Fast-F1/changelog.html>`_.
-
-**Enjoy the 2022 to season!**
-
 FastF1 is a python package for accessing and analyzing Formula 1 results,
 schedules, timing data and telemetry.
 
@@ -31,6 +26,7 @@ Getting Started: Documentation and Examples
  - `Documentation <https://theoehrly.github.io/Fast-F1/>`_.
  - `Examples <https://theoehrly.github.io/Fast-F1/examples/index.html>`_.
  - `Changelog <https://theoehrly.github.io/Fast-F1/changelog.html>`_.
+ - `Contributing <https://theoehrly.github.io/Fast-F1/contributing/index.html>`_.
 
 Furthermore, there are  some great articles and examples written by other
 people. They provide a nice overview about what you can do with FastF1 and
@@ -113,27 +109,6 @@ Usually it is not necessary to record the live timing data. But there have
 been server issues in the past which resulted in the data being unavailable
 for download. Therefore, you only need to record live timing data if you
 want to benefit from the extra redundancy.
-
-
-Bugs and Issues
----------------
-
-Please report bugs if (when) you find them. Feel free to report complaints about
-unclear documentation too.
-
-
-Contributing
-------------
-
-Contributions are welcome of course. If you are interested in contributing, open an issue for the proposed feature
-or issue you would like to work on. This way we can coordinate so that no unnecessary work is done.
-
-Working directly on the core and api code will require some time to understand. Creating nice default plots on the
-other hand does not required as deep of an understanding of the code and is therefore easier to accomplish. Pick
-whatever you like to do.
-
-Also, the documentation needs an examples section. You can provide some snippets of your code as examples for
-others, to help them get started easier.
 
 
 Notice

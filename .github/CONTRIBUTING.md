@@ -1,0 +1,1 @@
+Please refer to the [contribution guide](https://theoehrly.github.io/Fast-F1/contributing/index.html).
