@@ -3,6 +3,15 @@ Changelog
 =========
 
 
+v0.2.4
+======
+
+Bug Fixes:
+
+  - compatibility fixes for supporting 'Sprint' sessions for the 2022 season
+    (see also #160)
+
+
 v0.2.3
 ======
 
