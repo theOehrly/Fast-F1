@@ -142,6 +142,21 @@ def test_event_get_session_name():
     assert event.get_session_name('Q') == 'Qualifying'
     assert event.get_session_name('praCtice 1') == 'Practice 1'
 
+    # sprint qualifying name peculiarities
+    event = fastf1.get_event(2021, 14)
+    assert event.year == 2021
+    assert event.get_session_name('SQ') == 'Sprint Qualifying'
+    assert event.get_session_name('S') == 'Sprint Qualifying'
+    assert event.get_session_name('Sprint') == 'Sprint Qualifying'
+    assert event.get_session_name('Sprint Qualifying') == 'Sprint Qualifying'
+
+    event = fastf1.get_event(2022, 4)
+    assert event.year == 2022
+    assert event.get_session_name('SQ') == 'Sprint'
+    assert event.get_session_name('S') == 'Sprint'
+    assert event.get_session_name('Sprint') == 'Sprint'
+    assert event.get_session_name('Sprint Qualifying') == 'Sprint'
+
 
 def test_event_get_session_date():
     event = fastf1.get_event(2021, 1)

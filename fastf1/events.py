@@ -100,13 +100,17 @@ Multiple event (schedule) related functions and methods make use of a session
 identifier to differentiate between the various sessions of one event.
 This identifier can currently be one of the following:
 
-    - session name abbreviation: ``'FP1', 'FP2', 'FP3', 'Q',
+    - session name abbreviation: ``'FP1', 'FP2', 'FP3', 'Q', 'S',
       'SQ', 'R'``
     - full session name: ``'Practice 1', 'Practice 2',
-      'Practice 3', 'Sprint Qualifying', 'Qualifying', 'Race'``;
+      'Practice 3', 'Sprint Qualifying', 'Sprint', 'Qualifying', 'Race'``;
       provided names will be normalized, so that the name is
       case-insensitive
     - number of the session: ``1, 2, 3, 4, 5``
+
+Note that 'Sprint' is called 'Sprint Qualifying' only in the 2021 season.
+The event name will silently be corrected if you use 'Sprint'/'S' for the 2021
+season or 'Sprint Qualifying'/'SQ' for the subsequent seasons.
 
 
 Functions for accessing schedule data
@@ -173,6 +177,7 @@ from fastf1.utils import recursive_dict_get
 _SESSION_TYPE_ABBREVIATIONS = {
     'R': 'Race',
     'Q': 'Qualifying',
+    'S': 'Sprint',
     'SQ': 'Sprint Qualifying',
     'FP1': 'Practice 1',
     'FP2': 'Practice 2',
@@ -421,20 +426,31 @@ def _get_schedule_from_ergast(year):
             date = pd.NaT
         data['EventDate'].append(date)
 
-        # add sessions by assuming a 'conventional' and unchanged schedule
-        # only date but not time can be assumed for non race sessions,
-        #   therefore .floor to daily resolution
-        data['EventFormat'].append("conventional")
-        data['Session1'].append('Practice 1')
-        data['Session1Date'].append(date.floor('D') - pd.Timedelta(days=2))
-        data['Session2'].append('Practice 2')
-        data['Session2Date'].append(date.floor('D') - pd.Timedelta(days=2))
-        data['Session3'].append('Practice 3')
-        data['Session3Date'].append(date.floor('D') - pd.Timedelta(days=1))
-        data['Session4'].append('Qualifying')
-        data['Session4Date'].append(date.floor('D') - pd.Timedelta(days=1))
-        data['Session5'].append('Race')
-        data['Session5Date'].append(date)
+        if 'Sprint' in rnd:
+            sprint_name = 'Sprint Qualifying' if year == 2021 else 'Sprint'
+            data['EventFormat'].append("sprint")
+            data['Session1'].append('Practice 1')
+            data['Session1Date'].append(date.floor('D') - pd.Timedelta(days=2))
+            data['Session2'].append('Qualifying')
+            data['Session2Date'].append(date.floor('D') - pd.Timedelta(days=2))
+            data['Session3'].append('Practice 2')
+            data['Session3Date'].append(date.floor('D') - pd.Timedelta(days=1))
+            data['Session4'].append(sprint_name)
+            data['Session4Date'].append(date.floor('D') - pd.Timedelta(days=1))
+            data['Session5'].append('Race')
+            data['Session5Date'].append(date)
+        else:
+            data['EventFormat'].append("conventional")
+            data['Session1'].append('Practice 1')
+            data['Session1Date'].append(date.floor('D') - pd.Timedelta(days=2))
+            data['Session2'].append('Practice 2')
+            data['Session2Date'].append(date.floor('D') - pd.Timedelta(days=2))
+            data['Session3'].append('Practice 3')
+            data['Session3Date'].append(date.floor('D') - pd.Timedelta(days=1))
+            data['Session4'].append('Qualifying')
+            data['Session4Date'].append(date.floor('D') - pd.Timedelta(days=1))
+            data['Session5'].append('Race')
+            data['Session5Date'].append(date)
 
         data['F1ApiSupport'].append(True if year >= 2018 else False)
         # simplified; this is only true most of the time
@@ -723,6 +739,12 @@ class Event(pd.Series):
                 except KeyError:
                     raise ValueError(f"Invalid session type '{identifier}'")
 
+            # 'Sprint' is called 'Sprint Qualifying' only in 2021
+            if (self.year == 2021) and (session_name == 'Sprint'):
+                session_name = 'Sprint Qualifying'
+            elif (self.year > 2021) and (session_name == 'Sprint Qualifying'):
+                session_name = 'Sprint'
+
             if session_name not in self.values:
                 raise ValueError(f"No session of type '{identifier}' for "
                                  f"this event")
@@ -819,7 +841,7 @@ class Event(pd.Series):
         Returns:
             :class:`Session` instance
         """
-        return self.get_session('Sprint Qualifying')
+        return self.get_session('Sprint')
 
     def get_practice(self, number):
         """Return the specified practice session.
