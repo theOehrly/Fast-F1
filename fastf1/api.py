@@ -18,6 +18,7 @@ A collection of functions to interface with the F1 web api.
    position_data
    track_status_data
    session_status_data
+   race_control_messages
    driver_info
    weather_data
    fetch_page
@@ -1287,6 +1288,70 @@ def session_status_data(path, response=None, livedata=None):
 
         data['Time'].append(to_timedelta(entry[0]))
         data['Status'].append(row['Status'])
+
+    return data
+
+
+@Cache.api_request_wrapper
+def race_control_messages(path, response=None, livedata=None):
+    """Fetch and parse race control messages.
+
+    Race control messages are sent by race control to all teams to notify of decisions and statuses of the session
+
+    Every message has the following attributes:
+
+        - Utc: Message timestamp
+        - Category (str): Type of message, "Other", "Flag", "Drs", "CarEvent"
+        - Message (str): Content of message
+
+    Other possible attributes are:
+    
+        - Status (str): Status of context, e.g. "DISABLED" for disabling DRS
+        - Flag (str): Type of flag being waved "GREEN", "RED", "YELLOW", "CLEAR", "CHEQUERED"
+        - Scope (str): Scope of message "Track", "Sector", "Driver"
+        - Sector (int): Affected track sector for sector-scoped messages
+        - RacingNumber (str): Affected driver for CarEvent messages
+    
+    Args:
+        path (str): api path base string (usually ``Session.api_path``)
+        response: Response as returned by :func:`fetch_page` can be passed if it was downloaded already.
+        livedata: An instance of :class:`fastf1.livetiming.data.LiveTimingData` to use as a source instead of the api
+
+    Returns:
+        A dictionary containing one key for each data channel and a list of values per key.
+
+    Raises:
+        SessionNotAvailableError: in case the F1 livetiming api returns no data
+    """
+    if livedata is not None and livedata.has('RaceControlMessages'):
+        # does not need any further processing
+        logging.info("Loading race control messages")
+        return livedata.get('RaceControlMessages')
+    elif response is None:
+        logging.info("Fetching race control messages...")
+        response = fetch_page(path, 'race_control_messages')
+        if response is None:  # no response received
+            raise SessionNotAvailableError(
+                "No data for this session! If this session only finished "
+                "recently, please try again in a few minutes."
+            )
+
+    data = {
+        'Time': [], 'Category': [], 'Message': [], 'Status': [],
+        'Flag': [], 'Scope': [], 'Sector': [], 'RacingNumber': []
+    }
+    data_keys = ('Category', 'Message', 'Status', 'Flag', 'Scope', 'Sector', 'RacingNumber')
+    converters = (str, str, str, str, str, int, str)
+
+    for entry in response['Messages']:
+        data['Time'].append(to_datetime(entry['Utc']))
+
+        for key, conv in zip(data_keys, converters):
+            try:
+                data[key].append(conv(entry[key]))
+            except (KeyError, ValueError):
+                # type conversion failed or key is missing
+                data[key].append(None)
 
     return data
 

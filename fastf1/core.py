@@ -894,6 +894,7 @@ class Session:
         """str: API base path for this session"""
 
         self._session_status = dict()
+        self._race_control_messages = dict()
 
         self._laps: Laps
         self._t0_date: pd.Timestamp
@@ -986,6 +987,15 @@ class Session:
         return self._get_property_warn_not_loaded('_session_status')
 
     @property
+    def race_control_messages(self):
+        """:class:`pandas.Dataframe`: Race Control messages as returned by
+        :func:`fastf1.api.race_control_messages`
+        
+        Data is available after calling `Session.load` with ``messages=True``
+        """
+        return self._get_property_warn_not_loaded('_race_control_messages')
+
+    @property
     def session_start_time(self):
         """:class:`pandas.Timedelta`: Session time at which the session was
         started according to the session status data. This is not the
@@ -1005,7 +1015,7 @@ class Session:
         return self._get_property_warn_not_loaded('_t0_date')
 
     def load(self, *, laps=True, telemetry=True, weather=True,
-             livedata=None):
+             livedata=None, messages=True):
         """Load session data from the supported APIs.
 
         This method allows to flexibly load some or all data that FastF1 can
@@ -1076,10 +1086,17 @@ class Session:
                     logging.warning("Failed to load weather data!")
                     logging.debug("Weather data failure traceback:", exc_info=exc)
 
+            if messages:
+                try:
+                    self._load_race_control_messages(livedata=livedata)
+                except Exception as exc:
+                    logging.warning("Failed to load RC message data!")
+                    logging.debug("RC message data failure traceback:", exc_info=exc)
+
         else:
-            if any((laps, telemetry, weather)):
+            if any((laps, telemetry, weather, messages)):
                 logging.warning(
-                    "Cannot load laps, telemetry and weather data because "
+                    "Cannot load laps, telemetry, weather, and message data because "
                     "the relevant API is not supported for this session."
                 )
 
@@ -1484,6 +1501,11 @@ class Session:
         weather_data = api.weather_data(self.api_path, livedata=livedata)
         weather_df = pd.DataFrame(weather_data)
         self._weather_data = weather_df
+
+    def _load_race_control_messages(self, livedata=None):
+        race_control_messages = api.race_control_messages(self.api_path, livedata=livedata)
+        race_control_df = pd.DataFrame(race_control_messages)
+        self._race_control_messages = race_control_df
 
     def _load_telemetry(self, livedata=None):
         """Load telemetry data from the API.
