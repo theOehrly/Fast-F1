@@ -1305,13 +1305,13 @@ def race_control_messages(path, response=None, livedata=None):
         - Message (str): Content of message
 
     Other possible attributes are:
-    
+
         - Status (str): Status of context, e.g. "DISABLED" for disabling DRS
         - Flag (str): Type of flag being waved "GREEN", "RED", "YELLOW", "CLEAR", "CHEQUERED"
         - Scope (str): Scope of message "Track", "Sector", "Driver"
         - Sector (int): Affected track sector for sector-scoped messages
         - RacingNumber (str): Affected driver for CarEvent messages
-    
+
     Args:
         path (str): api path base string (usually ``Session.api_path``)
         response: Response as returned by :func:`fetch_page` can be passed if it was downloaded already.

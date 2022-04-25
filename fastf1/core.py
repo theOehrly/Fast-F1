@@ -990,7 +990,7 @@ class Session:
     def race_control_messages(self):
         """:class:`pandas.Dataframe`: Race Control messages as returned by
         :func:`fastf1.api.race_control_messages`
-        
+
         Data is available after calling `Session.load` with ``messages=True``
         """
         return self._get_property_warn_not_loaded('_race_control_messages')
