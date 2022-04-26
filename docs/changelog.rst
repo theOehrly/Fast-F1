@@ -2,6 +2,14 @@
 Changelog
 =========
 
+v0.2.5
+======
+
+Bug Fixes:
+
+  - Fixed grid position, position and points missing from Sprint sessions
+    result in 2022
+
 
 v0.2.4
 ======

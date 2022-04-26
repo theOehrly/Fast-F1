@@ -18,7 +18,7 @@ def fetch_results(year, gp, session):
     elif session == 'Qualifying':
         day = 'qualifying'
         sel = 'QualifyingResults'
-    elif session == 'Sprint Qualifying':
+    elif session in ('Sprint Qualifying', 'Sprint'):
         day = 'sprint'
         sel = 'SprintResults'
 

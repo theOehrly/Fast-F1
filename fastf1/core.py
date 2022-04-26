@@ -1417,7 +1417,7 @@ class Session:
 
     def _drivers_results_from_ergast(self, *, load_drivers=False,
                                      load_results=False):
-        if self.name in ('Qualifying', 'Sprint Qualifying', 'Race'):
+        if self.name in ('Qualifying', 'Sprint Qualifying', 'Sprint', 'Race'):
             session_name = self.name
         else:
             # this is a practice session, use drivers from race session but
