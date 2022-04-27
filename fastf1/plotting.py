@@ -209,7 +209,7 @@ def driver_color(identifier):
         >>> driver_color('lec')
         '#dc0000'
 
-        shortened driver names, included sponsors and typos can be dealt with
+        shortened driver names and typos can be dealt with
         too (within reason)
 
         >>> driver_color('Max Verst')
@@ -218,7 +218,7 @@ def driver_color(identifier):
         '#dc0000'
 
     Args:
-        identifier (str): Abbreviation or uniquely identifying name of the team.
+        identifier (str): Abbreviation or uniquely identifying name of the driver.
 
     Returns:
         str: hex color code
