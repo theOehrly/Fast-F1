@@ -187,6 +187,7 @@ def setup_mpl(mpl_timedelta_support=True, color_scheme='fastf1',
     if misc_mpl_mods:
         _enable_misc_mpl_mods()
 
+
 def driver_color(identifier):
     """Get a driver's color from a driver name or abbreviation.
 
@@ -252,6 +253,7 @@ def driver_color(identifier):
             raise KeyError
         best_matched_key = key_ratios[0][1]
         return DRIVER_COLORS[best_matched_key]
+
 
 def team_color(identifier):
     """Get a team's color from a team name or abbreviation.
