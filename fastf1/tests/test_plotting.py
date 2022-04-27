@@ -19,6 +19,7 @@ def test_team_color_name_abbreviation_integrity():
         assert value in TEAM_COLORS
     assert len(TEAM_COLORS) == len(TEAM_TRANSLATE)
 
+
 def test_driver_color_name_abbreviation_integrity():
     for value in DRIVER_TRANSLATE.values():
         assert value in DRIVER_COLORS
