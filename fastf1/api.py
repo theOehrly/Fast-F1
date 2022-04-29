@@ -1296,7 +1296,8 @@ def session_status_data(path, response=None, livedata=None):
 def race_control_messages(path, response=None, livedata=None):
     """Fetch and parse race control messages.
 
-    Race control messages are sent by race control to all teams to notify of decisions and statuses of the session
+    Race control messages are sent by race control to all teams to notify of
+    decisions and statuses of the session
 
     Every message has the following attributes:
 
@@ -1307,21 +1308,27 @@ def race_control_messages(path, response=None, livedata=None):
     Other possible attributes are:
 
         - Status (str): Status of context, e.g. "DISABLED" for disabling DRS
-        - Flag (str): Type of flag being waved "GREEN", "RED", "YELLOW", "CLEAR", "CHEQUERED"
+        - Flag (str): Type of flag being waved "GREEN", "RED", "YELLOW",
+          "CLEAR", "CHEQUERED"
         - Scope (str): Scope of message "Track", "Sector", "Driver"
         - Sector (int): Affected track sector for sector-scoped messages
         - RacingNumber (str): Affected driver for CarEvent messages
 
     Args:
         path (str): api path base string (usually ``Session.api_path``)
-        response: Response as returned by :func:`fetch_page` can be passed if it was downloaded already.
-        livedata: An instance of :class:`fastf1.livetiming.data.LiveTimingData` to use as a source instead of the api
+        response: Response as returned by :func:`fetch_page` can be passed if
+        it was downloaded already.
+        livedata: An instance of
+        :class:`fastf1.livetiming.data.LiveTimingData` to use as a source
+        instead of the api
 
     Returns:
-        A dictionary containing one key for each data channel and a list of values per key.
+        A dictionary containing one key for each data channel and a list of
+        values per key.
 
     Raises:
-        SessionNotAvailableError: in case the F1 livetiming api returns no data
+        SessionNotAvailableError: in case the F1 livetiming api returns no
+        data
     """
     if livedata is not None and livedata.has('RaceControlMessages'):
         # does not need any further processing
@@ -1340,7 +1347,8 @@ def race_control_messages(path, response=None, livedata=None):
         'Time': [], 'Category': [], 'Message': [], 'Status': [],
         'Flag': [], 'Scope': [], 'Sector': [], 'RacingNumber': []
     }
-    data_keys = ('Category', 'Message', 'Status', 'Flag', 'Scope', 'Sector', 'RacingNumber')
+    data_keys = ('Category', 'Message', 'Status', 'Flag', 'Scope', 'Sector',
+                 'RacingNumber')
     converters = (str, str, str, str, str, int, str)
 
     for entry in response['Messages']:

@@ -1014,8 +1014,8 @@ class Session:
         """
         return self._get_property_warn_not_loaded('_t0_date')
 
-    def load(self, *, laps=True, telemetry=True, weather=True,
-             livedata=None, messages=True):
+    def load(self, *, laps=True, telemetry=True, weather=True, messages=True,
+             livedata=None):
         """Load session data from the supported APIs.
 
         This method allows to flexibly load some or all data that FastF1 can
@@ -1054,7 +1054,8 @@ class Session:
             laps (bool): Load laps and session status data.
             telemetry (bool): Load telemetry data.
             weather (bool): Load weather data.
-            livedata (:class:`fastf1.livetiming.data.LiveTimingData`, optional) :
+            messages (bool): Load race control messages for the session
+            livedata (:class:`fastf1.livetiming.data.LiveTimingData`, optional):
                 instead of requesting the data from the api, locally saved
                 livetiming data can be used as a data source
         """
@@ -1091,13 +1092,15 @@ class Session:
                     self._load_race_control_messages(livedata=livedata)
                 except Exception as exc:
                     logging.warning("Failed to load RC message data!")
-                    logging.debug("RC message data failure traceback:", exc_info=exc)
+                    logging.debug("RC message data failure traceback:",
+                                  exc_info=exc)
 
         else:
             if any((laps, telemetry, weather, messages)):
                 logging.warning(
-                    "Cannot load laps, telemetry, weather, and message data because "
-                    "the relevant API is not supported for this session."
+                    "Cannot load laps, telemetry, weather, and message data "
+                    "because the relevant API is not supported for this "
+                    "session."
                 )
 
         logging.info(f"Finished loading data for {len(self.drivers)} "
@@ -1503,7 +1506,8 @@ class Session:
         self._weather_data = weather_df
 
     def _load_race_control_messages(self, livedata=None):
-        race_control_messages = api.race_control_messages(self.api_path, livedata=livedata)
+        race_control_messages = api.race_control_messages(self.api_path,
+                                                          livedata=livedata)
         race_control_df = pd.DataFrame(race_control_messages)
         self._race_control_messages = race_control_df
 
