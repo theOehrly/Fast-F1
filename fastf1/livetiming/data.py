@@ -138,6 +138,8 @@ class LiveTimingData:
         # TrackStatus and SessionStatus categories need special handling
         if cat == 'SessionData':
             self._parse_session_data(msg)
+        elif cat == 'RaceControlMessages':
+            self._parse_race_control_message(msg)
         elif cat not in ('TrackStatus', 'SessionStatus'):
             self._add_to_category(cat, [td, msg])
 
@@ -184,6 +186,19 @@ class LiveTimingData:
                 elif 'SessionStatus' in entry.keys():
                     self.data['SessionStatus']['Time'].append(status_timedelta)
                     self.data['SessionStatus']['Status'].append(entry['SessionStatus'])
+
+    def _parse_race_control_message(self, msg):
+        if 'RaceControlMessages' not in self.data.keys():
+            self.data['RaceControlMessages'] = {
+                'Utc': [], 'Category': [], 'Message': [], 'Status': [],
+                'Flag': [], 'Scope': [], 'Sector': [], 'RacingNumber': []
+            }
+
+        if ('Messages' in msg) and isinstance(msg['Messages'], dict):
+            for data in msg['Messages'].values():
+                for key in ('Utc', 'Category', 'Message', 'Status', 'Flag',
+                            'Scope', 'Sector', 'RacingNumber'):
+                    self.data['RaceControlMessages'][key].append(data.get(key))
 
     def _try_set_correct_start_date(self, data):
         # skim content to find 'Started' session status without actually
