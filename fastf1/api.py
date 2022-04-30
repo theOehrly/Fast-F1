@@ -1298,7 +1298,7 @@ def race_control_messages(path, response=None, livedata=None):
 
     Race control messages are sent by race control to all teams to notify of
     decisions and statuses of the session.
-    
+
     Every message has the following attributes:
 
         - Utc: Message timestamp
