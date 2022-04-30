@@ -1297,8 +1297,8 @@ def race_control_messages(path, response=None, livedata=None):
     """Fetch and parse race control messages.
 
     Race control messages are sent by race control to all teams to notify of
-    decisions and statuses of the session
-
+    decisions and statuses of the session.
+    
     Every message has the following attributes:
 
         - Utc: Message timestamp
@@ -1317,18 +1317,17 @@ def race_control_messages(path, response=None, livedata=None):
     Args:
         path (str): api path base string (usually ``Session.api_path``)
         response: Response as returned by :func:`fetch_page` can be passed if
-        it was downloaded already.
+            it was downloaded already.
         livedata: An instance of
-        :class:`fastf1.livetiming.data.LiveTimingData` to use as a source
-        instead of the api
+            :class:`fastf1.livetiming.data.LiveTimingData` to use as a source
+            instead of the api
 
     Returns:
         A dictionary containing one key for each data channel and a list of
         values per key.
 
     Raises:
-        SessionNotAvailableError: in case the F1 livetiming api returns no
-        data
+        SessionNotAvailableError: in case the F1 livetiming api returns no data
     """
     if livedata is not None and livedata.has('RaceControlMessages'):
         # does not need any further processing

@@ -1091,7 +1091,8 @@ class Session:
                 try:
                     self._load_race_control_messages(livedata=livedata)
                 except Exception as exc:
-                    logging.warning("Failed to load RC message data!")
+                    logging.warning("Failed to load Race Control message "
+                                    "data!")
                     logging.debug("RC message data failure traceback:",
                                   exc_info=exc)
 
