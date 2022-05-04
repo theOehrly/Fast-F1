@@ -2,16 +2,28 @@
 Changelog
 =========
 
-v0.2.5
+v2.2.5
 ======
 
 Bug Fixes:
 
   - Fixed grid position, position and points missing from Sprint sessions
-    result in 2022
+    result in 2022 (#166)
 
 
-v0.2.4
+New Features:
+
+  - Added :func:`fastf1.plotting.driver_color` to get driver colors which are
+    similar to the team color but slightly different between both drivers of
+    one team. This ways the drivers can be differentiated better.
+    (by @dialtone in #159)
+
+  - Added support for loading race control messages, see
+    :attr:`fastf1.core.Session.race_control_messages`
+    (by @bruzie in #163)
+
+
+v2.2.4
 ======
 
 Bug Fixes:
@@ -20,7 +32,7 @@ Bug Fixes:
     (see also #160)
 
 
-v0.2.3
+v2.2.3
 ======
 
 Bug Fixes:
