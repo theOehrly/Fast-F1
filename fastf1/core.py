@@ -1150,6 +1150,8 @@ class Session:
         self._session_status = pd.DataFrame(session_status)
         df = None
 
+        track_status = api.track_status_data(self.api_path, livedata=livedata)
+
         drivers = self.drivers
         if not drivers:
             # no driver list, generate from lap data
@@ -1210,6 +1212,17 @@ class Session:
                 laps_start_time.insert(0, self.session_start_time)
             else:
                 laps_start_time.insert(0, pd.NaT)
+            laps_start_time = pd.Series(laps_start_time)
+            #
+            # for i_status, (time_now, status) in enumerate(
+            #         zip(track_status['Time'], track_status['Status'])):
+            #     if status == '5':  # red flag
+            #         aborted_mask = laps_start_time >= time_now
+            #         if i_status < (len(track_status['Time']) - 1):
+            #             time_next = track_status['Time'][i_status + 1]
+            #             aborted_mask &= laps_start_time <= time_next
+            #         laps_start_time[aborted_mask] = pd.NaT
+
             result.loc[:, 'LapStartTime'] = pd.Series(
                 laps_start_time, dtype='timedelta64[ns]'
             )
@@ -1281,8 +1294,8 @@ class Session:
         d_map = {r['DriverNumber']: r['Abbreviation']
                  for _, r in self.results.iterrows()}
         laps['Driver'] = laps['DriverNumber'].map(d_map)
+
         # add track status data
-        ts_data = api.track_status_data(self.api_path, livedata=livedata)
         laps['TrackStatus'] = '1'
 
         def applicator(new_status, current_status):
@@ -1293,10 +1306,10 @@ class Session:
             else:
                 return current_status
 
-        if len(ts_data['Time']) > 0:
-            t = ts_data['Time'][0]
-            status = ts_data['Status'][0]
-            for next_t, next_status in zip(ts_data['Time'][1:], ts_data['Status'][1:]):
+        if len(track_status['Time']) > 0:
+            t = track_status['Time'][0]
+            status = track_status['Status'][0]
+            for next_t, next_status in zip(track_status['Time'][1:], track_status['Status'][1:]):
                 if status != '1':
                     # status change partially in lap partially outside
                     sel = (((next_t >= laps['LapStartTime']) & (laps['LapStartTime'] >= t)) |
