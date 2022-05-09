@@ -1401,7 +1401,7 @@ def driver_info(path, response=None, livedata=None):
             )
 
     # search for the correct entries that contain driver/team/headshot info
-    # headshots are one entry for each team
+    # for some sessions headshots are one entry for each team (Miami 22 FPs, Q)
     drv_idx = None
     team_idx = None
     headshots = []
