@@ -1172,7 +1172,8 @@ class Session:
             only_one_lap = False
 
             if not len(d1):
-                if (self.name == 'Race') and len(d2):
+                if ((self.name in ('Race', 'Sprint', 'Sprint Qualifying'))
+                        and len(d2)):
                     # add data for drivers who crashed on the very first lap
                     # as a downside, this potentially adds a nonexistent lap
                     # for drivers who could not start the race
@@ -1200,10 +1201,12 @@ class Session:
             else:
                 result = pd.merge_asof(d1, d2, on='Time', by='Driver')
 
-            # calculate lap start time by setting it to the 'Time' of the previous lap
+            # calculate lap start time by setting it to the 'Time' of the
+            # previous lap
             laps_start_time = list(result['Time'])[:-1]
-            if self.name == 'Race':
-                # assumption that the first lap started when the session was started can only be made for the race
+            if self.name in ('Race', 'Sprint', 'Sprint Qualifying'):
+                # assumption that the first lap started when the session was
+                # started can only be made for the race
                 laps_start_time.insert(0, self.session_start_time)
             else:
                 laps_start_time.insert(0, pd.NaT)
