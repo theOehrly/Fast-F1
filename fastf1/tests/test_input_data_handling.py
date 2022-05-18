@@ -131,3 +131,19 @@ def test_inlap_added():
     last = session.laps.pick_driver('PER').iloc[-1]
     assert not pd.isnull(last['PitInTime'])
     assert not pd.isnull(last['Time'])
+
+
+@pytest.mark.f1telapi
+def test_lap_start_time_after_red_flag():
+    # see GH#167
+    session = fastf1.get_session(2022, 'Saudi Arabia', 'Q')
+    session.load(telemetry=False, weather=False, messages=False)
+
+    restart_time = pd.to_timedelta('01:54:24.197000')
+
+    # ensure that verstappens first lap after the restart was also started
+    # after the restart
+    ver_laps = session.laps.pick_driver('VER')
+    idx = ver_laps[(ver_laps['Time'] > restart_time)
+                   & pd.notna(ver_laps['Time'])].index[0]
+    assert ver_laps.loc[idx]['LapStartTime'] > restart_time

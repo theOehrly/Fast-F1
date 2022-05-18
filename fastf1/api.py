@@ -110,7 +110,7 @@ class Cache:
     on FastF1.
     """
     _CACHE_DIR = ''
-    _API_CORE_VERSION = 4  # version of the api parser code (unrelated to release version number)
+    _API_CORE_VERSION = 5  # version of the api parser code (unrelated to release version number)
     _IGNORE_VERSION = False
     _FORCE_RENEW = False
 
@@ -703,6 +703,19 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
     if not drv_data['Time']:
         # ensure that there is still data left after potentially removing a lap
         return drv_data
+
+    # check for incorrect lap times and remove them
+    # fixes GH#167 among others
+    for i in range(len(drv_data['Time'])):
+        sector_sum = datetime.timedelta(0)
+        for key in ('Sector1Time', 'Sector2Time', 'Sector3Time'):
+            st = drv_data[key][i]
+            if pd.isna(st):
+                continue
+            sector_sum += st
+        if sector_sum > drv_data['LapTime'][i]:
+            drv_data['LapTime'][i] = pd.NaT
+            integrity_errors.append(i+1)
 
     # lap time sync; check which sector time was triggered with the lowest latency
     # Sector3SessionTime == end of lap

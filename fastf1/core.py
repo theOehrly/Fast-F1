@@ -1067,11 +1067,11 @@ class Session:
 
         if self.f1_api_support:
             if laps:
-                try:
-                    self._load_laps_data(livedata)
-                except Exception as exc:
-                    logging.warning("Failed to load lap data!")
-                    logging.debug("Lap data failure traceback:", exc_info=exc)
+                # try:
+                self._load_laps_data(livedata)
+                # except Exception as exc:
+                #     logging.warning("Failed to load lap data!")
+                #     logging.debug("Lap data failure traceback:", exc_info=exc)
 
             if telemetry:
                 try:
@@ -1213,15 +1213,37 @@ class Session:
             else:
                 laps_start_time.insert(0, pd.NaT)
             laps_start_time = pd.Series(laps_start_time)
-            #
-            # for i_status, (time_now, status) in enumerate(
-            #         zip(track_status['Time'], track_status['Status'])):
-            #     if status == '5':  # red flag
-            #         aborted_mask = laps_start_time >= time_now
-            #         if i_status < (len(track_status['Time']) - 1):
-            #             time_next = track_status['Time'][i_status + 1]
-            #             aborted_mask &= laps_start_time <= time_next
-            #         laps_start_time[aborted_mask] = pd.NaT
+
+            # don't set lap start times after red flag restart to the time
+            # at which the previous lap was set
+            # only run this correction if the session was ever aborted
+            if (self.session_status['Status'] == 'Aborted').any():
+                _is_aborted = False
+                # first, find the point at which the session was aborted, then
+                # the following restart and the lap that starts immediately
+                # after; correct its pit out time
+                for _, row in self.session_status.iterrows():
+                    if _is_aborted and row['Status'] == 'Started':  # restart
+                        _is_aborted = False
+                        try:
+                            restart_index = result.loc[
+                                result['PitOutTime'] > row['Time'],
+                                'PitOutTime'
+                            ].index[0]
+                        except IndexError:
+                            continue  # no pit out, car did not restart
+                        if self.name in ('Sprint Qualifying', 'Sprint',
+                                         'Race'):
+                            # if this is a race-like session, we can assume the
+                            # session restart time as lap start time
+                            laps_start_time[restart_index] = row['Time']
+                        else:
+                            # for other sessions, we cannot make this
+                            # assumption set to NaT here, it will be set to
+                            # PitOutTime later if possible
+                            laps_start_time[restart_index] = pd.NaT
+                    elif row['Status'] == 'Aborted':  # red flag
+                        _is_aborted = True
 
             result.loc[:, 'LapStartTime'] = pd.Series(
                 laps_start_time, dtype='timedelta64[ns]'
