@@ -203,6 +203,26 @@ def test_merging_10_hz(reference_laps_data):
     assert merged['SessionTime'].iloc[0] != pandas.Timedelta(0)
 
 
+def test_drop_unknown_channels(caplog):
+    fastf1.core.Telemetry.register_new_channel("test_keep", "discrete")
+    data = {"Speed": [200, 202, 203],
+            "test_keep": [1, 2, 3],
+            "test_drop": [1, 2, 3]}
+
+    tel = fastf1.core.Telemetry(data, drop_unknown_channels=False)
+    assert "Speed" in tel.columns
+    assert "test_keep" in tel.columns
+    assert "test_drop" in tel.columns
+
+    tel = fastf1.core.Telemetry(data, drop_unknown_channels=True)
+    assert "Speed" in tel.columns
+    assert "test_keep" in tel.columns
+    assert "test_drop" not in tel.columns
+    assert "unknown telemetry channels have been dropped" in caplog.text
+
+    fastf1.core.Telemetry._CHANNELS.pop("test_keep")  # clean up
+
+
 @pytest.mark.f1telapi
 def test_resampling_down(reference_laps_data):
     session, laps = reference_laps_data

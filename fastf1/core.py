@@ -213,10 +213,21 @@ class Telemetry(pd.DataFrame):
 
     _metadata = ['session', 'driver']
 
-    def __init__(self, *args, session=None, driver=None, **kwargs):
+    def __init__(self, *args, session=None, driver=None,
+                 drop_unknown_channels=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.session = session
         self.driver = driver
+
+        if drop_unknown_channels:
+            unknown = set(self.columns).difference(self._CHANNELS.keys())
+            super().drop(columns=unknown, inplace=True)
+            if unknown:
+                logging.warning(
+                    f"The following unknown telemetry channels have "
+                    f"been dropped when creating a Telemetry object: "
+                    f"{unknown} (driver: {self.driver})"
+                )
 
     @property
     def _constructor(self):
@@ -1584,9 +1595,11 @@ class Session:
             try:
                 # drop and recalculate time stamps based on 'Date', because 'Date' has a higher resolution
                 drv_car = Telemetry(car_data[drv].drop(labels='Time', axis=1),
-                                    session=self, driver=drv)
+                                    session=self, driver=drv,
+                                    drop_unknown_channels=True)
                 drv_pos = Telemetry(pos_data[drv].drop(labels='Time', axis=1),
-                                    session=self, driver=drv)
+                                    session=self, driver=drv,
+                                    drop_unknown_channels=True)
             except KeyError:
                 # not pos data or car data exists for this driver
                 continue

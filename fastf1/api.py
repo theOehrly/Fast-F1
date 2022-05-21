@@ -110,7 +110,7 @@ class Cache:
     on FastF1.
     """
     _CACHE_DIR = ''
-    _API_CORE_VERSION = 5  # version of the api parser code (unrelated to release version number)
+    _API_CORE_VERSION = 6  # version of the api parser code (unrelated to release version number)
     _IGNORE_VERSION = False
     _FORCE_RENEW = False
 
@@ -1181,9 +1181,13 @@ def position_data(path, response=None, livedata=None):
             # instances in Session.load_telemetry
             # and except Status which should be 'OffTrack' for missing data
             index_df = pd.DataFrame(data={'Date': most_complete_ref})
-            data[driver] = data[driver].merge(index_df, how='outer').sort_values(by='Date').reset_index()
+            data[driver] = data[driver]\
+                .merge(index_df, how='outer')\
+                .sort_values(by='Date')\
+                .reset_index(drop=True)
             data[driver]['Status'].fillna(value='OffTrack', inplace=True)
-            data[driver].loc[:, ['X', 'Y', 'Z']] = data[driver].loc[:, ['X', 'Y', 'Z']].fillna(value=0, inplace=False)
+            data[driver].loc[:, ['X', 'Y', 'Z']] = data[driver]\
+                .loc[:, ['X', 'Y', 'Z']].fillna(value=0, inplace=False)
 
             logging.warning(f"Driver {driver: >2}: Position data is incomplete!")
 
