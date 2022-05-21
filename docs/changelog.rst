@@ -3,6 +3,15 @@ Changelog
 =========
 
 
+v2.2.7
+======
+
+Bug Fixes:
+
+    - Fixed an issue that prevented merging of car data and position data
+      in some cases (see #180)
+
+
 v2.2.6
 ======
 
