@@ -54,17 +54,17 @@ environment so that Python will be able to import FastF1 from your
 development source directory. This allows you to import your modified version
 of FastF1 without re-installing after every change.
 
-..
-  TODO: add section once pre-commit hooks are added
-  Installing pre-commit hooks
-  ===========================
-  You can optionally install `pre-commit <https://pre-commit.com/>`_ hooks.
-  These will automatically check flake8 and other style issues when you run
-  ``git commit``. The hooks are defined in the top level
-  ``.pre-commit-config.yaml`` file. To install the hooks ::
+.. _install_pre_commit:
 
-      pip install pre-commit
-      pre-commit install
+Installing pre-commit hooks
+===========================
+You can optionally install `pre-commit <https://pre-commit.com/>`_ hooks.
+These will automatically check flake8 and other style issues when you run
+``git commit``. The hooks are defined in the top level
+``.pre-commit-config.yaml`` file. To install the hooks ::
+
+    pip install pre-commit
+    pre-commit install
 
 Installing additional dependencies for development
 ==================================================

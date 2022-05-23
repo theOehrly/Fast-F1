@@ -1,0 +1,11 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.0.0
+    hooks:
+      - id: flake8
+  - repo: local
+    hooks:
+      - id: flake8-line-length
+        name: Flake8 line length
+        entry: python ./scripts/flake8_line_length.py
+        language: python

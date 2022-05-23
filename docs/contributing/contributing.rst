@@ -133,12 +133,18 @@ rules before submitting a pull request:
   <https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html>`_.
 
 * Formatting should follow the recommendations of PEP8_, as enforced by
-  flake8_.  You can check flake8 compliance from the command line with ::
+  flake8_. The maximum line length for all changed lines is 79 characters.
+  You can check flake8 compliance from the command line with ::
 
-    python -m pip install pytest pytest-flake8
-    pytest --flake8 --lint-only
+    python -m pip install flake8
+    flake8 fastf1 examples
 
-  or your editor may provide integration with it.
+  or your editor may provide integration with it. The above command will not
+  flag lines that are too long!
+
+  Flake8 will also be run before each commit if you have the pre-commit hooks
+  installed (see :ref:`install_pre_commit`). Contrary to the manual invocation of flake8, this will also flag
+  lines which are too long!
 
   .. _PEP8: https://www.python.org/dev/peps/pep-0008/
   .. _flake8: https://flake8.pycqa.org/

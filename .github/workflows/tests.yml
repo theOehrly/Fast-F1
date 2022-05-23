@@ -87,9 +87,27 @@ jobs:
           python3 -m pip install -e .
 
       - name: Run tests
+        if: ${{ github.ref != 'refs/heads/master' }}
         run: |
           mkdir test_cache  # make sure cache dir exists
-          pytest -rf --flake8 --lint-only
+          git fetch origin --quiet
+          # flake8 with default config
+          flake8 fastf1 examples scripts
+          # flake8 check new shorter line length only on diff
+          git diff origin/master -U0 --relative | flake8 --max-line-length 79 --diff --select E501 fastf1 examples scripts
+
+      - name: Run tests (master push)
+        if: ${{ github.ref == 'refs/heads/master' && env.GITHUB_EVENT_NAME == 'push'}}
+        env:
+          LAST_PUSH_SHA: ${{ github.event.before }}
+        run: |
+          mkdir test_cache  # make sure cache dir exists
+          git fetch origin --quiet
+          # flake8 with default config
+          flake8 fastf1 examples scripts
+          # flake8 check new shorter line length only on diff
+          echo "Flake8 line length check on diff against $LAST_PUSH_SHA"
+          git diff $LAST_PUSH_SHA -U0 --relative | flake8 --max-line-length 79 --diff --select E501 fastf1 examples scripts
 
 
   run-readme-render-test:

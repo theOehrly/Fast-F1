@@ -8,6 +8,6 @@ sphinx-gallery
 autodocsumm
 wheel
 flake8==3.9.2
-pytest-flake8
 readme-renderer
 xdoctest
+pre-commit
