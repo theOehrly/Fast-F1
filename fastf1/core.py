@@ -1196,8 +1196,7 @@ class Session:
                     result['NumberOfLaps'] = 0
                     result['NumberOfPitStops'] = 0
                     result['Time'] = data['Time'].min()
-                    result['isCurrentSessionPersonalBest'] = False
-                    result['historicalPersonalBest'] = False
+                    result['IsPersonalBest'] = False
                     result['Compound'] = d2['Compound'].iloc[0]
                     result['TotalLaps'] = d2['TotalLaps'].iloc[0]
                     result['New'] = d2['New'].iloc[0]
@@ -2053,7 +2052,7 @@ class Laps(pd.DataFrame):
             laps = self  # all laps
         else:
             # get all personal best records across sessions
-            laps = self.loc[self['historicalPersonalBest'] == True]  # noqa: E712,E501 comparison with True
+            laps = self.loc[self['IsPersonalBest'] == True]  # noqa: E712,E501 comparison with True
 
         if not laps.size:
             return Lap(index=self.columns)

@@ -299,8 +299,8 @@ The following data columns are available:
   Index(['Time', 'DriverNumber', 'LapTime', 'LapNumber', 'Stint', 'PitOutTime',
          'PitInTime', 'Sector1Time', 'Sector2Time', 'Sector3Time',
          'Sector1SessionTime', 'Sector2SessionTime', 'Sector3SessionTime',
-         'SpeedI1', 'SpeedI2', 'SpeedFL', 'SpeedST', 'isCurrentSessionPersonalBest',
-         'historicalPersonalBest','Compound', 'TyreLife', 'FreshTyre', 'LapStartTime', 'Team', 'Driver',
+         'SpeedI1', 'SpeedI2', 'SpeedFL', 'SpeedST', 'IsPersonalBest',
+         'Compound', 'TyreLife', 'FreshTyre', 'LapStartTime', 'Team', 'Driver',
          'TrackStatus', 'IsAccurate', 'LapStartDate'],
         dtype='object')
 
