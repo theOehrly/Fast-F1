@@ -3,6 +3,17 @@ Changelog
 =========
 
 
+v2.2.8
+======
+
+Bug Fixes:
+
+  - Ensure that :attr:`fastf1.core.Session.drivers` returns a list of
+    unique values. This prevents problems that result from drivers being
+    incorrectly listed multiple times in the session result information.
+    (see #182 for example)
+
+
 v2.2.7
 ======
 
