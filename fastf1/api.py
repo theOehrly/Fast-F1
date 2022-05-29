@@ -411,7 +411,8 @@ EMPTY_LAPS = {'Time': pd.NaT, 'Driver': str(), 'LapTime': pd.NaT,
               'Sector3Time': pd.NaT, 'Sector1SessionTime': pd.NaT,
               'Sector2SessionTime': pd.NaT, 'Sector3SessionTime': pd.NaT,
               'SpeedI1': np.NaN, 'SpeedI2': np.NaN, 'SpeedFL': np.NaN,
-              'SpeedST': np.NaN, 'IsPersonalBest': False}
+              'SpeedST': np.NaN, 'isCurrentSessionPersonalBest': False,
+              'historicalPersonalBest': False}
 
 EMPTY_STREAM = {'Time': pd.NaT, 'Driver': str(), 'Position': np.NaN,
                 'GapToLeader': np.NaN, 'IntervalToPositionAhead': np.NaN}
@@ -466,6 +467,10 @@ def timing_data(path, response=None, livedata=None):
                       was set (one column for each sector's session time)
                     - SpeedI1/I2/FL/ST: Speed trap speeds; FL is speed at the finish line; I1 and I2 are speed traps in
                       sector 1 and 2 respectively; ST maybe a speed trap on the longest straight (?)
+                    - isCurrentSessionPersonalBest: Indicates if this is the personal best in the latest session.
+                      for eg: it will return the indicate best for Q3 for a `Q` event.
+                    - historicalPersonalBest: Indicates if this lap-time was/is a personal best in the current or
+                      previous session.
 
             - stream_data (DataFrame):
                 contains the following columns of data
@@ -478,7 +483,7 @@ def timing_data(path, response=None, livedata=None):
 
     Raises:
         SessionNotAvailableError: in case the F1 livetiming api returns no data
-    """
+    """  # noqa: E501
 
     # possible optional sanity checks (TODO, maybe):
     #   - inlap has to be followed by outlap
@@ -660,6 +665,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
 
         if val := recursive_dict_get(resp, 'BestLapTime', 'Value'):
             personal_best_lap_time = to_timedelta(val)
+            drv_data['historicalPersonalBest'][lapcnt] = True
 
         # new lap; create next row
         if 'NumberOfLaps' in resp and resp['NumberOfLaps'] > api_lapcnt:
@@ -782,7 +788,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
 
     for i, time in enumerate(drv_data['LapTime']):
         if time == personal_best_lap_time:
-            drv_data['IsPersonalBest'][i] = True
+            drv_data['isCurrentSessionPersonalBest'][i] = True
             break
 
     if integrity_errors:
