@@ -940,7 +940,7 @@ class Session:
 
         Data is available after calling `Session.load`
         """
-        return list(self.results['DriverNumber'])
+        return list(self.results['DriverNumber'].unique())
 
     @property
     def results(self):
@@ -1457,6 +1457,11 @@ class Session:
                 # return driver info without session results
                 self._results = SessionResults(drivers,
                                                force_default_cols=True)
+
+        if (dupl_mask := self._results.index.duplicated()).any():
+            dupl_drv = list(self._results.index[dupl_mask])
+            logging.warning("Session results contain duplicate entries for "
+                            f"driver(s) {dupl_drv}")
 
         if 'Position' in self._results:
             self._results = self._results.sort_values('Position')
