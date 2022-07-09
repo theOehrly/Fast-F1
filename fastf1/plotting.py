@@ -132,7 +132,7 @@ DRIVER_COLORS = {
 
 
 DRIVER_TRANSLATE = {'LEC': 'charles leclerc', 'SAI': 'carlos sainz',
-                    'VER': 'max verstappen', 'SER': 'sergio perez',
+                    'VER': 'max verstappen', 'PER': 'sergio perez',
                     'RIC': 'daniel ricciardo', 'NOR': 'lando norris',
                     'ALO': 'fernando alonso', 'OCO': 'esteban ocon',
                     'BOT': 'valtteri bottas', 'ZHO': 'zhou guanyu',
