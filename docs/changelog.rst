@@ -3,6 +3,14 @@ Changelog
 =========
 
 
+v2.2.9
+======
+
+Bug Fixes:
+
+    - Fix a typo in :attr:`fastf1.plotting.DRIVER_TRANSLATE` (#207)
+
+
 v2.2.8
 ======
 
