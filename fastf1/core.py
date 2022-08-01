@@ -115,36 +115,41 @@ def get_round(year, match):
 class Telemetry(pd.DataFrame):
     """Multi-channel time series telemetry data
 
-    The object can contain multiple telemetry channels. Multiple telemetry objects with different channels
-    can be merged on time. Each telemetry channel is one dataframe column.
-    Partial telemetry (e.g. for one lap only) can be obtained through various methods for slicing the data.
-    Additionally, methods for adding common computed data channels are available.
+    The object can contain multiple telemetry channels. Multiple telemetry
+    objects with different channels can be merged on time. Each telemetry
+    channel is one dataframe column. Partial telemetry (e.g. for one lap only)
+    can be obtained through various methods for slicing the data. Additionally,
+    methods for adding common computed data channels are available.
 
     The following telemetry channels existed in the original API data:
 
         - **Car data**:
-            - `Speed` (float): Car speed
+            - `Speed` (float): Car speed [km/h]
             - `RPM` (int): Car RPM
             - `nGear` (int): Car gear number
-            - `Throttle` (float): 0-100 Throttle pedal pressure
-            - `Brake` (float): 0-100 Brake pedal pressure
-            - `DRS` (int): DRS indicator (See :meth:`car_data` for more info)
+            - `Throttle` (float): 0-100 Throttle pedal pressure [%]
+            - `Brake` (bool): Brakes are applied or not.
+            - `DRS` (int): DRS indicator (See :func:`fastf1.api.car_data`
+              for more info)
 
         - **Position data**:
-            - `X` (float): X position
-            - `Y` (float): Y position
-            - `Z` (float): Z position
+            - `X` (float): X position [1/10 m]
+            - `Y` (float): Y position [1/10 m]
+            - `Z` (float): Z position [1/10 m]
             - `Status` (string): Flag - OffTrack/OnTrack
 
         - **For both of the above**:
             - `Time` (timedelta): Time (0 is start of the data slice)
-            - `SessionTime` (timedelta): Time elapsed since the start of the session
-            - `Date` (datetime): The full date + time at which this sample was created
+            - `SessionTime` (timedelta): Time elapsed since the start of the
+              session
+            - `Date` (datetime): The full date + time at which this sample
+              was created
             - `Source` (str): Flag indicating how this sample was created:
 
                 - 'car': sample from original api car data
                 - 'pos': sample from original api position data
-                - 'interpolated': this sample was artificially created; all values are computed/interpolated
+                - 'interpolated': this sample was artificially created; all
+                  values are computed/interpolated
 
                 Example:
                     A sample's source is indicated as 'car'. It contains
@@ -159,7 +164,8 @@ class Telemetry(pd.DataFrame):
                     interpolate data will preserve and adjust the source flag
                     correctly when modifying data.
 
-        Through merging/slicing it is possible to obtain any combination of telemetry channels!
+        Through merging/slicing it is possible to obtain any combination of
+        telemetry channels!
         The following additional computed data channels can be added:
 
             - Distance driven between two samples:
@@ -171,15 +177,18 @@ class Telemetry(pd.DataFrame):
             - Distance to driver ahead and car number of said driver:
               :meth:`add_driver_ahead`
 
-        .. note:: See the separate explanation concerning the various definitions of 'Time' for more information on the
-          three date and time related channels: :ref:`time-explanation`
+        .. note:: See the separate explanation concerning the various
+          definitions of 'Time' for more information on the three date and
+          time related channels: :ref:`time-explanation`
 
-    Slicing this class will return :class:`Telemetry` again for slices containing multiple rows. Single rows will be
-    returned as :class:`pandas.Series`.
+    Slicing this class will return :class:`Telemetry` again for slices
+    containing multiple rows. Single rows will be returned as
+    :class:`pandas.Series`.
 
     Args:
         *args (any): passed through to `pandas.DataFrame` superclass
-        session (:class:`Session`): Instance of associated session object. Required for full functionality!
+        session (:class:`Session`): Instance of associated session object.
+            Required for full functionality!
         driver (str): Driver number as string. Required for full functionality!
         **kwargs (any): passed through to `pandas.DataFrame` superclass
     """
@@ -1675,11 +1684,13 @@ class Laps(pd.DataFrame):
         **kwargs (any): passed through to :class:`pandas.DataFrame`
           super class
 
-    This class allows for easily picking specific laps from all laps in a session. It implements some additional
-    functionality on top off the usual `pandas.DataFrame` functionality. Among others, the laps' associated telemetry
-    data can be accessed.
+    This class allows for easily picking specific laps from all laps in a
+    session. It implements some additional functionality on top off the usual
+    `pandas.DataFrame` functionality. Among others, the laps' associated
+    telemetry data can be accessed.
 
-    If for example you want to get the fastest lap of Bottas you can narrow it down like this::
+    If for example you want to get the fastest lap of Bottas you can narrow
+    it down like this::
 
         import fastf1
 
@@ -1690,11 +1701,14 @@ class Laps(pd.DataFrame):
         print(best_bottas['LapTime'])
         # Timedelta('0 days 00:01:28.256000')
 
-    Slicing this class will return :class:`Laps` again for slices containing multiple rows. Single rows will be
-    returned as :class:`Lap`.
+    Slicing this class will return :class:`Laps` again for slices containing
+    multiple rows. Single rows will be returned as :class:`Lap`.
 
-    The following information is available per lap (one DataFrame column for each):
-        - **Time** (pandas.Timedelta): Session time when the lap time was set (end of lap)
+    The following information is available per lap (one DataFrame column
+    for each):
+
+        - **Time** (pandas.Timedelta): Session time when the lap time was
+          set (end of lap)
         - **Driver** (string): Three letter driver identifier
         - **DriverNumber** (str): Driver number
         - **LapTime** (pandas.Timedelta): Recorded lap time.
@@ -1702,37 +1716,54 @@ class Laps(pd.DataFrame):
           Deleting laps is currently not supported.
         - **LapNumber** (int): Recorded lap number
         - **Stint** (int): Stint number
-        - **PitOutTime** (pandas.Timedelta): Session time when car exited the pit
-        - **PitInTime** (pandas.Timedelta): Session time when car entered the pit
+        - **PitOutTime** (pandas.Timedelta): Session time when car exited
+          the pit
+        - **PitInTime** (pandas.Timedelta): Session time when car entered
+          the pit
         - **Sector1Time** (pandas.Timedelta): Sector 1 recorded time
         - **Sector2Time** (pandas.Timedelta): Sector 2 recorded time
         - **Sector3Time** (pandas.Timedelta): Sector 3 recorded time
-        - **Sector1SessionTime** (pandas.Timedelta): Session time when the Sector 1 time was set
-        - **Sector2SessionTime** (pandas.Timedelta): Session time when the Sector 2 time was set
-        - **Sector3SessionTime** (pandas.Timedelta): Session time when the Sector 3 time was set
-        - **SpeedI1** (float): Speedtrap sector 1
-        - **SpeedI2** (float): Speedtrap sector 2
-        - **SpeedFL** (float): Speedtrap at finish line
-        - **SpeedST** (float): Speedtrap on longest straight (Not sure)
+        - **Sector1SessionTime** (pandas.Timedelta): Session time when the
+          Sector 1 time was set
+        - **Sector2SessionTime** (pandas.Timedelta): Session time when the
+          Sector 2 time was set
+        - **Sector3SessionTime** (pandas.Timedelta): Session time when the
+          Sector 3 time was set
+        - **SpeedI1** (float): Speedtrap sector 1 [km/h]
+        - **SpeedI2** (float): Speedtrap sector 2 [km/h]
+        - **SpeedFL** (float): Speedtrap at finish line [km/h]
+        - **SpeedST** (float): Speedtrap on longest straight (Not sure) [km/h]
         - **IsPersonalBest** (bool): Flag that indicates whether this lap is
-            the official personal best lap of a driver. If any lap of a driver
-            is quicker than their respective personal best lap, this means that
-            the quicker lap is invalid and not counted. This can happen it the
-            track limits were execeeded, for example.
-        - **Compound** (str): Tyre compound name: SOFT, MEDIUM ..
-        - **TyreLife** (float): Laps driven on this tire (includes laps in other sessions for used sets of tires)
-        - **FreshTyre** (bool): Tyre had TyreLife=0 at stint start, i.e. was a new tire
+          the official personal best lap of a driver. If any lap of a driver
+          is quicker than their respective personal best lap, this means that
+          the quicker lap is invalid and not counted. This can happen it the
+          track limits were execeeded, for example.
+        - **Compound** (str): Tyres event specific compound name: SOFT, MEDIUM,
+          HARD, INTERMEDIATE, WET (the actual underlying compounds C1 to C5 are
+          not differentiated).
+        - **TyreLife** (float): Laps driven on this tire (includes laps in
+          other sessions for used sets of tires)
+        - **FreshTyre** (bool): Tyre had TyreLife=0 at stint start, i.e.
+          was a new tire
         - **Team** (str): Team name
-        - **LapStartTime** (pandas.Timedelta): Session time at the start of the lap
-        - **LapStartDate** (pandas.Timestamp): Timestamp at the start of the lap
-        - **TrackStatus** (str): A string that contains track status numbers for all track status that occurred
-          during this lap. The meaning of the track status numbers is explained in
-          :func:`fastf1.api.track_status_data`. (Currently, track status data is only implemented per lap.
-          If a finer resolution is desired, you need to directly use the data returned by
-          :func:`fastf1.api.track_status_data`)  # TODO updated when implemented
-        - **IsAccurate** (bool): If True, the lap has passed a basic accuracy check for timing data.
-          This does not guarantee accuracy but laps marked as inaccurate need to be handled with
-          caution. They might contain errors which can not be spotted easily.
+        - **LapStartTime** (pandas.Timedelta): Session time at the start of
+          the lap
+        - **LapStartDate** (pandas.Timestamp): Timestamp at the start of
+          the lap
+        - **TrackStatus** (str): A string that contains track status numbers
+          for all track status that occurred
+          during this lap. The meaning of the track status numbers is
+          explained in :func:`fastf1.api.track_status_data`.
+          For filtering laps by track status, you may want to use
+          :func:`Laps.pick_track_status`.
+        - **IsAccurate** (bool): Indicates that the lap start and end time are
+          synced correctly with other laps. Do not confuse this with the
+          accuracy of the lap time or sector times. They are always considered
+          to be accurate if they exist!
+          If this value is True, the lap has passed as basic accuracy check
+          for timing data. This does not guarantee accuracy but laps marked
+          as inaccurate need to be handled with caution. They might contain
+          errors which can not be spotted easily.
           Laps need to satisfy the following criteria to be marked
           as accurate:
 
@@ -1740,11 +1771,13 @@ class Laps(pd.DataFrame):
             - set under green or yellow flag (the api sometimes has issues
               with data from SC/VSC laps)
             - is not the first lap after a safety car period
-              (issues with SC/VSC might still apear on the first lap
+              (issues with SC/VSC might still appear on the first lap
               after it has ended)
             - has a value for lap time and all sector times
             - the sum of the sector times matches the lap time
-              (will be additionally logged as integrity error if not)
+              (If this were to ever occur, it would also be logged separately
+              as a data integrity error. You usually don't need to worry about
+              this.)
     """
 
     _metadata = ['session']
