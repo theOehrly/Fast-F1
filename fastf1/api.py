@@ -786,8 +786,10 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             break
 
     if integrity_errors:
-        logging.warning(f"Driver {drv: >2}: Encountered {len(integrity_errors)} timing integrity error(s) "
-                        f"near lap(s): {integrity_errors}")
+        logging.warning(
+            f"Driver {drv: >2}: Encountered {len(integrity_errors)} timing "
+            f"integrity error(s) near lap(s): {integrity_errors}.\n"
+            f"This might be a bug and should be reported.")
 
     return drv_data
 
