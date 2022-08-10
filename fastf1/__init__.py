@@ -17,6 +17,7 @@ session. This can be done with one of the following functions:
     fastf1.get_session
     fastf1.get_testing_session
     fastf1.get_event
+    fastf1.get_events_remaining
     fastf1.get_testing_session
     fastf1.get_event_schedule
 
@@ -49,6 +50,7 @@ Events API
 .. autofunction:: get_session
 .. autofunction:: get_testing_session
 .. autofunction:: get_event
+.. autofunction:: get_events_remaining
 .. autofunction:: get_testing_event
 .. autofunction:: get_event_schedule
 
@@ -63,6 +65,7 @@ Cache API
 from fastf1.events import (get_session,  # noqa: F401
                            get_testing_session,
                            get_event,
+                           get_events_remaining,
                            get_testing_event,
                            get_event_schedule)
 

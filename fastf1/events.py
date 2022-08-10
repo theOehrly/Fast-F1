@@ -388,6 +388,32 @@ def get_event_schedule(year, *, include_testing=True, force_ergast=False):
     return schedule
 
 
+def get_events_remaining(
+        dt=None, *, include_testing=True, force_ergast=False) \
+        -> 'EventSchedule':
+    """Create an :class:`~fastf1.events.EventSchedule` object for remaining season.
+
+    Args:
+        dt (datetime): Optional DateTime to get events after.
+        include_testing (bool): Include or exclude testing sessions from the
+            event schedule.
+        force_ergast (bool): Always use data from the ergast database to
+            create the event schedule
+
+    Returns:
+        :class:`~fastf1.events.EventSchedule`
+
+    .. versionadded:: 2.3
+    """
+    if dt is None:
+        dt = datetime.datetime.now()
+
+    events = get_event_schedule(
+        dt.year, include_testing=include_testing, force_ergast=force_ergast)
+    result = events.loc[events["EventDate"] >= dt]
+    return result
+
+
 def _get_schedule(year):
     response = Cache.requests_get(
         _SCHEDULE_BASE_URL + f"schedule_{year}.json"
