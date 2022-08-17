@@ -296,12 +296,12 @@ That's more than 250 laps right there and 26 columns of information.
 The following data columns are available:
 
   >>> session.laps.columns  # doctest: +NORMALIZE_WHITESPACE
-  Index(['Time', 'DriverNumber', 'LapTime', 'LapNumber', 'Stint', 'PitOutTime',
+  Index(['Time', 'DriverNumber', 'LapTime', 'LapNumber', 'PitOutTime',
          'PitInTime', 'Sector1Time', 'Sector2Time', 'Sector3Time',
          'Sector1SessionTime', 'Sector2SessionTime', 'Sector3SessionTime',
          'SpeedI1', 'SpeedI2', 'SpeedFL', 'SpeedST', 'IsPersonalBest',
-         'Compound', 'TyreLife', 'FreshTyre', 'LapStartTime', 'Team', 'Driver',
-         'TrackStatus', 'IsAccurate', 'LapStartDate'],
+         'Compound', 'TyreLife', 'FreshTyre', 'Stint', 'LapStartTime', 'Team',
+         'Driver', 'TrackStatus', 'IsAccurate', 'LapStartDate'],
         dtype='object')
 
 The detailed explanation for all these columns can be found in the

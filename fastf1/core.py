@@ -1157,7 +1157,9 @@ class Session:
         # Matching data and app_data. Not super straightforward
         # Sometimes a car may enter the pit without changing tyres, so
         # new compound is associated with the help of logging time.
-        useful = app_data[['Driver', 'Time', 'Compound', 'TotalLaps', 'New']]
+        data.drop(columns=['NumberOfPitStops'], inplace=True)
+        useful = app_data[['Driver', 'Time', 'Compound', 'StartLaps', 'New',
+                           'Stint']]
         useful = useful[~useful['Compound'].isnull()]
         # check when a session was started; for a race this indicates the
         # start of the race
@@ -1191,6 +1193,11 @@ class Session:
         for i, driver in enumerate(drivers):
             d1 = data[data['Driver'] == driver]
             d2 = useful[useful['Driver'] == driver]
+            # TODO: replace number of pitstops with stint?
+            if d2.shape[0] != len(d2['Stint'].unique()):
+                # tyre info includes correction messages that need to be
+                # applied before continuing
+                d2 = self.__fix_tyre_info(d2)
             only_one_lap = False
 
             if not len(d1):
@@ -1203,11 +1210,11 @@ class Session:
                     result = d1.copy()
                     result['Driver'] = [driver, ]
                     result['NumberOfLaps'] = 0
-                    result['NumberOfPitStops'] = 0
                     result['Time'] = data['Time'].min()
                     result['IsPersonalBest'] = False
                     result['Compound'] = d2['Compound'].iloc[0]
-                    result['TotalLaps'] = d2['TotalLaps'].iloc[0]
+                    result['TyreLife'] = d2['StartLaps'].iloc[0]
+                    result['Stint'] = 0
                     result['New'] = d2['New'].iloc[0]
                 else:
                     logging.warning(f"No lap data for driver {driver}")
@@ -1216,12 +1223,14 @@ class Session:
             elif not len(d2):
                 result = d1.copy()
                 result['Compound'] = str()
-                result['TotalLaps'] = np.nan
+                result['TyreLife'] = np.nan
+                result['Stint'] = 0
                 result['New'] = False
                 logging.warning(f"No tyre data for driver {driver}")
 
             else:
-                result = pd.merge_asof(d1, d2, on='Time', by='Driver')
+                result = pd.merge_asof(d1, d2, on='Time', by='Driver')\
+                    .rename(columns={'StartLaps': 'TyreLife'})
 
             # calculate lap start time by setting it to the 'Time' of the
             # previous lap
@@ -1273,10 +1282,10 @@ class Session:
             mask = pd.isna(result['LapStartTime']) & (~pd.isna(result['PitOutTime']))
             result.loc[mask, 'LapStartTime'] = result.loc[mask, 'PitOutTime']
 
-            # create total laps counter
-            for npit in result['NumberOfPitStops'].unique():
-                sel = result['NumberOfPitStops'] == npit
-                result.loc[sel, 'TotalLaps'] += np.arange(0, sel.sum()) + 1
+            # create total laps counter for each tyre used
+            for npit in result['Stint'].unique():
+                sel = result['Stint'] == npit
+                result.loc[sel, 'TyreLife'] += np.arange(0, sel.sum()) + 1
 
             # check if there is another lap during which the session was aborted
             # but which is not in the data
@@ -1308,11 +1317,10 @@ class Session:
                         'Time': [next_status['Time']],
                         'Driver': [result['Driver'].iloc[-1]],
                         'NumberOfLaps': [result['NumberOfLaps'].iloc[-1] + 1],
-                        'NumberOfPitStops':
-                            [result['NumberOfPitStops'].iloc[-1]],
+                        'Stint': [result['Stint'].iloc[-1]],
                         # 'IsPersonalBest': False,
                         'Compound': [result['Compound'].iloc[-1]],
-                        'TotalLaps': [result['TotalLaps'].iloc[-1] + 1],
+                        'TyreLife': [result['TyreLife'].iloc[-1] + 1],
                         'New': [result['New'].iloc[-1]],
                     })
                     if not only_one_lap:
@@ -1324,9 +1332,7 @@ class Session:
         if df is None:
             raise NoLapDataError
         laps = df.reset_index(drop=True)  # noqa: F821
-        laps.rename(columns={'TotalLaps': 'TyreLife',
-                             'NumberOfPitStops': 'Stint',
-                             'Driver': 'DriverNumber',
+        laps.rename(columns={'Driver': 'DriverNumber',
                              'NumberOfLaps': 'LapNumber',
                              'New': 'FreshTyre'}, inplace=True)
         laps['Stint'] += 1  # counting stints from 1
@@ -1378,6 +1384,43 @@ class Session:
             logging.warning("Could not load any valid session status information!")
         self._laps = Laps(laps, session=self)
         self._check_lap_accuracy()
+
+    def __fix_tyre_info(self, df):
+        # Sometimes later corrections of tyre info are sent through the api.
+        # These updates only set values that need to be changed and all other
+        # values are none-like. Therefore, if correction updates exist, for
+        # each stint the first received information is taken and then
+        # iteratively updated with non-NA values from all updates for this
+        # stint (in the order received).
+        corrected = pd.DataFrame(
+            {'Stint': df['Stint'].unique()}, columns=df.columns
+        )
+
+        for i, stint in enumerate(df['Stint'].unique()):
+            for _, row in df.loc[df['Stint'] == stint].iterrows():
+                # iterate over all messages (rows) that were received for this
+                # stint
+                if pd.isna(corrected.loc[i]).all():
+                    # first message: set as a whole (performance)
+                    corrected.loc[i] = row
+                    continue
+
+                for key, value in row.iteritems():
+                    # correction: update existing values only if new value
+                    # is non-na
+                    if pd.isna(value):
+                        continue
+                    if (key == 'Time') and not pd.isna(corrected.loc[i, key]):
+                        # always keep first time stamp instead of corrected
+                        # corresponds to pit stop time
+                        continue
+                    corrected.loc[i, key] = value
+
+        # reapply original dtypes per column
+        for col_name, dtype in zip(df.columns, df.dtypes):
+            corrected[col_name] = corrected[col_name].astype(dtype)
+
+        return corrected
 
     def _check_lap_accuracy(self):
         """Accuracy validation; simples yes/no validation
