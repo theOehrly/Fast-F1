@@ -1087,11 +1087,11 @@ class Session:
 
         if self.f1_api_support:
             if laps:
-                # try:
-                self._load_laps_data(livedata)
-                # except Exception as exc:
-                #     logging.warning("Failed to load lap data!")
-                #     logging.debug("Lap data failure traceback:", exc_info=exc)
+                try:
+                    self._load_laps_data(livedata)
+                except Exception as exc:
+                    logging.warning("Failed to load lap data!")
+                    logging.debug("Lap data failure traceback:", exc_info=exc)
 
             if telemetry:
                 try:
