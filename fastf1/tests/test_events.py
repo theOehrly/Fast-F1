@@ -1,3 +1,5 @@
+import datetime
+
 import pandas as pd
 import pytest
 
@@ -51,6 +53,25 @@ def test_get_testing_session(test_n, session_n, pass_1, pass_2):
     else:
         with pytest.raises(ValueError):
             fastf1.get_testing_session(2021, test_n, session_n)
+
+
+@pytest.mark.parametrize("dt", [datetime.datetime(year=2022, month=6, day=1)])
+def test_get_events_remaining(dt):
+    events = fastf1.get_events_remaining(dt)
+    assert len(events) == 15
+
+
+@pytest.mark.parametrize("dt",
+                         [datetime.datetime(year=2022, month=12, day=31)])
+def test_events_remaining_after_season(dt):
+    events = fastf1.get_events_remaining(dt)
+    assert len(events) == 0
+
+
+@pytest.mark.parametrize("dt", [datetime.datetime(year=2022, month=1, day=1)])
+def test_events_remaining_before_season(dt):
+    events = fastf1.get_events_remaining(dt)
+    assert len(events) == 24
 
 
 @pytest.mark.parametrize("gp", ['Bahrain', 'Bharain', 'Sakhir', 1])
