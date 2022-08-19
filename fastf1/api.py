@@ -129,6 +129,9 @@ class Cache:
             force_renew (bool): Ignore existing cached data. Download data and update the cache instead.
             use_requests_cache (bool): Do caching of the raw GET and POST requests.
         """
+        # Allow users to use paths such as ~user or ~/
+        cache_dir = os.path.expanduser(cache_dir)
+
         if not os.path.exists(cache_dir):
             raise NotADirectoryError("Cache directory does not exist! Please check for typos or create it first.")
         cls._CACHE_DIR = cache_dir
