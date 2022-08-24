@@ -4,26 +4,13 @@
 Calculates which drivers still has chance to win the WDC.
 Simplified since it doesn't compare positions if points are equal.
 
-This example implements 3 functions that it then uses to calculate
-it's result.
+This example implements 2 functions that it then uses to calculate
+its result.
 """
 
-import requests
 import fastf1
 
 fastf1.Cache.enable_cache("../doc_cache")  # replace with your cache directory
-
-
-##############################################################################
-# We need a function to get the current driver standings from
-# Ergast and returns as list of drivers.
-# Reference https://ergast.com/mrd/methods/standings/
-def get_drivers_standings():
-    url = "https://ergast.com/api/f1/current/driverStandings.json"
-    response = requests.get(url)
-    data = response.json()
-    drivers_standings = data['MRData']['StandingsTable']['StandingsLists'][0]['DriverStandings']  # noqa: E501
-    return drivers_standings
 
 
 ##############################################################################
@@ -70,11 +57,13 @@ Can win: {can_win}")
 
 
 ##############################################################################
-# Now using the 3 functions above we can use them to calculate who
+# Now using the 2 functions above we can use them to calculate who
 # can still win.
 
-# Get the current drivers standings
-driver_standings = get_drivers_standings()
+# We need a function to get the current driver standings from
+# Ergast and returns as list of drivers.
+# Reference https://ergast.com/mrd/methods/standings/
+driver_standings = fastf1.get_driver_standings(2022)
 
 # Get the maximum amount of points
 points = calculate_max_points_for_remaining_season()

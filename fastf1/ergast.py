@@ -8,6 +8,24 @@ base_url = 'https://ergast.com/api/f1'
 _headers = {'User-Agent': f'FastF1/{__version__}'}
 
 
+def get_driver_standings(year="current"):
+    """
+    Returns dre
+    :param year:
+    :return:
+    """
+    url = f"https://ergast.com/api/f1/{year}/driverStandings.json"
+    return _parse_ergast_driver_standings(
+        _parse_json_response(
+            Cache.requests_get(url, headers=_headers)
+        )
+    )
+
+
+def _parse_ergast_driver_standings(data):
+    return data['MRData']['StandingsTable']['StandingsLists'][0]['DriverStandings']  # noqa: E501
+
+
 def fetch_results(year, gp, session):
     """session can be 'Qualifying' or 'Race'
     mainly to port on upper level libraries

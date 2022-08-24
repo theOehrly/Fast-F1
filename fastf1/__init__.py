@@ -69,9 +69,10 @@ from fastf1.events import (get_session,  # noqa: F401
                            get_testing_event,
                            get_event_schedule)
 
+
 from fastf1.api import Cache  # noqa: F401
 from fastf1.version import __version__   # noqa: F401
-
+from fastf1.ergast import get_driver_standings  # noqa: F401
 
 _DRIVER_TEAM_MAPPING = {
     # only necessary when loading live timing data that does not include
