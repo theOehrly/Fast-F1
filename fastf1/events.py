@@ -772,8 +772,8 @@ class Event(pd.Series):
                 session_name = 'Sprint'
 
             if session_name not in self.values:
-                raise ValueError(f"No session of type '{identifier}' for "
-                                 f"this event")
+                raise ValueError(f"Session type '{identifier}' does not "
+                                 f"exist for this event")
         else:
             # by number
             if (float(num).is_integer()
@@ -809,7 +809,11 @@ class Event(pd.Series):
                              f"for this event")
         else:
             _name = mask.idxmax()
-            return self[f"{_name}Date"]
+            date = self[f"{_name}Date"]
+            if pd.isnull(date):
+                raise ValueError(f"Session type '{identifier}' does not "
+                                 f"exist for this event")
+            return date
 
     def get_session(self, identifier):
         """Return a session from this event.
@@ -829,8 +833,8 @@ class Event(pd.Series):
             # by name or abbreviation
             session_name = self.get_session_name(identifier)
             if session_name not in self.values:
-                raise ValueError(f"No session of type '{identifier}' for "
-                                 f"this event")
+                raise ValueError(f"Session type '{identifier}' does not "
+                                 f"exist for this event")
         else:
             # by number
             if (float(num).is_integer()

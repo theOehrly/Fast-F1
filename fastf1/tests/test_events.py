@@ -203,3 +203,14 @@ def test_event_get_session(meth_name, args, expected_name):
     event = fastf1.get_event(2021, 14)
     session = getattr(event, meth_name)(*args)
     assert session.name == expected_name
+
+
+def test_event_get_nonexistent_session():
+    with pytest.raises(ValueError, match="does not exist"):
+        fastf1.get_session(2020, 13, 'FP2')
+
+
+def test_event_get_nonexistent_session_date():
+    event = fastf1.get_event(2020, 13)
+    with pytest.raises(ValueError, match="does not exist"):
+        event.get_session_date('FP2')
