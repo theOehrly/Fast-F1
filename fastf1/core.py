@@ -735,10 +735,32 @@ class Telemetry(pd.DataFrame):
         else:
             d = self
 
-        drv_ahead, dist = self.calculate_driver_ahead()
-        return d.join(pd.DataFrame({'DriverAhead': drv_ahead,
-                                    'DistanceToDriverAhead': dist},
-                                   index=d.index), how='outer')
+        drv_ahead, dist, ref_tel = \
+            self.calculate_driver_ahead(return_reference=True)
+
+        # calculate driver ahead works with the unmodified source telemetry,
+        # therefore it may be necessary to resample the result if self uses
+        # a different timebase
+        # create a Telemetry object where the calculation results are merged
+        # with Date, Time and SessionTime. This is necessary so that the data
+        # can be resampled from the reference timebase to the timebase of self
+        dtd = ref_tel.loc[:, ('Date', 'Time', 'SessionTime')].join(
+            pd.DataFrame({'DriverAhead': drv_ahead,
+                          'DistanceToDriverAhead': dist},
+                         index=ref_tel.index)
+        )
+
+        if ((d['SessionTime'].shape != dtd['SessionTime'].shape)
+                or np.any((d['SessionTime'].values
+                           != dtd['SessionTime'].values))):
+            dtd = dtd.resample_channels(new_date_ref=d["SessionTime"])
+
+        # indices need to match as .join works index-on-index
+        dtd['_SelfIndex'] = d.index
+        dtd.set_index('_SelfIndex', drop=True, inplace=True)
+
+        return d.join(dtd.loc[:, ('DriverAhead', 'DistanceToDriverAhead')],
+                      how='outer')
 
     def calculate_differential_distance(self):
         """Calculate the distance between subsequent samples of self.
@@ -773,7 +795,7 @@ class Telemetry(pd.DataFrame):
         else:
             return pd.Series()
 
-    def calculate_driver_ahead(self):
+    def calculate_driver_ahead(self, return_reference=False):
         """Calculate driver ahead and distance to driver ahead.
 
         Driver ahead: Driver number of the driver ahead as string
@@ -783,8 +805,13 @@ class Telemetry(pd.DataFrame):
             integration error when used over long distances (more than one or two laps may sometimes be considered
             a long distance). If in doubt, do sanity checks (against the legacy version or in another way).
 
+        Args:
+            return_reference (bool): Additionally return the reference
+                telemetry data slice that is used to calculate the new data.
+
         Returns:
-            driver ahead (numpy.array), distance to driver ahead (numpy.array)
+            driver ahead (numpy.array), distance to driver ahead (numpy.array),
+            [reference telemetry (optional, :class:`Telemetry`)]
         """
         t_start = self['SessionTime'].iloc[0]
         t_end = self['SessionTime'].iloc[-1]
@@ -803,6 +830,8 @@ class Telemetry(pd.DataFrame):
         # part only
         own_laps = self.session.laps[self.session.laps['DriverNumber'] == self.driver]
         first_lap_number = (own_laps[own_laps['LapStartTime'] <= t_start])['LapNumber'].iloc[-1]
+
+        own_ref_tel = None
 
         for drv in self.session.drivers:
             if drv not in self.session.car_data:
@@ -833,13 +862,21 @@ class Telemetry(pd.DataFrame):
                 continue
 
             # first slice by lap and calculate distance, so that distance is zero at finish line
-            drv_tel = self.session.car_data[drv].slice_by_lap(relevant_laps).add_distance() \
-                          .loc[:, ('SessionTime', 'Distance')].rename(columns={'Distance': drv})
+            drv_tel = self.session.car_data[drv] \
+                          .slice_by_lap(relevant_laps) \
+                          .add_distance()
 
             # now slice again by time to only get the relevant time frame
             drv_tel = drv_tel.slice_by_time(t_start, t_end)
             if drv_tel.empty:
                 continue
+
+            if drv == self.driver:
+                own_ref_tel = drv_tel
+
+            drv_tel = drv_tel.loc[:, ('SessionTime', 'Distance')] \
+                .rename(columns={'Distance': drv})
+
             drv_tel = drv_tel.set_index('SessionTime')
             combined_distance = combined_distance.join(drv_tel, how='outer')
 
@@ -866,6 +903,9 @@ class Telemetry(pd.DataFrame):
 
         dist_to_drv_ahead = np.array([delta_dst[i, index_ahead[i]] for i in range(len(index_ahead))])
         dist_to_drv_ahead[np.all(delta_dst == np.inf, axis=1)] = np.nan  # remove value from all inf rows
+
+        if return_reference:
+            return drv_ahead, dist_to_drv_ahead, own_ref_tel
 
         return drv_ahead, dist_to_drv_ahead
 

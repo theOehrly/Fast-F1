@@ -265,6 +265,25 @@ def test_resampling_up(reference_laps_data):
     assert test_data['SessionTime'].iloc[0] != pandas.Timedelta(0)
 
 
+@pytest.mark.f1telapi
+def test_add_driver_ahead(reference_laps_data):
+    session, laps = reference_laps_data
+    test_data = laps.pick_fastest().get_car_data()
+    test_data = test_data.add_driver_ahead()
+    # only first value may be NaN
+    assert test_data['DistanceToDriverAhead'].isnull().sum() <= 1
+
+
+@pytest.mark.f1telapi
+def test_add_driver_ahead_resampled(reference_laps_data):
+    session, laps = reference_laps_data
+    test_data = laps.pick_fastest().get_car_data()\
+        .resample_channels(rule='0.5S')
+    test_data = test_data.add_driver_ahead()
+    # only first value may be NaN
+    assert test_data['DistanceToDriverAhead'].isnull().sum() <= 1
+
+
 def create_sample_car_data():
     # create sample telemetry for testing the .add_* methods
     # which work with distance, only time and speed really needs
