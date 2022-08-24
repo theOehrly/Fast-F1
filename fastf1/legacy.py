@@ -165,7 +165,7 @@ def _make_trajectory(session, ref_lap):
         stream_length = len(session.pos_data[drivers_list[0]])
         dmap = np.empty((stream_length, len(drivers_list)), dtype=int)
 
-        fast_query = {'n_jobs': 2, 'distance_upper_bound': 500}
+        fast_query = {'workers': 2, 'distance_upper_bound': 500}
         # fast_query < Increases speed
         for index, drv in enumerate(drivers_list):
             if drv not in session.pos_data.keys():
