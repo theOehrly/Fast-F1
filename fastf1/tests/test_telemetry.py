@@ -69,8 +69,22 @@ def test_merge_channels_with_metadata_propagation(reference_laps_data):
 
     for freq in ('original', 10):
         merged = car_data.merge_channels(pos_data, frequency=freq)
-        assert hasattr(merged, 'session')
+        for attr in fastf1.core.Telemetry._metadata:
+            assert getattr(merged, attr, None) is not None
         assert merged.session is session
+
+
+@pytest.mark.f1telapi
+def test_resample_channels_with_metadata_propagation(reference_laps_data):
+    session, laps = reference_laps_data
+    lap = laps.pick_fastest()
+    car_data = lap.get_car_data()
+
+    for freq in ('0.5S', '0.1S'):
+        resampled = car_data.resample_channels(rule=freq)
+        for attr in fastf1.core.Telemetry._metadata:
+            assert getattr(resampled, attr, None) is not None
+        assert resampled.session is session
 
 
 @pytest.mark.f1telapi

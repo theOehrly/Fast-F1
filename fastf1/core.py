@@ -493,7 +493,10 @@ class Telemetry(pd.DataFrame):
             resampled_columns['Source'] = res_source
 
             # join resampled columns and make 'Date' a column again
-            merged = Telemetry(resampled_columns, session=self.session).reset_index().rename(columns={'index': 'Date'})
+            merged = Telemetry(resampled_columns)\
+                .__finalize__(self)\
+                .reset_index()\
+                .rename(columns={'index': 'Date'})
 
             # recalculate the time columns
             merged['SessionTime'] = merged['Date'] - self.session.t0_date
@@ -536,13 +539,17 @@ class Telemetry(pd.DataFrame):
             raise ValueError("You need to specify either 'rule' or 'new_index'")
 
         if new_date_ref is None:
-            st = pd.Series(index=pd.DatetimeIndex(self['Date']), dtype=int).resample(rule, **kwargs).asfreq()
+            st = pd.Series(index=pd.DatetimeIndex(self['Date']), dtype=int)\
+                .resample(rule, **kwargs).asfreq()
             new_date_ref = pd.Series(st.index)
 
-        new_tel = Telemetry(session=self.session, driver=self.driver, columns=self.columns)
+        new_tel = Telemetry(columns=self.columns).__finalize__(self)
         new_tel.loc[:, 'Date'] = new_date_ref
 
-        combined_tel = self.merge_channels(Telemetry({'Date': new_date_ref}, session=self.session))
+        combined_tel = self.merge_channels(
+            Telemetry({'Date': new_date_ref}).__finalize__(self)
+        )
+
         mask = combined_tel['Date'].isin(new_date_ref)
         new_tel = combined_tel.loc[mask, :]
 
