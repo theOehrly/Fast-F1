@@ -863,15 +863,52 @@ class Telemetry(pd.DataFrame):
             lap_n_after = drv_laps_after['LapNumber'].iloc[0] \
                 if not drv_laps_after.empty \
                 else max(drv_laps['LapNumber'])
-            relevant_laps = drv_laps[(drv_laps['LapNumber'] >= lap_n_before) & (drv_laps['LapNumber'] <= lap_n_after)]
 
-            if relevant_laps.empty:
+            # pad_before/_after is used to extend the range of relevant laps
+            # by up to one lap in each direction if the previously determined
+            # relevant laps at the beginning or end are missing their
+            # LapStartTime or Time respectively
+            pad_before = 0
+            pad_after = 0
+            while True:
+                relevant_laps = None
+                try:
+                    relevant_laps = drv_laps[
+                        (drv_laps['LapNumber'] >= (lap_n_before - pad_before))
+                        & (drv_laps['LapNumber'] <= lap_n_after + pad_after)
+                    ]
+                except IndexError:
+                    break
+
+                if (pad_before >= 1) or (pad_after >= 1):
+                    logging.warning(f"Car number {drv} cannot be located "
+                                    f"on track while calculating the distance"
+                                    f"between cars.")
+                    break
+
+                if relevant_laps.empty:
+                    break
+
+                # a relevant timestamp is NaT; pad accordingly and try again
+                if relevant_laps['LapStartTime'].iloc[-1] is pd.NaT:
+                    pad_before += 1
+                    continue
+                if relevant_laps['Time'].iloc[0] is pd.NaT:
+                    pad_after += 1
+                    continue
+                break
+
+            if (relevant_laps is None) or relevant_laps.empty:
                 continue
 
             # first slice by lap and calculate distance, so that distance is zero at finish line
             drv_tel = self.session.car_data[drv] \
-                          .slice_by_lap(relevant_laps) \
-                          .add_distance()
+                          .slice_by_lap(relevant_laps)
+
+            if drv_tel.empty:
+                continue
+
+            drv_tel = drv_tel.add_distance()
 
             # now slice again by time to only get the relevant time frame
             drv_tel = drv_tel.slice_by_time(t_start, t_end)
