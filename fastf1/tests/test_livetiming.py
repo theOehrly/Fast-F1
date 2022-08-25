@@ -18,7 +18,7 @@ def test_file_loading():
     session = fastf1.get_session(2021, 1, 'Practice 3')
     session.load(livedata=livedata)
 
-    assert session.laps.shape == (274, 27)
+    assert session.laps.shape == (273, 27)
     assert session.car_data['44'].shape == (17362, 10)
 
 

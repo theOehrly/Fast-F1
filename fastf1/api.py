@@ -110,7 +110,8 @@ class Cache:
     on FastF1.
     """
     _CACHE_DIR = ''
-    _API_CORE_VERSION = 6  # version of the api parser code (unrelated to release version number)
+    # version of the api parser code (unrelated to release version number)
+    _API_CORE_VERSION = 7
     _IGNORE_VERSION = False
     _FORCE_RENEW = False
 
@@ -645,7 +646,13 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             for trapkey, trapname in (('I1', 'SpeedI1'), ('I2', 'SpeedI2'), ('FL', 'SpeedFL'), ('ST', 'SpeedST')):
                 if val := recursive_dict_get(resp, 'Speeds', trapkey, 'Value'):
                     # speed has to be float because int does not support NaN
-                    drv_data[trapname][lapcnt - lap_offset] = float(val)
+                    if trapkey == 'ST':
+                        # the ST trap value can occur early enough in a new lap
+                        # that it needs to be excluded from the usual offset
+                        # logic, therefore the offset is ignored here
+                        drv_data[trapname][lapcnt] = float(val)
+                    else:
+                        drv_data[trapname][lapcnt - lap_offset] = float(val)
 
         if 'InPit' in resp:
             # 'InPit': True is received once when entering pits, False is received once when leaving
