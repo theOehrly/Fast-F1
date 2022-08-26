@@ -2,6 +2,7 @@
 Utils module - :mod:`fastf1.utils`
 ==================================
 """
+import warnings
 from functools import reduce
 
 import numpy as np
@@ -121,25 +122,33 @@ def to_timedelta(x):
     """
     # this is faster than using pd.timedelta on a string
     if isinstance(x, str) and len(x):
-        hours, minutes = 0, 0
-        if len(hms := x.split(':')) == 3:
-            hours, minutes, seconds = hms
-        elif len(hms) == 2:
-            minutes, seconds = hms
-        else:
-            seconds = hms[0]
+        try:
+            hours, minutes = 0, 0
+            if len(hms := x.split(':')) == 3:
+                hours, minutes, seconds = hms
+            elif len(hms) == 2:
+                minutes, seconds = hms
+            else:
+                seconds = hms[0]
 
-        if '.' in seconds:
-            seconds, msus = seconds.split('.')
-            if len(msus) < 6:
-                msus = msus + '0' * (6 - len(msus))
-            elif len(msus) > 6:
-                msus = msus[0:6]
-        else:
-            msus = 0
+            if '.' in seconds:
+                seconds, msus = seconds.split('.')
+                if len(msus) < 6:
+                    msus = msus + '0' * (6 - len(msus))
+                elif len(msus) > 6:
+                    msus = msus[0:6]
+            else:
+                msus = 0
 
-        return timedelta(hours=int(hours), minutes=int(minutes),
-                         seconds=int(seconds), microseconds=int(msus))
+            return timedelta(hours=int(hours), minutes=int(minutes),
+                             seconds=int(seconds), microseconds=int(msus))
+        except Exception as exc:
+            warnings.warn(
+                "In a future version, `to_timedelta` will return NaT instead "
+                "of raising an exception if a value cannot be parsed.",
+                FutureWarning
+            )
+            raise exc
     elif isinstance(x, timedelta):
         return x
 
@@ -167,19 +176,27 @@ def to_datetime(x):
         datetime.datetime
     """
     if isinstance(x, str):
-        date, time = x.strip('Z').split('T')
-        year, month, day = date.split('-')
-        hours, minutes, seconds = time.split(':')
-        if '.' in seconds:
-            seconds, msus = seconds.split('.')
-            if len(msus) < 6:
-                msus = msus+'0'*(6-len(msus))
-            elif len(msus) > 6:
-                msus = msus[0:6]
-        else:
-            msus = 0
+        try:
+            date, time = x.strip('Z').split('T')
+            year, month, day = date.split('-')
+            hours, minutes, seconds = time.split(':')
+            if '.' in seconds:
+                seconds, msus = seconds.split('.')
+                if len(msus) < 6:
+                    msus = msus+'0'*(6-len(msus))
+                elif len(msus) > 6:
+                    msus = msus[0:6]
+            else:
+                msus = 0
 
-        return datetime(int(year), int(month), int(day), int(hours),
-                        int(minutes), int(seconds), int(msus))
+            return datetime(int(year), int(month), int(day), int(hours),
+                            int(minutes), int(seconds), int(msus))
+        except Exception as exc:
+            warnings.warn(
+                "In a future version, `to_datetime` will return NaT instead "
+                "of raising an exception if a value cannot be parsed.",
+                FutureWarning
+            )
+            raise exc
     elif isinstance(x, datetime):
         return x
