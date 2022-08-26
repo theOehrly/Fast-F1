@@ -1005,8 +1005,8 @@ class Session:
 
         self._session_start_time: pd.Timedelta
 
-        self._car_data = dict()
-        self._pos_data = dict()
+        self._car_data: dict
+        self._pos_data: dict
 
         self._weather_data: pd.DataFrame
         self._results: SessionResults
@@ -1731,6 +1731,9 @@ class Session:
         pos_data = api.position_data(self.api_path, livedata=livedata)
 
         self._calculate_t0_date(car_data, pos_data)
+
+        self._car_data = dict()
+        self._pos_data = dict()
 
         for drv in self.drivers:
             try:
