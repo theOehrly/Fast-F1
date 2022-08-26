@@ -33,6 +33,12 @@ def fetch_season(year):
 
 
 def fetch_weekend(year, gp):
+    warnings.warn(
+        "`fetch_weekend()` is deprecated and will be"
+        "removed without a direct replacement in a "
+        "future version.",
+        FutureWarning
+    )
     url = f"{base_url}/{year}/{gp}.json"
     data = _parse_ergast(_parse_json_response(
         Cache.requests_get(url, headers=_headers)
