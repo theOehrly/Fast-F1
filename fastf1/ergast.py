@@ -4,7 +4,7 @@ import warnings
 from fastf1.api import Cache
 from fastf1.version import __version__
 
-base_url = 'http://ergast.com/api/f1'
+base_url = 'https://ergast.com/api/f1'
 _headers = {'User-Agent': f'FastF1/{__version__}'}
 
 
