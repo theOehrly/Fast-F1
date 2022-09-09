@@ -1866,8 +1866,8 @@ class Laps(pd.DataFrame):
         - **IsPersonalBest** (bool): Flag that indicates whether this lap is
           the official personal best lap of a driver. If any lap of a driver
           is quicker than their respective personal best lap, this means that
-          the quicker lap is invalid and not counted. This can happen it the
-          track limits were execeeded, for example.
+          the quicker lap is invalid and not counted. For example, this can
+          happen if the track limits were exceeded.
         - **Compound** (str): Tyres event specific compound name: SOFT, MEDIUM,
           HARD, INTERMEDIATE, WET (the actual underlying compounds C1 to C5 are
           not differentiated).
