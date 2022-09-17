@@ -3,7 +3,6 @@ import concurrent.futures
 import json
 import logging
 import requests
-import sys
 import time
 
 from fastf1.signalr_aio import Connection
