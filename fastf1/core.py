@@ -1587,8 +1587,10 @@ class Session:
             if r:
                 # join driver info and session results
                 results = pd.DataFrame(r).set_index('DriverNumber')
-                self._results = SessionResults(drivers.join(results),
-                                               force_default_cols=True)
+                self._results = SessionResults(
+                    drivers.join(results, how='outer'), force_default_cols=True
+                )
+                self._results['DriverNumber'] = self._results.index
             else:
                 # return driver info without session results
                 self._results = SessionResults(drivers,
