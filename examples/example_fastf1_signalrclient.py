@@ -1,3 +1,8 @@
+"""Using the Fast-F1 signalr client?
+======================================
+
+Demonstrates the usage of the SignalRClient
+"""
 from fastf1.livetiming.client import SignalRClient
 
 import asyncio
