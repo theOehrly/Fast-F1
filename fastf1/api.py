@@ -348,7 +348,7 @@ class Cache:
                     try:
                         os.mkdir(cache_dir, mode=0o0700)
                     except Exception as err:
-                        logging.error("Failed to create cache directory {0}. Error {1}".format(cache_dir, err))
+                        logging.error("Failed to create cache directory {0}. Error {1}".format(cache_dir, err))  # noqa: E501
                         raise
 
                 # Enable cache with default
