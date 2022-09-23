@@ -3,10 +3,9 @@ import concurrent.futures
 import json
 import logging
 import requests
-import sys
 import time
 
-from signalr_aio import Connection
+from fastf1.signalr_aio import Connection
 
 import fastf1
 
@@ -75,12 +74,6 @@ class SignalRClient:
 
     def __init__(self, filename, filemode='w', debug=False,
                  timeout=60, logger=None):
-        if (ver := sys.version_info) >= (3, 10):
-            raise RuntimeError(
-                f"The live timing client does only support Python 3.8 and "
-                f"3.9 but you are using version "
-                f"{'.'.join(str(d) for d in ver[:3])}"
-            )
 
         self.headers = {'User-agent': 'BestHTTP',
                         'Accept-Encoding': 'gzip, identity',
