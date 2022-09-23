@@ -30,7 +30,9 @@ import datetime
 import functools
 import json
 import logging
+import math
 import os
+import sys
 import pickle
 import zlib
 
@@ -40,7 +42,6 @@ import requests
 import requests_cache
 
 from fastf1.utils import recursive_dict_get, to_timedelta, to_datetime
-
 
 base_url = 'https://livetiming.formula1.com'
 
@@ -116,7 +117,7 @@ class Cache:
     _FORCE_RENEW = False
 
     _requests_session = None
-    _has_been_warned = False  # flag to ensure that warning about disabled cache is logged once only
+    _default_cache_enabled = False  # flag to ensure that warning about disabled cache is logged once only # noqa: E501
     _tmp_disabled = False
 
     @classmethod
@@ -130,6 +131,9 @@ class Cache:
             force_renew (bool): Ignore existing cached data. Download data and update the cache instead.
             use_requests_cache (bool): Do caching of the raw GET and POST requests.
         """
+        # Allow users to use paths such as %LOCALAPPDATA%
+        cache_dir = os.path.expandvars(cache_dir)
+
         # Allow users to use paths such as ~user or ~/
         cache_dir = os.path.expanduser(cache_dir)
 
@@ -159,7 +163,7 @@ class Cache:
         enabled. Else, `requests.Session().get()` will be called without any
         caching.
         """
-        cls._show_not_enabled_warning()
+        cls._enable_default_cache()
         if (cls._requests_session is None) or cls._tmp_disabled:
             return requests.get(*args, **kwargs)
         return cls._requests_session.get(*args, **kwargs)
@@ -173,7 +177,7 @@ class Cache:
         enabled. Else, `requests.Session().get()` will be called without any
         caching.
         """
-        cls._show_not_enabled_warning()
+        cls._enable_default_cache()
         if (cls._requests_session is None) or cls._tmp_disabled:
             return requests.post(*args, **kwargs)
         return cls._requests_session.post(*args, **kwargs)
@@ -279,7 +283,7 @@ class Cache:
 
             else:  # cache was not enabled
                 if not cls._tmp_disabled:
-                    cls._show_not_enabled_warning()
+                    cls._enable_default_cache()
                 return func(api_path, response=response, livedata=livedata)
 
         return _cached_api_request
@@ -318,16 +322,51 @@ class Cache:
             pickle.dump(new_cached, cache_file_obj)
 
     @classmethod
-    def _show_not_enabled_warning(cls):
-        if not cls._CACHE_DIR and not cls._has_been_warned:
-            # warn only once and only if cache is not enabled
-            logging.warning(
-                "\n\nNO CACHE! Api caching has not been enabled! \n\t"
-                "It is highly recommended to enable this feature for much "
-                "faster data loading!\n\t"
-                "Use `fastf1.Cache.enable_cache('path/to/cache/')`\n")
+    def _enable_default_cache(cls):
+        if not cls._CACHE_DIR and not cls._default_cache_enabled:
+            cache_dir = None
+            if "FASTF1_CACHE" in os.environ:
+                cache_dir = os.environ.get("FASTF1_CACHE")
+            else:
+                if sys.platform == "linux":
+                    # If .cache exists we will use it. Otherwise, ~/
+                    tmp = os.path.expanduser("~/.cache")
+                    if os.path.exists(tmp):
+                        cache_dir = r"~/.cache/fastf1"
+                    else:
+                        cache_dir = r"~/.fastf1"
+                elif sys.platform == "darwin":
+                    cache_dir = r"~/Library/Caches/fastf1"
+                elif sys.platform == "win32":
+                    cache_dir = r"%LOCALAPPDATA%\Temp\fastf1"
 
-            cls._has_been_warned = True
+            if cache_dir is not None:
+                # Ensure the default cache folder exists
+                cache_dir = os.path.expandvars(cache_dir)
+                cache_dir = os.path.expanduser(cache_dir)
+                if not os.path.exists(cache_dir):
+                    try:
+                        os.mkdir(cache_dir, mode=0o0700)
+                    except Exception as err:
+                        logging.error("Failed to create cache directory {0}. Error {1}".format(cache_dir, err))
+                        raise
+
+                # Enable cache with default
+                cls.enable_cache(cache_dir)
+                logging.warning(
+                    f"\n\nDEFAULT CACHE ENABLED!\n\t"
+                    f"Cache directory: {cache_dir}.\n\t"
+                    f"Size: {cls._convert_size(cls._get_size(cache_dir))}"
+                )
+            else:
+                # warn only once and only if cache is not enabled
+                logging.warning(
+                    "\n\nNO CACHE! Api caching has not been enabled! \n\t"
+                    "It is highly recommended to enable this feature for much "
+                    "faster data loading!\n\t"
+                    "Use `fastf1.Cache.enable_cache('path/to/cache/')`\n")
+
+                cls._default_cache_enabled = True
 
     @classmethod
     def disabled(cls):
@@ -378,6 +417,28 @@ class Cache:
             This function is not multithreading-safe
         """
         cls._tmp_disabled = False
+
+    @classmethod
+    def _convert_size(cls, size_bytes):  # https://stackoverflow.com/questions/5194057/better-way-to-convert-file-sizes-in-python # noqa: E501
+        if size_bytes == 0:
+            return "0B"
+        size_name = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
+        i = int(math.floor(math.log(size_bytes, 1024)))
+        p = math.pow(1024, i)
+        s = round(size_bytes / p, 2)
+        return "%s %s" % (s, size_name[i])
+
+    @classmethod
+    def _get_size(cls, start_path='.'):  # https://stackoverflow.com/questions/1392413/calculating-a-directorys-size-using-python # noqa: E501
+        total_size = 0
+        for dirpath, dirnames, filenames in os.walk(start_path):
+            for f in filenames:
+                fp = os.path.join(dirpath, f)
+                # skip if it is symbolic link
+                if not os.path.islink(fp):
+                    total_size += os.path.getsize(fp)
+
+        return total_size
 
 
 class _NoCacheContext:
