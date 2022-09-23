@@ -29,8 +29,15 @@ The module is designed around Pandas, Numpy and Matplotlib. This makes it easy
 to use while offering lots of possibilities for data analysis and
 visualization.
 
-FastF1 handles big chunks of data (~50-100mb per session) so most of the
-information is stored locally as cached requests (be aware).
+FastF1 handles big chunks of data (~50-100mb per session). To improve performance
+data is per default cached locally as requests (be aware). The default placement
+of the cache is operating system specific:
+
+  - Windows: `%LOCALAPPDATA%\Temp\fastf1`
+  - macOS: `~/Library/Caches/fastf1`
+  - Linux: `~/.cache/fastf1` if `~/.cache` exists otherwise `~/.fastf1`
+
+You can override the default location by using `Cache.enable_cache('location')`.
 
 All data is downloaded from two sources:
 
