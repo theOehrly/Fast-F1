@@ -81,14 +81,13 @@ pages = {
 class Cache:
     """Pickle and requests based API cache.
 
+    Fast-F1 will per default enable caching. While this can be disabled, it
+    should almost always be enabled to speed up the runtime of your scripts
+    and to prevent exceeding the rate limit of api servers.
+
     The parsed API data will be saved as a pickled object.
     Raw GET requests are cached in a sqlite db using the 'requests-cache'
     module.
-
-    Caching should almost always be enabled to speed up the runtime of your
-    scripts and to prevent exceeding the rate limit of api servers.
-    FastF1 will print an annoyingly obnoxious warning message if you do not
-    enable caching.
 
     The cache has two "stages".
 
@@ -98,7 +97,7 @@ class Cache:
           running your scripts,  as parsing of the data is computationally
           expensive. Stage 2 caching is only used for some api functions.
 
-    Most commonly, you will enable caching right at the beginning of your script:
+    You can explicitly configure right at the beginning of your script:
 
         >>> import fastf1
         >>> fastf1.Cache.enable_cache('path/to/cache')  # doctest: +SKIP
@@ -106,9 +105,16 @@ class Cache:
         >>> session = fastf1.get_session(2021, 5, 'Q')
         >>> # ...
 
-    Note that you should always enable caching except for very rare
-    circumstances which are usually limited to doing core developement
-    on FastF1.
+    If no explicit location is provied, Fast-F1 will use a default location
+    depending on operating system.
+
+        - Windows: `%LOCALAPPDATA%\\Temp\\fastf1`
+        - macOS: `~/Library/Caches/fastf1`
+        - Linux: `~/.cache/fastf1` if `~/.cache` exists otherwise `~/.fastf1`
+
+    Cached data can be deleted at any time to reclaim disk space. However,
+    this also means you will have to redownload the same data again if you
+    need which will lead to reduced performance.
     """
     _CACHE_DIR = ''
     # version of the api parser code (unrelated to release version number)
