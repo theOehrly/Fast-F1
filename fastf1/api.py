@@ -112,7 +112,7 @@ class Cache:
     If no explicit location is provied, Fast-F1 will use a default location
     depending on operating system.
 
-        - Windows: `%LOCALAPPDATA%\\Temp\\fastf1`
+        - Windows: `%LOCALAPPDATA%\\\\Temp\\\\fastf1`
         - macOS: `~/Library/Caches/fastf1`
         - Linux: `~/.cache/fastf1` if `~/.cache` exists otherwise `~/.fastf1`
 
