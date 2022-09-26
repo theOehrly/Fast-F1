@@ -105,6 +105,10 @@ class Cache:
         >>> session = fastf1.get_session(2021, 5, 'Q')
         >>> # ...
 
+    An alternative way to set the cache directory is to configure an
+    environment variable `FASTF1_CACHE`. However, this value will be
+    ignored if `Cache.enable_cache()` is called.
+
     If no explicit location is provied, Fast-F1 will use a default location
     depending on operating system.
 
