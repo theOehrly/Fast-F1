@@ -17,6 +17,7 @@ act/
 [Ll]ib64
 [Ll]ocal
 [Ss]cripts
+[Ss]hare
 pyvenv.cfg
 .venv
 pip-selfcheck.json
