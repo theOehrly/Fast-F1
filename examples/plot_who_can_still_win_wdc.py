@@ -43,14 +43,14 @@ def calculate_max_points_for_remaining_season():
 # We currently don't consider the case of two drivers getting equal points
 # since its more complicated and would require comparing positions.
 def calculate_who_can_win(driver_standings, max_points):
-    LEADER_POINTS = int(driver_standings[0]['points'])
+    LEADER_POINTS = int(driver_standings['points'].iat[0])
 
-    for _, driver in enumerate(driver_standings):
+    for _, driver in driver_standings.iterrows():
         driver_max_points = int(driver["points"]) + max_points
         can_win = 'No' if driver_max_points < LEADER_POINTS else 'Yes'
 
         print(f"{driver['position']}: \
-{driver['Driver']['code']}, \
+{driver['Driver_code']}, \
 Current points: {driver['points']}, \
 Theoretical max points: {driver_max_points}, \
 Can win: {can_win}")

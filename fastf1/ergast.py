@@ -1,4 +1,5 @@
 import json
+import pandas
 import warnings
 
 from fastf1.api import Cache
@@ -8,17 +9,20 @@ base_url = 'https://ergast.com/api/f1'
 _headers = {'User-Agent': f'FastF1/{__version__}'}
 
 
-def get_driver_standings(year="current"):
+def get_driver_standings(year="current") -> pandas.DataFrame:
     """
-    Returns dre
+    Returns driver standings
     :param year:
-    :return:
+    :return: DataFrame
     """
     url = f"https://ergast.com/api/f1/{year}/driverStandings.json"
-    return _parse_ergast_driver_standings(
-        _parse_json_response(
-            Cache.requests_get(url, headers=_headers)
-        )
+    return pandas.json_normalize(
+        _parse_ergast_driver_standings(
+            _parse_json_response(
+                Cache.requests_get(url, headers=_headers)
+            )
+        ),
+        sep='_'
     )
 
 
