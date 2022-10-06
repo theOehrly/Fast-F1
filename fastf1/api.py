@@ -220,9 +220,9 @@ class Cache:
                     os.remove(os.path.join(dirpath, filename))
 
         if deep:
-            if not hasattr(requests.Session(), 'cache'):
-                cls._install_requests_cache(cache_dir)
-            requests_cache.clear()
+            cache_db_path = os.path.join(cache_dir, 'fastf1_http_cache.sqlite')
+            if os.path.exists(cache_db_path):
+                os.remove(cache_db_path)
 
     @classmethod
     def api_request_wrapper(cls, func):
