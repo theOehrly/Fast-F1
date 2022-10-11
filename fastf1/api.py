@@ -196,8 +196,9 @@ class Cache:
     def clear_cache(cls, cache_dir=None, deep=False):
         """Clear all cached data.
 
-        Deletes all files in the cache directory. By default, it will clear the default cache directory.
-        However, if a cache directory is provided as an argument this will be cleared instead. Optionally,
+        Deletes all files in the cache directory. By default, it will clear
+        the default cache directory. However, if a cache directory is
+        provided as an argument this will be cleared instead. Optionally,
         the requests cache can be cleared too.
 
         Can be called without enabling the cache first.
