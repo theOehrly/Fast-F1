@@ -1,0 +1,11 @@
+url_normalize-1.4.3.dist-info/INSTALLER,sha256=zuuue4knoyJ-UwPPXg8fezS7VCrXJQrAP7zeNuwvFQg,4
+url_normalize-1.4.3.dist-info/LICENSE,sha256=x8vrwMEv8jRJWfH145sXvs0VU4jPraVx27HQzSn7wj4,1070
+url_normalize-1.4.3.dist-info/METADATA,sha256=0MVtxGyTPFS37GGuwruMD5VYA2OAQViAvQkWRy4u8jo,3142
+url_normalize-1.4.3.dist-info/RECORD,,
+url_normalize-1.4.3.dist-info/WHEEL,sha256=2SyTS6-hWVbCVhxpPo1j5f9gwaWw-hVIJs0s_cC8MXM,87
+url_normalize/__init__.py,sha256=92vND5H6tviA408z928nQ65xggO_Ys8JTcxDkSMJCUk,1060
+url_normalize/__pycache__/__init__.cpython-39.pyc,,
+url_normalize/__pycache__/tools.cpython-39.pyc,,
+url_normalize/__pycache__/url_normalize.cpython-39.pyc,,
+url_normalize/tools.py,sha256=-zPkLqGgnALB8io9KFms0P1_M1e6-fHSFIO9mwvClpM,2306
+url_normalize/url_normalize.py,sha256=IgMl7mVz195kwTmNRZkqJyLVnNVG_SOCMDCOeEtkZnU,6462
