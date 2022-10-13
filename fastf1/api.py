@@ -120,7 +120,7 @@ class Cache:
     this also means you will have to redownload the same data again if you
     need which will lead to reduced performance.
     """
-    _CACHE_DIR = ''
+    _CACHE_DIR = None
     # version of the api parser code (unrelated to release version number)
     _API_CORE_VERSION = 7
     _IGNORE_VERSION = False
@@ -193,11 +193,13 @@ class Cache:
         return cls._requests_session.post(*args, **kwargs)
 
     @classmethod
-    def clear_cache(cls, cache_dir, deep=False):
+    def clear_cache(cls, cache_dir=None, deep=False):
         """Clear all cached data.
 
-        This deletes all cache files in the provided cache directory.
-        Optionally, the requests cache is cleared too.
+        Deletes all files in the cache directory. By default, it will clear
+        the default cache directory. However, if a cache directory is
+        provided as an argument this will be cleared instead. Optionally,
+        the requests cache can be cleared too.
 
         Can be called without enabling the cache first.
 
@@ -211,6 +213,15 @@ class Cache:
             cache_dir (str): Path to the directory which is used to store cached data.
             deep (bool): Clear the requests cache (stage 1) too.
         """
+        if cache_dir is None:
+            if cls._CACHE_DIR is None:
+                cache_dir = cls.get_default_cache_path()
+            else:
+                cache_dir = cls._CACHE_DIR
+
+        # We need to expand the directory to support ~/
+        cache_dir = os.path.expandvars(cache_dir)
+        cache_dir = os.path.expanduser(cache_dir)
         if not os.path.exists(cache_dir):
             raise NotADirectoryError("Cache directory does not exist!")
 
@@ -220,9 +231,9 @@ class Cache:
                     os.remove(os.path.join(dirpath, filename))
 
         if deep:
-            if not hasattr(requests.Session(), 'cache'):
-                cls._install_requests_cache(cache_dir)
-            requests_cache.clear()
+            cache_db_path = os.path.join(cache_dir, 'fastf1_http_cache.sqlite')
+            if os.path.exists(cache_db_path):
+                os.remove(cache_db_path)
 
     @classmethod
     def api_request_wrapper(cls, func):
@@ -332,23 +343,29 @@ class Cache:
             pickle.dump(new_cached, cache_file_obj)
 
     @classmethod
+    def get_default_cache_path(cls):
+        if sys.platform == "linux":
+            # If .cache exists we will use it. Otherwise, ~/
+            tmp = os.path.expanduser("~/.cache")
+            if os.path.exists(tmp):
+                return r"~/.cache/fastf1"
+            else:
+                return r"~/.fastf1"
+        elif sys.platform == "darwin":
+            return r"~/Library/Caches/fastf1"
+        elif sys.platform == "win32":
+            return r"%LOCALAPPDATA%\Temp\fastf1"
+        else:
+            return None
+
+    @classmethod
     def _enable_default_cache(cls):
         if not cls._CACHE_DIR and not cls._default_cache_enabled:
             cache_dir = None
             if "FASTF1_CACHE" in os.environ:
                 cache_dir = os.environ.get("FASTF1_CACHE")
             else:
-                if sys.platform == "linux":
-                    # If .cache exists we will use it. Otherwise, ~/
-                    tmp = os.path.expanduser("~/.cache")
-                    if os.path.exists(tmp):
-                        cache_dir = r"~/.cache/fastf1"
-                    else:
-                        cache_dir = r"~/.fastf1"
-                elif sys.platform == "darwin":
-                    cache_dir = r"~/Library/Caches/fastf1"
-                elif sys.platform == "win32":
-                    cache_dir = r"%LOCALAPPDATA%\Temp\fastf1"
+                cache_dir = cls.get_default_cache_path()
 
             if cache_dir is not None:
                 # Ensure the default cache folder exists
