@@ -1000,6 +1000,7 @@ class Session:
         self._session_status = dict()
         self._race_control_messages = dict()
 
+        self._total_laps: int
         self._laps: Laps
         self._t0_date: pd.Timestamp
 
@@ -1050,6 +1051,14 @@ class Session:
         Data is available after calling `Session.load` with ``laps=True``
         """
         return self._get_property_warn_not_loaded('_laps')
+
+    @property
+    def total_laps(self):
+        """:class:`int`: Originally scheduled number of laps.
+
+        Data is available after calling `Session.load` with ``laps=True``
+        """
+        return self._get_property_warn_not_loaded('_total_laps')
 
     @property
     def weather_data(self):
@@ -1254,6 +1263,12 @@ class Session:
                 self._session_start_time = session_status['Time'][i]
                 break
         self._session_status = pd.DataFrame(session_status)
+
+        lap_count = api.lap_count(self.api_path, livedata=livedata)
+        # A race can have multiple intended total laps, the first one
+        # being the original scheduel
+        self._total_laps = lap_count['TotalLaps'][0]
+
         df = None
 
         track_status = api.track_status_data(self.api_path, livedata=livedata)
