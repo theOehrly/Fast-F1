@@ -19,6 +19,7 @@ A collection of functions to interface with the F1 web api.
    track_status_data
    session_status_data
    race_control_messages
+   lap_count
    driver_info
    weather_data
    fetch_page
@@ -1476,6 +1477,65 @@ def race_control_messages(path, response=None, livedata=None):
         for key, conv in zip(data_keys, converters):
             try:
                 data[key].append(conv(entry[key]))
+            except (KeyError, ValueError):
+                # type conversion failed or key is missing
+                data[key].append(None)
+
+    return data
+
+
+@Cache.api_request_wrapper
+def lap_count(path, response=None, livedata=None):
+    """Fetch and parse lap count data.
+
+    It provides the following data channels per sample:
+        - Time: session timestamp (time only)
+        - TotalLaps (int): Intended number of total laps
+        - CurrentLap (int): Current race lap
+
+    A value can have both 'TotalLaps' and 'CurrentLap' or only one of them.
+
+    A new value is sent every time a lap is completed or
+    the intended number of laps changes.
+
+    Args:
+        path (str): api path base string (usually ``Session.api_path``)
+        response: Response as returned by :func:`fetch_page` can be passed if
+            it was downloaded already.
+        livedata: An instance of
+            :class:`fastf1.livetiming.data.LiveTimingData` to use as a source
+            instead of the api
+
+    Returns:
+        A dictionary containing one key for each data channel and a list of
+        values per key.
+
+    Raises:
+        SessionNotAvailableError: in case the F1 livetiming api returns no data
+    """
+    if livedata is not None and livedata.has('LapCount'):
+        # does not need any further processing
+        logging.info("Loading lap count data")
+        return livedata.get('LapCount')
+    elif response is None:
+        logging.info("Fetching lap count data...")
+        response = fetch_page(path, 'lap_count')
+        if response is None:  # no response received
+            raise SessionNotAvailableError(
+                "No data for this session! If this session only finished "
+                "recently, please try again in a few minutes."
+            )
+
+    data = {'Time': [], 'TotalLaps': [], 'CurrentLap': []}
+    data_keys = ('TotalLaps', 'CurrentLap')
+    converters = (int, int)
+
+    for entry in response:
+        data['Time'].append(to_timedelta(entry[0]))
+
+        for key, conv in zip(data_keys, converters):
+            try:
+                data[key].append(conv(entry[1][key]))
             except (KeyError, ValueError):
                 # type conversion failed or key is missing
                 data[key].append(None)
