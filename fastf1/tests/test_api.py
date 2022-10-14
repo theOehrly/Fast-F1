@@ -199,3 +199,24 @@ def test_weather_data():
     for col, dtype in zip(data.values(), dtypes):
         assert isinstance(col[0], dtype)
         assert len(col) == 100
+
+
+def test_lap_count_data():
+    response = list()
+    tl = 12  # length of timestamp: len('00:00:00:000')
+    with open('fastf1/testing/reference_data/'
+              '2021_01_R/lap_count.raw', 'rb') as fobj:
+        for line in fobj.readlines():
+            dec = line.decode('utf-8-sig')
+            response.append([dec[:tl], fastf1.api.parse(dec[tl:])])
+
+    # parse data; api path is unused here so it does not need to be valid
+    data = fastf1.api.lap_count('api/path', response=response)
+
+    # ########## verify lap data
+    assert isinstance(data, dict)
+    assert len(data.keys()) == 3
+    dtypes = [datetime.timedelta, int, int]
+    for col, dtype in zip(data.values(), dtypes):
+        assert isinstance(col[0], dtype)
+        assert len(col) == 57
