@@ -5,6 +5,7 @@ exp*.py
 
 # ide config
 .idea/
+.vscode/
 
 # environments for development and local test runs
 venv/
