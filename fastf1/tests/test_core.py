@@ -32,3 +32,11 @@ def test_laps_constructor_metadata_propagation(reference_laps_data):
     assert laps.session is session
     assert laps.iloc[0:2].session is session
     assert laps.iloc[0].session is session
+
+def test_pick_fastest_Not_InQ3():
+    s=fastf1.get_session(2022,"Austrian GP","Q")
+    s.load()
+    expectlaptime="1:06.330"
+    lap=s.laps.pick_driver("NOR").pick_fastest()#no args
+    lapString=fastf1.core.Lap.lapTimetoString(lap)
+    assert expectlaptime == lapString

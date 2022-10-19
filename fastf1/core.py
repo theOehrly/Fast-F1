@@ -59,6 +59,7 @@ import warnings
 import numpy as np
 import pandas as pd
 
+from datetime import datetime, timedelta
 import fastf1
 from fastf1 import api, ergast
 from fastf1.utils import recursive_dict_get, to_timedelta
@@ -1806,6 +1807,54 @@ class Session:
         self._t0_date = date_offset.round('ms')
 
 
+    """
+    Method to extract the  Q1, Q2 and Q3 start and finish timestamps based on the race control messages
+    Returns:
+        A dictionary with 3 elements(Q1,Q2,Q3) and 2 elements inside each of them  (start, end)"""
+    def get_quali_rounds(self, isPrinted=False):
+        session=self
+        kont=0
+        kontfinish=0
+        status=fastf1.api.session_status_data(session.api_path)
+        timestampsQ1={}
+        timestampsQ2={}
+        timestampsQ3={}
+        rounds={'Q1':timestampsQ1,'Q2':timestampsQ2,'Q3':timestampsQ3}
+        
+        t0=self.t0_date
+        for i in range (0,len(status['Time'])):
+            if status['Status'][i]=="Started":
+                if i==1 or  (i>=2 and status['Status'][i-2]!="Aborted"):#check if it's the first message (Q1) and it is not a restarted session after a red flag
+                    kont=kont+1
+                    if isPrinted:
+                        print("Q"+str(kont)+" started at", status['Time'][i])
+
+                    if(kont==1):
+                        timestampsQ1["Start"]=t0+status['Time'][i]
+                    elif (kont==2):
+                        timestampsQ2["Start"]=t0+status['Time'][i]
+                    elif (kont==3):
+                        timestampsQ3["Start"]=t0+status['Time'][i]
+                    else:
+                        print("round error")
+            elif status['Status'][i]=="Finished":
+                kontfinish=kontfinish+1
+                if isPrinted:
+                    print("Q"+str(kontfinish)+" finished at", status['Time'][i])
+                if(kont==1):
+                        timestampsQ1["End"]=t0+status['Time'][i]
+                elif (kont==2):
+                        timestampsQ2["End"]=t0+status['Time'][i]
+                elif (kont==3):
+                        timestampsQ3["End"]=t0+status['Time'][i]
+                else:
+                        print("round error")
+
+                if kontfinish==3:
+                    break
+        return rounds    
+
+
 class Laps(pd.DataFrame):
     """Object for accessing lap (timing) data of multiple laps.
 
@@ -2189,45 +2238,48 @@ class Laps(pd.DataFrame):
         """
         return self[self['Team'].isin(names)]
 
-    def pick_fastest(self, only_by_time=False):
+    def pick_fastest(self, round="all"):
         """Return the lap with the fastest lap time.
 
-        This method will by default return the quickest lap out of self, that
-        is also marked as personal best lap of a driver.
-
-        If the quickest lap by lap time is not marked as personal best, this
-        means that it was not counted. This can be the case for example, if
-        the driver exceeded track limits and the lap time was deleted.
-
-        If no lap is marked as personal best lap or self contains no laps,
-        an empty Lap object will be returned.
-
-        The check for personal best lap can be disabled, so that any quickest
-        lap will be returned.
+        This method will by default return the quickest lap out of self that is valid.
+        Maybe there is a fastest lap made by this driver, but it was deleted due to track limits
+        so just the oficially fastest one is returned.
 
         Args:
-            only_by_time (bool): Ignore whether any laps are marked as
-                personal best laps and simply return the lap that has the
-                lowest lap time.
+            round(String): By default "all" rounds are considered, so it returns the fastest oficial lap
+                of the whole qualifying session. 
+                By setting round to "Q1" the fastet oficial lap of Q1 will be returned
+                By setting round to "Q2" the fastet oficial lap of Q2 will be returned
+                By setting round to "Q3" the fastet oficial lap of Q3 will be returned
+
+                If the driver, did not take part in the round selected, an empty instance of lap will be returned
 
         Returns:
             instance of :class:`Lap`
         """
-        if only_by_time:
-            laps = self  # all laps
-        else:
-            # select only laps marked as personal fastest
-            laps = self.loc[self['IsPersonalBest'] == True]  # noqa: E712 comparison with True
-
+        
+        laps = self  # all laps
         if not laps.size:
             return Lap(index=self.columns)
 
-        lap = laps.loc[laps['LapTime'].idxmin()]
-        if isinstance(lap, pd.DataFrame):
-            # More laps, same time
-            lap = lap.iloc[0]  # take first clocked
+        min= timedelta(hours=0, minutes=99, seconds=99)
+        i=0
+        lap=Lap(index=self.columns)
+        for i in range(len(laps)):
+            lapRound=laps.iloc[i].get_quali_round()
+            if(lapRound!="-1" and(round=="all" or lapRound==round)):
+                if(laps.iloc[i]['LapTime']<min):
+                    if(laps.iloc[i].isValid()):
+                        lap=laps.iloc[i]
+                        min=laps.iloc[i]['LapTime']
+                    else:
+                        print("fastest was "+str(laps.iloc[i]['LapTime'])+" but was deleted")
 
+        if(round=="all"):
+            print("Fastest lap was made in")
+            print(lap.get_quali_round())
         return lap
+
 
     def pick_quicklaps(self, threshold=None):
         """Return all laps with `LapTime` faster than a certain limit. By
@@ -2469,7 +2521,43 @@ class Lap(pd.Series):
 
         # no data: return an empty Series with the correct index names
         return pd.Series(index=self.session.weather_data.columns)
+    """Method to extract the Qualifying round (Q1,Q2,Q3) that the actual lap was set.
+        It compares the lap start date with each rounds' timestamps
+        returns the string  "Q1" if the lap was set in q1
+        returns the string  "Q2" if the lap was set in q1
+        returns the string  "Q3" if the lap was set in q1
+        if it was not one of the previous three cases, "Error the lap was made out of session" is returned. 
+            Since the lap started after the end of session
+    """
+    def get_quali_round(self):
+        times=self.session.get_quali_rounds()
+        if(times["Q1"]["Start"]<self.LapStartDate<times["Q1"]["End"]):
+            return "Q1"
+        elif(times["Q2"]["Start"]<self.LapStartDate<times["Q2"]["End"]):
+            return "Q2"
+        elif(times["Q3"]["Start"]<self.LapStartDate<times["Q3"]["End"]):
+            return "Q3"
+        else:
+            return "-1" #error! lap was made out of session
 
+    """Method to know if a lap was deleted or not
+        return true if the lap was valid
+        return false if it was deleted due to track limits""" 
+    def isValid(self):
+        messages=self.session.race_control_messages['Message']
+        lapFormat = self.lapTimetoString()
+        for i in range(len(messages)):            
+            if( str(self['Driver']) in messages.iloc[i] and lapFormat in messages.iloc[i] and "TRACK LIMITS" in messages.iloc[i] ):   
+                return False
+        
+        return True 
+
+    def lapTimetoString(self):
+        minutes, seconds = divmod(self['LapTime'].seconds, 60)
+        millis = round(self['LapTime'].microseconds/1000, 0)
+        lapFormat=str(minutes)+":"+str(seconds).zfill(2)+"."+str(round(millis)).zfill(3)
+        return lapFormat  
+                
 
 class SessionResults(pd.DataFrame):
     """This class provides driver and result information for all drivers that
