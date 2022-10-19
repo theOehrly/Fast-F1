@@ -1264,10 +1264,12 @@ class Session:
                 break
         self._session_status = pd.DataFrame(session_status)
 
-        lap_count = api.lap_count(self.api_path, livedata=livedata)
-        # A race can have multiple intended total laps, the first one
-        # being the original scheduel
-        self._total_laps = lap_count['TotalLaps'][0]
+        # Lap count data only exists for Races.
+        if self.name == 'Race':
+            lap_count = api.lap_count(self.api_path, livedata=livedata)
+            # A race can have multiple intended total laps, the first one
+            # being the original scheduel
+            self._total_laps = lap_count['TotalLaps'][0]
 
         df = None
 
