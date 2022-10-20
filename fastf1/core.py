@@ -1054,7 +1054,9 @@ class Session:
 
     @property
     def total_laps(self):
-        """:class:`int`: Originally scheduled number of laps.
+        """:class:`int`: Originally scheduled number of laps for race-like
+        sessions such as Race and Sprint. It takes -1 as a default value
+        for other types of sessions or if data is unavailable
 
         Data is available after calling `Session.load` with ``laps=True``
         """
@@ -1264,12 +1266,18 @@ class Session:
                 break
         self._session_status = pd.DataFrame(session_status)
 
-        # Lap count data only exists for Races.
-        if self.name == 'Race':
-            lap_count = api.lap_count(self.api_path, livedata=livedata)
-            # A race can have multiple intended total laps, the first one
-            # being the original scheduel
-            self._total_laps = lap_count['TotalLaps'][0]
+        # Lap count data only exists for race-like sessions.
+        if self.name in ('Race', 'Sprint', 'Sprint Qualifying'):
+            try:
+                lap_count = api.lap_count(self.api_path, livedata=livedata)
+                # A race-like session can have multiple intended total laps,
+                # the first one being the original schedule
+                self._total_laps = lap_count['TotalLaps'][0]
+            except IndexError:
+                self._total_laps = -1
+                logging.warning("No lap count data for this session.")
+        else:
+            self._total_laps = -1
 
         df = None
 
