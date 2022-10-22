@@ -998,14 +998,14 @@ class Session:
         )
         """str: API base path for this session"""
 
-        self._session_status = dict()
-        self._race_control_messages = dict()
+        self._session_status: pd.DataFrame
+        self._race_control_messages: pd.DataFrame
 
         self._total_laps: Optional[int]
         self._laps: Laps
-        self._t0_date: pd.Timestamp
 
-        self._session_start_time: pd.Timedelta
+        self._t0_date: Optional[pd.Timestamp]
+        self._session_start_time: Optional[pd.Timedelta]
 
         self._car_data: dict
         self._pos_data: dict
@@ -1264,6 +1264,9 @@ class Session:
             if session_status['Status'][i] == 'Started':
                 self._session_start_time = session_status['Time'][i]
                 break
+        else:
+            logging.warning("Failed to determine `Session.session_start_time`")
+            self._session_start_time = None
         self._session_status = pd.DataFrame(session_status)
 
         # Lap count data only exists for race-like sessions.
@@ -1828,7 +1831,11 @@ class Session:
                 if date_offset is None or new_offset > date_offset:
                     date_offset = new_offset
 
-        self._t0_date = date_offset.round('ms')
+        if date_offset is None:
+            self._t0_date = None
+            logging.warning("Failed to determine `Session.t0_date`!")
+        else:
+            self._t0_date = date_offset.round('ms')
 
 
 class Laps(pd.DataFrame):
