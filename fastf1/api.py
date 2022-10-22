@@ -123,7 +123,7 @@ class Cache:
     """
     _CACHE_DIR = None
     # version of the api parser code (unrelated to release version number)
-    _API_CORE_VERSION = 7
+    _API_CORE_VERSION = 8
     _IGNORE_VERSION = False
     _FORCE_RENEW = False
 
@@ -617,6 +617,9 @@ def timing_data(path, response=None, livedata=None):
     laps_data = pd.DataFrame(laps_data)
     stream_data = pd.DataFrame(stream_data)
 
+    # pandas doesn't correctly infer bool dtype columns, set type explicitly
+    laps_data[['IsPersonalBest']] = laps_data[['IsPersonalBest']].astype(bool)
+
     return laps_data, stream_data
 
 
@@ -1019,7 +1022,11 @@ def timing_app_data(path, response=None, livedata=None):
                     data['Driver'][-1] = driver_number
                     data['Stint'][-1] = stint_number
 
-    return pd.DataFrame(data)
+    df = pd.DataFrame(data)
+    # pandas doesn't correctly infer bool dtype columns, set type explicitly
+    df[['New', 'TyresNotChanged']] \
+        = df[['New', 'TyresNotChanged']].astype(bool)
+    return df
 
 
 @Cache.api_request_wrapper

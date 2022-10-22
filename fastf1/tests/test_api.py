@@ -80,7 +80,7 @@ def test_timing_app_data():
     assert len(data.columns) == 13
     assert (data.dtypes == [
         'float64', 'object', 'timedelta64[ns]', 'int64', 'float64',
-        'object', 'object', 'object', 'timedelta64[ns]', 'float64',
+        'object', 'bool', 'bool', 'timedelta64[ns]', 'float64',
         'object', 'float64', 'object']).all()
 
 

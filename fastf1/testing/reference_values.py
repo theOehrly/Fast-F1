@@ -28,12 +28,12 @@ LAP_DTYPES = {'Time': '<m8[ns]',
               'SpeedST': 'float64',
               'Compound': 'O',
               'TyreLife': 'float64',
-              'FreshTyre': 'O',
+              'FreshTyre': 'bool',
               'LapStartTime': '<m8[ns]',
               'Team': 'O',
               'Driver': 'O',
               'TrackStatus': 'O',
-              'IsAccurate': 'O'}
+              'IsAccurate': 'bool'}
 
 CAR_DATA_DTYPES = {'Brake': 'bool',
                    'nGear': 'int64',
