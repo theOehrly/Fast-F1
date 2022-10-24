@@ -1055,7 +1055,7 @@ class Session:
     @property
     def total_laps(self):
         """:class:`int`: Originally scheduled number of laps for race-like
-        sessions such as Race and Sprint. It takes -1 as a default value
+        sessions such as Race and Sprint. It takes None as a default value
         for other types of sessions or if data is unavailable
 
         Data is available after calling `Session.load` with ``laps=True``
