@@ -1,13 +1,13 @@
-pytest
-pytest-mpl
+pytest>=6.0.0  # equals pytest min version requirement
+pytest-mpl==0.14.0  # logging issues in newer versions
 requests-mock
-sphinx
-sphinx-rtd-theme==0.5.2  # sphinx-rtd/docutils issues
-docutils==0.16
-sphinx-gallery
-autodocsumm
+sphinx==4.5.0  # autodocsumm does not support sphinx 5.0
+sphinx-rtd-theme==1.0.0  # rtd-theme and docutils have issues in older versions
+docutils==0.17.1
+sphinx-gallery>=0.10.0
+autodocsumm>=0.2.8  # cross-links don't work correctly in older versions
 wheel
-flake8==3.9.2
+flake8
 readme-renderer
 xdoctest
 pre-commit
