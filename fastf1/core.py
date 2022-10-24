@@ -55,6 +55,7 @@ import collections
 from functools import cached_property
 import logging
 import warnings
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -1000,7 +1001,7 @@ class Session:
         self._session_status = dict()
         self._race_control_messages = dict()
 
-        self._total_laps: int
+        self._total_laps: Optional[int]
         self._laps: Laps
         self._t0_date: pd.Timestamp
 
@@ -1013,11 +1014,10 @@ class Session:
         self._results: SessionResults
 
     def _get_property_warn_not_loaded(self, name):
-        d = getattr(self, name, None)
-        if d is None:
+        if not hasattr(self, name):
             raise DataNotLoadedError("The data you are trying to access has not "
                                      "been loaded yet. See `Session.load`")
-        return d
+        return getattr(self, name, None)
 
     @property
     def weekend(self):
@@ -1274,10 +1274,10 @@ class Session:
                 # the first one being the original schedule
                 self._total_laps = lap_count['TotalLaps'][0]
             except IndexError:
-                self._total_laps = -1
+                self._total_laps = None
                 logging.warning("No lap count data for this session.")
         else:
-            self._total_laps = -1
+            self._total_laps = None
 
         df = None
 
