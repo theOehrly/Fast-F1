@@ -37,7 +37,7 @@ Usage Example
     fastf1.Cache.enable_cache('cache_directory')
 
     livedata = LiveTimingData('saved_data.txt')
-    session = fastf1.get_session(2021, 'testing', 1)
+    session = fastf1.get_testing_session(2021, 1, 1)
     session.load(livedata=livedata)
 
 optionally you can load live timing data from two or more files

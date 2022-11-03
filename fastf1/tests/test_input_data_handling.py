@@ -33,7 +33,7 @@ def test_history_mod_1(caplog):
     # api data sometimes goes back in time
     caplog.set_level(logging.INFO)
 
-    session = fastf1.get_session(2020, 'testing', 3)
+    session = fastf1.get_testing_session(2020, 1, 3)
     session.load()
 
     assert "The api attempted to rewrite history" in caplog.text  # the warning
