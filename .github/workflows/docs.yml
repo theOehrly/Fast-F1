@@ -74,7 +74,7 @@ jobs:
       - name: Build docs
         run: |
           mkdir test_cache  # not really need but pytest setup relies on it 
-          python setup.py build_sphinx -a -E
+          python setup.py build_sphinx -a -E -W --keep-going
 
       - name: Publish docs
         if: (github.event_name == 'release') || inputs.publish
