@@ -35,11 +35,6 @@ jobs:
           restore-keys: |
             pip-cache
 
-      - name: Install patched autodocsumm
-        # TODO: remove this step once PR is merged
-        run: |
-          python3 -m pip install git+https://github.com/theOehrly/autodocsumm.git@fixed-for-prod-0
-
       - name: Install python requirements
         run: |
           python3 -m pip install --upgrade pip setuptools wheel
