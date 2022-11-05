@@ -17,15 +17,15 @@ jobs:
     name: Tests on ${{ matrix.python-version }}
     steps:
       - name: Setup python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Cache pip
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.cache/pip
           key: pip-cache-${{ hashFiles('requirements/*/*.txt') }}
@@ -46,7 +46,7 @@ jobs:
           mkdir test_cache  # make sure cache dir exists
 
       - name: Cache FastF1
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ./test_cache
           key: fastf1-${{ secrets.CACHE_VERSION }}-${{ matrix.python-version }}-${{ hashFiles('*.*') }}
@@ -62,15 +62,15 @@ jobs:
     name: Flake8 lint checks
     steps:
       - name: Setup python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '3.8'
 
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Cache pip
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.cache/pip
           key: pip-cache-${{ hashFiles('requirements/*/*.txt') }}
@@ -115,15 +115,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Cache pip
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.cache/pip
           key: pip-cache-${{ hashFiles('requirements/*/*.txt') }}
