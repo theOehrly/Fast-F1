@@ -317,7 +317,7 @@ def get_event(year, gp, *, force_ergast=False, strict_search=False):
         force_ergast (bool): Always use data from the ergast database to
             create the event schedule
         strict_search (bool) : Match precisely the query, or default to
-            fuzzy search. If no event is not found with
+            fuzzy search. If no event is found with
             ``strict_search=True``, the function will return None
 
     Returns:
@@ -329,7 +329,7 @@ def get_event(year, gp, *, force_ergast=False, strict_search=False):
                                   force_ergast=force_ergast)
 
     if type(gp) is str:
-        event = schedule.get_event_by_name(gp, strict_search)
+        event = schedule.get_event_by_name(gp, strict_search=strict_search)
     else:
         event = schedule.get_event_by_round(gp)
 
@@ -594,7 +594,7 @@ class EventSchedule(pd.DataFrame):
             raise ValueError(f"Invalid round: {round}")
         return self[mask].iloc[0]
 
-    def get_event_by_name(self, name, strict_search=False):
+    def get_event_by_name(self, name, *, strict_search=False):
         """Get an :class:`Event` by its name.
 
         A fuzzy match is performed to find the event that best matches the
@@ -603,8 +603,8 @@ class EventSchedule(pd.DataFrame):
         the correct result. You should therefore always check if the function
         actually returns the event you had wanted.
         To gurantee the function returns the event queried, toggle
-        strict_search, which will only return an event if it matches
-        (non case sensitive) the query string.
+        strict_search, which will only return an event if its event name
+        matches (non case sensitive) the query string.
 
         .. warning:: You should avoid adding common words to ``name`` to avoid
             false string matches.
