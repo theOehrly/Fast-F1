@@ -594,6 +594,48 @@ class EventSchedule(pd.DataFrame):
             raise ValueError(f"Invalid round: {round}")
         return self[mask].iloc[0]
 
+    def _strict_event_search(self, name):
+        """
+        Match Event Name exactly, ignoring case.
+        """
+
+        query = name.lower()
+        for i, event in self.iterrows():
+            if 'EventName' in event:
+                if event['EventName'].lower() == query:
+                    return self.loc[i]
+        else:
+            return None
+
+    def _fuzzy_event_search(self, name):
+
+        def _matcher_strings(ev):
+            strings = list()
+            if 'Location' in ev:
+                strings.append(ev['Location'])
+            if 'Country' in ev:
+                strings.append(ev['Country'])
+            if 'EventName' in ev:
+                strings.append(ev['EventName'].replace("Grand Prix", ""))
+            if 'OfficialEventName' in ev:
+                strings.append(ev['OfficialEventName']
+                               .replace("FORMULA 1", "")
+                               .replace(str(self.year), "")
+                               .replace("GRAND PRIX", ""))
+            return strings
+
+        max_ratio = 0
+        index = 0
+        for i, event in self.iterrows():
+            ratio = max(
+                [fuzz.ratio(val.casefold(), name.casefold())
+                 for val in _matcher_strings(event)]
+            )
+            if ratio > max_ratio:
+                max_ratio = ratio
+                index = i
+        return self.loc[index]
+
     def get_event_by_name(self, name, *, strict_search=False):
         """Get an :class:`Event` by its name.
 
@@ -627,52 +669,10 @@ class EventSchedule(pd.DataFrame):
 
         """
 
-        def _strict_search():
-            """
-            Match Event Name exactly, ignoring case.
-            """
-
-            query = name.lower()
-            for i, event in self.iterrows():
-                if 'EventName' in event:
-                    if event['EventName'].lower() == query:
-                        return self.loc[i]
-            else:
-                return None
-
-        def _fuzzy_search():
-
-            def _matcher_strings(ev):
-                strings = list()
-                if 'Location' in ev:
-                    strings.append(ev['Location'])
-                if 'Country' in ev:
-                    strings.append(ev['Country'])
-                if 'EventName' in ev:
-                    strings.append(ev['EventName'].replace("Grand Prix", ""))
-                if 'OfficialEventName' in ev:
-                    strings.append(ev['OfficialEventName']
-                                   .replace("FORMULA 1", "")
-                                   .replace(str(self.year), "")
-                                   .replace("GRAND PRIX", ""))
-                return strings
-
-            max_ratio = 0
-            index = 0
-            for i, event in self.iterrows():
-                ratio = max(
-                    [fuzz.ratio(val.casefold(), name.casefold())
-                     for val in _matcher_strings(event)]
-                )
-                if ratio > max_ratio:
-                    max_ratio = ratio
-                    index = i
-            return self.loc[index]
-
         if strict_search:
-            return _strict_search()
+            return self._strict_event_search(name)
         else:
-            return _fuzzy_search()
+            return self._fuzzy_event_search(name)
 
 
 class Event(pd.Series):
