@@ -659,11 +659,12 @@ class EventSchedule(pd.DataFrame):
                 ``.get_event_by_name("silverstone")`` will both return the
                 event for the British Grand Prix.
             strict_search (bool) : Search only for exact query matches
-            instead of using fuzzy search. For example,
+                instead of using fuzzy search. For example,
                 ``.get_event_by_name("British Grand Prix", strict_search=True)`` # noqa: E501
                 will return the event for the British Grand Prix, whereas
                 ``.get_event_by_name("British", strict_search=True)``
                 will return ``None``
+
         Returns:
             :class:`Event`
 
