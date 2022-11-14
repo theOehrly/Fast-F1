@@ -299,7 +299,7 @@ def get_testing_session(year, test_number, session_number):
     return event.get_session(session_number)
 
 
-def get_event(year, gp, *, force_ergast=False, strict_search=False):
+def get_event(year, gp, *, force_ergast=False, strict_search=False) -> "Event":
     """Create an :class:`~fastf1.events.Event` object for a specific
     season and gp.
 
