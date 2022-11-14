@@ -68,7 +68,7 @@ from fastf1.utils import recursive_dict_get, to_timedelta
 logging.basicConfig(level=logging.INFO, style='{',
                     format="{module: <8} {levelname: >10} \t{message}")
 
-D_LOOKUP: List[List[int, str, str]] = \
+D_LOOKUP: List[List] = \
     [[44, 'HAM', 'Mercedes'], [77, 'BOT', 'Mercedes'],
      [55, 'SAI', 'Ferrari'], [16, 'LEC', 'Ferrari'],
      [33, 'VER', 'Red Bull'], [11, 'PER', 'Red Bull'],
