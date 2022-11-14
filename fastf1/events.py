@@ -299,7 +299,7 @@ def get_testing_session(year, test_number, session_number):
     return event.get_session(session_number)
 
 
-def get_event(year, gp, *, force_ergast=False):
+def get_event(year, gp, *, force_ergast=False, strict_search=False):
     """Create an :class:`~fastf1.events.Event` object for a specific
     season and gp.
 
@@ -316,6 +316,9 @@ def get_event(year, gp, *, force_ergast=False):
             as all testing event are round 0!
         force_ergast (bool): Always use data from the ergast database to
             create the event schedule
+        strict_search (bool) : Match precisely the query, or default to
+            fuzzy search. If no event is found with
+            ``strict_search=True``, the function will return None
 
     Returns:
         :class:`~fastf1.events.Event`
@@ -326,7 +329,7 @@ def get_event(year, gp, *, force_ergast=False):
                                   force_ergast=force_ergast)
 
     if type(gp) is str:
-        event = schedule.get_event_by_name(gp)
+        event = schedule.get_event_by_name(gp, strict_search=strict_search)
     else:
         event = schedule.get_event_by_round(gp)
 
@@ -591,28 +594,21 @@ class EventSchedule(pd.DataFrame):
             raise ValueError(f"Invalid round: {round}")
         return self[mask].iloc[0]
 
-    def get_event_by_name(self, name):
-        """Get an :class:`Event` by its name.
-
-        A fuzzy match is performed to find the event that best matches the
-        given name. Fuzzy matching is performed using the country, location,
-        name and officialName of each event. This is not guaranteed to return
-        the correct result. You should therefore always check if the function
-        actually returns the event you had wanted.
-
-        .. warning:: You should avoid adding common words to ``name`` to avoid
-            false string matches.
-            For example, you should rather use "Belgium" instead of "Belgian
-            Grand Prix" as ``name``.
-
-        Args:
-            name (str): The name of the event. For example,
-                ``.get_event_by_name("british")`` and
-                ``.get_event_by_name("silverstone")`` will both return the
-                event for the British Grand Prix.
-        Returns:
-            :class:`Event`
+    def _strict_event_search(self, name):
         """
+        Match Event Name exactly, ignoring case.
+        """
+
+        query = name.lower()
+        for i, event in self.iterrows():
+            if 'EventName' in event:
+                if event['EventName'].lower() == query:
+                    return self.loc[i]
+        else:
+            return None
+
+    def _fuzzy_event_search(self, name):
+
         def _matcher_strings(ev):
             strings = list()
             if 'Location' in ev:
@@ -639,6 +635,45 @@ class EventSchedule(pd.DataFrame):
                 max_ratio = ratio
                 index = i
         return self.loc[index]
+
+    def get_event_by_name(self, name, *, strict_search=False):
+        """Get an :class:`Event` by its name.
+
+        A fuzzy match is performed to find the event that best matches the
+        given name. Fuzzy matching is performed using the country, location,
+        name and officialName of each event. This is not guaranteed to return
+        the correct result. You should therefore always check if the function
+        actually returns the event you had wanted.
+        To gurantee the function returns the event queried, toggle
+        strict_search, which will only return an event if its event name
+        matches (non case sensitive) the query string.
+
+        .. warning:: You should avoid adding common words to ``name`` to avoid
+            false string matches.
+            For example, you should rather use "Belgium" instead of "Belgian
+            Grand Prix" as ``name``.
+
+        Args:
+            name (str): The name of the event. For example,
+                ``.get_event_by_name("british")`` and
+                ``.get_event_by_name("silverstone")`` will both return the
+                event for the British Grand Prix.
+            strict_search (bool) : Search only for exact query matches
+                instead of using fuzzy search. For example,
+                ``.get_event_by_name("British Grand Prix", strict_search=True)`` # noqa: E501
+                will return the event for the British Grand Prix, whereas
+                ``.get_event_by_name("British", strict_search=True)``
+                will return ``None``
+
+        Returns:
+            :class:`Event`
+
+        """
+
+        if strict_search:
+            return self._strict_event_search(name)
+        else:
+            return self._fuzzy_event_search(name)
 
 
 class Event(pd.Series):
