@@ -62,6 +62,8 @@ Cache API
     :autosummary:
 
 """
+from typing import Dict
+
 from fastf1.events import (get_session,  # noqa: F401
                            get_testing_session,
                            get_event,
@@ -73,7 +75,7 @@ from fastf1.api import Cache  # noqa: F401
 from fastf1.version import __version__   # noqa: F401
 
 
-_DRIVER_TEAM_MAPPING = {
+_DRIVER_TEAM_MAPPING: Dict[str, Dict[str, str]] = {
     # only necessary when loading live timing data that does not include
     # the driver and team listing and no data is available on ergast yet
     '23': {'Abbreviation': 'ALB', 'FirstName': 'Alexander',

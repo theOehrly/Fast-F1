@@ -4,12 +4,15 @@ Utils module - :mod:`fastf1.utils`
 """
 import warnings
 from functools import reduce
+from typing import Tuple
 
 import numpy as np
 from datetime import datetime, timedelta
 
+import pandas as pd
 
-def delta_time(reference_lap, compare_lap):
+
+def delta_time(reference_lap: pd.Series, compare_lap: pd.Series) -> Tuple:
     # TODO move somewhere else
     """Calculates the delta time of a given lap, along the 'Distance' axis
     of the reference lap.
@@ -98,7 +101,7 @@ def recursive_dict_get(d, *keys, default_none=False):
         return ret
 
 
-def to_timedelta(x):
+def to_timedelta(x: str):
     """Fast timedelta object creation from a time string
 
     Permissible string formats:

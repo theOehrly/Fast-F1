@@ -36,6 +36,7 @@ import os
 import sys
 import pickle
 import zlib
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -46,7 +47,7 @@ from fastf1.utils import recursive_dict_get, to_timedelta, to_datetime
 
 base_url = 'https://livetiming.formula1.com'
 
-headers = {
+headers: Dict[str, str] = {
   'Host': 'livetiming.formula1.com',
   'Connection': 'close',
   'TE': 'identity',
@@ -54,7 +55,7 @@ headers = {
   'Accept-Encoding': 'gzip, identity',
 }
 
-pages = {
+pages: Dict[str, str] = {
   'session_data': 'SessionData.json',  # track + session status + lap count
   'session_info': 'SessionInfo.json',  # more rnd
   'archive_status': 'ArchiveStatus.json',  # rnd=1880327548
@@ -132,7 +133,7 @@ class Cache:
     _tmp_disabled = False
 
     @classmethod
-    def enable_cache(cls, cache_dir, ignore_version=False, force_renew=False, use_requests_cache=True):
+    def enable_cache(cls, cache_dir: str, ignore_version: bool=False, force_renew: bool=False, use_requests_cache: bool=True):
         """Enables the API cache.
 
         Args:

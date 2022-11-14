@@ -24,6 +24,7 @@ and colors which are provided below.
 .. note:: Plotting related functionality is likely to change in a future
     release.
 """
+from typing import Dict, List
 
 import pandas as pd
 import numpy as np
@@ -44,6 +45,7 @@ except ImportError:
                   UserWarning)
 
 import warnings
+
 with warnings.catch_warnings():
     warnings.filterwarnings('ignore', message="Using slow pure-python SequenceMatcher")
     # suppress that warning, it's confusing at best here, we don't need fast sequence matching
@@ -54,6 +56,7 @@ with warnings.catch_warnings():
 class __TeamColorsWarnDict(dict):
     """Implements userwarning on KeyError in :any:`TEAM_COLORS` after
     changing team names."""
+
     def get(self, key, default=None):
         value = super().get(key, default)
         if value is None:
@@ -87,65 +90,65 @@ TEAM_COLORS = __TeamColorsWarnDict({
 """Mapping of team colors (hex color code) to team names.
 (current season only)"""
 
-
-TEAM_TRANSLATE = {'MER': 'mercedes', 'FER': 'ferrari',
-                  'RBR': 'red bull', 'MCL': 'mclaren',
-                  'APN': 'alpine', 'AMR': 'aston martin',
-                  'ARR': 'alfa romeo', 'APT': 'alphatauri',
-                  'HAA': 'haas', 'WIL': 'williams'}
+TEAM_TRANSLATE: Dict[str, str] = {
+    'MER': 'mercedes', 'FER': 'ferrari',
+    'RBR': 'red bull', 'MCL': 'mclaren',
+    'APN': 'alpine', 'AMR': 'aston martin',
+    'ARR': 'alfa romeo', 'APT': 'alphatauri',
+    'HAA': 'haas', 'WIL': 'williams'}
 """Mapping of team names to theirs respective abbreviations."""
 
-DRIVER_COLORS = {
-        "valtteri bottas": "#900000",
-        "zhou guanyu": "#500000",
+DRIVER_COLORS: Dict[str, str] = {
+    "valtteri bottas": "#900000",
+    "zhou guanyu": "#500000",
 
-        "pierre gasly": "#2b4562",
-        "yuki tsunoda": "#356cac",
+    "pierre gasly": "#2b4562",
+    "yuki tsunoda": "#356cac",
 
-        "fernando alonso": "#0090ff",
-        "esteban ocon": "#70c2ff",
+    "fernando alonso": "#0090ff",
+    "esteban ocon": "#70c2ff",
 
-        "sebastian vettel": "#006f62",
-        "lance stroll": "#25a617",
-        "nico hulkenberg": "#2f9b90",
+    "sebastian vettel": "#006f62",
+    "lance stroll": "#25a617",
+    "nico hulkenberg": "#2f9b90",
 
-        "charles leclerc": "#dc0000",
-        "carlos sainz": "#ff8181",
+    "charles leclerc": "#dc0000",
+    "carlos sainz": "#ff8181",
 
-        "kevin magnussen": "#ffffff",
-        "mick schumacher": "#cacaca",
+    "kevin magnussen": "#ffffff",
+    "mick schumacher": "#cacaca",
 
-        "daniel ricciardo": "#ff8700",
-        "lando norris": "#eeb370",
+    "daniel ricciardo": "#ff8700",
+    "lando norris": "#eeb370",
 
-        "lewis hamilton": "#00d2be",
-        "george russell": "#24ffff",
+    "lewis hamilton": "#00d2be",
+    "george russell": "#24ffff",
 
-        "max verstappen": "#0600ef",
-        "sergio perez": "#716de2",
+    "max verstappen": "#0600ef",
+    "sergio perez": "#716de2",
 
-        "alexander albon": "#005aff",
-        "nicholas latifi": "#012564",
-    }
+    "alexander albon": "#005aff",
+    "nicholas latifi": "#012564",
+}
 """Mapping of driver colors (hex color code) to driver names.
 (current season only)"""
 
-
-DRIVER_TRANSLATE = {'LEC': 'charles leclerc', 'SAI': 'carlos sainz',
-                    'VER': 'max verstappen', 'PER': 'sergio perez',
-                    'RIC': 'daniel ricciardo', 'NOR': 'lando norris',
-                    'ALO': 'fernando alonso', 'OCO': 'esteban ocon',
-                    'BOT': 'valtteri bottas', 'ZHO': 'zhou guanyu',
-                    'GAS': 'pierre gasly', 'TSU': 'yuki tsunoda',
-                    'MAG': 'kevin magnussen', 'MSC': 'mick schumacher',
-                    'VET': 'sebastian vettel', 'HUL': 'nico hulkenberg',
-                    'STR': 'lance stroll',
-                    'HAM': 'lewis hamilton', 'RUS': 'george russell',
-                    'ALB': 'alexander albon', 'LAT': 'nicholas latifi'}
+DRIVER_TRANSLATE: Dict[str, str] = {
+    'LEC': 'charles leclerc', 'SAI': 'carlos sainz',
+    'VER': 'max verstappen', 'PER': 'sergio perez',
+    'RIC': 'daniel ricciardo', 'NOR': 'lando norris',
+    'ALO': 'fernando alonso', 'OCO': 'esteban ocon',
+    'BOT': 'valtteri bottas', 'ZHO': 'zhou guanyu',
+    'GAS': 'pierre gasly', 'TSU': 'yuki tsunoda',
+    'MAG': 'kevin magnussen', 'MSC': 'mick schumacher',
+    'VET': 'sebastian vettel', 'HUL': 'nico hulkenberg',
+    'STR': 'lance stroll',
+    'HAM': 'lewis hamilton', 'RUS': 'george russell',
+    'ALB': 'alexander albon', 'LAT': 'nicholas latifi'}
 """Mapping of driver names to theirs respective abbreviations."""
 
-COLOR_PALETTE = ['#FF79C6', '#50FA7B', '#8BE9FD', '#BD93F9',
-                 '#FFB86C', '#FF5555', '#F1FA8C']
+COLOR_PALETTE: List[str] = ['#FF79C6', '#50FA7B', '#8BE9FD', '#BD93F9',
+                            '#FFB86C', '#FF5555', '#F1FA8C']
 """The default color palette for matplotlib plot lines in fastf1's color
 scheme."""
 
@@ -188,7 +191,7 @@ def setup_mpl(mpl_timedelta_support=True, color_scheme='fastf1',
         _enable_misc_mpl_mods()
 
 
-def driver_color(identifier):
+def driver_color(identifier: str) -> str:
     """Get a driver's color from a driver name or abbreviation.
 
     This function will try to find a matching driver for any identifier string
@@ -246,7 +249,7 @@ def driver_color(identifier):
             ratio = fuzz.ratio(identifier, existing_key)
             key_ratios.append((ratio, existing_key))
         key_ratios.sort(reverse=True)
-        if (key_ratios[0][0] < 35) or (key_ratios[0][0]/key_ratios[1][0] < 1.2):
+        if (key_ratios[0][0] < 35) or (key_ratios[0][0] / key_ratios[1][0] < 1.2):
             # ensure that the best match has a minimum accuracy (35 out of
             # 100) and that it has a minimum confidence (at least 20% better
             # than second best)
@@ -255,7 +258,7 @@ def driver_color(identifier):
         return DRIVER_COLORS[best_matched_key]
 
 
-def team_color(identifier):
+def team_color(identifier) -> str:
     """Get a team's color from a team name or abbreviation.
 
     This function will try to find a matching team for any identifier string
@@ -319,7 +322,7 @@ def team_color(identifier):
             ratio = fuzz.ratio(identifier, existing_key)
             key_ratios.append((ratio, existing_key))
         key_ratios.sort(reverse=True)
-        if (key_ratios[0][0] < 35) or (key_ratios[0][0]/key_ratios[1][0] < 1.2):
+        if (key_ratios[0][0] < 35) or (key_ratios[0][0] / key_ratios[1][0] < 1.2):
             # ensure that the best match has a minimum accuracy (35 out of
             # 100) and that it has a minimum confidence (at least 20% better
             # than second best)
@@ -385,6 +388,7 @@ def _enable_misc_mpl_mods():
                         kwargs[key] = [kwargs[key][i] for i in _ids]
                 kwargs.pop('sort', None)
             return bar(*args, **kwargs)
+
         return _bar_sorted_decorator
 
     plt.bar = _bar_sorted(plt.bar)

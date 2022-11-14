@@ -155,6 +155,7 @@ import collections
 import datetime
 import logging
 import warnings
+from typing import Union, Optional
 
 import dateutil.parser
 
@@ -173,7 +174,6 @@ from fastf1.core import Session
 import fastf1.ergast
 from fastf1.utils import recursive_dict_get
 
-
 _SESSION_TYPE_ABBREVIATIONS = {
     'R': 'Race',
     'Q': 'Qualifying',
@@ -188,7 +188,7 @@ _SCHEDULE_BASE_URL = "https://raw.githubusercontent.com/" \
                      "theOehrly/f1schedule/master/"
 
 
-def get_session(year, gp, identifier=None, *, force_ergast=False, event=None):
+def get_session(year: int, gp: Union[str, int], identifier: Optional[Union[int, str]] = None, *, force_ergast: bool = False, event=None) -> Session:
     """Create a :class:`~fastf1.core.Session` object based on year, event name
     and session identifier.
 
@@ -280,7 +280,7 @@ def get_session(year, gp, identifier=None, *, force_ergast=False, event=None):
     return event.get_session(identifier)
 
 
-def get_testing_session(year, test_number, session_number):
+def get_testing_session(year, test_number, session_number) -> Session:
     """Create a :class:`~fastf1.core.Session` object for testing sessions
     based on year, test  event number and session number.
 
@@ -336,7 +336,7 @@ def get_event(year, gp, *, force_ergast=False, strict_search=False) -> "Event":
     return event
 
 
-def get_testing_event(year, test_number):
+def get_testing_event(year: int, test_number: int) -> "Event":
     """Create a :class:`fastf1.events.Event` object for testing sessions
     based on year and test event number.
 
@@ -354,12 +354,12 @@ def get_testing_event(year, test_number):
 
     try:
         assert test_number >= 1
-        return schedule.iloc[test_number-1]
+        return schedule.iloc[test_number - 1]
     except (IndexError, AssertionError):
         raise ValueError(f"Test event number {test_number} does not exist")
 
 
-def get_event_schedule(year, *, include_testing=True, force_ergast=False):
+def get_event_schedule(year: int, *, include_testing: bool = True, force_ergast: bool = False) -> "EventSchedule":
     """Create an :class:`~fastf1.events.EventSchedule` object for a specific
     season.
 
@@ -375,7 +375,7 @@ def get_event_schedule(year, *, include_testing=True, force_ergast=False):
 
     .. versionadded:: 2.2
     """
-    if ((year not in range(2018, datetime.datetime.now().year+1))
+    if ((year not in range(2018, datetime.datetime.now().year + 1))
             or force_ergast):
         schedule = _get_schedule_from_ergast(year)
     else:
@@ -392,7 +392,7 @@ def get_event_schedule(year, *, include_testing=True, force_ergast=False):
 
 
 def get_events_remaining(
-        dt=None, *, include_testing=True, force_ergast=False) \
+        dt=None, *, include_testing: bool=True, force_ergast: bool=False) \
         -> 'EventSchedule':
     """Create an :class:`~fastf1.events.EventSchedule` object for remaining season.
 
