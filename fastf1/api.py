@@ -133,8 +133,10 @@ class Cache:
     _tmp_disabled = False
 
     @classmethod
-    def enable_cache(cls, cache_dir: str, ignore_version: bool = False,
-                     force_renew: bool = False, use_requests_cache: bool = True):
+    def enable_cache(
+            cls, cache_dir: str, ignore_version: bool = False,
+            force_renew: bool = False,
+            use_requests_cache: bool = True):
         """Enables the API cache.
 
         Args:
@@ -755,8 +757,10 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
                 if pitstops >= 0:
                     drv_data['PitInTime'][lapcnt] = to_timedelta(time)
             elif ((('NumberOfLaps' in resp) and resp['NumberOfLaps'] > api_lapcnt)
-                  or (drv_data['Time'][lapcnt] - to_timedelta(time)) < pd.Timedelta(5, 's')):
-                # same response line as beginning of next lap or beginning of next lap less than 5 seconds away
+                  or (drv_data['Time'][lapcnt] - to_timedelta(time)) <
+                  pd.Timedelta(5, 's')):
+                # same response line as beginning of next lap
+                # or beginning of next lap less than 5 seconds away
                 drv_data['PitOutTime'][lapcnt + 1] = to_timedelta(time)  # add to next lap
                 pitstops += 1
             else:
@@ -797,10 +801,12 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         drv_data['NumberOfLaps'][lapcnt] = lapcnt + 1
         drv_data['NumberOfPitStops'][lapcnt] = pitstops
         drv_data['Driver'][lapcnt] = drv
-    else:  # if there was no more data after the last lap count increase, delete the last empty record
+    else:  # if there was no more data after the last lap count increase,
+        # delete the last empty record
         for key in drv_data.keys():
             drv_data[key] = drv_data[key][:-1]
-    if not data_in_lap(0):  # remove first lap if there's no data; "pseudo outlap" that didn't exist
+    if not data_in_lap(0):  # remove first lap if there's no data;
+        # "pseudo outlap" that didn't exist
         for key in drv_data.keys():
             drv_data[key] = drv_data[key][1:]
         drv_data['NumberOfLaps'] = list(map(lambda n: n - 1, drv_data['NumberOfLaps']))  # reduce each lap count by one
@@ -862,7 +868,8 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
 
     # more lap sync, this time check which lap triggered with the lowest latency
     for i in range(len(drv_data['Time']) - 1, 0, -1):
-        if (new_time := drv_data['Time'][i] - drv_data['LapTime'][i]) < drv_data['Time'][i - 1]:
+        if (new_time := drv_data['Time'][i] - drv_data['LapTime'][i]) < \
+                drv_data['Time'][i - 1]:
             if i > 1 and new_time < drv_data['Time'][i - 2]:
                 integrity_errors.append(i + 1)  # not be possible if sector times and lap time are correct
             else:
@@ -871,20 +878,27 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
     # need to go both directions once to make everything match up; also recalculate sector times
     for i in range(len(drv_data['Time']) - 1):
         if any(pd.isnull(tst) for tst in (
-                drv_data['Time'][i], drv_data['LapTime'][i + 1], drv_data['Sector1Time'][i + 1],
-                drv_data['Sector2Time'][i + 1], drv_data['Sector3Time'][i + 1])):
+                drv_data['Time'][i], drv_data['LapTime'][i + 1],
+                drv_data['Sector1Time'][i + 1],
+                drv_data['Sector2Time'][i + 1],
+                drv_data['Sector3Time'][i + 1])):
             continue  # lap not usable, missing critical values
 
-        if (new_time := drv_data['Time'][i] + drv_data['LapTime'][i + 1]) < drv_data['Time'][i + 1]:
+        if (new_time := drv_data['Time'][i] +
+                drv_data['LapTime'][i + 1]) < \
+                drv_data['Time'][i + 1]:
             drv_data['Time'][i + 1] = new_time
         if (new_s1_time := drv_data['Time'][i] + drv_data['Sector1Time'][i + 1]) < \
                 drv_data['Sector1SessionTime'][i + 1]:
             drv_data['Sector1SessionTime'][i + 1] = new_s1_time
-        if (new_s2_time := drv_data['Time'][i] + drv_data['Sector1Time'][i + 1] + drv_data['Sector2Time'][i + 1]) < \
+        if (new_s2_time := drv_data['Time'][i] + drv_data['Sector1Time'][i + 1] +
+                drv_data['Sector2Time'][i + 1]) < \
                 drv_data['Sector2SessionTime'][i + 1]:
             drv_data['Sector2SessionTime'][i + 1] = new_s2_time
-        if (new_s3_time := drv_data['Time'][i] + drv_data['Sector1Time'][i + 1] + drv_data['Sector2Time'][i + 1] +
-                drv_data['Sector3Time'][i + 1]) < drv_data['Sector3SessionTime'][i + 1]:
+        if (new_s3_time := drv_data['Time'][i] + drv_data['Sector1Time'][i + 1]
+                           + drv_data['Sector2Time'][i + 1] +
+                           drv_data['Sector3Time'][i + 1]) < \
+                drv_data['Sector3SessionTime'][i + 1]:
             drv_data['Sector3SessionTime'][i + 1] = new_s3_time
 
     for i, time in enumerate(drv_data['LapTime']):
@@ -1174,12 +1188,12 @@ def car_data(path, response=None, livedata=None):
 
         # convert to correct datatypes
         data[driver].loc[:, num_channels] = data[driver] \
-            .loc[:, num_channels] \
+                                                .loc[:, num_channels] \
             .fillna(value=0, inplace=False) \
             .astype('int64')
 
         data[driver].loc[:, bool_channels] = data[driver] \
-            .loc[:, bool_channels] \
+                                                 .loc[:, bool_channels] \
             .fillna(value=False, inplace=False) \
             .astype('bool')
 
@@ -1303,7 +1317,7 @@ def position_data(path, response=None, livedata=None):
                 .reset_index(drop=True)
             data[driver]['Status'].fillna(value='OffTrack', inplace=True)
             data[driver].loc[:, ['X', 'Y', 'Z']] = data[driver] \
-                        .loc[:, ['X', 'Y', 'Z']].fillna(value=0, inplace=False)
+                                                       .loc[:, ['X', 'Y', 'Z']].fillna(value=0, inplace=False)
 
             logging.warning(f"Driver {driver: >2}: Position data is incomplete!")
 

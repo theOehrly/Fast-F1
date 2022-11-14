@@ -188,8 +188,10 @@ _SCHEDULE_BASE_URL = "https://raw.githubusercontent.com/" \
                      "theOehrly/f1schedule/master/"
 
 
-def get_session(year: int, gp: Union[str, int], identifier: Optional[Union[int, str]] = None, *,
-                force_ergast: bool = False, event=None) -> Session:
+def get_session(
+        year: int, gp: Union[str, int],
+        identifier: Optional[Union[int, str]] = None, *,
+        force_ergast: bool = False, event=None) -> Session:
     """Create a :class:`~fastf1.core.Session` object based on year, event name
     and session identifier.
 
