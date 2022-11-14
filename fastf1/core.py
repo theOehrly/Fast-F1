@@ -2025,8 +2025,7 @@ class Laps(pd.DataFrame):
         # calculate driver ahead from from data without padding to
         # prevent out of bounds errors
         drv_ahead = car_data.iloc[1:-1].add_driver_ahead() \
-                        .loc[:, ('DriverAhead', 'DistanceToDriverAhead',
-                                 'Date', 'Time', 'SessionTime')]
+            .loc[:, ('DriverAhead', 'DistanceToDriverAhead', 'Date', 'Time', 'SessionTime')]
 
         car_data = car_data.add_distance().add_relative_distance()
         car_data = car_data.merge_channels(drv_ahead)
@@ -2416,7 +2415,7 @@ class Lap(pd.Series):
         # calculate driver ahead from from data without padding to
         # prevent out of bounds errors
         drv_ahead = car_data.iloc[1:-1].add_driver_ahead() \
-                        .loc[:, ('DriverAhead', 'DistanceToDriverAhead',
+                            .loc[:, ('DriverAhead', 'DistanceToDriverAhead',
                                  'Date', 'Time', 'SessionTime')]
 
         car_data = car_data.add_distance().add_relative_distance()

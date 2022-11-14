@@ -188,7 +188,8 @@ _SCHEDULE_BASE_URL = "https://raw.githubusercontent.com/" \
                      "theOehrly/f1schedule/master/"
 
 
-def get_session(year: int, gp: Union[str, int], identifier: Optional[Union[int, str]] = None, *, force_ergast: bool = False, event=None) -> Session:
+def get_session(year: int, gp: Union[str, int], identifier: Optional[Union[int, str]] = None, *,
+                force_ergast: bool = False, event=None) -> Session:
     """Create a :class:`~fastf1.core.Session` object based on year, event name
     and session identifier.
 
@@ -392,7 +393,7 @@ def get_event_schedule(year: int, *, include_testing: bool = True, force_ergast:
 
 
 def get_events_remaining(
-        dt=None, *, include_testing: bool=True, force_ergast: bool=False) \
+        dt=None, *, include_testing: bool = True, force_ergast: bool = False) \
         -> 'EventSchedule':
     """Create an :class:`~fastf1.events.EventSchedule` object for remaining season.
 

@@ -48,34 +48,34 @@ from fastf1.utils import recursive_dict_get, to_timedelta, to_datetime
 base_url = 'https://livetiming.formula1.com'
 
 headers: Dict[str, str] = {
-  'Host': 'livetiming.formula1.com',
-  'Connection': 'close',
-  'TE': 'identity',
-  'User-Agent': 'BestHTTP',
-  'Accept-Encoding': 'gzip, identity',
+    'Host': 'livetiming.formula1.com',
+    'Connection': 'close',
+    'TE': 'identity',
+    'User-Agent': 'BestHTTP',
+    'Accept-Encoding': 'gzip, identity',
 }
 
 pages: Dict[str, str] = {
-  'session_data': 'SessionData.json',  # track + session status + lap count
-  'session_info': 'SessionInfo.json',  # more rnd
-  'archive_status': 'ArchiveStatus.json',  # rnd=1880327548
-  'heartbeat': 'Heartbeat.jsonStream',  # Probably time synchronization?
-  'audio_streams': 'AudioStreams.jsonStream',  # Link to audio commentary
-  'driver_list': 'DriverList.jsonStream',  # Driver info and line story
-  'extrapolated_clock': 'ExtrapolatedClock.jsonStream',  # Boolean
-  'race_control_messages': 'RaceControlMessages.json',  # Flags etc
-  'session_status': 'SessionStatus.jsonStream',  # Start and finish times
-  'team_radio': 'TeamRadio.jsonStream',  # Links to team radios
-  'timing_app_data': 'TimingAppData.jsonStream',  # Tyres and laps (juicy)
-  'timing_stats': 'TimingStats.jsonStream',  # 'Best times/speed' useless
-  'track_status': 'TrackStatus.jsonStream',  # SC, VSC and Yellow
-  'weather_data': 'WeatherData.jsonStream',  # Temp, wind and rain
-  'position': 'Position.z.jsonStream',  # Coordinates, not GPS? (.z)
-  'car_data': 'CarData.z.jsonStream',  # Telemetry channels (.z)
-  'content_streams': 'ContentStreams.jsonStream',  # Lap by lap feeds
-  'timing_data': 'TimingData.jsonStream',  # Gap to car ahead
-  'lap_count': 'LapCount.jsonStream',  # Lap counter
-  'championship_prediction': 'ChampionshipPrediction.jsonStream'  # Points
+    'session_data': 'SessionData.json',  # track + session status + lap count
+    'session_info': 'SessionInfo.json',  # more rnd
+    'archive_status': 'ArchiveStatus.json',  # rnd=1880327548
+    'heartbeat': 'Heartbeat.jsonStream',  # Probably time synchronization?
+    'audio_streams': 'AudioStreams.jsonStream',  # Link to audio commentary
+    'driver_list': 'DriverList.jsonStream',  # Driver info and line story
+    'extrapolated_clock': 'ExtrapolatedClock.jsonStream',  # Boolean
+    'race_control_messages': 'RaceControlMessages.json',  # Flags etc
+    'session_status': 'SessionStatus.jsonStream',  # Start and finish times
+    'team_radio': 'TeamRadio.jsonStream',  # Links to team radios
+    'timing_app_data': 'TimingAppData.jsonStream',  # Tyres and laps (juicy)
+    'timing_stats': 'TimingStats.jsonStream',  # 'Best times/speed' useless
+    'track_status': 'TrackStatus.jsonStream',  # SC, VSC and Yellow
+    'weather_data': 'WeatherData.jsonStream',  # Temp, wind and rain
+    'position': 'Position.z.jsonStream',  # Coordinates, not GPS? (.z)
+    'car_data': 'CarData.z.jsonStream',  # Telemetry channels (.z)
+    'content_streams': 'ContentStreams.jsonStream',  # Lap by lap feeds
+    'timing_data': 'TimingData.jsonStream',  # Gap to car ahead
+    'lap_count': 'LapCount.jsonStream',  # Lap counter
+    'championship_prediction': 'ChampionshipPrediction.jsonStream'  # Points
 }
 """Known API requests"""
 
@@ -133,7 +133,8 @@ class Cache:
     _tmp_disabled = False
 
     @classmethod
-    def enable_cache(cls, cache_dir: str, ignore_version: bool=False, force_renew: bool=False, use_requests_cache: bool=True):
+    def enable_cache(cls, cache_dir: str, ignore_version: bool = False,
+                     force_renew: bool = False, use_requests_cache: bool = True):
         """Enables the API cache.
 
         Args:
@@ -247,6 +248,7 @@ class Cache:
         Returns:
             The wrapped function
         """
+
         @functools.wraps(func)
         def _cached_api_request(api_path, response=None, livedata=None):
             if cls._CACHE_DIR and not cls._tmp_disabled:
@@ -755,7 +757,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             elif ((('NumberOfLaps' in resp) and resp['NumberOfLaps'] > api_lapcnt)
                   or (drv_data['Time'][lapcnt] - to_timedelta(time)) < pd.Timedelta(5, 's')):
                 # same response line as beginning of next lap or beginning of next lap less than 5 seconds away
-                drv_data['PitOutTime'][lapcnt+1] = to_timedelta(time)  # add to next lap
+                drv_data['PitOutTime'][lapcnt + 1] = to_timedelta(time)  # add to next lap
                 pitstops += 1
             else:
                 drv_data['PitOutTime'][lapcnt] = to_timedelta(time)  # add to current lap
@@ -801,7 +803,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
     if not data_in_lap(0):  # remove first lap if there's no data; "pseudo outlap" that didn't exist
         for key in drv_data.keys():
             drv_data[key] = drv_data[key][1:]
-        drv_data['NumberOfLaps'] = list(map(lambda n: n-1, drv_data['NumberOfLaps']))  # reduce each lap count by one
+        drv_data['NumberOfLaps'] = list(map(lambda n: n - 1, drv_data['NumberOfLaps']))  # reduce each lap count by one
 
     if not drv_data['Time']:
         # ensure that there is still data left after potentially removing a lap
@@ -818,7 +820,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             sector_sum += st
         if sector_sum > drv_data['LapTime'][i]:
             drv_data['LapTime'][i] = pd.NaT
-            integrity_errors.append(i+1)
+            integrity_errors.append(i + 1)
 
     # lap time sync; check which sector time was triggered with the lowest latency
     # Sector3SessionTime == end of lap
@@ -840,8 +842,8 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             new_time = session_time + sector_sum
             if not pd.isnull(new_time) and (new_time < min_time or pd.isnull(min_time)):
                 min_time = new_time
-        if i > 0 and min_time < drv_data['Time'][i-1]:
-            integrity_errors.append(i+1)  # not be possible if sector times and lap time are correct
+        if i > 0 and min_time < drv_data['Time'][i - 1]:
+            integrity_errors.append(i + 1)  # not be possible if sector times and lap time are correct
             continue
 
         drv_data['Time'][i] = min_time
@@ -859,29 +861,31 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         return drv_data
 
     # more lap sync, this time check which lap triggered with the lowest latency
-    for i in range(len(drv_data['Time'])-1, 0, -1):
-        if (new_time := drv_data['Time'][i] - drv_data['LapTime'][i]) < drv_data['Time'][i-1]:
-            if i > 1 and new_time < drv_data['Time'][i-2]:
-                integrity_errors.append(i+1)  # not be possible if sector times and lap time are correct
+    for i in range(len(drv_data['Time']) - 1, 0, -1):
+        if (new_time := drv_data['Time'][i] - drv_data['LapTime'][i]) < drv_data['Time'][i - 1]:
+            if i > 1 and new_time < drv_data['Time'][i - 2]:
+                integrity_errors.append(i + 1)  # not be possible if sector times and lap time are correct
             else:
-                drv_data['Time'][i-1] = new_time
+                drv_data['Time'][i - 1] = new_time
 
     # need to go both directions once to make everything match up; also recalculate sector times
-    for i in range(len(drv_data['Time'])-1):
-        if any(pd.isnull(tst) for tst in (drv_data['Time'][i], drv_data['LapTime'][i+1], drv_data['Sector1Time'][i+1],
-                                          drv_data['Sector2Time'][i+1], drv_data['Sector3Time'][i+1])):
+    for i in range(len(drv_data['Time']) - 1):
+        if any(pd.isnull(tst) for tst in (
+                drv_data['Time'][i], drv_data['LapTime'][i + 1], drv_data['Sector1Time'][i + 1],
+                drv_data['Sector2Time'][i + 1], drv_data['Sector3Time'][i + 1])):
             continue  # lap not usable, missing critical values
 
-        if (new_time := drv_data['Time'][i] + drv_data['LapTime'][i+1]) < drv_data['Time'][i+1]:
-            drv_data['Time'][i+1] = new_time
-        if (new_s1_time := drv_data['Time'][i] + drv_data['Sector1Time'][i+1]) < drv_data['Sector1SessionTime'][i+1]:
-            drv_data['Sector1SessionTime'][i+1] = new_s1_time
-        if (new_s2_time := drv_data['Time'][i] + drv_data['Sector1Time'][i+1] + drv_data['Sector2Time'][i+1]) < \
-                drv_data['Sector2SessionTime'][i+1]:
-            drv_data['Sector2SessionTime'][i+1] = new_s2_time
-        if (new_s3_time := drv_data['Time'][i] + drv_data['Sector1Time'][i+1] + drv_data['Sector2Time'][i+1] +
-                drv_data['Sector3Time'][i+1]) < drv_data['Sector3SessionTime'][i+1]:
-            drv_data['Sector3SessionTime'][i+1] = new_s3_time
+        if (new_time := drv_data['Time'][i] + drv_data['LapTime'][i + 1]) < drv_data['Time'][i + 1]:
+            drv_data['Time'][i + 1] = new_time
+        if (new_s1_time := drv_data['Time'][i] + drv_data['Sector1Time'][i + 1]) < \
+                drv_data['Sector1SessionTime'][i + 1]:
+            drv_data['Sector1SessionTime'][i + 1] = new_s1_time
+        if (new_s2_time := drv_data['Time'][i] + drv_data['Sector1Time'][i + 1] + drv_data['Sector2Time'][i + 1]) < \
+                drv_data['Sector2SessionTime'][i + 1]:
+            drv_data['Sector2SessionTime'][i + 1] = new_s2_time
+        if (new_s3_time := drv_data['Time'][i] + drv_data['Sector1Time'][i + 1] + drv_data['Sector2Time'][i + 1] +
+                drv_data['Sector3Time'][i + 1]) < drv_data['Sector3SessionTime'][i + 1]:
+            drv_data['Sector3SessionTime'][i + 1] = new_s3_time
 
     for i, time in enumerate(drv_data['LapTime']):
         if time == personal_best_lap_time:
@@ -1154,9 +1158,9 @@ def car_data(path, response=None, livedata=None):
             # correctly based on Session.t0_date anyways when creating Telemetry
             # instances in Session.load_telemetry
             index_df = pd.DataFrame(data={'Date': most_complete_ref})
-            data[driver] = data[driver]\
-                .merge(index_df, how='outer')\
-                .sort_values(by='Date')\
+            data[driver] = data[driver] \
+                .merge(index_df, how='outer') \
+                .sort_values(by='Date') \
                 .reset_index(drop=True)
 
             logging.warning(f"Driver {driver: >2}: Car data is incomplete!")
@@ -1170,13 +1174,13 @@ def car_data(path, response=None, livedata=None):
 
         # convert to correct datatypes
         data[driver].loc[:, num_channels] = data[driver] \
-            .loc[:, num_channels]\
-            .fillna(value=0, inplace=False)\
+            .loc[:, num_channels] \
+            .fillna(value=0, inplace=False) \
             .astype('int64')
 
         data[driver].loc[:, bool_channels] = data[driver] \
-            .loc[:, bool_channels]\
-            .fillna(value=False, inplace=False)\
+            .loc[:, bool_channels] \
+            .fillna(value=False, inplace=False) \
             .astype('bool')
 
     return data
@@ -1293,13 +1297,13 @@ def position_data(path, response=None, livedata=None):
             # instances in Session.load_telemetry
             # and except Status which should be 'OffTrack' for missing data
             index_df = pd.DataFrame(data={'Date': most_complete_ref})
-            data[driver] = data[driver]\
-                .merge(index_df, how='outer')\
-                .sort_values(by='Date')\
+            data[driver] = data[driver] \
+                .merge(index_df, how='outer') \
+                .sort_values(by='Date') \
                 .reset_index(drop=True)
             data[driver]['Status'].fillna(value='OffTrack', inplace=True)
-            data[driver].loc[:, ['X', 'Y', 'Z']] = data[driver]\
-                .loc[:, ['X', 'Y', 'Z']].fillna(value=0, inplace=False)
+            data[driver].loc[:, ['X', 'Y', 'Z']] = data[driver] \
+                        .loc[:, ['X', 'Y', 'Z']].fillna(value=0, inplace=False)
 
             logging.warning(f"Driver {driver: >2}: Position data is incomplete!")
 
@@ -1786,5 +1790,6 @@ def parse(text, zipped=False):
 class SessionNotAvailableError(Exception):
     """Raised if an api request returned no data for the requested session.
     A likely cause is that the session does not exist because it was cancelled."""
+
     def __init__(self, *args):
         super().__init__(*args)
