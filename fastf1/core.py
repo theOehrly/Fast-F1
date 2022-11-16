@@ -1047,7 +1047,7 @@ class Session:
         return self._get_property_warn_not_loaded('_results')
 
     @property
-    def laps(self):
+    def laps(self) -> Laps:
         """:class:`Laps`: All laps from all drivers driven in this session.
 
         Data is available after calling `Session.load` with ``laps=True``
@@ -1055,7 +1055,7 @@ class Session:
         return self._get_property_warn_not_loaded('_laps')
 
     @property
-    def total_laps(self):
+    def total_laps(self) -> int:
         """:class:`int`: Originally scheduled number of laps for race-like
         sessions such as Race and Sprint. It takes None as a default value
         for other types of sessions or if data is unavailable
@@ -1075,7 +1075,7 @@ class Session:
         return self._get_property_warn_not_loaded('_weather_data')
 
     @property
-    def car_data(self):
+    def car_data(self) -> Telemetry:
         """Dictionary of car telemetry (Speed, RPM, etc.) as received from
         the api by car number (where car number is a string and the telemetry
         is an instance of :class:`Telemetry`)
@@ -1085,7 +1085,7 @@ class Session:
         return self._get_property_warn_not_loaded('_car_data')
 
     @property
-    def pos_data(self):
+    def pos_data(self) -> Telemetry:
         """Dictionary of car position data as received from the api by car
         number (where car number is a string and the telemetry
         is an instance of :class:`Telemetry`)
@@ -1113,7 +1113,7 @@ class Session:
         return self._get_property_warn_not_loaded('_race_control_messages')
 
     @property
-    def session_start_time(self):
+    def session_start_time(self) -> pandas.Timedelta:
         """:class:`pandas.Timedelta`: Session time at which the session was
         started according to the session status data. This is not the
         time at which the session is scheduled to be started!
@@ -1123,7 +1123,7 @@ class Session:
         return self._get_property_warn_not_loaded('_session_start_time')
 
     @property
-    def t0_date(self):
+    def t0_date(self) -> pandas.Datetime:
         """:class:`pandas.Datetime`: Date timestamp which marks the beginning
         of the data stream (the moment at which the session time is zero).
 
