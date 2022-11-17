@@ -1039,7 +1039,7 @@ class Session:
         return list(self.results['DriverNumber'].unique())
 
     @property
-    def results(self):
+    def results(self) -> "SessionResults":
         """:class:`SessionResults`: Session result with driver information.
 
         Data is available after calling `Session.load`
@@ -1047,7 +1047,7 @@ class Session:
         return self._get_property_warn_not_loaded('_results')
 
     @property
-    def laps(self) -> Laps:
+    def laps(self) -> "Laps":
         """:class:`Laps`: All laps from all drivers driven in this session.
 
         Data is available after calling `Session.load` with ``laps=True``
@@ -1075,7 +1075,7 @@ class Session:
         return self._get_property_warn_not_loaded('_weather_data')
 
     @property
-    def car_data(self) -> Telemetry:
+    def car_data(self) -> "Telemetry":
         """Dictionary of car telemetry (Speed, RPM, etc.) as received from
         the api by car number (where car number is a string and the telemetry
         is an instance of :class:`Telemetry`)
@@ -1085,7 +1085,7 @@ class Session:
         return self._get_property_warn_not_loaded('_car_data')
 
     @property
-    def pos_data(self) -> Telemetry:
+    def pos_data(self) -> "Telemetry":
         """Dictionary of car position data as received from the api by car
         number (where car number is a string and the telemetry
         is an instance of :class:`Telemetry`)
@@ -1123,7 +1123,7 @@ class Session:
         return self._get_property_warn_not_loaded('_session_start_time')
 
     @property
-    def t0_date(self) -> pandas.Datetime:
+    def t0_date(self):
         """:class:`pandas.Datetime`: Date timestamp which marks the beginning
         of the data stream (the moment at which the session time is zero).
 
