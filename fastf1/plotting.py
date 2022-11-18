@@ -153,8 +153,9 @@ COLOR_PALETTE: List[str] = ['#FF79C6', '#50FA7B', '#8BE9FD', '#BD93F9',
 scheme."""
 
 
-def setup_mpl(mpl_timedelta_support=True, color_scheme='fastf1',
-              misc_mpl_mods=True):
+def setup_mpl(
+        mpl_timedelta_support: bool = True, color_scheme: str = 'fastf1',
+        misc_mpl_mods: bool = True):
     """Setup matplotlib for use with fastf1.
 
     This is optional but, at least partly, highly recommended.
@@ -258,7 +259,7 @@ def driver_color(identifier: str) -> str:
         return DRIVER_COLORS[best_matched_key]
 
 
-def team_color(identifier) -> str:
+def team_color(identifier: str) -> str:
     """Get a team's color from a team name or abbreviation.
 
     This function will try to find a matching team for any identifier string
