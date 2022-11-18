@@ -283,7 +283,7 @@ def get_session(
     return event.get_session(identifier)
 
 
-def get_testing_session(year, test_number, session_number) -> Session:
+def get_testing_session(year: int, test_number: int, session_number: int) -> Session:
     """Create a :class:`~fastf1.core.Session` object for testing sessions
     based on year, test  event number and session number.
 
@@ -302,7 +302,10 @@ def get_testing_session(year, test_number, session_number) -> Session:
     return event.get_session(session_number)
 
 
-def get_event(year, gp, *, force_ergast=False, strict_search=False) -> "Event":
+def get_event(
+        year: int, gp: Union[int, str], *,
+        force_ergast: bool = False, strict_search: bool = False
+) -> "Event":
     """Create an :class:`~fastf1.events.Event` object for a specific
     season and gp.
 
@@ -395,8 +398,8 @@ def get_event_schedule(year: int, *, include_testing: bool = True, force_ergast:
 
 
 def get_events_remaining(
-        dt=None, *, include_testing: bool = True, force_ergast: bool = False) \
-        -> 'EventSchedule':
+        dt=None, *, include_testing: bool = True,
+        force_ergast: bool = False) -> 'EventSchedule':
     """Create an :class:`~fastf1.events.EventSchedule` object for remaining season.
 
     Args:
@@ -435,7 +438,7 @@ def _get_schedule(year):
     return schedule
 
 
-def _get_schedule_from_ergast(year):
+def _get_schedule_from_ergast(year) -> "EventSchedule":
     # create an event schedule using data from the ergast database
     season = fastf1.ergast.fetch_season(year)
     data = collections.defaultdict(list)
@@ -535,7 +538,7 @@ class EventSchedule(pd.DataFrame):
 
     _internal_names = ['base_class_view']
 
-    def __init__(self, *args, year=0, force_default_cols=False, **kwargs):
+    def __init__(self, *args, year: int = 0, force_default_cols: bool = False, **kwargs):
         if force_default_cols:
             kwargs['columns'] = list(self._COL_TYPES)
         super().__init__(*args, **kwargs)
@@ -580,7 +583,7 @@ class EventSchedule(pd.DataFrame):
         testing event."""
         return pd.Series(self['EventFormat'] == 'testing')
 
-    def get_event_by_round(self, round):
+    def get_event_by_round(self, round: int) -> "Event":
         """Get an :class:`Event` by its round number.
 
         Args:
@@ -597,7 +600,7 @@ class EventSchedule(pd.DataFrame):
             raise ValueError(f"Invalid round: {round}")
         return self[mask].iloc[0]
 
-    def _strict_event_search(self, name):
+    def _strict_event_search(self, name: str):
         """
         Match Event Name exactly, ignoring case.
         """
@@ -610,7 +613,7 @@ class EventSchedule(pd.DataFrame):
         else:
             return None
 
-    def _fuzzy_event_search(self, name):
+    def _fuzzy_event_search(self, name: str) -> "Event":
 
         def _matcher_strings(ev):
             strings = list()
@@ -639,7 +642,7 @@ class EventSchedule(pd.DataFrame):
                 index = i
         return self.loc[index]
 
-    def get_event_by_name(self, name, *, strict_search=False):
+    def get_event_by_name(self, name: str, *, strict_search: bool = False):
         """Get an :class:`Event` by its name.
 
         A fuzzy match is performed to find the event that best matches the
@@ -695,7 +698,7 @@ class Event(pd.Series):
 
     _internal_names = ['date', 'gp']
 
-    def __init__(self, *args, year=None, **kwargs):
+    def __init__(self, *args, year: int = None, **kwargs):
         super().__init__(*args, **kwargs)
         self.year = year
         self._getattr_override = True  # TODO: remove in v2.3
@@ -707,7 +710,7 @@ class Event(pd.Series):
 
         return _new
 
-    def __getattribute__(self, name):
+    def __getattribute__(self, name: str):
         # TODO: remove in v2.3
         if name == 'name' and getattr(self, '_getattr_override', False):
             if 'EventName' in self:
@@ -731,7 +734,7 @@ class Event(pd.Series):
             return super().__repr__()
 
     @property
-    def date(self):
+    def date(self) -> str:
         """Event race date (YYYY-MM-DD)
 
         This wraps ``self['EventDate'].strftime('%Y-%m-%d')``
@@ -748,7 +751,7 @@ class Event(pd.Series):
         return self['EventDate'].strftime('%Y-%m-%d')
 
     @property
-    def gp(self):
+    def gp(self) -> int:
         """Event round number
 
         .. deprecated:: 2.2
@@ -760,12 +763,12 @@ class Event(pd.Series):
                       "instead.", FutureWarning)
         return self['RoundNumber']
 
-    def is_testing(self):
+    def is_testing(self) -> bool:
         """Return `True` or `False`, depending on whether this event is a
         testing event."""
         return self['EventFormat'] == 'testing'
 
-    def get_session_name(self, identifier):
+    def get_session_name(self, identifier) -> str:
         """Return the full session name of a specific session from this event.
 
         Examples:
@@ -825,7 +828,7 @@ class Event(pd.Series):
 
         return session_name
 
-    def get_session_date(self, identifier):
+    def get_session_date(self, identifier: Union[str, int]) -> datetime.datetime:
         """Return the date and time (if available) at which a specific session
         of this event is or was held.
 
@@ -853,7 +856,7 @@ class Event(pd.Series):
                                  f"exist for this event")
             return date
 
-    def get_session(self, identifier):
+    def get_session(self, identifier: Union[int, str]) -> "Session":
         """Return a session from this event.
 
         Args:
@@ -887,7 +890,7 @@ class Event(pd.Series):
         return Session(event=self, session_name=session_name,
                        f1_api_support=self.F1ApiSupport)
 
-    def get_race(self):
+    def get_race(self) -> "Session":
         """Return the race session.
 
         Returns:
@@ -895,7 +898,7 @@ class Event(pd.Series):
         """
         return self.get_session('Race')
 
-    def get_qualifying(self):
+    def get_qualifying(self) -> "Session":
         """Return the qualifying session.
 
         Returns:
@@ -903,7 +906,7 @@ class Event(pd.Series):
         """
         return self.get_session('Qualifying')
 
-    def get_sprint(self):
+    def get_sprint(self) -> "Session":
         """Return the sprint session.
 
         Returns:
@@ -911,7 +914,7 @@ class Event(pd.Series):
         """
         return self.get_session('Sprint')
 
-    def get_practice(self, number):
+    def get_practice(self, number) -> "Session":
         """Return the specified practice session.
         Args:
             number: 1, 2 or 3 - Free practice session number

@@ -55,10 +55,9 @@ import collections
 from functools import cached_property
 import logging
 import warnings
-from typing import Optional, List, Iterable
+from typing import Optional, List, Iterable, Union
 
 import numpy as np
-import pandas
 import pandas as pd
 
 import fastf1
@@ -1113,7 +1112,7 @@ class Session:
         return self._get_property_warn_not_loaded('_race_control_messages')
 
     @property
-    def session_start_time(self) -> pandas.Timedelta:
+    def session_start_time(self) -> pd.Timedelta:
         """:class:`pandas.Timedelta`: Session time at which the session was
         started according to the session status data. This is not the
         time at which the session is scheduled to be started!
@@ -1801,7 +1800,7 @@ class Session:
 
         self._laps['LapStartDate'] = self._laps['LapStartTime'] + self.t0_date
 
-    def get_driver(self, identifier):
+    def get_driver(self, identifier) -> "Driver":
         """
         Get a driver object which contains additional information about a driver.
 
@@ -2025,8 +2024,8 @@ class Laps(pd.DataFrame):
         # calculate "driver ahead from" from data without padding to
         # prevent out of bounds errors
         drv_ahead = car_data.iloc[1:-1].add_driver_ahead() \
-            .loc[:, ('DriverAhead', 'DistanceToDriverAhead',
-                     'Date', 'Time', 'SessionTime')]
+                        .loc[:, ('DriverAhead', 'DistanceToDriverAhead',
+                                 'Date', 'Time', 'SessionTime')]
 
         car_data = car_data.add_distance().add_relative_distance()
         car_data = car_data.merge_channels(drv_ahead)
@@ -2080,7 +2079,7 @@ class Laps(pd.DataFrame):
         pos_data = self.session.pos_data[drv_num].slice_by_lap(self, **kwargs).reset_index(drop=True)
         return pos_data
 
-    def get_weather_data(self) -> pandas.DataFrame:
+    def get_weather_data(self) -> pd.DataFrame:
         """Return weather data for each lap in self.
 
         Weather data is updated once per minute. This means that there are
@@ -2159,7 +2158,7 @@ class Laps(pd.DataFrame):
         else:
             return pd.DataFrame(columns=self.session.weather_data.columns)
 
-    def pick_driver(self, identifier) -> "Laps":
+    def pick_driver(self, identifier: Union[int, str]) -> "Laps":
         """Return all laps of a specific driver in self based on the driver's
         three letters identifier or based on the driver number ::
 
@@ -2179,7 +2178,7 @@ class Laps(pd.DataFrame):
         else:
             return self[self['Driver'] == identifier]
 
-    def pick_drivers(self, identifiers) -> "Laps":
+    def pick_drivers(self, identifiers: Iterable[Union[int, str]]) -> "Laps":
         """Return all laps of the specified drivers in self based on the
         drivers' three letters identifier or based on the driver number. This
         is the same as :meth:`Laps.pick_driver` but for multiple drivers
@@ -2199,7 +2198,7 @@ class Laps(pd.DataFrame):
 
         return self[(drv.isin(names) | num.isin(numbers))]
 
-    def pick_team(self, name) -> "Laps":
+    def pick_team(self, name: str) -> "Laps":
         """Return all laps of a specific team in self based on the
         team's name ::
 
@@ -2289,7 +2288,7 @@ class Laps(pd.DataFrame):
 
         return self[self['LapTime'] < time_threshold]
 
-    def pick_tyre(self, compound) -> "Laps":
+    def pick_tyre(self, compound: str) -> "Laps":
         """Return all laps in self which were done on a specific compound.
 
         Args:
@@ -2335,7 +2334,7 @@ class Laps(pd.DataFrame):
         """
         return self[self['IsAccurate']]
 
-    def iterlaps(self, require=()):
+    def iterlaps(self, require: Optional[Iterable] = ()):
         """Iterator for iterating over all laps in self.
 
         This method wraps :meth:`pandas.DataFrame.iterrows`.
@@ -2416,7 +2415,7 @@ class Lap(pd.Series):
         # calculate driver ahead from from data without padding to
         # prevent out of bounds errors
         drv_ahead = car_data.iloc[1:-1].add_driver_ahead() \
-                            .loc[:, ('DriverAhead', 'DistanceToDriverAhead',
+                        .loc[:, ('DriverAhead', 'DistanceToDriverAhead',
                                  'Date', 'Time', 'SessionTime')]
 
         car_data = car_data.add_distance().add_relative_distance()
@@ -2455,7 +2454,7 @@ class Lap(pd.Series):
         pos_data = self.session.pos_data[self['DriverNumber']].slice_by_lap(self, **kwargs).reset_index(drop=True)
         return pos_data
 
-    def get_weather_data(self) -> pandas.Series:
+    def get_weather_data(self) -> pd.Series:
         """Return weather data for this lap.
 
         Weather data is updated once per minute. This means that there are
@@ -2625,7 +2624,7 @@ class SessionResults(pd.DataFrame):
 
     _internal_names = ['base_class_view']
 
-    def __init__(self, *args, force_default_cols=False, **kwargs):
+    def __init__(self, *args, force_default_cols: bool=False, **kwargs):
         if force_default_cols:
             kwargs['columns'] = list(self._COL_TYPES.keys())
         super().__init__(*args, **kwargs)
