@@ -55,7 +55,7 @@ import collections
 from functools import cached_property
 import logging
 import warnings
-from typing import Optional, List, Iterable, Union
+from typing import Optional, List, Iterable, Union, Tuple
 
 import numpy as np
 import pandas as pd
@@ -2334,7 +2334,7 @@ class Laps(pd.DataFrame):
         """
         return self[self['IsAccurate']]
 
-    def iterlaps(self, require: Optional[Iterable] = ()):
+    def iterlaps(self, require: Optional[Iterable] = ()) -> Iterable[Tuple[int, "Lap"]]:
         """Iterator for iterating over all laps in self.
 
         This method wraps :meth:`pandas.DataFrame.iterrows`.
