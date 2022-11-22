@@ -875,11 +875,14 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             drv_data['Time'][i+1] = new_time
         if (new_s1_time := drv_data['Time'][i] + drv_data['Sector1Time'][i+1]) < drv_data['Sector1SessionTime'][i+1]:
             drv_data['Sector1SessionTime'][i+1] = new_s1_time
-        if (new_s2_time := drv_data['Time'][i] + drv_data['Sector1Time'][i+1] + drv_data['Sector2Time'][i+1]) < \
-                drv_data['Sector2SessionTime'][i+1]:
+        if (new_s2_time := drv_data['Time'][i] + drv_data['Sector1Time'][i+1]
+                + drv_data['Sector2Time'][i+1]) \
+                < drv_data['Sector2SessionTime'][i+1]:
             drv_data['Sector2SessionTime'][i+1] = new_s2_time
-        if (new_s3_time := drv_data['Time'][i] + drv_data['Sector1Time'][i+1] + drv_data['Sector2Time'][i+1] +
-                drv_data['Sector3Time'][i+1]) < drv_data['Sector3SessionTime'][i+1]:
+        if (new_s3_time := drv_data['Time'][i] + drv_data['Sector1Time'][i+1]
+                + drv_data['Sector2Time'][i+1]
+                + drv_data['Sector3Time'][i+1]) \
+                < drv_data['Sector3SessionTime'][i+1]:
             drv_data['Sector3SessionTime'][i+1] = new_s3_time
 
     for i, time in enumerate(drv_data['LapTime']):
