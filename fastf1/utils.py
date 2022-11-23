@@ -4,7 +4,7 @@ Utils module - :mod:`fastf1.utils`
 """
 import warnings
 from functools import reduce
-from typing import Tuple
+from typing import Tuple, Dict
 
 import numpy as np
 from datetime import datetime, timedelta
@@ -90,7 +90,7 @@ def delta_time(reference_lap: pd.Series, compare_lap: pd.Series) -> Tuple:
     return delta, ref, comp
 
 
-def recursive_dict_get(d, *keys, default_none: bool = False):
+def recursive_dict_get(d: Dict, *keys: str, default_none: bool = False):
     """Recursive dict get. Can take an arbitrary number of keys and returns an empty
     dict if any key does not exist.
     https://stackoverflow.com/a/28225747"""
