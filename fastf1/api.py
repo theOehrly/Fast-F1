@@ -896,8 +896,8 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
                 drv_data['Sector2SessionTime'][i + 1]:
             drv_data['Sector2SessionTime'][i + 1] = new_s2_time
         if (new_s3_time := drv_data['Time'][i] + drv_data['Sector1Time'][i + 1]
-                           + drv_data['Sector2Time'][i + 1] +
-                           drv_data['Sector3Time'][i + 1]) < \
+                + drv_data['Sector2Time'][i + 1] +
+                drv_data['Sector3Time'][i + 1]) < \
                 drv_data['Sector3SessionTime'][i + 1]:
             drv_data['Sector3SessionTime'][i + 1] = new_s3_time
 
@@ -1187,13 +1187,13 @@ def car_data(path, response=None, livedata=None):
                             f"non-boolean values!")
 
         # convert to correct datatypes
-        data[driver].loc[:, num_channels] = data[driver] \
-                                                .loc[:, num_channels] \
+        data[driver].loc[:, num_channels] = \
+            data[driver].loc[:, num_channels] \
             .fillna(value=0, inplace=False) \
             .astype('int64')
 
-        data[driver].loc[:, bool_channels] = data[driver] \
-                                                 .loc[:, bool_channels] \
+        data[driver].loc[:, bool_channels] = \
+            data[driver].loc[:, bool_channels] \
             .fillna(value=False, inplace=False) \
             .astype('bool')
 
@@ -1316,8 +1316,9 @@ def position_data(path, response=None, livedata=None):
                 .sort_values(by='Date') \
                 .reset_index(drop=True)
             data[driver]['Status'].fillna(value='OffTrack', inplace=True)
-            data[driver].loc[:, ['X', 'Y', 'Z']] = data[driver] \
-                                                       .loc[:, ['X', 'Y', 'Z']].fillna(value=0, inplace=False)
+            data[driver].loc[:, ['X', 'Y', 'Z']] = \
+                data[driver].loc[:, ['X', 'Y', 'Z']]\
+                .fillna(value=0, inplace=False)
 
             logging.warning(f"Driver {driver: >2}: Position data is incomplete!")
 

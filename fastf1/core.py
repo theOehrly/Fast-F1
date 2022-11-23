@@ -109,7 +109,7 @@ def get_round(year, match):
                   "information including the round number for the event.",
                   FutureWarning)
     from fastf1 import events
-    event: events.Event = events.get_event(year, match)
+    event = events.get_event(year, match)
     return event.RoundNumber
 
 
@@ -226,7 +226,7 @@ class Telemetry(pd.DataFrame):
     def __init__(self, *args, session=None, driver=None,
                  drop_unknown_channels=False, **kwargs):
         super().__init__(*args, **kwargs)
-        self.session: Session = session
+        self.session: Optional[Session] = session
         self.driver = driver
 
         if drop_unknown_channels:
@@ -1960,7 +1960,7 @@ class Laps(pd.DataFrame):
 
     def __init__(self, *args, session: Optional[Session] = None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.session: Optional[Session] = session
+        self.session = session
 
     @property
     def _constructor(self):
@@ -2023,9 +2023,10 @@ class Laps(pd.DataFrame):
 
         # calculate "driver ahead from" from data without padding to
         # prevent out of bounds errors
-        drv_ahead = car_data.iloc[1:-1].add_driver_ahead() \
-                        .loc[:, ('DriverAhead', 'DistanceToDriverAhead',
-                                 'Date', 'Time', 'SessionTime')]
+        drv_ahead = car_data.iloc[1:-1] \
+            .add_driver_ahead() \
+            .loc[:, ('DriverAhead', 'DistanceToDriverAhead',
+                     'Date', 'Time', 'SessionTime')]
 
         car_data = car_data.add_distance().add_relative_distance()
         car_data = car_data.merge_channels(drv_ahead)
@@ -2414,9 +2415,10 @@ class Lap(pd.Series):
 
         # calculate driver ahead from from data without padding to
         # prevent out of bounds errors
-        drv_ahead = car_data.iloc[1:-1].add_driver_ahead() \
-                        .loc[:, ('DriverAhead', 'DistanceToDriverAhead',
-                                 'Date', 'Time', 'SessionTime')]
+        drv_ahead = car_data.iloc[1:-1] \
+            .add_driver_ahead() \
+            .loc[:, ('DriverAhead', 'DistanceToDriverAhead',
+                     'Date', 'Time', 'SessionTime')]
 
         car_data = car_data.add_distance().add_relative_distance()
         car_data = car_data.merge_channels(drv_ahead)
@@ -2624,7 +2626,7 @@ class SessionResults(pd.DataFrame):
 
     _internal_names = ['base_class_view']
 
-    def __init__(self, *args, force_default_cols: bool=False, **kwargs):
+    def __init__(self, *args, force_default_cols: bool = False, **kwargs):
         if force_default_cols:
             kwargs['columns'] = list(self._COL_TYPES.keys())
         super().__init__(*args, **kwargs)

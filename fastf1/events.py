@@ -189,9 +189,13 @@ _SCHEDULE_BASE_URL = "https://raw.githubusercontent.com/" \
 
 
 def get_session(
-        year: int, gp: Union[str, int],
-        identifier: Optional[Union[int, str]] = None, *,
-        force_ergast: bool = False, event=None) -> Session:
+        year: int,
+        gp: Union[str, int],
+        identifier: Optional[Union[int, str]] = None,
+        *,
+        force_ergast: bool = False,
+        event=None
+) -> Session:
     """Create a :class:`~fastf1.core.Session` object based on year, event name
     and session identifier.
 
@@ -303,8 +307,10 @@ def get_testing_session(year: int, test_number: int, session_number: int) -> Ses
 
 
 def get_event(
-        year: int, gp: Union[int, str], *,
-        force_ergast: bool = False, strict_search: bool = False
+        year: int,
+        gp: Union[int, str], *,
+        force_ergast: bool = False,
+        strict_search: bool = False
 ) -> "Event":
     """Create an :class:`~fastf1.events.Event` object for a specific
     season and gp.
@@ -398,8 +404,11 @@ def get_event_schedule(year: int, *, include_testing: bool = True, force_ergast:
 
 
 def get_events_remaining(
-        dt=None, *, include_testing: bool = True,
-        force_ergast: bool = False) -> 'EventSchedule':
+        dt=None,
+        *,
+        include_testing: bool = True,
+        force_ergast: bool = False
+) -> 'EventSchedule':
     """Create an :class:`~fastf1.events.EventSchedule` object for remaining season.
 
     Args:
