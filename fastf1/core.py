@@ -55,7 +55,7 @@ import collections
 from functools import cached_property
 import logging
 import warnings
-from typing import Optional, List, Iterable, Union, Tuple
+from typing import Optional, List, Iterable, Union, Tuple, Any
 
 import numpy as np
 import pandas as pd
@@ -277,16 +277,13 @@ class Telemetry(pd.DataFrame):
             setattr(ret, var, val)
         return ret
 
-    def slice_by_mask(self, mask, pad=0, pad_side='both'):
+    def slice_by_mask(self, mask, pad=0, pad_side='both') -> "Telemetry":
         """Slice self using a boolean array as a mask.
 
         Args:
             mask (array-like): Array of boolean values with the same length as self
             pad (int): Number of samples used for padding the sliced data
             pad_side (str): Where to pad the data; possible options: 'both', 'before', 'after'
-
-        Returns:
-            :class:`Telemetry`
         """
         if pad:
             if pad_side in ('both', 'before'):
@@ -304,7 +301,13 @@ class Telemetry(pd.DataFrame):
 
         return data_slice
 
-    def slice_by_lap(self, ref_laps, pad=0, pad_side='both', interpolate_edges=False):
+    def slice_by_lap(
+            self,
+            ref_laps: Union["Lap", "Laps"],
+            pad: int = 0,
+            pad_side: str = 'both',
+            interpolate_edges: bool = False
+    ):
         """Slice self to only include data from the provided lap or laps.
 
         .. note:: Self needs to contain a 'SessionTime' column.
@@ -314,14 +317,12 @@ class Telemetry(pd.DataFrame):
             the sliced result.
 
         Args:
-            ref_laps (Lap or Laps): The lap/laps by which to slice self
-            pad (int): Number of samples used for padding the sliced data
-            pad_side (str): Where to pad the data; possible options: 'both', 'before', 'after
-            interpolate_edges (bool): Add an interpolated sample at the beginning and end to exactly
-                match the provided time window.
-
-        Returns:
-            :class:`Telemetry`
+            ref_laps: The lap/laps by which to slice self
+            pad: Number of samples used for padding the sliced data
+            pad_side: Where to pad the data; possible options:
+                'both', 'before', 'after
+            interpolate_edges: Add an interpolated sample at the beginning
+                and end to exactly match the provided time window.
         """
         if isinstance(ref_laps, Laps) and len(ref_laps) > 1:
             if 'DriverNumber' not in ref_laps.columns:
@@ -345,7 +346,14 @@ class Telemetry(pd.DataFrame):
 
         return self.slice_by_time(start_time, end_time, pad, pad_side, interpolate_edges)
 
-    def slice_by_time(self, start_time, end_time, pad=0, pad_side='both', interpolate_edges=False):
+    def slice_by_time(
+            self,
+            start_time,
+            end_time,
+            pad: int = 0,
+            pad_side: str = 'both',
+            interpolate_edges: bool = False
+    ) -> "Telemetry":
         """Slice self to only include data in a specific time frame.
 
         .. note:: Self needs to contain a 'SessionTime' column. Slicing by time use the 'SessionTime' as its reference.
@@ -353,10 +361,11 @@ class Telemetry(pd.DataFrame):
         Args:
             start_time (Timedelta): Start of the section
             end_time (Timedelta): End of the section
-            pad (int): Number of samples used for padding the sliced data
-            pad_side (str): Where to pad the data; possible options: 'both', 'before', 'after
-            interpolate_edges (bool): Add an interpolated sample at the beginning and end to exactly
-                match the provided time window.
+            pad: Number of samples used for padding the sliced data
+            pad_side: Where to pad the data; possible options:
+                'both', 'before', 'after
+            interpolate_edges: Add an interpolated sample at the beginning
+                and end to exactly match the provided time window.
 
         Returns:
             :class:`Telemetry`
@@ -381,7 +390,11 @@ class Telemetry(pd.DataFrame):
             return data_slice
         return Telemetry()
 
-    def merge_channels(self, other, frequency=None):
+    def merge_channels(
+            self,
+            other: Union["Telemetry", pd.DataFrame],
+            frequency: Union[int, str] = None
+    ):
         """Merge telemetry objects containing different telemetry channels.
 
         The two objects don't need to have a common time base. The data will be merged, optionally resampled and
@@ -415,12 +428,9 @@ class Telemetry(pd.DataFrame):
             to preserve accuracy
 
         Args:
-            other (:class:`Telemetry` or :class:`pandas.DataFrame`): Object to be merged with self
-            frequency (str or int): Optional frequency to overwrite global preset. (Either string 'original' or integer
-                for a frequency in Hz)
-
-        Returns:
-            :class:`Telemetry`
+            other: Object to be merged with self
+            frequency: Optional frequency to overwrite global preset.
+                (Either string 'original' or integer for a frequency in Hz)
         """
         # merge the data and interpolate missing; 'Date' needs to be the index
         data = self.set_index('Date')
@@ -512,7 +522,12 @@ class Telemetry(pd.DataFrame):
 
         return merged
 
-    def resample_channels(self, rule=None, new_date_ref=None, **kwargs):
+    def resample_channels(
+            self,
+            rule: Optional[str] = None,
+            new_date_ref: Optional[pd.Series] = None,
+            **kwargs: Optional[Any]
+    ):
         """Resample telemetry data.
 
         Convenience method for frequency conversion and resampling. Up and down sampling of data is supported.
@@ -529,10 +544,10 @@ class Telemetry(pd.DataFrame):
               time reference.
 
         Args:
-            rule (optional, str): Resampling rule for :meth:`pandas.Series.resample`
-            new_date_ref (optional, pandas.Series): New custom Series of reference dates
-            **kwargs (optional, any): Only in combination with 'rule'; additional parameters for
-                :meth:`pandas.Series.resample`
+            rule: Resampling rule for :meth:`pandas.Series.resample`
+            new_date_ref: New custom Series of reference dates
+            **kwargs: Only in combination with 'rule'; additional parameters
+                for :meth:`pandas.Series.resample`
         """
         if rule is not None and new_date_ref is not None:
             raise ValueError("You can only specify one of 'rule' or 'new_index'")
@@ -600,18 +615,23 @@ class Telemetry(pd.DataFrame):
         return ret
 
     @classmethod
-    def register_new_channel(cls, name, signal_type, interpolation_method=None):
+    def register_new_channel(
+            cls,
+            name: str,
+            signal_type: str,
+            interpolation_method: Optional[str] = None
+    ):
         """Register a custom telemetry channel.
 
         Registered telemetry channels are automatically interpolated when merging or resampling data.
 
         Args:
-            name (str): Telemetry channel/column name
-            signal_type (str): One of three possible signal types:
+            name: Telemetry channel/column name
+            signal_type: One of three possible signal types:
                 - 'continuous': Speed, RPM, Distance, ...
                 - 'discrete': DRS, nGear, status values, ...
                 - 'excluded': Data channel will be ignored during resampling
-            interpolation_method (optional, str): The interpolation method
+            interpolation_method: The interpolation method
                 which should be used. Can only be specified and is required
                 in combination with ``signal_type='continuous'``. See
                 :meth:`pandas.Series.interpolate` for possible interpolation
@@ -632,7 +652,10 @@ class Telemetry(pd.DataFrame):
             return np.min(i_arr)
         return None
 
-    def add_differential_distance(self, drop_existing=True):
+    def add_differential_distance(
+            self,
+            drop_existing: bool = True
+    ) -> "Telemetry":
         """Add column 'DifferentialDistance' to self.
 
         This column contains the distance driven between subsequent samples.
@@ -641,9 +664,10 @@ class Telemetry(pd.DataFrame):
         with self.
 
         Args:
-            drop_existing (bool): Drop and recalculate column if it already exists
+            drop_existing: Drop and recalculate column if it already exists
         Returns:
-            :class:`Telemetry`: self joined with new column or self if column exists and `drop_existing` is False.
+            self joined with new column or self if column exists
+            and `drop_existing` is False.
         """
         if ('DifferentialDistance' in self.columns) and not drop_existing:
             return self
@@ -657,7 +681,7 @@ class Telemetry(pd.DataFrame):
 
         return self.join(new_dif_dist, how='outer')
 
-    def add_distance(self, drop_existing=True):
+    def add_distance(self, drop_existing: bool = True) -> "Telemetry":
         """Add column 'Distance' to self.
 
         This column contains the distance driven since the first sample of self in meters.
@@ -669,9 +693,10 @@ class Telemetry(pd.DataFrame):
         Calls :meth:`integrate_distance` and joins the result with self.
 
         Args:
-            drop_existing (bool): Drop and recalculate column if it already exists
+            drop_existing: Drop and recalculate column if it already exists
         Returns:
-            :class:`Telemetry`: self joined with new column or self if column exists and `drop_existing` is False.
+            self joined with new column or self if column exists
+            and `drop_existing` is False.
         """
         if ('Distance' in self.columns) and not drop_existing:
             return self
@@ -682,7 +707,7 @@ class Telemetry(pd.DataFrame):
 
         return self.join(new_dist, how='outer')
 
-    def add_relative_distance(self, drop_existing=True):
+    def add_relative_distance(self, drop_existing: bool = True) -> "Telemetry":
         """Add column 'RelativeDistance' to self.
 
         This column contains the distance driven since the first sample as
@@ -691,10 +716,11 @@ class Telemetry(pd.DataFrame):
 
         This is calculated the same way as 'Distance' (see: :meth:`add_distance`). The same warnings apply.
 
-        Args:
-            drop_existing (bool): Drop and recalculate column if it already exists
+         Args:
+            drop_existing: Drop and recalculate column if it already exists
         Returns:
-            :class:`Telemetry`: self joined with new column or self if column exists and `drop_existing` is False.
+            self joined with new column or self if column exists
+            and `drop_existing` is False.
         """
         if 'RelativeDistance' in self.columns:
             if drop_existing:
@@ -711,7 +737,7 @@ class Telemetry(pd.DataFrame):
             rel_dist = dist / dist.iloc[-1]
         return d.join(pd.DataFrame({'RelativeDistance': rel_dist}), how='outer')
 
-    def add_driver_ahead(self, drop_existing=True):
+    def add_driver_ahead(self, drop_existing: bool = True) -> "Telemetry":
         """Add column 'DriverAhead' and 'DistanceToDriverAhead' to self.
 
         DriverAhead: Driver number of the driver ahead as string
@@ -730,9 +756,10 @@ class Telemetry(pd.DataFrame):
         Calls :meth:`calculate_driver_ahead` and joins the result with self.
 
         Args:
-            drop_existing (bool): Drop and recalculate column if it already exists
+            drop_existing: Drop and recalculate column if it already exists
         Returns:
-            :class:`Telemetry`: self joined with new column or self if column exists and `drop_existing` is False.
+            self joined with new column or self if column exists
+            and `drop_existing` is False.
         """
         if 'DriverAhead' in self.columns and 'DistanceToDriverAhead' in self.columns:
             if drop_existing:
@@ -770,13 +797,10 @@ class Telemetry(pd.DataFrame):
         return d.join(dtd.loc[:, ('DriverAhead', 'DistanceToDriverAhead')],
                       how='outer')
 
-    def calculate_differential_distance(self):
+    def calculate_differential_distance(self) -> pd.Series:
         """Calculate the distance between subsequent samples of self.
 
         Distance is in meters
-
-        Returns:
-            :class:`pandas.Series`
         """
         if not all([col in self.columns for col in ('Speed', 'Time')]):
             raise ValueError("Telemetry does not contain required channels 'Time' and 'Speed'.")
@@ -803,7 +827,7 @@ class Telemetry(pd.DataFrame):
         else:
             return pd.Series()
 
-    def calculate_driver_ahead(self, return_reference=False):
+    def calculate_driver_ahead(self, return_reference: bool = False):
         """Calculate driver ahead and distance to driver ahead.
 
         Driver ahead: Driver number of the driver ahead as string
@@ -814,7 +838,7 @@ class Telemetry(pd.DataFrame):
             a long distance). If in doubt, do sanity checks (against the legacy version or in another way).
 
         Args:
-            return_reference (bool): Additionally return the reference
+            return_reference: Additionally return the reference
                 telemetry data slice that is used to calculate the new data.
 
         Returns:
