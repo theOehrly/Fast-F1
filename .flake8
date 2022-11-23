@@ -1,3 +1,0 @@
-[flake8]
-exclude =
-    fastf1/signalr_aio

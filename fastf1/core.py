@@ -1474,8 +1474,9 @@ class Session:
             for next_t, next_status in zip(track_status['Time'][1:], track_status['Status'][1:]):
                 if status != '1':
                     # status change partially in lap partially outside
-                    sel = (((next_t >= laps['LapStartTime']) & (laps['LapStartTime'] >= t)) |
-                           ((t <= laps['Time']) & (laps['Time'] <= next_t)))
+                    sel = (((next_t >= laps['LapStartTime'])
+                            & (laps['LapStartTime'] >= t))
+                           | ((t <= laps['Time']) & (laps['Time'] <= next_t)))
                     laps.loc[sel, 'TrackStatus'] = laps.loc[sel, 'TrackStatus'].apply(
                         lambda curr: applicator(status, curr)
                     )
@@ -2498,8 +2499,8 @@ class Lap(pd.Series):
             Name: 70, dtype: object
         """
         # get first value within the duration of the lap
-        mask = ((self.session.weather_data['Time'] >= self['LapStartTime']) &
-                (self.session.weather_data['Time'] <= self['Time']))
+        mask = ((self.session.weather_data['Time'] >= self['LapStartTime'])
+                & (self.session.weather_data['Time'] <= self['Time']))
         samples = self.session.weather_data[mask]
         if not samples.empty:
             return samples.iloc[0]
