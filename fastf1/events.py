@@ -153,6 +153,7 @@ API Reference
 """  # noqa: W605 invalid escape sequence (escaped space)
 import collections
 import datetime
+from datetime import datetime
 import logging
 import warnings
 from typing import Union, Optional
@@ -398,15 +399,15 @@ def get_event_schedule(year: int, *, include_testing: bool = True, force_ergast:
 
 
 def get_events_remaining(
-        dt=None, *, include_testing: bool = True,
+        dt: Optional[datetime] = None, *, include_testing: bool = True,
         force_ergast: bool = False) -> 'EventSchedule':
     """Create an :class:`~fastf1.events.EventSchedule` object for remaining season.
 
     Args:
-        dt (datetime): Optional DateTime to get events after.
-        include_testing (bool): Include or exclude testing sessions from the
+        dt: Optional DateTime to get events after.
+        include_testing: Include or exclude testing sessions from the
             event schedule.
-        force_ergast (bool): Always use data from the ergast database to
+        force_ergast: Always use data from the ergast database to
             create the event schedule
 
     Returns:
