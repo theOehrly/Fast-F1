@@ -373,7 +373,7 @@ class Telemetry(pd.DataFrame):
         if interpolate_edges:
             edges = Telemetry({'SessionTime': (start_time, end_time),
                                'Date': (start_time + self.session.t0_date, end_time + self.session.t0_date)},
-                              session=self.session)
+                              session=self.session).__finalize__(self)
             d = self.merge_channels(edges)
 
         else:
@@ -388,7 +388,7 @@ class Telemetry(pd.DataFrame):
                 data_slice.loc[:, 'Time'] = data_slice['SessionTime'] - start_time
 
             return data_slice
-        return Telemetry()
+        return Telemetry().__finalize__(self)
 
     def merge_channels(
             self,
@@ -1521,7 +1521,7 @@ class Session:
 
         else:
             logging.warning("Could not load any valid session status information!")
-        self._laps = Laps(laps, session=self)
+        self._laps = Laps(laps, session=self).__finalize__(self)
         self._check_lap_accuracy()
 
     def __fix_tyre_info(self, df):
@@ -2287,7 +2287,7 @@ class Laps(pd.DataFrame):
             laps = self.loc[self['IsPersonalBest'] == True]  # noqa: E712 comparison with True
 
         if not laps.size:
-            return Lap(index=self.columns)
+            return Lap(index=self.columns, dtype=object).__finalize__(self)
 
         lap = laps.loc[laps['LapTime'].idxmin()]
         if isinstance(lap, pd.DataFrame):

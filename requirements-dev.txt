@@ -7,7 +7,7 @@ docutils==0.17.1
 sphinx-gallery>=0.10.0
 autodocsumm>=0.2.8  # cross-links don't work correctly in older versions
 wheel
-flake8
+flake8<5.0.0
 readme-renderer
 xdoctest
 pre-commit
