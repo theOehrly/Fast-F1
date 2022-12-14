@@ -140,11 +140,11 @@ class Cache:
         """Enables the API cache.
 
         Args:
-            cache_dir (str): Path to the directory which should be used to store cached data. Path needs to exist.
-            ignore_version (bool): Ignore if cached data was create with a different version of the API parser
+            cache_dir: Path to the directory which should be used to store cached data. Path needs to exist.
+            ignore_version: Ignore if cached data was create with a different version of the API parser
                 (not recommended: this can cause crashes or unrecognized errors as incompatible data may be loaded)
-            force_renew (bool): Ignore existing cached data. Download data and update the cache instead.
-            use_requests_cache (bool): Do caching of the raw GET and POST requests.
+            force_renew: Ignore existing cached data. Download data and update the cache instead.
+            use_requests_cache: Do caching of the raw GET and POST requests.
         """
         # Allow users to use paths such as %LOCALAPPDATA%
         cache_dir = os.path.expandvars(cache_dir)
