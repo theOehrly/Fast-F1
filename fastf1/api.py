@@ -757,8 +757,8 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
                 if pitstops >= 0:
                     drv_data['PitInTime'][lapcnt] = to_timedelta(time)
             elif ((('NumberOfLaps' in resp) and resp['NumberOfLaps'] > api_lapcnt)
-                  or (drv_data['Time'][lapcnt] - to_timedelta(time)) <
-                  pd.Timedelta(5, 's')):
+                  or (drv_data['Time'][lapcnt] - to_timedelta(time))
+                  < pd.Timedelta(5, 's')):
                 # same response line as beginning of next lap
                 # or beginning of next lap less than 5 seconds away
                 drv_data['PitOutTime'][lapcnt + 1] = to_timedelta(time)  # add to next lap
@@ -884,22 +884,22 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
                 drv_data['Sector3Time'][i + 1])):
             continue  # lap not usable, missing critical values
 
-        if (new_time := drv_data['Time'][i] +
-                drv_data['LapTime'][i + 1]) < \
-                drv_data['Time'][i + 1]:
-            drv_data['Time'][i + 1] = new_time
-        if (new_s1_time := drv_data['Time'][i] + drv_data['Sector1Time'][i + 1]) < \
-                drv_data['Sector1SessionTime'][i + 1]:
-            drv_data['Sector1SessionTime'][i + 1] = new_s1_time
-        if (new_s2_time := drv_data['Time'][i] + drv_data['Sector1Time'][i + 1] +
-                drv_data['Sector2Time'][i + 1]) < \
-                drv_data['Sector2SessionTime'][i + 1]:
-            drv_data['Sector2SessionTime'][i + 1] = new_s2_time
-        if (new_s3_time := drv_data['Time'][i] + drv_data['Sector1Time'][i + 1]
-                           + drv_data['Sector2Time'][i + 1] +
-                           drv_data['Sector3Time'][i + 1]) < \
-                drv_data['Sector3SessionTime'][i + 1]:
-            drv_data['Sector3SessionTime'][i + 1] = new_s3_time
+        if (new_time := drv_data['Time'][i] + drv_data['LapTime'][i+1]) \
+                < drv_data['Time'][i+1]:
+            drv_data['Time'][i+1] = new_time
+        if (new_s1_time := drv_data['Time'][i]
+                + drv_data['Sector1Time'][i+1]) \
+                < drv_data['Sector1SessionTime'][i+1]:
+            drv_data['Sector1SessionTime'][i+1] = new_s1_time
+        if (new_s2_time := drv_data['Time'][i] + drv_data['Sector1Time'][i+1]
+                + drv_data['Sector2Time'][i+1]) \
+                < drv_data['Sector2SessionTime'][i+1]:
+            drv_data['Sector2SessionTime'][i+1] = new_s2_time
+        if (new_s3_time := drv_data['Time'][i] + drv_data['Sector1Time'][i+1]
+                + drv_data['Sector2Time'][i+1]
+                + drv_data['Sector3Time'][i+1]) \
+                < drv_data['Sector3SessionTime'][i+1]:
+            drv_data['Sector3SessionTime'][i+1] = new_s3_time
 
     for i, time in enumerate(drv_data['LapTime']):
         if time == personal_best_lap_time:
@@ -1187,13 +1187,13 @@ def car_data(path, response=None, livedata=None):
                             f"non-boolean values!")
 
         # convert to correct datatypes
-        data[driver].loc[:, num_channels] = data[driver] \
-                                                .loc[:, num_channels] \
+        data[driver].loc[:, num_channels] = \
+            data[driver].loc[:, num_channels] \
             .fillna(value=0, inplace=False) \
             .astype('int64')
 
-        data[driver].loc[:, bool_channels] = data[driver] \
-                                                 .loc[:, bool_channels] \
+        data[driver].loc[:, bool_channels] = \
+            data[driver].loc[:, bool_channels] \
             .fillna(value=False, inplace=False) \
             .astype('bool')
 
@@ -1316,8 +1316,9 @@ def position_data(path, response=None, livedata=None):
                 .sort_values(by='Date') \
                 .reset_index(drop=True)
             data[driver]['Status'].fillna(value='OffTrack', inplace=True)
-            data[driver].loc[:, ['X', 'Y', 'Z']] = data[driver] \
-                                                       .loc[:, ['X', 'Y', 'Z']].fillna(value=0, inplace=False)
+            data[driver].loc[:, ['X', 'Y', 'Z']] = \
+                data[driver].loc[:, ['X', 'Y', 'Z']]\
+                .fillna(value=0, inplace=False)
 
             logging.warning(f"Driver {driver: >2}: Position data is incomplete!")
 
