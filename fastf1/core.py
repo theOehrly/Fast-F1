@@ -1001,6 +1001,8 @@ class Session:
         self._session_status: pd.DataFrame
         self._race_control_messages: pd.DataFrame
 
+        self._track_status: pd.DataFrame
+
         self._total_laps: Optional[int]
         self._laps: Laps
 
@@ -1100,6 +1102,15 @@ class Session:
         Data is available after calling `Session.load` with ``laps=True``
         """
         return self._get_property_warn_not_loaded('_session_status')
+
+    @property
+    def track_status(self):
+        """:class:`pandas.Dataframe`: Track status data as returned by
+        :func:`fastf1.api.track_status_data`
+
+        Data is available after calling `Session.load` with ``laps=True``
+        """
+        return self._get_property_warn_not_loaded('_track_status')
 
     @property
     def race_control_messages(self):
@@ -1285,6 +1296,7 @@ class Session:
         df = None
 
         track_status = api.track_status_data(self.api_path, livedata=livedata)
+        self._track_status = pd.DataFrame(track_status)
 
         drivers = self.drivers
         if not drivers:
