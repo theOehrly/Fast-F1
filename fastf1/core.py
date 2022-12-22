@@ -719,9 +719,11 @@ class Telemetry(pd.DataFrame):
         See :func:`fastf1.api.track_status_data` for more information.
 
         Args:
-            drop_existing (bool): Drop and recalculate column if it already exists
+            drop_existing (bool): Drop and recalculate column if it already
+                exists.
         Returns:
-            :class:`Telemetry`: self joined with new column or self if column exists and `drop_existing` is False.
+            :class:`Telemetry`: self joined with new column or self if column
+                exists and `drop_existing` is False.
         """
         if 'TrackStatus' in self.columns:
             if drop_existing:
@@ -735,15 +737,16 @@ class Telemetry(pd.DataFrame):
         statuses = d.session.track_status['Status']
         events = d.session.t0_date + d.session.track_status['Time']
 
-        # |------ Track Status event K ------|------ N telemetry samples ------|------ Track Status event K + 1 ------|
-        #                                                    ^
-        #                                            all samples have the
-        #                                          same Track Status event K
+        # |--- event K ---|--- N telemetry samples ---|--- event K + 1 ---|
+        #                           ^
+        #                   all samples have the same
+        #                 track status because of event K
         #
         # For each track status event, calculate the in between events of the
         # telemetry, up until the next track status event. For each of the in
-        # between events add the corresponding track status to an array. At last,
-        # create the new column 'TrackStatus' with the array of track statuses.
+        # between events add the corresponding track status to an array. At
+        # last, create the new column 'TrackStatus' with the array of track
+        # statuses.
         for index in range(events.shape[0] - 1):
             curr_e = events[index]
             next_e = events[index+1]
