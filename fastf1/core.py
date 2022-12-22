@@ -711,6 +711,52 @@ class Telemetry(pd.DataFrame):
             rel_dist = dist / dist.iloc[-1]
         return d.join(pd.DataFrame({'RelativeDistance': rel_dist}), how='outer')
 
+    def add_track_status(self, drop_existing=True):
+        """Add column 'TrackStatus' to self.
+
+        This column contains the Track Status for each event as a number.
+
+        See :func:`fastf1.api.track_status_data` for more information.
+
+        Args:
+            drop_existing (bool): Drop and recalculate column if it already exists
+        Returns:
+            :class:`Telemetry`: self joined with new column or self if column exists and `drop_existing` is False.
+        """
+        if 'TrackStatus' in self.columns:
+            if drop_existing:
+                d = self.drop(labels='TrackStatus', axis=1)
+            else:
+                return self
+        else:
+            d = self
+
+        ts = []
+        statuses = d.session.track_status['Status']
+        events = d.session.t0_date + d.session.track_status['Time']
+
+        # |------ Track Status event K ------|------ N telemetry samples ------|------ Track Status event K + 1 ------|
+        #                                                    ^
+        #                                            all samples have the
+        #                                          same Track Status event K
+        #
+        # For each track status event, calculate the in between events of the
+        # telemetry, up until the next track status event. For each of the in
+        # between events add the corresponding track status to an array. At last,
+        # create the new column 'TrackStatus' with the array of track statuses.
+        for index in range(events.shape[0] - 1):
+            curr_e = events[index]
+            next_e = events[index+1]
+
+            dd_shape = d[(d['Date'] < next_e) & (d['Date'] >= curr_e)].shape[0]
+            ts.extend([statuses[index]] * dd_shape)
+
+        dd_shape = d[(d['Date'] > events.iloc[-1])].shape[0]
+        ts.extend([statuses[index]] * dd_shape)
+
+        d['TrackStatus'] = ts
+        return d
+
     def add_driver_ahead(self, drop_existing=True):
         """Add column 'DriverAhead' and 'DistanceToDriverAhead' to self.
 
