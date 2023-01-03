@@ -153,7 +153,6 @@ API Reference
 """  # noqa: W605 invalid escape sequence (escaped space)
 import collections
 import datetime
-from datetime import datetime
 import logging
 import warnings
 from typing import Union, Optional
@@ -396,7 +395,7 @@ def get_event_schedule(
 
 
 def get_events_remaining(
-        dt: Optional[datetime] = None,
+        dt: Optional[datetime.datetime] = None,
         *,
         include_testing: bool = True,
         force_ergast: bool = False
