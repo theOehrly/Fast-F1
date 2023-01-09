@@ -302,7 +302,7 @@ def test_add_track_status():
     # rainy and short session, good for fast test/quick loading
     session = fastf1.get_session(2020, 5, 'FP2')
 
-     # load the data
+    # load the data
     session.load(telemetry=True)
     test_data = session.laps.pick_driver('VER').get_telemetry()
     test_data = test_data.add_track_status()
