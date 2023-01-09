@@ -316,7 +316,6 @@ def test_add_track_status():
     assert test_data['TrackStatus'].iloc[-1] == statuses.iloc[-1]
 
 
-
 def create_sample_car_data():
     # create sample telemetry for testing the .add_* methods
     # which work with distance, only time and speed really needs
