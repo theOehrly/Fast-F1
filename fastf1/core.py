@@ -755,7 +755,7 @@ class Telemetry(pd.DataFrame):
             ts.extend([statuses[index]] * dd_shape)
 
         dd_shape = d[(d['Date'] > events.iloc[-1])].shape[0]
-        ts.extend([statuses[index]] * dd_shape)
+        ts.extend([statuses[-1]] * dd_shape)
 
         d['TrackStatus'] = ts
         return d
