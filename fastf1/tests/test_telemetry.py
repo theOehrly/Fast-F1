@@ -298,6 +298,25 @@ def test_add_driver_ahead_resampled(reference_laps_data):
     assert test_data['DistanceToDriverAhead'].isnull().sum() <= 1
 
 
+def test_add_track_status():
+    # rainy and short session, good for fast test/quick loading
+    session = fastf1.get_session(2020, 5, 'FP2')
+
+     # load the data
+    session.load(telemetry=True)
+    test_data = session.laps.pick_driver('VER').get_telemetry()
+    test_data = test_data.add_track_status()
+
+    # Get statuses
+    statuses = session.track_status['Status']
+
+    # First and last track statuses must be equal to first and last
+    # statuses
+    assert test_data['TrackStatus'].iloc[0] == statuses.iloc[0]
+    assert test_data['TrackStatus'].iloc[-1] == statuses.iloc[-1]
+
+
+
 def create_sample_car_data():
     # create sample telemetry for testing the .add_* methods
     # which work with distance, only time and speed really needs
