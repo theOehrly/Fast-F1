@@ -36,42 +36,6 @@ class _ErgastResponseMixin:
         raise NotImplementedError
 
 
-class ErgastResponseRaw(_ErgastResponseMixin, list):
-    def __init__(self, *, response_headers, query_filters, query_result):
-        super().__init__(query_result,
-                         response_headers=response_headers,
-                         query_filters=query_filters)
-
-
-class ErgastResponse(_ErgastResponseMixin):
-    def __init__(self, *args, response_description, response_data, category,
-                 subcategory, auto_cast, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._description = ErgastResultFrame(response=response_description,
-                                              category=category,
-                                              auto_cast=auto_cast)
-        self._results = [ErgastResultFrame(response=elem,
-                                           category=subcategory,
-                                           auto_cast=auto_cast)
-                         for elem in response_data]
-
-    @property
-    def description(self):
-        return self._description
-
-    @property
-    def results(self):
-        return self._results
-
-
-class _ErgastResponseItem:
-    def __init__(self, response):
-        self._response = response
-
-    def __repr__(self):
-        return "<meta>"
-
-
 class ErgastResultFrame(pd.DataFrame):
     _internal_names = ['base_class_view']
 
@@ -158,6 +122,38 @@ class ErgastResultSeries(pd.Series):
         return _new
 
 
+class ErgastResponseRaw(_ErgastResponseMixin, list):
+    def __init__(self, *, response_headers, query_filters, query_result):
+        super().__init__(query_result,
+                         response_headers=response_headers,
+                         query_filters=query_filters)
+
+
+class ErgastSimpleResponse(_ErgastResponseMixin, ErgastResultFrame):
+    pass
+
+
+class ErgastMultiResponse(_ErgastResponseMixin):
+    def __init__(self, *args, response_description, response_data, category,
+                 subcategory, auto_cast, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._description = ErgastResultFrame(response=response_description,
+                                              category=category,
+                                              auto_cast=auto_cast)
+        self._results = [ErgastResultFrame(response=elem,
+                                           category=subcategory,
+                                           auto_cast=auto_cast)
+                         for elem in response_data]
+
+    @property
+    def description(self):
+        return self._description
+
+    @property
+    def results(self):
+        return self._results
+
+
 class ErgastSelectionObject:
     # TODO: maximum size of response and offset relevant?
 
@@ -184,14 +180,17 @@ class ErgastSelectionObject:
                 f"Server response: '{r.reason}'"
             )
 
-    def _build_result(self,
-                      endpoint: Optional[str],
-                      table: str,
-                      category: dict,
-                      subcategory: Optional[dict],
-                      result_type: Optional[Literal['pandas', 'raw']] = None,
-                      auto_cast: Optional[bool] = None,
-                      ) -> Union[ErgastResponse, ErgastResponseRaw]:
+    def _build_result(
+            self,
+            endpoint: Optional[str],
+            table: str,
+            category: dict,
+            subcategory: Optional[dict],
+            result_type: Optional[Literal['pandas', 'raw']] = None,
+            auto_cast: Optional[bool] = None,
+    ) -> Union[ErgastSimpleResponse,
+               ErgastMultiResponse,
+               ErgastResponseRaw]:
 
         # use defaults or per-call overrides if specified
         if result_type is None:
@@ -230,91 +229,115 @@ class ErgastSelectionObject:
                     result_element_data.append(
                         query_result[i].pop(subcategory['name'])
                     )
-            return ErgastResponse(response_headers=resp,
-                                  query_filters=body,
-                                  response_description=query_result,
-                                  response_data=result_element_data,
-                                  category=category,
-                                  subcategory=subcategory,
-                                  auto_cast=auto_cast)
+                return ErgastMultiResponse(response_headers=resp,
+                                           query_filters=body,
+                                           response_description=query_result,
+                                           response_data=result_element_data,
+                                           category=category,
+                                           subcategory=subcategory,
+                                           auto_cast=auto_cast)
+            else:
+                return ErgastSimpleResponse(response_headers=resp,
+                                            query_filters=body,
+                                            response=query_result,
+                                            category=category,
+                                            auto_cast=auto_cast)
 
-    def get_seasons(self) -> Union[ErgastResponse, ErgastResponseRaw]:
+    # ### endpoints with single-result responses ###
+    #
+    # can be represented by a DataFrame-like object
+    def get_seasons(self) \
+            -> Union[ErgastSimpleResponse, ErgastResponseRaw]:
         return self._build_result(endpoint='seasons',
                                   table='SeasonTable',
                                   category=API.Seasons,
                                   subcategory=None)
 
-    def get_race_schedule(self) -> Union[ErgastResponse, ErgastResponseRaw]:
+    def get_race_schedule(self) \
+            -> Union[ErgastSimpleResponse, ErgastResponseRaw]:
         return self._build_result(endpoint='races',
                                   table='RaceTable',
                                   category=API.Races_Schedule,
                                   subcategory=None)
 
-    def get_race_results(self) -> Union[ErgastResponse, ErgastResponseRaw]:
+    def get_driver_info(self) \
+            -> Union[ErgastSimpleResponse, ErgastResponseRaw]:
+        return self._build_result(endpoint='drivers',
+                                  table='DriverTable',
+                                  category=API.Drivers,
+                                  subcategory=None)
+
+    def get_constructor_info(self) \
+            -> Union[ErgastSimpleResponse, ErgastResponseRaw]:
+        return self._build_result(endpoint='constructors',
+                                  table='ConstructorTable',
+                                  category=API.Constructors,
+                                  subcategory=None)
+
+    def get_circuits(self) \
+            -> Union[ErgastSimpleResponse, ErgastResponseRaw]:
+        return self._build_result(endpoint='circuits',
+                                  table='CircuitTable',
+                                  category=API.Circuits,
+                                  subcategory=None)
+
+    def get_finishing_status(self) \
+            -> Union[ErgastSimpleResponse, ErgastResponseRaw]:
+        return self._build_result(endpoint='status',
+                                  table='StatusTable',
+                                  category=API.Status,
+                                  subcategory=None)
+
+    # ### endpoint with multi-result responses ###
+    #
+    # example: qualifying results filtered only by season will yield a
+    # result for each weekend
+    #
+    # needs to be represented by multiple DataFrame-like objects
+    def get_race_results(self) \
+            -> Union[ErgastMultiResponse, ErgastResponseRaw]:
         return self._build_result(endpoint='results',
                                   table='RaceTable',
                                   category=API.Races_RaceResults,
                                   subcategory=API.RaceResults)
 
     def get_qualifying_results(self) \
-            -> Union[ErgastResponse, ErgastResponseRaw]:
+            -> Union[ErgastMultiResponse, ErgastResponseRaw]:
         return self._build_result(endpoint='qualifying',
                                   table='RaceTable',
                                   category=API.Races_QualifyingResults,
                                   subcategory=API.QualifyingResults)
 
     def get_sprint_results(self) \
-            -> Union[ErgastResponse, ErgastResponseRaw]:
+            -> Union[ErgastMultiResponse, ErgastResponseRaw]:
         return self._build_result(endpoint='sprint',
                                   table='RaceTable',
                                   category=API.Races_SprintResults,
                                   subcategory=API.SprintResults)
 
-    def get_driver_standings(self) -> Union[ErgastResponse, ErgastResponseRaw]:
+    def get_driver_standings(self) \
+            -> Union[ErgastMultiResponse, ErgastResponseRaw]:
         return self._build_result(endpoint='driverStandings',
                                   table='StandingsTable',
                                   category=API.StandingsLists_Driver,
                                   subcategory=API.DriverStandings)
 
     def get_constructor_standings(self) \
-            -> Union[ErgastResponse, ErgastResponseRaw]:
+            -> Union[ErgastMultiResponse, ErgastResponseRaw]:
         return self._build_result(endpoint='constructorStandings',
                                   table='StandingsTable',
                                   category=API.StandingsLists_Constructor,
                                   subcategory=API.ConstructorStandings)
 
-    def get_driver_info(self) -> Union[ErgastResponse, ErgastResponseRaw]:
-        return self._build_result(endpoint='drivers',
-                                  table='DriverTable',
-                                  category=API.Drivers,
-                                  subcategory=None)
-
-    def get_constructor_info(self) -> Union[ErgastResponse, ErgastResponseRaw]:
-        return self._build_result(endpoint='constructors',
-                                  table='ConstructorTable',
-                                  category=API.Constructors,
-                                  subcategory=None)
-
-    def get_circuits(self) -> Union[ErgastResponse, ErgastResponseRaw]:
-        return self._build_result(endpoint='circuits',
-                                  table='CircuitTable',
-                                  category=API.Circuits,
-                                  subcategory=None)
-
-    def get_finishing_status(self) -> Union[ErgastResponse, ErgastResponseRaw]:
-        return self._build_result(endpoint='status',
-                                  table='StatusTable',
-                                  category=API.Status,
-                                  subcategory=None)
-
-    def get_lap_times(self) -> Union[ErgastResponse, ErgastResponseRaw]:
+    def get_lap_times(self) \
+            -> Union[ErgastMultiResponse, ErgastResponseRaw]:
         return self._build_result(endpoint='laps',
                                   table='RaceTable',
                                   category=API.Races_Laps,
                                   subcategory=API.Laps)
 
     def get_pit_stops(self, **kwargs) \
-            -> Union[ErgastResponse, ErgastResponseRaw]:
+            -> Union[ErgastMultiResponse, ErgastResponseRaw]:
         return self._build_result(endpoint='pitstops',
                                   table='RaceTable',
                                   category=API.Races_PitStops,
