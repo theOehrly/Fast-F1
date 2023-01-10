@@ -4,12 +4,15 @@ Utils module - :mod:`fastf1.utils`
 """
 import warnings
 from functools import reduce
+from typing import Tuple, Dict
 
 import numpy as np
 from datetime import datetime, timedelta
 
+import pandas as pd
 
-def delta_time(reference_lap, compare_lap):
+
+def delta_time(reference_lap: pd.Series, compare_lap: pd.Series) -> Tuple:
     # TODO move somewhere else
     """Calculates the delta time of a given lap, along the 'Distance' axis
     of the reference lap.
@@ -87,7 +90,7 @@ def delta_time(reference_lap, compare_lap):
     return delta, ref, comp
 
 
-def recursive_dict_get(d, *keys, default_none=False):
+def recursive_dict_get(d: Dict, *keys: str, default_none: bool = False):
     """Recursive dict get. Can take an arbitrary number of keys and returns an empty
     dict if any key does not exist.
     https://stackoverflow.com/a/28225747"""
@@ -98,7 +101,7 @@ def recursive_dict_get(d, *keys, default_none=False):
         return ret
 
 
-def to_timedelta(x):
+def to_timedelta(x: str) -> timedelta:
     """Fast timedelta object creation from a time string
 
     Permissible string formats:
@@ -183,7 +186,7 @@ def to_datetime(x):
             if '.' in seconds:
                 seconds, msus = seconds.split('.')
                 if len(msus) < 6:
-                    msus = msus+'0'*(6-len(msus))
+                    msus = msus + '0' * (6 - len(msus))
                 elif len(msus) > 6:
                     msus = msus[0:6]
             else:
