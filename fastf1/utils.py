@@ -1,7 +1,4 @@
-"""
-Utils module - :mod:`fastf1.utils`
-==================================
-"""
+"""This is a collection of various functions."""
 import warnings
 from functools import reduce
 from typing import Tuple, Dict

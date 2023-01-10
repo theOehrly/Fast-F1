@@ -1,7 +1,4 @@
 """
-Api Functions - :mod:`fastf1.api`
-=================================
-
 .. note:: The functions listed here are primarily for internal use within
     FastF1. While you can use these functions directly, it is usually
     better to use the functionality provided by the data objects
