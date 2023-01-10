@@ -250,7 +250,8 @@ def driver_color(identifier: str) -> str:
             ratio = fuzz.ratio(identifier, existing_key)
             key_ratios.append((ratio, existing_key))
         key_ratios.sort(reverse=True)
-        if (key_ratios[0][0] < 35) or (key_ratios[0][0] / key_ratios[1][0] < 1.2):
+        if ((key_ratios[0][0] < 35)
+                or (key_ratios[0][0] / key_ratios[1][0] < 1.2)):
             # ensure that the best match has a minimum accuracy (35 out of
             # 100) and that it has a minimum confidence (at least 20% better
             # than second best)
@@ -323,7 +324,8 @@ def team_color(identifier: str) -> str:
             ratio = fuzz.ratio(identifier, existing_key)
             key_ratios.append((ratio, existing_key))
         key_ratios.sort(reverse=True)
-        if (key_ratios[0][0] < 35) or (key_ratios[0][0] / key_ratios[1][0] < 1.2):
+        if ((key_ratios[0][0] < 35)
+                or (key_ratios[0][0] / key_ratios[1][0] < 1.2)):
             # ensure that the best match has a minimum accuracy (35 out of
             # 100) and that it has a minimum confidence (at least 20% better
             # than second best)

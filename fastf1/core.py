@@ -716,7 +716,7 @@ class Telemetry(pd.DataFrame):
 
         This is calculated the same way as 'Distance' (see: :meth:`add_distance`). The same warnings apply.
 
-         Args:
+        Args:
             drop_existing: Drop and recalculate column if it already exists
         Returns:
             self joined with new column or self if column exists
@@ -2360,7 +2360,8 @@ class Laps(pd.DataFrame):
         """
         return self[self['IsAccurate']]
 
-    def iterlaps(self, require: Optional[Iterable] = ()) -> Iterable[Tuple[int, "Lap"]]:
+    def iterlaps(self, require: Optional[Iterable] = None) \
+            -> Iterable[Tuple[int, "Lap"]]:
         """Iterator for iterating over all laps in self.
 
         This method wraps :meth:`pandas.DataFrame.iterrows`.

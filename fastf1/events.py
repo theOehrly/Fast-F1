@@ -284,7 +284,8 @@ def get_session(
     return event.get_session(identifier)
 
 
-def get_testing_session(year: int, test_number: int, session_number: int) -> Session:
+def get_testing_session(year: int, test_number: int, session_number: int) \
+        -> Session:
     """Create a :class:`~fastf1.core.Session` object for testing sessions
     based on year, test  event number and session number.
 
@@ -535,7 +536,8 @@ class EventSchedule(pd.DataFrame):
 
     _internal_names = ['base_class_view']
 
-    def __init__(self, *args, year: int = 0, force_default_cols: bool = False, **kwargs):
+    def __init__(self, *args, year: int = 0,
+                 force_default_cols: bool = False, **kwargs):
         if force_default_cols:
             kwargs['columns'] = list(self._COL_TYPES)
         super().__init__(*args, **kwargs)
@@ -821,7 +823,8 @@ class Event(pd.Series):
 
         return session_name
 
-    def get_session_date(self, identifier: Union[str, int]) -> datetime.datetime:
+    def get_session_date(self, identifier: Union[str, int]) \
+            -> datetime.datetime:
         """Return the date and time (if available) at which a specific session
         of this event is or was held.
 
