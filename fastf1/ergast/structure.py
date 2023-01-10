@@ -293,7 +293,7 @@ Driver = {
     'name': 'Driver',
     'method': flatten_by_rename,
     'map': {'driverId': {'name': 'driverId', 'type': str},
-            'permanentNumber': {'name': 'driverNumber', 'type': str},
+            'permanentNumber': {'name': 'driverNumber', 'type': int},
             'code': {'name': 'driver', 'type': str},
             'url': {'name': 'driverUrl', 'type': str},
             'givenName': {'name': 'givenName', 'type': str},

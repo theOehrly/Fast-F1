@@ -122,11 +122,42 @@ class ErgastResultSeries(pd.Series):
         return _new
 
 
-class ErgastResponseRaw(_ErgastResponseMixin, list):
-    def __init__(self, *, response_headers, query_filters, query_result):
+class ErgastResultRaw(_ErgastResponseMixin, list):
+    def __init__(self, *, response_headers, query_filters, query_result,
+                 category, auto_cast):
+        if auto_cast:
+            query_result = self._prepare_response(query_result, category)
+
         super().__init__(query_result,
                          response_headers=response_headers,
                          query_filters=query_filters)
+
+    @classmethod
+    def _prepare_response(cls, query_result, category):
+        # query_result is a list of json-like data. Each element in that list
+        # has the same structure. Iterate over all elements and call the
+        # recursive _auto_cast method to convert data types
+        query_result = copy.deepcopy(query_result)  # TODO: efficiency?
+        for i in range(len(query_result)):
+            query_result[i] = cls._auto_cast(query_result[i], category)
+        return query_result
+
+    @classmethod
+    def _auto_cast(cls, data, category):
+        # convert datatypes for all known elements
+        for name, mapping in category['map'].items():
+            if name not in data:
+                continue
+            data[name] = mapping['type'](data[name])
+
+        # recursively step into known subcategories and convert data types
+        for subcategory in category['sub']:
+            if (subname := subcategory['name']) not in data:
+                continue
+            subcast = cls._auto_cast(data[subname], subcategory)
+            data[subname] = subcast
+
+        return data
 
 
 class ErgastSimpleResponse(_ErgastResponseMixin, ErgastResultFrame):
@@ -190,7 +221,7 @@ class ErgastSelectionObject:
             auto_cast: Optional[bool] = None,
     ) -> Union[ErgastSimpleResponse,
                ErgastMultiResponse,
-               ErgastResponseRaw]:
+               ErgastResultRaw]:
 
         # use defaults or per-call overrides if specified
         if result_type is None:
@@ -216,10 +247,11 @@ class ErgastSelectionObject:
         # query filters remain in body
 
         if result_type == 'raw':
-            return ErgastResponseRaw(response_headers=resp,
-                                     query_filters=body,
-                                     query_result=query_result,
-                                     auto_cast=auto_cast)
+            return ErgastResultRaw(response_headers=resp,
+                                   query_filters=body,
+                                   query_result=query_result,
+                                   category=category,
+                                   auto_cast=auto_cast)
 
         if result_type == 'pandas':
             # result element description remains in query result
@@ -247,42 +279,42 @@ class ErgastSelectionObject:
     #
     # can be represented by a DataFrame-like object
     def get_seasons(self) \
-            -> Union[ErgastSimpleResponse, ErgastResponseRaw]:
+            -> Union[ErgastSimpleResponse, ErgastResultRaw]:
         return self._build_result(endpoint='seasons',
                                   table='SeasonTable',
                                   category=API.Seasons,
                                   subcategory=None)
 
     def get_race_schedule(self) \
-            -> Union[ErgastSimpleResponse, ErgastResponseRaw]:
+            -> Union[ErgastSimpleResponse, ErgastResultRaw]:
         return self._build_result(endpoint='races',
                                   table='RaceTable',
                                   category=API.Races_Schedule,
                                   subcategory=None)
 
     def get_driver_info(self) \
-            -> Union[ErgastSimpleResponse, ErgastResponseRaw]:
+            -> Union[ErgastSimpleResponse, ErgastResultRaw]:
         return self._build_result(endpoint='drivers',
                                   table='DriverTable',
                                   category=API.Drivers,
                                   subcategory=None)
 
     def get_constructor_info(self) \
-            -> Union[ErgastSimpleResponse, ErgastResponseRaw]:
+            -> Union[ErgastSimpleResponse, ErgastResultRaw]:
         return self._build_result(endpoint='constructors',
                                   table='ConstructorTable',
                                   category=API.Constructors,
                                   subcategory=None)
 
     def get_circuits(self) \
-            -> Union[ErgastSimpleResponse, ErgastResponseRaw]:
+            -> Union[ErgastSimpleResponse, ErgastResultRaw]:
         return self._build_result(endpoint='circuits',
                                   table='CircuitTable',
                                   category=API.Circuits,
                                   subcategory=None)
 
     def get_finishing_status(self) \
-            -> Union[ErgastSimpleResponse, ErgastResponseRaw]:
+            -> Union[ErgastSimpleResponse, ErgastResultRaw]:
         return self._build_result(endpoint='status',
                                   table='StatusTable',
                                   category=API.Status,
@@ -295,49 +327,49 @@ class ErgastSelectionObject:
     #
     # needs to be represented by multiple DataFrame-like objects
     def get_race_results(self) \
-            -> Union[ErgastMultiResponse, ErgastResponseRaw]:
+            -> Union[ErgastMultiResponse, ErgastResultRaw]:
         return self._build_result(endpoint='results',
                                   table='RaceTable',
                                   category=API.Races_RaceResults,
                                   subcategory=API.RaceResults)
 
     def get_qualifying_results(self) \
-            -> Union[ErgastMultiResponse, ErgastResponseRaw]:
+            -> Union[ErgastMultiResponse, ErgastResultRaw]:
         return self._build_result(endpoint='qualifying',
                                   table='RaceTable',
                                   category=API.Races_QualifyingResults,
                                   subcategory=API.QualifyingResults)
 
     def get_sprint_results(self) \
-            -> Union[ErgastMultiResponse, ErgastResponseRaw]:
+            -> Union[ErgastMultiResponse, ErgastResultRaw]:
         return self._build_result(endpoint='sprint',
                                   table='RaceTable',
                                   category=API.Races_SprintResults,
                                   subcategory=API.SprintResults)
 
     def get_driver_standings(self) \
-            -> Union[ErgastMultiResponse, ErgastResponseRaw]:
+            -> Union[ErgastMultiResponse, ErgastResultRaw]:
         return self._build_result(endpoint='driverStandings',
                                   table='StandingsTable',
                                   category=API.StandingsLists_Driver,
                                   subcategory=API.DriverStandings)
 
     def get_constructor_standings(self) \
-            -> Union[ErgastMultiResponse, ErgastResponseRaw]:
+            -> Union[ErgastMultiResponse, ErgastResultRaw]:
         return self._build_result(endpoint='constructorStandings',
                                   table='StandingsTable',
                                   category=API.StandingsLists_Constructor,
                                   subcategory=API.ConstructorStandings)
 
     def get_lap_times(self) \
-            -> Union[ErgastMultiResponse, ErgastResponseRaw]:
+            -> Union[ErgastMultiResponse, ErgastResultRaw]:
         return self._build_result(endpoint='laps',
                                   table='RaceTable',
                                   category=API.Races_Laps,
                                   subcategory=API.Laps)
 
     def get_pit_stops(self, **kwargs) \
-            -> Union[ErgastMultiResponse, ErgastResponseRaw]:
+            -> Union[ErgastMultiResponse, ErgastResultRaw]:
         return self._build_result(endpoint='pitstops',
                                   table='RaceTable',
                                   category=API.Races_PitStops,
