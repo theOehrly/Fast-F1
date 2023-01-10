@@ -70,6 +70,7 @@ Alternatively, a wheel or a source distribution can be downloaded from Pypi.
    core
    events
    api
+   ergast
    utils
    plotting
    livetiming

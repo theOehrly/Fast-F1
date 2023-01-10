@@ -42,7 +42,8 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.viewcode',
     'sphinx_gallery.gen_gallery',
-    'autodocsumm'
+    'autodocsumm',
+    'fastf1.ergast.sphinx',
 ]
 
 todo_include_todos = True

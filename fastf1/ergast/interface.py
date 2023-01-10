@@ -1,6 +1,6 @@
 import copy
 import json
-from typing import Literal, Optional, Union
+from typing import List, Literal, Optional, Union
 
 from fastf1.api import Cache
 import fastf1.ergast.structure as API
@@ -14,7 +14,7 @@ BASE_URL = 'https://ergast.com/api/f1'
 HEADERS = {'User-Agent': f'FastF1/{__version__}'}
 
 
-class _ErgastResponseMixin:
+class ErgastResponseMixin:
     def __init__(self, *args, response_headers: dict,
                  query_filters: dict, **kwargs):
         super().__init__(*args, **kwargs)
@@ -37,6 +37,21 @@ class _ErgastResponseMixin:
 
 
 class ErgastResultFrame(pd.DataFrame):
+    """
+    Wraps a Pandas ``DataFrame``. Additionally, this class can be
+    initialized from Ergast response data with automatic flattening and type
+    casting of the data.
+
+    Args:
+        data: Passed through to the DataFrame constructor (must be None if
+            `response` is provided)
+        category: Reference to a category from :mod:`fastf1.ergast.structure`
+            that describes the result data
+        response: JSON-like response data from Ergast; used to generate `data`
+            from an Ergast response (must be None if `data` is provided)
+        auto_cast: Determines if values are automatically cast to the most
+            appropriate data type from their original string representation
+    """
     _internal_names = ['base_class_view']
 
     def __init__(self, data=None, *,
@@ -68,7 +83,7 @@ class ErgastResultFrame(pd.DataFrame):
 
         # call the categories associated flattening method on the data
         # (operations on 'nested' and 'flat' are inplace, therefore no return)
-        category['method'](nested, category, flat, cast)
+        category['method'](nested, category, flat, cast=cast)
 
         # recursively step into subcategories; updated the flattened result
         # dict with the result from the renaming of the subcategory values
@@ -122,7 +137,19 @@ class ErgastResultSeries(pd.Series):
         return _new
 
 
-class ErgastResultRaw(_ErgastResponseMixin, list):
+class ErgastRawResponse(ErgastResponseMixin, list):
+    """
+    Provides the raw JSON-like response data from Ergast.
+
+    This class wraps a ``list`` and adds response information
+    and paging (see :class:`ErgastResponseMixin`).
+
+    Args:
+        category: Reference to a category from :mod:`fastf1.ergast.structure`
+            that describes the result data
+        auto_cast: Determines if values are automatically cast to the most
+            appropriate data type from their original string representation
+    """
     def __init__(self, *, response_headers, query_filters, query_result,
                  category, auto_cast):
         if auto_cast:
@@ -160,39 +187,62 @@ class ErgastResultRaw(_ErgastResponseMixin, list):
         return data
 
 
-class ErgastSimpleResponse(_ErgastResponseMixin, ErgastResultFrame):
+class ErgastSimpleResponse(ErgastResponseMixin, ErgastResultFrame):
+    """
+    Provides simple Ergast result data in the form of a Pandas ``DataFrame``.
+
+    This class wraps an :class:`ErgastResultFrame` and adds response
+    information and paging (see :class:`ErgastResponseMixin`).
+    """
     pass
 
 
-class ErgastMultiResponse(_ErgastResponseMixin):
+class ErgastMultiResponse(ErgastResponseMixin):
+    """
+    Provides complex Ergast result data in the form of multiple Pandas
+    ``DataFrames``.
+
+    This class additionally offers response information and paging
+    (see :class:`ErgastResponseMixin`).
+    """
     def __init__(self, *args, response_description, response_data, category,
                  subcategory, auto_cast, **kwargs):
         super().__init__(*args, **kwargs)
         self._description = ErgastResultFrame(response=response_description,
                                               category=category,
                                               auto_cast=auto_cast)
-        self._results = [ErgastResultFrame(response=elem,
+        self._content = [ErgastResultFrame(response=elem,
                                            category=subcategory,
                                            auto_cast=auto_cast)
                          for elem in response_data]
 
     @property
-    def description(self):
+    def description(self) -> ErgastResultFrame:
         return self._description
 
     @property
-    def results(self):
-        return self._results
+    def content(self) -> List[ErgastResultFrame]:
+        return self._content
 
 
-class ErgastSelectionObject:
+class Ergast:
+    """
+    Args:
+        result_type: determines the default type of the returned result object
+
+            - 'raw': :class:`ErgastRawResponse`
+            - 'pandas': :class:`ErgastSimpleResponse` or
+              :class:`ErgastMultiResponse` depending on endpoint
+
+        auto_cast: determines whether result values are cast from there default
+            string representation to a better matching type
+    """
     # TODO: maximum size of response and offset relevant?
 
     def __init__(self,
-                 selectors: Optional[list] = None,
-                 result_type: str = 'raw',
+                 result_type: Literal['raw', 'pandas'] = 'raw',
                  auto_cast: bool = True):
-        self._selectors = selectors
+        self._selectors = []
         self._default_result_type = result_type
         self._default_auto_cast = auto_cast
 
@@ -221,7 +271,7 @@ class ErgastSelectionObject:
             auto_cast: Optional[bool] = None,
     ) -> Union[ErgastSimpleResponse,
                ErgastMultiResponse,
-               ErgastResultRaw]:
+               ErgastRawResponse]:
 
         # use defaults or per-call overrides if specified
         if result_type is None:
@@ -247,11 +297,11 @@ class ErgastSelectionObject:
         # query filters remain in body
 
         if result_type == 'raw':
-            return ErgastResultRaw(response_headers=resp,
-                                   query_filters=body,
-                                   query_result=query_result,
-                                   category=category,
-                                   auto_cast=auto_cast)
+            return ErgastRawResponse(response_headers=resp,
+                                     query_filters=body,
+                                     query_result=query_result,
+                                     category=category,
+                                     auto_cast=auto_cast)
 
         if result_type == 'pandas':
             # result element description remains in query result
@@ -275,114 +325,6 @@ class ErgastSelectionObject:
                                             category=category,
                                             auto_cast=auto_cast)
 
-    # ### endpoints with single-result responses ###
-    #
-    # can be represented by a DataFrame-like object
-    def get_seasons(self) \
-            -> Union[ErgastSimpleResponse, ErgastResultRaw]:
-        return self._build_result(endpoint='seasons',
-                                  table='SeasonTable',
-                                  category=API.Seasons,
-                                  subcategory=None)
-
-    def get_race_schedule(self) \
-            -> Union[ErgastSimpleResponse, ErgastResultRaw]:
-        return self._build_result(endpoint='races',
-                                  table='RaceTable',
-                                  category=API.Races_Schedule,
-                                  subcategory=None)
-
-    def get_driver_info(self) \
-            -> Union[ErgastSimpleResponse, ErgastResultRaw]:
-        return self._build_result(endpoint='drivers',
-                                  table='DriverTable',
-                                  category=API.Drivers,
-                                  subcategory=None)
-
-    def get_constructor_info(self) \
-            -> Union[ErgastSimpleResponse, ErgastResultRaw]:
-        return self._build_result(endpoint='constructors',
-                                  table='ConstructorTable',
-                                  category=API.Constructors,
-                                  subcategory=None)
-
-    def get_circuits(self) \
-            -> Union[ErgastSimpleResponse, ErgastResultRaw]:
-        return self._build_result(endpoint='circuits',
-                                  table='CircuitTable',
-                                  category=API.Circuits,
-                                  subcategory=None)
-
-    def get_finishing_status(self) \
-            -> Union[ErgastSimpleResponse, ErgastResultRaw]:
-        return self._build_result(endpoint='status',
-                                  table='StatusTable',
-                                  category=API.Status,
-                                  subcategory=None)
-
-    # ### endpoint with multi-result responses ###
-    #
-    # example: qualifying results filtered only by season will yield a
-    # result for each weekend
-    #
-    # needs to be represented by multiple DataFrame-like objects
-    def get_race_results(self) \
-            -> Union[ErgastMultiResponse, ErgastResultRaw]:
-        return self._build_result(endpoint='results',
-                                  table='RaceTable',
-                                  category=API.Races_RaceResults,
-                                  subcategory=API.RaceResults)
-
-    def get_qualifying_results(self) \
-            -> Union[ErgastMultiResponse, ErgastResultRaw]:
-        return self._build_result(endpoint='qualifying',
-                                  table='RaceTable',
-                                  category=API.Races_QualifyingResults,
-                                  subcategory=API.QualifyingResults)
-
-    def get_sprint_results(self) \
-            -> Union[ErgastMultiResponse, ErgastResultRaw]:
-        return self._build_result(endpoint='sprint',
-                                  table='RaceTable',
-                                  category=API.Races_SprintResults,
-                                  subcategory=API.SprintResults)
-
-    def get_driver_standings(self) \
-            -> Union[ErgastMultiResponse, ErgastResultRaw]:
-        return self._build_result(endpoint='driverStandings',
-                                  table='StandingsTable',
-                                  category=API.StandingsLists_Driver,
-                                  subcategory=API.DriverStandings)
-
-    def get_constructor_standings(self) \
-            -> Union[ErgastMultiResponse, ErgastResultRaw]:
-        return self._build_result(endpoint='constructorStandings',
-                                  table='StandingsTable',
-                                  category=API.StandingsLists_Constructor,
-                                  subcategory=API.ConstructorStandings)
-
-    def get_lap_times(self) \
-            -> Union[ErgastMultiResponse, ErgastResultRaw]:
-        return self._build_result(endpoint='laps',
-                                  table='RaceTable',
-                                  category=API.Races_Laps,
-                                  subcategory=API.Laps)
-
-    def get_pit_stops(self, **kwargs) \
-            -> Union[ErgastMultiResponse, ErgastResultRaw]:
-        return self._build_result(endpoint='pitstops',
-                                  table='RaceTable',
-                                  category=API.Races_PitStops,
-                                  subcategory=API.PitStops,
-                                  **kwargs)
-
-
-class Ergast(ErgastSelectionObject):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._args = args
-        self._kwargs = kwargs
-
     def select(self,
                season: Union[Literal['current'], int] = None,
                round: Union[Literal['last'], int] = None,
@@ -393,32 +335,363 @@ class Ergast(ErgastSelectionObject):
                results_position: Optional[int] = None,
                fastest_rank: Optional[int] = None,
                status: Optional[str] = None,
-               ) -> ErgastSelectionObject:
+               ) -> 'Ergast':
+        """
+        For each endpoint, the results can be refined adding different
+        criteria to the request. Multiple criteria can be used to refine a
+        single request. But note that not all criteria are supported by all
+        endpoints. For details, refer to the documentation of each endpoint
+        on https://ergast.com/mrd.
 
-        selectors = list()
-
+        Args:
+            season: select a season by its year
+            round: select a round by its number
+            circuit: select a circuit by its circuit id
+            constructor: select a constructor by its constructor id
+            driver: select a driver by its driver id
+            grid_position: select a grid position by its number
+            results_position: select a finishing result by its position
+            fastest_rank: select fastest by rank number
+            status: select by finishing status
+        """
         if season is not None:
-            selectors.append(f"/{season}")
+            self._selectors.append(f"/{season}")
         if round is not None:
-            selectors.append(f"/{round}")
+            self._selectors.append(f"/{round}")
         if circuit is not None:
-            selectors.append(f"/circuits/{circuit}")
+            self._selectors.append(f"/circuits/{circuit}")
         if constructor is not None:
-            selectors.append(f"/constructors/{constructor}")
+            self._selectors.append(f"/constructors/{constructor}")
         if driver is not None:
-            selectors.append(f"/drivers/{driver}")
+            self._selectors.append(f"/drivers/{driver}")
         if grid_position is not None:
-            selectors.append(f"/grid/{grid_position}")
+            self._selectors.append(f"/grid/{grid_position}")
         if results_position is not None:
-            selectors.append(f"/results/{results_position}")
+            self._selectors.append(f"/results/{results_position}")
         if fastest_rank is not None:
-            selectors.append(f"/fastest/{fastest_rank}")
+            self._selectors.append(f"/fastest/{fastest_rank}")
         if status is not None:
-            selectors.append(f"/status/{status}")
+            self._selectors.append(f"/status/{status}")
 
-        return ErgastSelectionObject(*self._args,
-                                     selectors=selectors,
-                                     **self._kwargs)
+        return self
+
+    # ### endpoints with single-result responses ###
+    #
+    # can be represented by a DataFrame-like object
+    def get_seasons(self,
+                    result_type: Optional[Literal['pandas', 'raw']] = None,
+                    auto_cast: Optional[bool] = None
+                    ) -> Union[ErgastSimpleResponse, ErgastRawResponse]:
+        """Get a list of seasons.
+
+        See: https://ergast.com/mrd/methods/seasons/
+
+        .. ergast-api-map:: Seasons
+            :summary: API Mapping
+
+        Args:
+            result_type: Overwrites the default result type
+            auto_cast: Overwrites the default value for ``auto_cast``
+        """
+        return self._build_result(endpoint='seasons',
+                                  table='SeasonTable',
+                                  category=API.Seasons,
+                                  subcategory=None,
+                                  result_type=result_type,
+                                  auto_cast=auto_cast)
+
+    def get_race_schedule(
+            self,
+            result_type: Optional[Literal['pandas', 'raw']] = None,
+            auto_cast: Optional[bool] = None
+    ) -> Union[ErgastSimpleResponse, ErgastRawResponse]:
+        """Get a list of races.
+
+        See: https://ergast.com/mrd/methods/schedule/
+
+        .. ergast-api-map:: Races_Schedule
+            :summary: API Mapping
+
+        Args:
+            result_type: Overwrites the default result type
+            auto_cast: Overwrites the default value for ``auto_cast``
+        """
+        return self._build_result(endpoint='races',
+                                  table='RaceTable',
+                                  category=API.Races_Schedule,
+                                  subcategory=None,
+                                  result_type=result_type,
+                                  auto_cast=auto_cast)
+
+    def get_driver_info(
+            self,
+            result_type: Optional[Literal['pandas', 'raw']] = None,
+            auto_cast: Optional[bool] = None
+    ) -> Union[ErgastSimpleResponse, ErgastRawResponse]:
+        """Get a list of drivers.
+
+        See: https://ergast.com/mrd/methods/drivers/
+
+        .. ergast-api-map:: Drivers
+            :summary: API Mapping
+
+        Args:
+            result_type: Overwrites the default result type
+            auto_cast: Overwrites the default value for ``auto_cast``
+        """
+        return self._build_result(endpoint='drivers',
+                                  table='DriverTable',
+                                  category=API.Drivers,
+                                  subcategory=None,
+                                  result_type=result_type,
+                                  auto_cast=auto_cast)
+
+    def get_constructor_info(
+            self,
+            result_type: Optional[Literal['pandas', 'raw']] = None,
+            auto_cast: Optional[bool] = None
+    ) -> Union[ErgastSimpleResponse, ErgastRawResponse]:
+        """Get a list of constructors.
+
+        See: https://ergast.com/mrd/methods/constructors/
+
+        .. ergast-api-map:: Constructors
+            :summary: API Mapping
+
+        Args:
+            result_type: Overwrites the default result type
+            auto_cast: Overwrites the default value for ``auto_cast``
+        """
+        return self._build_result(endpoint='constructors',
+                                  table='ConstructorTable',
+                                  category=API.Constructors,
+                                  subcategory=None,
+                                  result_type=result_type,
+                                  auto_cast=auto_cast)
+
+    def get_circuits(self,
+                     result_type: Optional[Literal['pandas', 'raw']] = None,
+                     auto_cast: Optional[bool] = None
+                     ) -> Union[ErgastSimpleResponse, ErgastRawResponse]:
+        """Get a list of circuits.
+
+        See: https://ergast.com/mrd/methods/circuits/
+
+        .. ergast-api-map:: Circuits
+            :summary: API Mapping
+
+        Args:
+            result_type: Overwrites the default result type
+            auto_cast: Overwrites the default value for ``auto_cast``
+        """
+        return self._build_result(endpoint='circuits',
+                                  table='CircuitTable',
+                                  category=API.Circuits,
+                                  subcategory=None,
+                                  result_type=result_type,
+                                  auto_cast=auto_cast)
+
+    def get_finishing_status(
+            self,
+            result_type: Optional[Literal['pandas', 'raw']] = None,
+            auto_cast: Optional[bool] = None
+    ) -> Union[ErgastSimpleResponse, ErgastRawResponse]:
+        """Get a list of finishing status codes.
+
+        See: https://ergast.com/mrd/methods/status/
+
+        .. ergast-api-map:: Status
+            :summary: API Mapping
+
+        Args:
+            result_type: Overwrites the default result type
+            auto_cast: Overwrites the default value for ``auto_cast``
+        """
+        return self._build_result(endpoint='status',
+                                  table='StatusTable',
+                                  category=API.Status,
+                                  subcategory=None,
+                                  result_type=result_type,
+                                  auto_cast=auto_cast)
+
+    # ### endpoint with multi-result responses ###
+    #
+    # example: qualifying results filtered only by season will yield a
+    # result for each weekend
+    #
+    # needs to be represented by multiple DataFrame-like objects
+    def get_race_results(
+            self,
+            result_type: Optional[Literal['pandas', 'raw']] = None,
+            auto_cast: Optional[bool] = None
+    ) -> Union[ErgastMultiResponse, ErgastRawResponse]:
+        """Get race results for one or multiple races.
+
+        See: https://ergast.com/mrd/methods/results/
+
+        .. ergast-api-map:: Races_RaceResults
+            :summary: API Mapping
+            :subcategory: RaceResults
+            :show-flat:
+
+        Args:
+            result_type: Overwrites the default result type
+            auto_cast: Overwrites the default value for ``auto_cast``
+        """
+        return self._build_result(endpoint='results',
+                                  table='RaceTable',
+                                  category=API.Races_RaceResults,
+                                  subcategory=API.RaceResults,
+                                  result_type=result_type,
+                                  auto_cast=auto_cast)
+
+    def get_qualifying_results(
+            self,
+            result_type: Optional[Literal['pandas', 'raw']] = None,
+            auto_cast: Optional[bool] = None
+    ) -> Union[ErgastMultiResponse, ErgastRawResponse]:
+        """Get qualifying results for one or multiple qualifying sessions.
+
+        See: https://ergast.com/mrd/methods/qualifying/
+
+        .. ergast-api-map:: Races_QualifyingResults
+            :summary: API Mapping
+            :subcategory: QualifyingResults
+            :show-flat:
+
+        Args:
+            result_type: Overwrites the default result type
+            auto_cast: Overwrites the default value for ``auto_cast``
+        """
+        return self._build_result(endpoint='qualifying',
+                                  table='RaceTable',
+                                  category=API.Races_QualifyingResults,
+                                  subcategory=API.QualifyingResults,
+                                  result_type=result_type,
+                                  auto_cast=auto_cast)
+
+    def get_sprint_results(
+            self,
+            result_type: Optional[Literal['pandas', 'raw']] = None,
+            auto_cast: Optional[bool] = None
+    ) -> Union[ErgastMultiResponse, ErgastRawResponse]:
+        """Get sprint results for one or multiple sprints.
+
+        See: https://ergast.com/mrd/methods/sprint/
+
+        .. ergast-api-map:: Races_SprintResults
+            :summary: API Mapping
+            :subcategory: SprintResults
+            :show-flat:
+
+        Args:
+            result_type: Overwrites the default result type
+            auto_cast: Overwrites the default value for ``auto_cast``
+        """
+        return self._build_result(endpoint='sprint',
+                                  table='RaceTable',
+                                  category=API.Races_SprintResults,
+                                  subcategory=API.SprintResults,
+                                  result_type=result_type,
+                                  auto_cast=auto_cast)
+
+    def get_driver_standings(
+            self,
+            result_type: Optional[Literal['pandas', 'raw']] = None,
+            auto_cast: Optional[bool] = None
+    ) -> Union[ErgastMultiResponse, ErgastRawResponse]:
+        """Get driver standings at specific points of a season.
+
+        See: https://ergast.com/mrd/methods/standings/
+
+        .. ergast-api-map:: StandingsLists_Driver
+            :summary: API Mapping
+            :subcategory: DriverStandings
+            :show-flat:
+
+        Args:
+            result_type: Overwrites the default result type
+            auto_cast: Overwrites the default value for ``auto_cast``
+        """
+        return self._build_result(endpoint='driverStandings',
+                                  table='StandingsTable',
+                                  category=API.StandingsLists_Driver,
+                                  subcategory=API.DriverStandings,
+                                  result_type=result_type,
+                                  auto_cast=auto_cast)
+
+    def get_constructor_standings(
+            self,
+            result_type: Optional[Literal['pandas', 'raw']] = None,
+            auto_cast: Optional[bool] = None
+    ) -> Union[ErgastMultiResponse, ErgastRawResponse]:
+        """Get constructor standings at specific points of a season.
+
+        See: https://ergast.com/mrd/methods/standings/
+
+        .. ergast-api-map:: StandingsLists_Constructor
+            :summary: API Mapping
+            :subcategory: ConstructorStandings
+            :show-flat:
+
+        Args:
+            result_type: Overwrites the default result type
+            auto_cast: Overwrites the default value for ``auto_cast``
+        """
+        return self._build_result(endpoint='constructorStandings',
+                                  table='StandingsTable',
+                                  category=API.StandingsLists_Constructor,
+                                  subcategory=API.ConstructorStandings,
+                                  result_type=result_type,
+                                  auto_cast=auto_cast)
+
+    def get_lap_times(self,
+                      result_type: Optional[Literal['pandas', 'raw']] = None,
+                      auto_cast: Optional[bool] = None
+                      ) -> Union[ErgastMultiResponse, ErgastRawResponse]:
+        """Get sprint results for one or multiple sprints.
+
+        See: https://ergast.com/mrd/methods/laps/
+
+        .. ergast-api-map:: Races_Laps
+            :summary: API Mapping
+            :subcategory: Laps
+            :show-flat:
+
+        Args:
+            result_type: Overwrites the default result type
+            auto_cast: Overwrites the default value for ``auto_cast``
+        """
+        return self._build_result(endpoint='laps',
+                                  table='RaceTable',
+                                  category=API.Races_Laps,
+                                  subcategory=API.Laps,
+                                  result_type=result_type,
+                                  auto_cast=auto_cast)
+
+    def get_pit_stops(self,
+                      result_type: Optional[Literal['pandas', 'raw']] = None,
+                      auto_cast: Optional[bool] = None
+                      ) -> Union[ErgastMultiResponse, ErgastRawResponse]:
+        """Get pit stop information for one or multiple sessions.
+
+        See: https://ergast.com/mrd/methods/standings/
+
+        .. ergast-api-map:: Races_PitStops
+            :summary: API Mapping
+            :subcategory: PitStops
+            :show-flat:
+
+        Args:
+            result_type: Overwrites the default result type
+            auto_cast: Overwrites the default value for ``auto_cast``
+        """
+        return self._build_result(endpoint='pitstops',
+                                  table='RaceTable',
+                                  category=API.Races_PitStops,
+                                  subcategory=API.PitStops,
+                                  result_type=result_type,
+                                  auto_cast=auto_cast)
 
 
 class ErgastException(Exception):
