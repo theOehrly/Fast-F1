@@ -72,8 +72,8 @@ class ErgastResultFrame(pd.DataFrame):
         for i in range(len(data)):
             _, data[i] = cls._flatten_element(data[i], category, cast)
 
-        if (postprocessor := category['post']) is not None:
-            data = postprocessor(data)
+        if (finalizer := category.get('finalize')) is not None:
+            data = finalizer(data)
 
         return data
 
@@ -387,7 +387,7 @@ class Ergast:
         See: https://ergast.com/mrd/methods/seasons/
 
         .. ergast-api-map:: Seasons
-            :summary: API Mapping
+            :describe-dataframe:
 
         Args:
             result_type: Overwrites the default result type
@@ -410,7 +410,7 @@ class Ergast:
         See: https://ergast.com/mrd/methods/schedule/
 
         .. ergast-api-map:: Races_Schedule
-            :summary: API Mapping
+            :describe-dataframe:
 
         Args:
             result_type: Overwrites the default result type
@@ -433,7 +433,7 @@ class Ergast:
         See: https://ergast.com/mrd/methods/drivers/
 
         .. ergast-api-map:: Drivers
-            :summary: API Mapping
+            :describe-dataframe:
 
         Args:
             result_type: Overwrites the default result type
@@ -456,7 +456,7 @@ class Ergast:
         See: https://ergast.com/mrd/methods/constructors/
 
         .. ergast-api-map:: Constructors
-            :summary: API Mapping
+            :describe-dataframe:
 
         Args:
             result_type: Overwrites the default result type
@@ -478,7 +478,7 @@ class Ergast:
         See: https://ergast.com/mrd/methods/circuits/
 
         .. ergast-api-map:: Circuits
-            :summary: API Mapping
+            :describe-dataframe:
 
         Args:
             result_type: Overwrites the default result type
@@ -501,7 +501,7 @@ class Ergast:
         See: https://ergast.com/mrd/methods/status/
 
         .. ergast-api-map:: Status
-            :summary: API Mapping
+            :describe-dataframe:
 
         Args:
             result_type: Overwrites the default result type
@@ -530,9 +530,8 @@ class Ergast:
         See: https://ergast.com/mrd/methods/results/
 
         .. ergast-api-map:: Races_RaceResults
-            :summary: API Mapping
             :subcategory: RaceResults
-            :show-flat:
+            :describe-dataframe:
 
         Args:
             result_type: Overwrites the default result type
@@ -555,9 +554,8 @@ class Ergast:
         See: https://ergast.com/mrd/methods/qualifying/
 
         .. ergast-api-map:: Races_QualifyingResults
-            :summary: API Mapping
             :subcategory: QualifyingResults
-            :show-flat:
+            :describe-dataframe:
 
         Args:
             result_type: Overwrites the default result type
@@ -580,9 +578,8 @@ class Ergast:
         See: https://ergast.com/mrd/methods/sprint/
 
         .. ergast-api-map:: Races_SprintResults
-            :summary: API Mapping
             :subcategory: SprintResults
-            :show-flat:
+            :describe-dataframe:
 
         Args:
             result_type: Overwrites the default result type
@@ -605,9 +602,8 @@ class Ergast:
         See: https://ergast.com/mrd/methods/standings/
 
         .. ergast-api-map:: StandingsLists_Driver
-            :summary: API Mapping
             :subcategory: DriverStandings
-            :show-flat:
+            :describe-dataframe:
 
         Args:
             result_type: Overwrites the default result type
@@ -630,9 +626,8 @@ class Ergast:
         See: https://ergast.com/mrd/methods/standings/
 
         .. ergast-api-map:: StandingsLists_Constructor
-            :summary: API Mapping
             :subcategory: ConstructorStandings
-            :show-flat:
+            :describe-dataframe:
 
         Args:
             result_type: Overwrites the default result type
@@ -654,9 +649,8 @@ class Ergast:
         See: https://ergast.com/mrd/methods/laps/
 
         .. ergast-api-map:: Races_Laps
-            :summary: API Mapping
             :subcategory: Laps
-            :show-flat:
+            :describe-dataframe:
 
         Args:
             result_type: Overwrites the default result type
@@ -678,9 +672,8 @@ class Ergast:
         See: https://ergast.com/mrd/methods/standings/
 
         .. ergast-api-map:: Races_PitStops
-            :summary: API Mapping
             :subcategory: PitStops
-            :show-flat:
+            :describe-dataframe:
 
         Args:
             result_type: Overwrites the default result type

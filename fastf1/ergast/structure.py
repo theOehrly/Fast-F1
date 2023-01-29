@@ -4,7 +4,8 @@ import re
 from typing import Optional
 
 
-# ### date and time conversion ###
+# ##############################################
+# ### functions for date and time conversion ###
 
 _time_string_matcher = re.compile(
     r'(\d{1,2}:)?(\d{1,2}:)?(\d{1,2})(\.\d{1,6})?(Z|[+-]\d{2}:\d{2})?'
@@ -88,11 +89,12 @@ def timedelta_from_ergast(t_str) -> Optional[datetime.timedelta]:
     return None
 
 
-# ### flattening of ergast response data ###
+# ########################################################
+# ### functions for flattening of ergast response data ###
 
 
-def flatten_by_rename(nested: dict, category: dict, flat: dict, *,
-                      cast: bool = True, rename: bool = True):
+def _flatten_by_rename(nested: dict, category: dict, flat: dict, *,
+                       cast: bool = True, rename: bool = True):
     """:meta private:
     Iterate over all values on the current level, rename them and
     add them to the flattened result dict. This is the default operation that
@@ -114,8 +116,8 @@ def flatten_by_rename(nested: dict, category: dict, flat: dict, *,
             flat[name] = value
 
 
-def flatten_inline_list_of_dicts(nested: list, category: dict, flat: dict, *,
-                                 cast: bool = True, rename: bool = True):
+def _flatten_inline_list_of_dicts(nested: dict, category: dict, flat: dict, *,
+                                  cast: bool = True, rename: bool = True):
     """:meta private:
     The current level is a single list of dictionaries, iterate over them and
     convert from a list of dictionaries::
@@ -158,158 +160,159 @@ def flatten_inline_list_of_dicts(nested: list, category: dict, flat: dict, *,
             else:
                 flat[name] = joined
 
-# ### category post-processors ###
 
-
-def transform_lap_data(data, *, is_doc=False):
+def _lap_timings_flatten_by_rename(nested: dict, category: dict, flat: dict, *,
+                                   cast: bool = True, rename: bool = True):
     """:meta private:
-    Finalizes the flattening of laps data. This is necessary because the
-    'Number' value needs to be augmented so that it exists for each lap. Then
-    it is possible to drop a nesting dimension.
+    Wrapper for :func:`flatten_by_rename` especially for lap timings.
+    This function additionally directly integrates the subkey 'Timings' into
+    the flattened results and converts the 'number' key to a list of value
+    to match the values from 'Timings'.
+    """
+    # apply the normal flatten_by_rename function
+    _flatten_by_rename(nested, category, flat, cast=cast, rename=rename)
 
-    Example, data after already performed flattening ::
+    # pop the 'Timings' subcategory from the nested object to process it
+    # here on this level already
+    subcontent = nested.pop('Timings')
+    # call its conversion method on its content to enable renaming and casting
+    # by doing so, the subcontent is already directly integrated into flat
+    Timings['method'](subcontent, Timings, flat, cast=cast, rename=rename)
+    # the subcontent is a list of values for each key while 'number' is a
+    # single value; therefore 'number' is augmented to a list of correct length
+    flat['number'] = [flat['number'], ] * len(flat['driverId'])
+
+
+# ################################
+# ### root category finalizers ###
+
+def _merge_dicts_of_lists(data):
+    """:meta-private:
+    Transform a list of equally keyed dictionaries that only contain lists into
+    a single dictionary containing these list joined together.
 
         [
-            {
-                'number' : 1,
-                'driverId': [alonso, hamilton, ...],
-                'time': [...],
-                ...
-            },{
-                'number' : 2,
-                'driverId': [alonso, hamilton, ...],
-                'time': [...],
-                ...
-            },
+            {'value' : [1, 2, 3], ...},
+            {'value' : [4, 5, 6], ...},
             ...
         ]
 
     Transform to ::
 
-        {
-            'number': [1, 1, ..., 2, 2, ..., ...],
-            'driverId': [alonso, hamilton, ..., alonso, hamilton, ..., ...],
-            'time': [...],
-            ...
-        }
+        {'value' : [1, 2, 3, 4, 5, 6, ...], ...},
     """
-    trans = None
-    try:
-        while data:
-            row = data.pop(0)
-            length = len(row['driverId'])
-            row['number'] = [row['number'], ] * length
-            if trans is None:
-                trans = row
-            else:
-                for key, value in row.items():
-                    trans[key].extend(value)
-    except KeyError:
-        logging.warning("Postprocessor on lap timing data failed")
-        return None
+    if len(data) <= 1:
+        return data[0]
 
-    return trans
+    for i in range(len(data) - 1):
+        _tmp = data.pop(1)
+        for key in data[0].keys():
+            data[0][key].extend(_tmp.pop(key))
 
+    return data[0]
+
+
+# #####################################
+# ### response subcategory elements ###
 
 FirstPractice = {
     'name': 'FirstPractice',
     'type': dict,
-    'method': flatten_by_rename,
+    'method': _flatten_by_rename,
     'map': {'date': {'name': 'fp1Date', 'type': date_from_ergast},
             'time': {'name': 'fp1Time', 'type': time_from_ergast}},
     'sub': [],
-    'post': None
+    'finalize': None
 }
 
 SecondPractice = {
     'name': 'SecondPractice',
     'type': dict,
-    'method': flatten_by_rename,
+    'method': _flatten_by_rename,
     'map': {'date': {'name': 'fp2Date', 'type': date_from_ergast},
             'time': {'name': 'fp2Time', 'type': time_from_ergast}},
     'sub': [],
-    'post': None
+    'finalize': None
 }
 
 ThirdPractice = {
     'name': 'ThirdPractice',
     'type': dict,
-    'method': flatten_by_rename,
+    'method': _flatten_by_rename,
     'map': {'date': {'name': 'fp3Date', 'type': date_from_ergast},
             'time': {'name': 'fp3Time', 'type': time_from_ergast}},
     'sub': [],
-    'post': None
+    'finalize': None
 }
 
 Qualifying = {
     'name': 'Qualifying',
     'type': dict,
-    'method': flatten_by_rename,
+    'method': _flatten_by_rename,
     'map': {'date': {'name': 'qualifyingDate', 'type': date_from_ergast},
             'time': {'name': 'qualifyingTime', 'type': time_from_ergast}},
     'sub': [],
-    'post': None
+    'finalize': None
 }
 
 Sprint = {
     'name': 'Sprint',
     'type': dict,
-    'method': flatten_by_rename,
+    'method': _flatten_by_rename,
     'map': {'date': {'name': 'sprintDate', 'type': date_from_ergast},
             'time': {'name': 'sprintTime', 'type': time_from_ergast}},
     'sub': [],
-    'post': None
+    'finalize': None
 }
 
 TotalRaceTime = {
     'name': 'Time',
     'type': dict,
-    'method': flatten_by_rename,
+    'method': _flatten_by_rename,
     'map': {
         'millis': {'name': 'totalRaceTimeMillis', 'type': int},
         'time': {'name': 'totalRaceTime', 'type': timedelta_from_ergast}
     },
     'sub': [],
-    'post': None
+    'finalize': None
 }
 
 FastestLapTime = {
     'name': 'Time',
     'type': dict,
-    'method': flatten_by_rename,
+    'method': _flatten_by_rename,
     'map': {
         'millis': {'name': 'fastestLapTimeMillis', 'type': int},
         'time': {'name': 'fastestLapTime', 'type': timedelta_from_ergast}
     },
     'sub': [],
-    'post': None
+    'finalize': None
 }
 
 FastestLapAvgSpeed = {
     'name': 'AverageSpeed',
     'type': dict,
-    'method': flatten_by_rename,
+    'method': _flatten_by_rename,
     'map': {'units': {'name': 'fastestLapAvgSpeedUnits', 'type': str},
             'speed': {'name': 'fastestLapAvgSpeed', 'type': float}},
     'sub': [],
-    'post': None
+    'finalize': None
 }
-
 
 FastestLap = {
     'name': 'FastestLap',
     'type': dict,
-    'method': flatten_by_rename,
+    'method': _flatten_by_rename,
     'map': {'rank': {'name': 'fastestLapRank', 'type': int},
             'lap': {'name': 'fastestLapNumber', 'type': int}},
     'sub': [FastestLapTime, FastestLapAvgSpeed],
-    'post': None
+    'finalize': None
 }
 
 Driver = {
     'name': 'Driver',
     'type': dict,
-    'method': flatten_by_rename,
+    'method': _flatten_by_rename,
     'map': {'driverId': {'name': 'driverId', 'type': str},
             'permanentNumber': {'name': 'driverNumber', 'type': int},
             'code': {'name': 'driverCode', 'type': str},
@@ -319,19 +322,19 @@ Driver = {
             'dateOfBirth': {'name': 'dateOfBirth', 'type': date_from_ergast},
             'nationality': {'name': 'driverNationality', 'type': str}},
     'sub': [],
-    'post': None
+    'finalize': None
 }
 
 Constructor = {
     'name': 'Constructor',
     'type': dict,
-    'method': flatten_by_rename,
+    'method': _flatten_by_rename,
     'map': {'constructorId': {'name': 'constructorId', 'type': str},
             'url': {'name': 'constructorUrl', 'type': str},
             'name': {'name': 'constructorName', 'type': str},
             'nationality': {'name': 'constructorNationality', 'type': str}},
     'sub': [],
-    'post': None
+    'finalize': None
 }
 
 ConstructorsInline = {
@@ -341,55 +344,55 @@ ConstructorsInline = {
     # for each data field
     'name': 'Constructors',
     'type': list,
-    'method': flatten_inline_list_of_dicts,
+    'method': _flatten_inline_list_of_dicts,
     'map': {'constructorId': {'name': 'constructorIds', 'type': str},
             'url': {'name': 'constructorUrls', 'type': str},
             'name': {'name': 'constructorNames', 'type': str},
             'nationality': {'name': 'constructorNationalities', 'type': str}},
     'sub': [],
-    'post': None
+    'finalize': None
 }
 
 Location = {
     'name': 'Location',
     'type': dict,
-    'method': flatten_by_rename,
+    'method': _flatten_by_rename,
     'map': {'lat': {'name': 'lat', 'type': float},
             'long': {'name': 'long', 'type': float},
             'locality': {'name': 'locality', 'type': str},
             'country': {'name': 'country', 'type': str}},
     'sub': [],
-    'post': None
+    'finalize': None
 }
 
 Circuit = {
     'name': 'Circuit',
     'type': dict,
-    'method': flatten_by_rename,
+    'method': _flatten_by_rename,
     'map': {'circuitId': {'name': 'circuitId', 'type': str},
             'url': {'name': 'circuitUrl', 'type': str},
             'circuitName': {'name': 'circuitName', 'type': str}},
     'sub': [Location],
-    'post': None
+    'finalize': None
 }
 
 QualifyingResults = {
     'name': 'QualifyingResults',
     'type': list,
-    'method': flatten_by_rename,
+    'method': _flatten_by_rename,
     'map': {'number': {'name': 'number', 'type': int},
             'position': {'name': 'position', 'type': int},
             'Q1': {'name': 'Q1', 'type': timedelta_from_ergast},
             'Q2': {'name': 'Q2', 'type': timedelta_from_ergast},
             'Q3': {'name': 'Q3', 'type': timedelta_from_ergast}},
     'sub': [Driver, Constructor],
-    'post': None
+    'finalize': None
 }
 
 RaceResults = {
     'name': 'Results',
     'type': list,
-    'method': flatten_by_rename,
+    'method': _flatten_by_rename,
     'map': {'number': {'name': 'number', 'type': int},
             'position': {'name': 'position', 'type': int},
             'positionText': {'name': 'positionText', 'type': str},
@@ -398,7 +401,7 @@ RaceResults = {
             'laps': {'name': 'laps', 'type': int},
             'status': {'name': 'status', 'type': str}},
     'sub': [Driver, Constructor, TotalRaceTime, FastestLap],
-    'post': None
+    'finalize': None
 }
 
 SprintResults = {
@@ -409,13 +412,13 @@ SprintResults = {
 DriverStandings = {
     'name': 'DriverStandings',
     'type': list,
-    'method': flatten_by_rename,
+    'method': _flatten_by_rename,
     'map': {'position': {'name': 'position', 'type': int},
             'positionText': {'name': 'positionText', 'type': str},
             'points': {'name': 'points', 'type': int},
             'wins': {'name': 'wins', 'type': int}},
     'sub': [Driver, ConstructorsInline],
-    'post': None
+    'finalize': None
 }
 
 ConstructorStandings = {
@@ -427,55 +430,57 @@ ConstructorStandings = {
 Timings = {
     'name': 'Timings',
     'type': list,
-    'method': flatten_inline_list_of_dicts,
+    'method': _flatten_inline_list_of_dicts,
     'map': {'driverId': {'name': 'driverId', 'type': str},
             'position': {'name': 'position', 'type': int},
-            'time': {'name': 'time', 'type': timedelta_from_ergast}},
+            'time': {'name': 'time', 'type': timedelta_from_ergast},
+            },
     'sub': [],
-    'post': None
+    'finalize': None
 }
 
 Laps = {
     'name': 'Laps',
     'type': list,
-    'method': flatten_by_rename,
+    'method': _lap_timings_flatten_by_rename,
     'map': {'number': {'name': 'number', 'type': int}},
     'sub': [Timings],
-    'post': transform_lap_data
+    'finalize': _merge_dicts_of_lists
 }
 
 PitStops = {
     'name': 'PitStops',
     'type': list,
-    'method': flatten_by_rename,
+    'method': _flatten_by_rename,
     'map': {'driverId': {'name': 'driverId', 'type': str},
             'stop': {'name': 'stop', 'type': int},
             'lap': {'name': 'lap', 'type': int},
             'time': {'name': 'time', 'type': time_from_ergast},
             'duration': {'name': 'duration', 'type': timedelta_from_ergast}},
     'sub': [Driver, ConstructorsInline],
-    'post': None
+    'finalize': None
 }
 
+# ##############################
 # ### response root elements ###
 
 Seasons = {
     'name': 'Seasons',
     'type': list,
-    'method': flatten_by_rename,
+    'method': _flatten_by_rename,
     'map': {'season': {'name': 'season', 'type': int},
             'url': {'name': 'seasonUrl', 'type': str}},
     'sub': [],
-    'post': None
+    'finalize': None
 }
 
 __StandingsLists = {
     'name': 'StandingsLists',
     'type': list,
-    'method': flatten_by_rename,
+    'method': _flatten_by_rename,
     'map': {'season': {'name': 'season', 'type': int},
             'round': {'name': 'round', 'type': int}},
-    'post': None
+    'finalize': None
 }
 
 StandingsLists_Driver = {
@@ -492,14 +497,14 @@ __Races = {
     # template for all 'Races' based categories
     'name': 'Races',
     'type': list,
-    'method': flatten_by_rename,
+    'method': _flatten_by_rename,
     'map': {'season': {'name': 'season', 'type': int},
             'round': {'name': 'round', 'type': int},
             'url': {'name': 'raceUrl', 'type': str},
             'raceName': {'name': 'raceName', 'type': str},
             'date': {'name': 'raceDate', 'type': date_from_ergast},
             'time': {'name': 'raceTime', 'type': time_from_ergast}},
-    'post': None
+    'finalize': None
 }
 
 Races_Schedule = {
@@ -525,7 +530,7 @@ Races_SprintResults = {
 
 Races_Laps = {
     **__Races,
-    'sub': [Circuit]
+    'sub': [Circuit, Laps]
 }
 
 Races_PitStops = {
@@ -554,10 +559,10 @@ Circuits = {
 Status = {
     'name': 'Status',
     'type': list,
-    'method': flatten_by_rename,
+    'method': _flatten_by_rename,
     'map': {'statusId': {'name': 'statusId', 'type': int},
             'count': {'name': 'count', 'type': int},
             'status': {'name': 'status', 'type': str}},
     'sub': [],
-    'post': None
+    'finalize': None
 }
