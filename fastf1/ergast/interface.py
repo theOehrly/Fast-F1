@@ -15,21 +15,57 @@ HEADERS = {'User-Agent': f'FastF1/{__version__}'}
 
 
 class ErgastResponseMixin:
-    def __init__(self, *args, response_headers: dict,
-                 query_filters: dict, **kwargs):
+    def __init__(self, *args, response_headers: dict, query_filters: dict,
+                 metadata: dict, selectors: list, **kwargs):
         super().__init__(*args, **kwargs)
         self._response_headers = response_headers
         self._query_filters = query_filters
+        self._metadata = metadata
+        self._selectors = selectors
 
     @property
     def total_results(self):
-        return self._response_headers.get("total", "")
+        return int(self._response_headers.get("total", 0))
+
+    @property
+    def is_complete(self):
+        # if offset is non-zero, data is missing at the beginning
+        if int(self._response_headers.get('offset', 0)) != 0:
+            return False
+
+        # if limit is less than total, data is missing at the end
+        return (int(self._response_headers.get("limit", 0))
+                < int(self._response_headers.get("total", 0)))
 
     def get_next_result_page(self):
-        raise NotImplementedError
+        n_last = (int(self._response_headers.get("offset", 0))
+                  + int(self._response_headers.get("limit", 0)))
+
+        if n_last >= int(self._response_headers.get("total", 0)):
+            raise ValueError("No more data after this response.")
+
+        return Ergast()._build_default_result(  # noqa: access to builtin
+            **self._metadata,
+            selectors=self._selectors,
+            limit=int(self._response_headers.get("limit")),
+            offset=n_last
+        )
 
     def get_prev_result_page(self):
-        raise NotImplementedError
+        n_first = int(self._response_headers.get("offset", 0))
+
+        if n_first <= 0:
+            raise ValueError("No more data before this response.")
+
+        limit = int(self._response_headers.get("limit", 0))
+        new_offset = max(n_first - limit, 0)
+
+        return Ergast()._build_default_result(  # noqa: access to builtin
+            **self._metadata,
+            selectors=self._selectors,
+            limit=int(self._response_headers.get("limit")),
+            offset=new_offset
+        )
 
     def get_all_results(self):
         # TODO: may need manual rate limiting; better: add in 'Ergast'
@@ -155,14 +191,11 @@ class ErgastRawResponse(ErgastResponseMixin, list):
         auto_cast: Determines if values are automatically cast to the most
             appropriate data type from their original string representation
     """
-    def __init__(self, *, response_headers, query_filters, query_result,
-                 category, auto_cast):
+    def __init__(self, *, query_result, category, auto_cast, **kwargs):
         if auto_cast:
             query_result = self._prepare_response(query_result, category)
 
-        super().__init__(query_result,
-                         response_headers=response_headers,
-                         query_filters=query_filters)
+        super().__init__(query_result, **kwargs)
 
     @classmethod
     def _prepare_response(cls, query_result, category):
@@ -348,27 +381,32 @@ class Ergast:
         # will only return circuits that hosted a GP in 2022
 
     Args:
-        result_type: determines the default type of the returned result object
+        result_type: Determines the default type of the returned result object
 
             - 'raw': :class:`ErgastRawResponse`
             - 'pandas': :class:`ErgastSimpleResponse` or
               :class:`ErgastMultiResponse` depending on endpoint
 
-        auto_cast: determines whether result values are cast from there default
+        auto_cast: Determines whether result values are cast from there default
             string representation to a better matching type
-    """
-    # TODO: maximum size of response and offset relevant?
 
+        limit: The maximum number of results returned by the API. Defaults to
+            30 if not set. Maximum: 1000. See also "Response Paging",
+            https://ergast.com/mrd/.
+    """
     def __init__(self,
                  result_type: Literal['raw', 'pandas'] = 'raw',
-                 auto_cast: bool = True):
+                 auto_cast: bool = True,
+                 limit: Optional[int] = None):
         self._selectors = []
         self._default_result_type = result_type
         self._default_auto_cast = auto_cast
+        self._limit = limit
 
-    def _get(self, url: str) -> Union[dict, list]:
-        # request data from ergast and load the returned json data
-        r = Cache.requests_get(url, headers=HEADERS)
+    @classmethod
+    def _get(cls, url: str, params: dict) -> Union[dict, list]:
+        # request data from ergast and load the returned json data.
+        r = Cache.requests_get(url, headers=HEADERS, params=params)
         if r.status_code == 200:
             try:
                 return json.loads(r.content.decode('utf-8'))
@@ -382,14 +420,59 @@ class Ergast:
                 f"Server response: '{r.reason}'"
             )
 
+    @staticmethod
+    def _build_url(endpoint: Optional[str] = None,
+                   selectors: Optional[list] = None) -> str:
+        # build url from base, selector and endpoint
+        url_fragments = [BASE_URL]
+        if selectors is not None:
+            url_fragments.extend(selectors)
+        if endpoint is not None:
+            url_fragments.append(f"/{endpoint}")
+        url_fragments.append(".json")
+        url = ''.join(url_fragments)
+        return url
+
+    def _build_default_result(
+            self, *,
+            result_type: Optional[Literal['pandas', 'raw']] = None,
+            auto_cast: Optional[bool] = None,
+            limit: Optional[int] = None,
+            selectors: Optional[list] = None,
+            **kwargs
+    ) -> Union[ErgastSimpleResponse,
+               ErgastMultiResponse,
+               ErgastRawResponse]:
+        # use defaults or per-call overrides if specified
+        if result_type is None:
+            result_type = self._default_result_type
+        if auto_cast is None:
+            auto_cast = self._default_auto_cast
+        if limit is None:
+            limit = self._limit
+        if selectors is None:
+            selectors = self._selectors
+
+        return self._build_result(
+            result_type=result_type,
+            auto_cast=auto_cast,
+            limit=limit,
+            selectors=selectors,
+            **kwargs
+        )
+
+    @classmethod
     def _build_result(
-            self,
+            cls, *,
             endpoint: Optional[str],
             table: str,
             category: dict,
             subcategory: Optional[dict],
             result_type: Optional[Literal['pandas', 'raw']] = None,
             auto_cast: Optional[bool] = None,
+            limit: Optional[int] = None,
+            offset: Optional[int] = None,
+            selectors: Optional[list] = None,
     ) -> Union[ErgastSimpleResponse,
                ErgastMultiResponse,
                ErgastRawResponse]:
@@ -397,35 +480,28 @@ class Ergast:
         # split the raw response into multiple parts, depending also on what
         # type was selected for the response data format.
 
-        # use defaults or per-call overrides if specified
-        if result_type is None:
-            result_type = self._default_result_type
-        if auto_cast is None:
-            auto_cast = self._default_auto_cast
-
-        # build url from base, selector and endpoint
-        url_fragments = [BASE_URL]
-        if self._selectors is not None:
-            url_fragments.extend(self._selectors)
-        if endpoint is not None:
-            url_fragments.append(f"/{endpoint}")
-        url_fragments.append(".json")
-        url = ''.join(url_fragments)
+        url = cls._build_url(endpoint, selectors=selectors)
+        params = {'limit': limit, 'offset': offset}
 
         # get response and split it into individual parts
-        resp = self._get(url)
+        resp = cls._get(url, params)
         resp = resp['MRData']
         body = resp.pop(table)
         # response headers remain in response
         query_result = body.pop(category['name'])
         # query filters remain in body
 
+        query_metadata = {'endpoint': endpoint, 'table': table,
+                          'category': category, 'subcategory': subcategory,
+                          'result_type': result_type, 'auto_cast': auto_cast}
+
         if result_type == 'raw':
-            return ErgastRawResponse(response_headers=resp,
-                                     query_filters=body,
-                                     query_result=query_result,
-                                     category=category,
-                                     auto_cast=auto_cast)
+            return ErgastRawResponse(
+                response_headers=resp, query_filters=body,
+                metadata=query_metadata, selectors=selectors,
+                query_result=query_result, category=category,
+                auto_cast=auto_cast
+            )
 
         if result_type == 'pandas':
             # result element description remains in query result
@@ -435,19 +511,21 @@ class Ergast:
                     result_element_data.append(
                         query_result[i].pop(subcategory['name'])
                     )
-                return ErgastMultiResponse(response_headers=resp,
-                                           query_filters=body,
-                                           response_description=query_result,
-                                           response_data=result_element_data,
-                                           category=category,
-                                           subcategory=subcategory,
-                                           auto_cast=auto_cast)
+                return ErgastMultiResponse(
+                    response_headers=resp, query_filters=body,
+                    metadata=query_metadata, selectors=selectors,
+                    response_description=query_result,
+                    response_data=result_element_data,
+                    category=category, subcategory=subcategory,
+                    auto_cast=auto_cast
+                )
             else:
-                return ErgastSimpleResponse(response_headers=resp,
-                                            query_filters=body,
-                                            response=query_result,
-                                            category=category,
-                                            auto_cast=auto_cast)
+                return ErgastSimpleResponse(
+                    response_headers=resp, query_filters=body,
+                    metadata=query_metadata, selectors=selectors,
+                    response=query_result, category=category,
+                    auto_cast=auto_cast
+                )
 
     def select(self,
                season: Union[Literal['current'], int] = None,
@@ -504,7 +582,9 @@ class Ergast:
     # can be represented by a DataFrame-like object
     def get_seasons(self,
                     result_type: Optional[Literal['pandas', 'raw']] = None,
-                    auto_cast: Optional[bool] = None
+                    auto_cast: Optional[bool] = None,
+                    limit: Optional[int] = None,
+                    offset: Optional[int] = None
                     ) -> Union[ErgastSimpleResponse, ErgastRawResponse]:
         """Get a list of seasons.
 
@@ -516,18 +596,26 @@ class Ergast:
         Args:
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
+            limit: Overwrites the default value for ``limit``
+            offset: An offset into the result set for response paging.
+                Defaults to 0 if not set. See also "Response Paging",
+                https://ergast.com/mrd/.
         """
-        return self._build_result(endpoint='seasons',
-                                  table='SeasonTable',
-                                  category=API.Seasons,
-                                  subcategory=None,
-                                  result_type=result_type,
-                                  auto_cast=auto_cast)
+        return self._build_default_result(endpoint='seasons',
+                                          table='SeasonTable',
+                                          category=API.Seasons,
+                                          subcategory=None,
+                                          result_type=result_type,
+                                          auto_cast=auto_cast,
+                                          limit=limit,
+                                          offset=offset)
 
     def get_race_schedule(
             self,
             result_type: Optional[Literal['pandas', 'raw']] = None,
-            auto_cast: Optional[bool] = None
+            auto_cast: Optional[bool] = None,
+            limit: Optional[int] = None,
+            offset: Optional[int] = None
     ) -> Union[ErgastSimpleResponse, ErgastRawResponse]:
         """Get a list of races.
 
@@ -539,18 +627,26 @@ class Ergast:
         Args:
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
+            limit: Overwrites the default value for ``limit``
+            offset: An offset into the result set for response paging.
+                Defaults to 0 if not set. See also "Response Paging",
+                https://ergast.com/mrd/.
         """
-        return self._build_result(endpoint='races',
-                                  table='RaceTable',
-                                  category=API.Races_Schedule,
-                                  subcategory=None,
-                                  result_type=result_type,
-                                  auto_cast=auto_cast)
+        return self._build_default_result(endpoint='races',
+                                          table='RaceTable',
+                                          category=API.Races_Schedule,
+                                          subcategory=None,
+                                          result_type=result_type,
+                                          auto_cast=auto_cast,
+                                          limit=limit,
+                                          offset=offset)
 
     def get_driver_info(
             self,
             result_type: Optional[Literal['pandas', 'raw']] = None,
-            auto_cast: Optional[bool] = None
+            auto_cast: Optional[bool] = None,
+            limit: Optional[int] = None,
+            offset: Optional[int] = None
     ) -> Union[ErgastSimpleResponse, ErgastRawResponse]:
         """Get a list of drivers.
 
@@ -562,18 +658,26 @@ class Ergast:
         Args:
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
+            limit: Overwrites the default value for ``limit``
+            offset: An offset into the result set for response paging.
+                Defaults to 0 if not set. See also "Response Paging",
+                https://ergast.com/mrd/.
         """
-        return self._build_result(endpoint='drivers',
-                                  table='DriverTable',
-                                  category=API.Drivers,
-                                  subcategory=None,
-                                  result_type=result_type,
-                                  auto_cast=auto_cast)
+        return self._build_default_result(endpoint='drivers',
+                                          table='DriverTable',
+                                          category=API.Drivers,
+                                          subcategory=None,
+                                          result_type=result_type,
+                                          auto_cast=auto_cast,
+                                          limit=limit,
+                                          offset=offset)
 
     def get_constructor_info(
             self,
             result_type: Optional[Literal['pandas', 'raw']] = None,
-            auto_cast: Optional[bool] = None
+            auto_cast: Optional[bool] = None,
+            limit: Optional[int] = None,
+            offset: Optional[int] = None
     ) -> Union[ErgastSimpleResponse, ErgastRawResponse]:
         """Get a list of constructors.
 
@@ -585,17 +689,25 @@ class Ergast:
         Args:
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
+            limit: Overwrites the default value for ``limit``
+            offset: An offset into the result set for response paging.
+                Defaults to 0 if not set. See also "Response Paging",
+                https://ergast.com/mrd/.
         """
-        return self._build_result(endpoint='constructors',
-                                  table='ConstructorTable',
-                                  category=API.Constructors,
-                                  subcategory=None,
-                                  result_type=result_type,
-                                  auto_cast=auto_cast)
+        return self._build_default_result(endpoint='constructors',
+                                          table='ConstructorTable',
+                                          category=API.Constructors,
+                                          subcategory=None,
+                                          result_type=result_type,
+                                          auto_cast=auto_cast,
+                                          limit=limit,
+                                          offset=offset)
 
     def get_circuits(self,
                      result_type: Optional[Literal['pandas', 'raw']] = None,
-                     auto_cast: Optional[bool] = None
+                     auto_cast: Optional[bool] = None,
+                     limit: Optional[int] = None,
+                     offset: Optional[int] = None
                      ) -> Union[ErgastSimpleResponse, ErgastRawResponse]:
         """Get a list of circuits.
 
@@ -607,18 +719,26 @@ class Ergast:
         Args:
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
+            limit: Overwrites the default value for ``limit``
+            offset: An offset into the result set for response paging.
+                Defaults to 0 if not set. See also "Response Paging",
+                https://ergast.com/mrd/.
         """
-        return self._build_result(endpoint='circuits',
-                                  table='CircuitTable',
-                                  category=API.Circuits,
-                                  subcategory=None,
-                                  result_type=result_type,
-                                  auto_cast=auto_cast)
+        return self._build_default_result(endpoint='circuits',
+                                          table='CircuitTable',
+                                          category=API.Circuits,
+                                          subcategory=None,
+                                          result_type=result_type,
+                                          auto_cast=auto_cast,
+                                          limit=limit,
+                                          offset=offset)
 
     def get_finishing_status(
             self,
             result_type: Optional[Literal['pandas', 'raw']] = None,
-            auto_cast: Optional[bool] = None
+            auto_cast: Optional[bool] = None,
+            limit: Optional[int] = None,
+            offset: Optional[int] = None
     ) -> Union[ErgastSimpleResponse, ErgastRawResponse]:
         """Get a list of finishing status codes.
 
@@ -630,13 +750,19 @@ class Ergast:
         Args:
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
+            limit: Overwrites the default value for ``limit``
+            offset: An offset into the result set for response paging.
+                Defaults to 0 if not set. See also "Response Paging",
+                https://ergast.com/mrd/.
         """
-        return self._build_result(endpoint='status',
-                                  table='StatusTable',
-                                  category=API.Status,
-                                  subcategory=None,
-                                  result_type=result_type,
-                                  auto_cast=auto_cast)
+        return self._build_default_result(endpoint='status',
+                                          table='StatusTable',
+                                          category=API.Status,
+                                          subcategory=None,
+                                          result_type=result_type,
+                                          auto_cast=auto_cast,
+                                          limit=limit,
+                                          offset=offset)
 
     # ### endpoint with multi-result responses ###
     #
@@ -647,7 +773,9 @@ class Ergast:
     def get_race_results(
             self,
             result_type: Optional[Literal['pandas', 'raw']] = None,
-            auto_cast: Optional[bool] = None
+            auto_cast: Optional[bool] = None,
+            limit: Optional[int] = None,
+            offset: Optional[int] = None
     ) -> Union[ErgastMultiResponse, ErgastRawResponse]:
         """Get race results for one or multiple races.
 
@@ -660,18 +788,26 @@ class Ergast:
         Args:
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
+            limit: Overwrites the default value for ``limit``
+            offset: An offset into the result set for response paging.
+                Defaults to 0 if not set. See also "Response Paging",
+                https://ergast.com/mrd/.
         """
-        return self._build_result(endpoint='results',
-                                  table='RaceTable',
-                                  category=API.Races_RaceResults,
-                                  subcategory=API.RaceResults,
-                                  result_type=result_type,
-                                  auto_cast=auto_cast)
+        return self._build_default_result(endpoint='results',
+                                          table='RaceTable',
+                                          category=API.Races_RaceResults,
+                                          subcategory=API.RaceResults,
+                                          result_type=result_type,
+                                          auto_cast=auto_cast,
+                                          limit=limit,
+                                          offset=offset)
 
     def get_qualifying_results(
             self,
             result_type: Optional[Literal['pandas', 'raw']] = None,
-            auto_cast: Optional[bool] = None
+            auto_cast: Optional[bool] = None,
+            limit: Optional[int] = None,
+            offset: Optional[int] = None
     ) -> Union[ErgastMultiResponse, ErgastRawResponse]:
         """Get qualifying results for one or multiple qualifying sessions.
 
@@ -684,18 +820,26 @@ class Ergast:
         Args:
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
+            limit: Overwrites the default value for ``limit``
+            offset: An offset into the result set for response paging.
+                Defaults to 0 if not set. See also "Response Paging",
+                https://ergast.com/mrd/.
         """
-        return self._build_result(endpoint='qualifying',
-                                  table='RaceTable',
-                                  category=API.Races_QualifyingResults,
-                                  subcategory=API.QualifyingResults,
-                                  result_type=result_type,
-                                  auto_cast=auto_cast)
+        return self._build_default_result(endpoint='qualifying',
+                                          table='RaceTable',
+                                          category=API.Races_QualifyingResults,
+                                          subcategory=API.QualifyingResults,
+                                          result_type=result_type,
+                                          auto_cast=auto_cast,
+                                          limit=limit,
+                                          offset=offset)
 
     def get_sprint_results(
             self,
             result_type: Optional[Literal['pandas', 'raw']] = None,
-            auto_cast: Optional[bool] = None
+            auto_cast: Optional[bool] = None,
+            limit: Optional[int] = None,
+            offset: Optional[int] = None
     ) -> Union[ErgastMultiResponse, ErgastRawResponse]:
         """Get sprint results for one or multiple sprints.
 
@@ -708,18 +852,26 @@ class Ergast:
         Args:
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
+            limit: Overwrites the default value for ``limit``
+            offset: An offset into the result set for response paging.
+                Defaults to 0 if not set. See also "Response Paging",
+                https://ergast.com/mrd/.
         """
-        return self._build_result(endpoint='sprint',
-                                  table='RaceTable',
-                                  category=API.Races_SprintResults,
-                                  subcategory=API.SprintResults,
-                                  result_type=result_type,
-                                  auto_cast=auto_cast)
+        return self._build_default_result(endpoint='sprint',
+                                          table='RaceTable',
+                                          category=API.Races_SprintResults,
+                                          subcategory=API.SprintResults,
+                                          result_type=result_type,
+                                          auto_cast=auto_cast,
+                                          limit=limit,
+                                          offset=offset)
 
     def get_driver_standings(
             self,
             result_type: Optional[Literal['pandas', 'raw']] = None,
-            auto_cast: Optional[bool] = None
+            auto_cast: Optional[bool] = None,
+            limit: Optional[int] = None,
+            offset: Optional[int] = None
     ) -> Union[ErgastMultiResponse, ErgastRawResponse]:
         """Get driver standings at specific points of a season.
 
@@ -732,18 +884,26 @@ class Ergast:
         Args:
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
+            limit: Overwrites the default value for ``limit``
+            offset: An offset into the result set for response paging.
+                Defaults to 0 if not set. See also "Response Paging",
+                https://ergast.com/mrd/.
         """
-        return self._build_result(endpoint='driverStandings',
-                                  table='StandingsTable',
-                                  category=API.StandingsLists_Driver,
-                                  subcategory=API.DriverStandings,
-                                  result_type=result_type,
-                                  auto_cast=auto_cast)
+        return self._build_default_result(endpoint='driverStandings',
+                                          table='StandingsTable',
+                                          category=API.StandingsLists_Driver,
+                                          subcategory=API.DriverStandings,
+                                          result_type=result_type,
+                                          auto_cast=auto_cast,
+                                          limit=limit,
+                                          offset=offset)
 
     def get_constructor_standings(
             self,
             result_type: Optional[Literal['pandas', 'raw']] = None,
-            auto_cast: Optional[bool] = None
+            auto_cast: Optional[bool] = None,
+            limit: Optional[int] = None,
+            offset: Optional[int] = None
     ) -> Union[ErgastMultiResponse, ErgastRawResponse]:
         """Get constructor standings at specific points of a season.
 
@@ -756,17 +916,27 @@ class Ergast:
         Args:
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
+            limit: Overwrites the default value for ``limit``
+            offset: An offset into the result set for response paging.
+                Defaults to 0 if not set. See also "Response Paging",
+                https://ergast.com/mrd/.
         """
-        return self._build_result(endpoint='constructorStandings',
-                                  table='StandingsTable',
-                                  category=API.StandingsLists_Constructor,
-                                  subcategory=API.ConstructorStandings,
-                                  result_type=result_type,
-                                  auto_cast=auto_cast)
+        return self._build_default_result(
+            endpoint='constructorStandings',
+            table='StandingsTable',
+            category=API.StandingsLists_Constructor,
+            subcategory=API.ConstructorStandings,
+            result_type=result_type,
+            auto_cast=auto_cast,
+            limit=limit,
+            offset=offset
+        )
 
     def get_lap_times(self,
                       result_type: Optional[Literal['pandas', 'raw']] = None,
-                      auto_cast: Optional[bool] = None
+                      auto_cast: Optional[bool] = None,
+                      limit: Optional[int] = None,
+                      offset: Optional[int] = None
                       ) -> Union[ErgastMultiResponse, ErgastRawResponse]:
         """Get sprint results for one or multiple sprints.
 
@@ -779,17 +949,25 @@ class Ergast:
         Args:
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
+            limit: Overwrites the default value for ``limit``
+            offset: An offset into the result set for response paging.
+                Defaults to 0 if not set. See also "Response Paging",
+                https://ergast.com/mrd/.
         """
-        return self._build_result(endpoint='laps',
-                                  table='RaceTable',
-                                  category=API.Races_Laps,
-                                  subcategory=API.Laps,
-                                  result_type=result_type,
-                                  auto_cast=auto_cast)
+        return self._build_default_result(endpoint='laps',
+                                          table='RaceTable',
+                                          category=API.Races_Laps,
+                                          subcategory=API.Laps,
+                                          result_type=result_type,
+                                          auto_cast=auto_cast,
+                                          limit=limit,
+                                          offset=offset)
 
     def get_pit_stops(self,
                       result_type: Optional[Literal['pandas', 'raw']] = None,
-                      auto_cast: Optional[bool] = None
+                      auto_cast: Optional[bool] = None,
+                      limit: Optional[int] = None,
+                      offset: Optional[int] = None
                       ) -> Union[ErgastMultiResponse, ErgastRawResponse]:
         """Get pit stop information for one or multiple sessions.
 
@@ -802,13 +980,19 @@ class Ergast:
         Args:
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
+            limit: Overwrites the default value for ``limit``
+            offset: An offset into the result set for response paging.
+                Defaults to 0 if not set. See also "Response Paging",
+                https://ergast.com/mrd/.
         """
-        return self._build_result(endpoint='pitstops',
-                                  table='RaceTable',
-                                  category=API.Races_PitStops,
-                                  subcategory=API.PitStops,
-                                  result_type=result_type,
-                                  auto_cast=auto_cast)
+        return self._build_default_result(endpoint='pitstops',
+                                          table='RaceTable',
+                                          category=API.Races_PitStops,
+                                          subcategory=API.PitStops,
+                                          result_type=result_type,
+                                          auto_cast=auto_cast,
+                                          limit=limit,
+                                          offset=offset)
 
 
 class ErgastException(Exception):
