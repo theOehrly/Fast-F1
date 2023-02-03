@@ -125,6 +125,11 @@ class ErgastResultFrame(pd.DataFrame):
 
 
 class ErgastResultSeries(pd.Series):
+    """
+    Wraps a Pandas ``Series``.
+
+    Currently, no extra functionality is implemented.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -204,9 +209,98 @@ class ErgastMultiResponse(ErgastResponseMixin):
 
     This class additionally offers response information and paging
     (see :class:`ErgastResponseMixin`).
+
+    Note: You this object is usually not instantiated by the user. Instead
+    you should use one of the API endpoint methods that are provided by
+    :class:`Ergast` get data from the API.
+
+    Example:
+
+    .. doctest::
+
+        >>> from fastf1.ergast import Ergast
+        >>> ergast = Ergast(result_type='pandas', auto_cast=True)
+        >>> result = ergast.select(season=2022).get_race_results()
+
+        # The description shows that the result includes data from two
+        # grand prix.
+        >>> result.description
+           season  round  ... locality       country
+        0    2022      1  ...   Sakhir       Bahrain
+        1    2022      2  ...   Jeddah  Saudi Arabia
+        <BLANKLINE>
+        [2 rows x 13 columns]
+
+        # As expected, ``result.content`` contains two elements, one for each
+        # row of the description
+        >>> len(result.content)
+        2
+
+        # The first element contains all results from the first of the two
+        # grand prix.
+        >>> result.content[0]
+            number  position  ... fastestLapAvgSpeedUnits  fastestLapAvgSpeed
+        0       16         1  ...                     kph             206.018
+        1       55         2  ...                     kph             203.501
+        2       44         3  ...                     kph             202.469
+        3       63         4  ...                     kph             202.313
+        4       20         5  ...                     kph             201.641
+        5       77         6  ...                     kph             201.691
+        6       31         7  ...                     kph             200.630
+        7       22         8  ...                     kph             200.642
+        8       14         9  ...                     kph             201.412
+        9       24        10  ...                     kph             201.512
+        10      47        11  ...                     kph             200.948
+        11      18        12  ...                     kph             200.555
+        12      23        13  ...                     kph             200.125
+        13       3        14  ...                     kph             200.318
+        14       4        15  ...                     kph             200.882
+        15       6        16  ...                     kph             198.300
+        16      27        17  ...                     kph             198.401
+        17      11        18  ...                     kph             202.762
+        18       1        19  ...                     kph             204.140
+        19      10        20  ...                     kph             200.189
+        <BLANKLINE>
+        [20 rows x 26 columns]
+
+        # The second element is incomplete and only contains the first 11
+        # positions of the second Grand Prix. This is because by default,
+        # every query on Ergast is limited to 30 result values. You can
+        # manually change this limit for each request though.
+        >>> result.content[1]
+           number  position  ... fastestLapAvgSpeedUnits  fastestLapAvgSpeed
+        0       1         1  ...                     kph             242.191
+        1      16         2  ...                     kph             242.556
+        2      55         3  ...                     kph             241.841
+        3      11         4  ...                     kph             241.481
+        4      63         5  ...                     kph             239.454
+        5      31         6  ...                     kph             238.729
+        6       4         7  ...                     kph             239.629
+        7      10         8  ...                     kph             237.796
+        8      20         9  ...                     kph             239.562
+        9      44        10  ...                     kph             239.001
+        <BLANKLINE>
+        [10 rows x 26 columns]
+
+    Args:
+        response_description: Ergast response containing only the "descriptive"
+            information (only data that is available in :attr:`.description`)
+        response_data: A list of the "content" data that has been split from
+            the Ergast response (data that is available in :attr:`.content`)
+        category: A category object from :mod:`fastf1.ergast.structure`
+            that defines the main category.
+        subcategory: A category object from :mod:`fastf1.ergast.structure`
+            that defines the subcategory which is the content data.
+        auto_cast: Flag that enables or disables automatic casting from the
+            original string representation to the most suitable data type.
     """
-    def __init__(self, *args, response_description, response_data, category,
-                 subcategory, auto_cast, **kwargs):
+    def __init__(self, *args,
+                 response_description: dict,
+                 response_data: list,
+                 category: dict,
+                 subcategory: dict,
+                 auto_cast: bool,
+                 **kwargs):
         super().__init__(*args, **kwargs)
         self._description = ErgastResultFrame(response=response_description,
                                               category=category,
@@ -218,15 +312,41 @@ class ErgastMultiResponse(ErgastResponseMixin):
 
     @property
     def description(self) -> ErgastResultFrame:
+        """An :class:`ErgastResultFrame` that describes the data in
+        :attr:`.content`.
+
+        Each row of this :class:`ErgastResultFrame` contains the descriptive
+        information for one element in :attr:`.content`.
+        """
         return self._description
 
     @property
     def content(self) -> List[ErgastResultFrame]:
+        """A ``list`` of :class:`ErgastResultFrame` that contain the main
+        response data.
+
+        Descriptive data for each :class:`ErgastResultFrame` is given in the
+        corresponding row of :attr:`.description`.
+        """
         return self._content
 
 
 class Ergast:
     """
+    The main object that acts as an interface to the Ergast API.
+
+    For each API endpoint, there is a separate method implemented to
+    request data. All methods have in common, that they can be preceded by a
+    call to :func:`.select` to filter the results.
+
+    Example::
+
+        ergast = Ergast()
+        ergast.get_circuits()
+        # will return all circuits in the database
+        ergast.select(season=2022).get_circuits()
+        # will only return circuits that hosted a GP in 2022
+
     Args:
         result_type: determines the default type of the returned result object
 
@@ -247,6 +367,7 @@ class Ergast:
         self._default_auto_cast = auto_cast
 
     def _get(self, url: str) -> Union[dict, list]:
+        # request data from ergast and load the returned json data
         r = Cache.requests_get(url, headers=HEADERS)
         if r.status_code == 200:
             try:
@@ -272,6 +393,9 @@ class Ergast:
     ) -> Union[ErgastSimpleResponse,
                ErgastMultiResponse,
                ErgastRawResponse]:
+        # query the Ergast database and
+        # split the raw response into multiple parts, depending also on what
+        # type was selected for the response data format.
 
         # use defaults or per-call overrides if specified
         if result_type is None:
