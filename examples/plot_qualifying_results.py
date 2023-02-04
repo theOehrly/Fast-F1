@@ -8,12 +8,14 @@ Plot the qualifying result with visualization the fastest times.
 import matplotlib.pyplot as plt
 import pandas as pd
 from timple.timedelta import strftimedelta
+
+import cache
 import fastf1
 import fastf1.plotting
 from fastf1.core import Laps
 
 
-fastf1.Cache.enable_cache('../doc_cache')  # replace with your cache directory
+cache.Cache.enable_cache('../doc_cache')  # replace with your cache directory
 
 # we only want support for timedelta plotting in this example
 fastf1.plotting.setup_mpl(mpl_timedelta_support=True, color_scheme=None, misc_mpl_mods=False)

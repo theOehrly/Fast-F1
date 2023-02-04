@@ -1,7 +1,7 @@
 import json
 import warnings
 
-from fastf1.api import Cache
+from fastf1.cache import Cache
 from fastf1.ergast.interface import BASE_URL as base_url
 from fastf1.ergast.interface import HEADERS as _headers
 

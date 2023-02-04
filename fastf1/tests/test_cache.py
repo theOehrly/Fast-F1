@@ -1,6 +1,7 @@
 import logging
 import os
 
+from fastf1 import Cache
 import fastf1.testing
 
 
@@ -9,8 +10,7 @@ def test_enable_cache(tmpdir):
 
 
 def _test_enable_cache(tmpdir):
-    import fastf1
-    fastf1.Cache.enable_cache(tmpdir)
+    Cache.enable_cache(tmpdir)
 
 
 def test_cache_used_and_clear(tmpdir):
@@ -29,7 +29,7 @@ def _test_cache_used_and_clear(tmpdir):
         # properly used
 
         # enable fastf1's own pickle cache
-        fastf1.Cache.enable_cache(tmpdir, use_requests_cache=False)
+        Cache.enable_cache(tmpdir, use_requests_cache=False)
 
         with open('fastf1/testing/reference_data/'
                   'schedule_2020.json', 'rb') as fobj:
@@ -103,5 +103,5 @@ def _test_cache_used_and_clear(tmpdir):
         session.load()
         assert "Using cached data for" in log_handle.text
 
-        fastf1.Cache.clear_cache(tmpdir)  # should delete pickle files
+        Cache.clear_cache(tmpdir)  # should delete pickle files
         assert os.listdir(cache_dir_path) == []

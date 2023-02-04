@@ -2,7 +2,7 @@ import copy
 import json
 from typing import List, Literal, Optional, Union
 
-from fastf1.api import Cache
+from fastf1.cache import Cache
 import fastf1.ergast.structure as API
 from fastf1.version import __version__
 

@@ -25,20 +25,17 @@ session. This can be done with one of the following functions:
 Caching
 -------
 
-Caching should almost always be enabled to speed up the runtime of your
-scripts and to prevent exceeding the rate limit of api servers.
-FastF1 will print an annoyingly obnoxious warning message if you do not
-enable caching.
+Caching is enabled by default in FastF1 and most of the time, you do not
+need to worry about caching at all. It will simply happen automatically in the
+background and speed up your programs.
 
-The following class-level functions are used to setup, enable and
-(temporarily) disable caching.
+For more information on options and default cache location see
+:class:`fastf1.cache.Cache`.
 
-.. autosummary::
-    fastf1.Cache.enable_cache
-    fastf1.Cache.clear_cache
-    fastf1.Cache.disabled
-    fastf1.Cache.set_disabled
-    fastf1.Cache.set_enabled
+It is possible to disable the cache but this is highly discouraged. Generally,
+disabling caching will slow down your programs. Furthermore, requests that can
+be served from the cache do not count towards any API limits. FastF1 will
+print an annoyingly obnoxious warning message if you disable caching.
 
 
 General Functions - API Reference
@@ -71,7 +68,7 @@ from fastf1.events import (get_session,  # noqa: F401
                            get_testing_event,
                            get_event_schedule)
 
-from fastf1.api import Cache  # noqa: F401
+from fastf1.cache import Cache   # noqa: F401
 from fastf1.version import __version__   # noqa: F401
 
 

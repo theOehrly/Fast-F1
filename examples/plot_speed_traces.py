@@ -6,10 +6,12 @@ Compare two fastest laps by overlaying their speed traces.
 
 
 import matplotlib.pyplot as plt
+
+import cache
 import fastf1.plotting
 
 
-fastf1.Cache.enable_cache('../doc_cache')  # replace with your cache directory
+cache.Cache.enable_cache('../doc_cache')  # replace with your cache directory
 
 # enable some matplotlib patches for plotting timedelta values and load
 # FastF1's default color scheme
