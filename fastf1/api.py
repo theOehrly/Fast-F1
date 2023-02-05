@@ -34,7 +34,7 @@ import warnings
 import numpy as np
 import pandas as pd
 
-from fastf1.cache import Cache as _Cache
+from fastf1.req import Cache as _Cache
 from fastf1.utils import recursive_dict_get, to_timedelta, to_datetime
 
 base_url = 'https://livetiming.formula1.com'

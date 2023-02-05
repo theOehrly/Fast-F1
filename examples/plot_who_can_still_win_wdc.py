@@ -10,10 +10,9 @@ it's result.
 
 import requests
 
-import cache
 import fastf1
 
-cache.Cache.enable_cache("../doc_cache")  # replace with your cache directory
+fastf1.Cache.enable_cache("../doc_cache")  # replace with your cache directory
 
 
 ##############################################################################

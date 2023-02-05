@@ -2,7 +2,6 @@ import pytest
 
 from matplotlib import pyplot as plt
 
-import cache
 import fastf1
 import fastf1.plotting
 import fastf1.utils
@@ -35,7 +34,7 @@ def test_readme_example():
 @pytest.mark.f1telapi
 @pytest.mark.mpl_image_compare(style='default')
 def test_doc_example_fast_lec():
-    cache.Cache.enable_cache("test_cache/")
+    fastf1.Cache.enable_cache("test_cache/")
     session = fastf1.get_session(2020, 'Belgian', 'R')
 
     session.load()
@@ -56,7 +55,7 @@ def test_doc_example_fast_lec():
 @pytest.mark.f1telapi
 @pytest.mark.mpl_image_compare(style='default')
 def test_doc_example_delta_time():
-    cache.Cache.enable_cache("test_cache/")
+    fastf1.Cache.enable_cache("test_cache/")
     session = fastf1.get_session(2020, 'Belgian', 'R')
     session.load()
     lec = session.laps.pick_driver('LEC').pick_fastest()
@@ -79,7 +78,7 @@ def test_doc_example_delta_time():
 @pytest.mark.f1telapi
 @pytest.mark.mpl_image_compare(style='default')
 def test_speed_trace():
-    cache.Cache.enable_cache("test_cache/")
+    fastf1.Cache.enable_cache("test_cache/")
     session = fastf1.get_session(2020, 'Belgian', 'R')
     session.load()
 

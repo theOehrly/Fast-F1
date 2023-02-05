@@ -10,6 +10,9 @@ This module can be used to interface with Ergast F1 API
 
 The class :class:`Ergast` provides access to all API Endpoints of Ergast.
 
+The terms of use of Ergast apply (https://ergast.com/mrd/terms/).
+Rate limits are enforced by FastF1. A :class:`fastf1`
+
 Response Types
 ..............
 

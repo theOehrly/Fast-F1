@@ -1,12 +1,22 @@
 """
-Caching - :mod:`fastf1.cache`
-=============================
+All HTTP requests that are performed by FastF1 go through its caching and
+rate limiting system.
 
-This module implements caching and rate limiting for all HTTP requests that
-are performed by FastF1.
+Caching is enabled by default in FastF1 and most of the time, you do not need
+to worry about caching at all. It will simply happen automatically in the
+background and speed up your programs. Disabling the cache is highly
+discouraged and will generally slow down your programs.
 
-.. autoclass::
-    Cache
+Rate limits are applied at all times. Requests that can be served from the
+cache do not count towards any rate limits. Having the cache enabled can
+therefore virtually increase the rate limits.
+
+When rate limits are exceeded, FastF1 will either...
+
+- throttle the rate of requests, if small delays are sufficient to stay within
+  the limit (soft rate limit)
+
+- raise a :class:`RateLimitExceeded` exception (hard rate limit)
 
 """
 
@@ -48,7 +58,12 @@ from requests_cache import CacheMixin
 # unnecessary hassle for many people.
 
 
-class _FixedIntervalLimitDelay:
+class _MinIntervalLimitDelay:
+    """Ensure that there is at least a minimum delay between each request.
+
+    Sleeps for the remaining amount of time if the last request was more recent
+    than allowed by the minimum interval rule.
+    """
     def __init__(self, interval: float):
         self._interval: float = interval
         self._t_last: float = 0.0
@@ -61,6 +76,12 @@ class _FixedIntervalLimitDelay:
 
 
 class _CallsPerIntervalLimitRaise:
+    """Ensures that there is a maximum number of requests within a fixed
+    interval of time.
+
+    If the maximum number of allowed requests within this interval is exceeded,
+    a :class:`RateLimitExceeded` exception is raised.
+    """
     def __init__(self, calls: int, interval: float, info: str):
         self._interval: float = interval
         self._timestamps = collections.deque(maxlen=calls)
@@ -70,21 +91,19 @@ class _CallsPerIntervalLimitRaise:
         self._timestamps.append(time.time())
         if len(self._timestamps) == self._timestamps.maxlen:
             if self._timestamps[0] > (time.time() - self._interval):
-                raise RateLimitExceeded(self._info)
+                raise RateLimitExceededError(self._info)
 
 
 class _SessionWithRateLimiting(requests.Session):
-    """
-    Apply rate limiters to requests that match a URL pattern.
+    """Apply rate limiters to requests that match a URL pattern.
     """
     _RATE_LIMITS = {
         # limits on ergast.com
         re.compile(r"^https?://(\w+\.)?ergast\.com.*"): [
-            _FixedIntervalLimitDelay(0.25),
+            _MinIntervalLimitDelay(0.25),
             # soft limit 4 calls/sec
-            _CallsPerIntervalLimitRaise(
-                200, 60*60, "ergast.com: 200 calls/hour"
-            )  # hard limit 200 calls/h
+            _CallsPerIntervalLimitRaise(200, 60*60, "ergast.com: 200 calls/h")
+            # hard limit 200 calls/h
         ]
     }
 
@@ -101,6 +120,9 @@ class _SessionWithRateLimiting(requests.Session):
 
 
 class _CachedSessionWithRateLimiting(CacheMixin, _SessionWithRateLimiting):
+    """Equivalent of ``requests_cache.CachedSession```but using
+    :class:`_SessionWithRateLimiting` as base instead of ``requests.Session``.
+    """
     pass
 
 
@@ -538,6 +560,7 @@ class _NoCacheContext:
         Cache.set_enabled()
 
 
-class RateLimitExceeded(Exception):
+# TODO: document
+class RateLimitExceededError(Exception):
     """Raised if a hard rate limit is exceeded."""
     pass

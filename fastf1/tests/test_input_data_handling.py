@@ -6,7 +6,6 @@ import logging
 
 import pandas as pd
 
-import cache
 import fastf1
 import fastf1.ergast
 import fastf1.testing
@@ -47,7 +46,7 @@ def test_ergast_lookup_fail():
 
 
 def _test_ergast_lookup_fail():
-    cache.Cache.enable_cache('test_cache')
+    fastf1.Cache.enable_cache('test_cache')
     log_handle = fastf1.testing.capture_log()
 
     # ergast lookup fails if data is requested to soon after a session ends
@@ -112,7 +111,7 @@ def _test_no_timing_app_data():
     fastf1.api.timing_app_data = _mock
 
     session = fastf1.get_session(2020, 'Italy', 'R')
-    with cache.Cache.disabled():
+    with fastf1.Cache.disabled():
         session.load(telemetry=False, weather=False)
 
     assert 'Failed to load lap data!' not in log_handle.text
@@ -126,7 +125,7 @@ def _test_no_timing_app_data():
 def test_inlap_added():
     session = fastf1.get_session(2021, 'Mexico City', 'Q')
 
-    with cache.Cache.disabled():
+    with fastf1.Cache.disabled():
         session.load(telemetry=False)
 
     last = session.laps.pick_driver('PER').iloc[-1]

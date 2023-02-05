@@ -2,7 +2,7 @@ import copy
 import json
 from typing import List, Literal, Optional, Union
 
-from fastf1.cache import Cache
+from fastf1.req import Cache
 import fastf1.ergast.structure as API
 from fastf1.version import __version__
 
@@ -411,11 +411,11 @@ class Ergast:
             try:
                 return json.loads(r.content.decode('utf-8'))
             except Exception as exc:
-                raise ErgastJsonException(
+                raise ErgastJsonError(
                     f"Failed to parse Ergast response ({url})"
                 ) from exc
         else:
-            raise ErgastInvalidRequest(
+            raise ErgastInvalidRequestError(
                 f"Invalid request to Ergast ({url})\n"
                 f"Server response: '{r.reason}'"
             )
@@ -995,13 +995,14 @@ class Ergast:
                                           offset=offset)
 
 
-class ErgastException(Exception):
+# TODO: document
+class ErgastError(Exception):
     pass
 
 
-class ErgastJsonException(ErgastException):
+class ErgastJsonError(ErgastError):
     pass
 
 
-class ErgastInvalidRequest(ErgastException):
+class ErgastInvalidRequestError(ErgastError):
     pass

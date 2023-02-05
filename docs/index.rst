@@ -71,7 +71,6 @@ Alternatively, a wheel or a source distribution can be downloaded from Pypi.
    events
    api
    ergast
-   cache
    utils
    plotting
    livetiming
