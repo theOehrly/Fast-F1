@@ -396,7 +396,7 @@ RaceResults = {
     'map': {'number': {'name': 'number', 'type': int},
             'position': {'name': 'position', 'type': int},
             'positionText': {'name': 'positionText', 'type': str},
-            'points': {'name': 'points', 'type': int},
+            'points': {'name': 'points', 'type': float},
             'grid': {'name': 'grid', 'type': int},
             'laps': {'name': 'laps', 'type': int},
             'status': {'name': 'status', 'type': str}},
@@ -415,7 +415,7 @@ DriverStandings = {
     'method': _flatten_by_rename,
     'map': {'position': {'name': 'position', 'type': int},
             'positionText': {'name': 'positionText', 'type': str},
-            'points': {'name': 'points', 'type': int},
+            'points': {'name': 'points', 'type': float},
             'wins': {'name': 'wins', 'type': int}},
     'sub': [Driver, ConstructorsInline],
     'finalize': None
