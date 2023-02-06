@@ -16,7 +16,7 @@ HEADERS = {'User-Agent': f'FastF1/{__version__}'}
 
 class ErgastResponseMixin:
     def __init__(self, *args, response_headers: dict, query_filters: dict,
-                 metadata: dict, selectors: list, **kwargs):
+                 metadata: dict, selectors: dict, **kwargs):
         super().__init__(*args, **kwargs)
         self._response_headers = response_headers
         self._query_filters = query_filters
@@ -403,6 +403,69 @@ class Ergast:
         self._default_auto_cast = auto_cast
         self._limit = limit
 
+    @staticmethod
+    def _build_url(
+            endpoint: str,
+            season: Union[Literal['current'], int] = None,
+            round: Union[Literal['last'], int] = None,
+            circuit: Optional[str] = None,
+            constructor: Optional[str] = None,
+            driver: Optional[str] = None,
+            grid_position: Optional[int] = None,
+            results_position: Optional[int] = None,
+            fastest_rank: Optional[int] = None,
+            status: Optional[str] = None,
+            lap_number: Optional[int] = None,
+            stop_number: Optional[int] = None,
+            standings_position: Optional[int] = None
+    ) -> str:
+        selectors = list()
+
+        if season is not None:
+            selectors.append(f"/{season}")
+        if round is not None:
+            selectors.append(f"/{round}")
+        if circuit is not None:
+            selectors.append(f"/circuits/{circuit}")
+        if constructor is not None:
+            selectors.append(f"/constructors/{constructor}")
+        if driver is not None:
+            selectors.append(f"/drivers/{driver}")
+        if grid_position is not None:
+            selectors.append(f"/grid/{grid_position}")
+        if results_position is not None:
+            selectors.append(f"/results/{results_position}")
+        if fastest_rank is not None:
+            selectors.append(f"/fastest/{fastest_rank}")
+        if status is not None:
+            selectors.append(f"/status/{status}")
+
+        # some special cases: the endpoint may also be used as selector
+        # therefore, if the specifier is defined, do not add the endpoint
+        # string additionally
+        if standings_position is not None:
+            if endpoint == 'driverStandings':
+                selectors.append(f"/driverStandings/{standings_position}")
+                endpoint = None
+            elif endpoint == 'constructorStandings':
+                selectors.append(f"/constructorStandings/{standings_position}")
+                endpoint = None
+
+        if lap_number is not None:
+            selectors.append(f"/laps/{lap_number}")
+            if endpoint == 'laps':
+                endpoint = None
+
+        if stop_number is not None:
+            selectors.append(f"/pitstops/{stop_number}")
+            if endpoint == 'pitstops':
+                endpoint = None
+
+        if endpoint is not None:
+            selectors.append(f"/{endpoint}")
+
+        return BASE_URL + "".join(selectors) + ".json"
+
     @classmethod
     def _get(cls, url: str, params: dict) -> Union[dict, list]:
         # request data from ergast and load the returned json data.
@@ -420,47 +483,6 @@ class Ergast:
                 f"Server response: '{r.reason}'"
             )
 
-    @staticmethod
-    def _build_url(endpoint: Optional[str] = None,
-                   selectors: Optional[list] = None) -> str:
-        # build url from base, selector and endpoint
-        url_fragments = [BASE_URL]
-        if selectors is not None:
-            url_fragments.extend(selectors)
-        if endpoint is not None:
-            url_fragments.append(f"/{endpoint}")
-        url_fragments.append(".json")
-        url = ''.join(url_fragments)
-        return url
-
-    def _build_default_result(
-            self, *,
-            result_type: Optional[Literal['pandas', 'raw']] = None,
-            auto_cast: Optional[bool] = None,
-            limit: Optional[int] = None,
-            selectors: Optional[list] = None,
-            **kwargs
-    ) -> Union[ErgastSimpleResponse,
-               ErgastMultiResponse,
-               ErgastRawResponse]:
-        # use defaults or per-call overrides if specified
-        if result_type is None:
-            result_type = self._default_result_type
-        if auto_cast is None:
-            auto_cast = self._default_auto_cast
-        if limit is None:
-            limit = self._limit
-        if selectors is None:
-            selectors = self._selectors
-
-        return self._build_result(
-            result_type=result_type,
-            auto_cast=auto_cast,
-            limit=limit,
-            selectors=selectors,
-            **kwargs
-        )
-
     @classmethod
     def _build_result(
             cls, *,
@@ -472,7 +494,7 @@ class Ergast:
             auto_cast: Optional[bool] = None,
             limit: Optional[int] = None,
             offset: Optional[int] = None,
-            selectors: Optional[list] = None,
+            selectors: Optional[dict] = None,
     ) -> Union[ErgastSimpleResponse,
                ErgastMultiResponse,
                ErgastRawResponse]:
@@ -480,7 +502,7 @@ class Ergast:
         # split the raw response into multiple parts, depending also on what
         # type was selected for the response data format.
 
-        url = cls._build_url(endpoint, selectors=selectors)
+        url = cls._build_url(endpoint, **selectors)
         params = {'limit': limit, 'offset': offset}
 
         # get response and split it into individual parts
@@ -527,65 +549,51 @@ class Ergast:
                     auto_cast=auto_cast
                 )
 
-    def select(self,
-               season: Union[Literal['current'], int] = None,
-               round: Union[Literal['last'], int] = None,
-               circuit: Optional[str] = None,
-               constructor: Optional[str] = None,
-               driver: Optional[str] = None,
-               grid_position: Optional[int] = None,
-               results_position: Optional[int] = None,
-               fastest_rank: Optional[int] = None,
-               status: Optional[str] = None,
-               ) -> 'Ergast':
-        """
-        For each endpoint, the results can be refined adding different
-        criteria to the request. Multiple criteria can be used to refine a
-        single request. But note that not all criteria are supported by all
-        endpoints. For details, refer to the documentation of each endpoint
-        on https://ergast.com/mrd.
+    def _build_default_result(
+            self, *,
+            result_type: Optional[Literal['pandas', 'raw']] = None,
+            auto_cast: Optional[bool] = None,
+            limit: Optional[int] = None,
+            selectors: Optional[dict] = None,
+            **kwargs
+    ) -> Union[ErgastSimpleResponse,
+               ErgastMultiResponse,
+               ErgastRawResponse]:
+        # use defaults or per-call overrides if specified
+        if result_type is None:
+            result_type = self._default_result_type
+        if auto_cast is None:
+            auto_cast = self._default_auto_cast
+        if limit is None:
+            limit = self._limit
+        if selectors is None:
+            selectors = self._selectors
 
-        Args:
-            season: select a season by its year
-            round: select a round by its number
-            circuit: select a circuit by its circuit id
-            constructor: select a constructor by its constructor id
-            driver: select a driver by its driver id
-            grid_position: select a grid position by its number
-            results_position: select a finishing result by its position
-            fastest_rank: select fastest by rank number
-            status: select by finishing status
-        """
-        if season is not None:
-            self._selectors.append(f"/{season}")
-        if round is not None:
-            self._selectors.append(f"/{round}")
-        if circuit is not None:
-            self._selectors.append(f"/circuits/{circuit}")
-        if constructor is not None:
-            self._selectors.append(f"/constructors/{constructor}")
-        if driver is not None:
-            self._selectors.append(f"/drivers/{driver}")
-        if grid_position is not None:
-            self._selectors.append(f"/grid/{grid_position}")
-        if results_position is not None:
-            self._selectors.append(f"/results/{results_position}")
-        if fastest_rank is not None:
-            self._selectors.append(f"/fastest/{fastest_rank}")
-        if status is not None:
-            self._selectors.append(f"/status/{status}")
-
-        return self
+        return self._build_result(
+            result_type=result_type,
+            auto_cast=auto_cast,
+            limit=limit,
+            selectors=selectors,
+            **kwargs
+        )
 
     # ### endpoints with single-result responses ###
     #
     # can be represented by a DataFrame-like object
-    def get_seasons(self,
-                    result_type: Optional[Literal['pandas', 'raw']] = None,
-                    auto_cast: Optional[bool] = None,
-                    limit: Optional[int] = None,
-                    offset: Optional[int] = None
-                    ) -> Union[ErgastSimpleResponse, ErgastRawResponse]:
+    def get_seasons(
+            self,
+            circuit: Optional[str] = None,
+            constructor: Optional[str] = None,
+            driver: Optional[str] = None,
+            grid_position: Optional[int] = None,
+            results_position: Optional[int] = None,
+            fastest_rank: Optional[int] = None,
+            status: Optional[str] = None,
+            result_type: Optional[Literal['pandas', 'raw']] = None,
+            auto_cast: Optional[bool] = None,
+            limit: Optional[int] = None,
+            offset: Optional[int] = None
+    ) -> Union[ErgastSimpleResponse, ErgastRawResponse]:
         """Get a list of seasons.
 
         See: https://ergast.com/mrd/methods/seasons/
@@ -594,6 +602,13 @@ class Ergast:
             :describe-dataframe:
 
         Args:
+            circuit: select a circuit by its circuit id
+            constructor: select a constructor by its constructor id
+            driver: select a driver by its driver id
+            grid_position: select a grid position by its number
+            results_position: select a finishing result by its position
+            fastest_rank: select fastest by rank number
+            status: select by finishing status
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
@@ -601,6 +616,14 @@ class Ergast:
                 Defaults to 0 if not set. See also "Response Paging",
                 https://ergast.com/mrd/.
         """
+        selectors = {'circuit': circuit,
+                     'constructor': constructor,
+                     'driver': driver,
+                     'grid_position': grid_position,
+                     'results_position': results_position,
+                     'fastest_rank': fastest_rank,
+                     'status': status}
+
         return self._build_default_result(endpoint='seasons',
                                           table='SeasonTable',
                                           category=API.Seasons,
@@ -608,10 +631,20 @@ class Ergast:
                                           result_type=result_type,
                                           auto_cast=auto_cast,
                                           limit=limit,
-                                          offset=offset)
+                                          offset=offset,
+                                          selectors=selectors)
 
     def get_race_schedule(
             self,
+            season: Union[Literal['current'], int],
+            round: Optional[Union[Literal['last'], int]] = None,
+            circuit: Optional[str] = None,
+            constructor: Optional[str] = None,
+            driver: Optional[str] = None,
+            grid_position: Optional[int] = None,
+            results_position: Optional[int] = None,
+            fastest_rank: Optional[int] = None,
+            status: Optional[str] = None,
             result_type: Optional[Literal['pandas', 'raw']] = None,
             auto_cast: Optional[bool] = None,
             limit: Optional[int] = None,
@@ -625,6 +658,15 @@ class Ergast:
             :describe-dataframe:
 
         Args:
+            season: select a season by its year
+            round: select a round by its number
+            circuit: select a circuit by its circuit id
+            constructor: select a constructor by its constructor id
+            driver: select a driver by its driver id
+            grid_position: select a grid position by its number
+            results_position: select a finishing result by its position
+            fastest_rank: select fastest by rank number
+            status: select by finishing status
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
@@ -632,6 +674,16 @@ class Ergast:
                 Defaults to 0 if not set. See also "Response Paging",
                 https://ergast.com/mrd/.
         """
+        selectors = {'season': season,
+                     'round': round,
+                     'circuit': circuit,
+                     'constructor': constructor,
+                     'driver': driver,
+                     'grid_position': grid_position,
+                     'results_position': results_position,
+                     'fastest_rank': fastest_rank,
+                     'status': status}
+
         return self._build_default_result(endpoint='races',
                                           table='RaceTable',
                                           category=API.Races_Schedule,
@@ -639,10 +691,20 @@ class Ergast:
                                           result_type=result_type,
                                           auto_cast=auto_cast,
                                           limit=limit,
-                                          offset=offset)
+                                          offset=offset,
+                                          selectors=selectors)
 
     def get_driver_info(
             self,
+            season: Optional[Union[Literal['current'], int]] = None,
+            round: Optional[Union[Literal['last'], int]] = None,
+            circuit: Optional[str] = None,
+            constructor: Optional[str] = None,
+            driver: Optional[str] = None,
+            grid_position: Optional[int] = None,
+            results_position: Optional[int] = None,
+            fastest_rank: Optional[int] = None,
+            status: Optional[str] = None,
             result_type: Optional[Literal['pandas', 'raw']] = None,
             auto_cast: Optional[bool] = None,
             limit: Optional[int] = None,
@@ -656,6 +718,15 @@ class Ergast:
             :describe-dataframe:
 
         Args:
+            season: select a season by its year
+            round: select a round by its number
+            circuit: select a circuit by its circuit id
+            constructor: select a constructor by its constructor id
+            driver: select a driver by its driver id
+            grid_position: select a grid position by its number
+            results_position: select a finishing result by its position
+            fastest_rank: select fastest by rank number
+            status: select by finishing status
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
@@ -663,6 +734,16 @@ class Ergast:
                 Defaults to 0 if not set. See also "Response Paging",
                 https://ergast.com/mrd/.
         """
+        selectors = {'season': season,
+                     'round': round,
+                     'circuit': circuit,
+                     'constructor': constructor,
+                     'driver': driver,
+                     'grid_position': grid_position,
+                     'results_position': results_position,
+                     'fastest_rank': fastest_rank,
+                     'status': status}
+
         return self._build_default_result(endpoint='drivers',
                                           table='DriverTable',
                                           category=API.Drivers,
@@ -670,10 +751,20 @@ class Ergast:
                                           result_type=result_type,
                                           auto_cast=auto_cast,
                                           limit=limit,
-                                          offset=offset)
+                                          offset=offset,
+                                          selectors=selectors)
 
     def get_constructor_info(
             self,
+            season: Optional[Union[Literal['current'], int]] = None,
+            round: Optional[Union[Literal['last'], int]] = None,
+            circuit: Optional[str] = None,
+            constructor: Optional[str] = None,
+            driver: Optional[str] = None,
+            grid_position: Optional[int] = None,
+            results_position: Optional[int] = None,
+            fastest_rank: Optional[int] = None,
+            status: Optional[str] = None,
             result_type: Optional[Literal['pandas', 'raw']] = None,
             auto_cast: Optional[bool] = None,
             limit: Optional[int] = None,
@@ -687,6 +778,15 @@ class Ergast:
             :describe-dataframe:
 
         Args:
+            season: select a season by its year
+            round: select a round by its number
+            circuit: select a circuit by its circuit id
+            constructor: select a constructor by its constructor id
+            driver: select a driver by its driver id
+            grid_position: select a grid position by its number
+            results_position: select a finishing result by its position
+            fastest_rank: select fastest by rank number
+            status: select by finishing status
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
@@ -694,6 +794,16 @@ class Ergast:
                 Defaults to 0 if not set. See also "Response Paging",
                 https://ergast.com/mrd/.
         """
+        selectors = {'season': season,
+                     'round': round,
+                     'circuit': circuit,
+                     'constructor': constructor,
+                     'driver': driver,
+                     'grid_position': grid_position,
+                     'results_position': results_position,
+                     'fastest_rank': fastest_rank,
+                     'status': status}
+
         return self._build_default_result(endpoint='constructors',
                                           table='ConstructorTable',
                                           category=API.Constructors,
@@ -701,14 +811,24 @@ class Ergast:
                                           result_type=result_type,
                                           auto_cast=auto_cast,
                                           limit=limit,
-                                          offset=offset)
+                                          offset=offset,
+                                          selectors=selectors)
 
-    def get_circuits(self,
-                     result_type: Optional[Literal['pandas', 'raw']] = None,
-                     auto_cast: Optional[bool] = None,
-                     limit: Optional[int] = None,
-                     offset: Optional[int] = None
-                     ) -> Union[ErgastSimpleResponse, ErgastRawResponse]:
+    def get_circuits(
+            self,
+            season: Optional[Union[Literal['current'], int]] = None,
+            round: Optional[Union[Literal['last'], int]] = None,
+            constructor: Optional[str] = None,
+            driver: Optional[str] = None,
+            grid_position: Optional[int] = None,
+            results_position: Optional[int] = None,
+            fastest_rank: Optional[int] = None,
+            status: Optional[str] = None,
+            result_type: Optional[Literal['pandas', 'raw']] = None,
+            auto_cast: Optional[bool] = None,
+            limit: Optional[int] = None,
+            offset: Optional[int] = None
+    ) -> Union[ErgastSimpleResponse, ErgastRawResponse]:
         """Get a list of circuits.
 
         See: https://ergast.com/mrd/methods/circuits/
@@ -717,6 +837,14 @@ class Ergast:
             :describe-dataframe:
 
         Args:
+            season: select a season by its year
+            round: select a round by its number
+            constructor: select a constructor by its constructor id
+            driver: select a driver by its driver id
+            grid_position: select a grid position by its number
+            results_position: select a finishing result by its position
+            fastest_rank: select fastest by rank number
+            status: select by finishing status
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
@@ -724,6 +852,15 @@ class Ergast:
                 Defaults to 0 if not set. See also "Response Paging",
                 https://ergast.com/mrd/.
         """
+        selectors = {'season': season,
+                     'round': round,
+                     'constructor': constructor,
+                     'driver': driver,
+                     'grid_position': grid_position,
+                     'results_position': results_position,
+                     'fastest_rank': fastest_rank,
+                     'status': status}
+
         return self._build_default_result(endpoint='circuits',
                                           table='CircuitTable',
                                           category=API.Circuits,
@@ -731,10 +868,20 @@ class Ergast:
                                           result_type=result_type,
                                           auto_cast=auto_cast,
                                           limit=limit,
-                                          offset=offset)
+                                          offset=offset,
+                                          selectors=selectors)
 
     def get_finishing_status(
             self,
+            season: Optional[Union[Literal['current'], int]] = None,
+            round: Optional[Union[Literal['last'], int]] = None,
+            circuit: Optional[str] = None,
+            constructor: Optional[str] = None,
+            driver: Optional[str] = None,
+            grid_position: Optional[int] = None,
+            results_position: Optional[int] = None,
+            fastest_rank: Optional[int] = None,
+            status: Optional[str] = None,
             result_type: Optional[Literal['pandas', 'raw']] = None,
             auto_cast: Optional[bool] = None,
             limit: Optional[int] = None,
@@ -748,6 +895,15 @@ class Ergast:
             :describe-dataframe:
 
         Args:
+            season: select a season by its year
+            round: select a round by its number
+            circuit: select a circuit by its circuit id
+            constructor: select a constructor by its constructor id
+            driver: select a driver by its driver id
+            grid_position: select a grid position by its number
+            results_position: select a finishing result by its position
+            fastest_rank: select fastest by rank number
+            status: select by finishing status
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
@@ -755,6 +911,16 @@ class Ergast:
                 Defaults to 0 if not set. See also "Response Paging",
                 https://ergast.com/mrd/.
         """
+        selectors = {'season': season,
+                     'round': round,
+                     'circuit': circuit,
+                     'constructor': constructor,
+                     'driver': driver,
+                     'grid_position': grid_position,
+                     'results_position': results_position,
+                     'fastest_rank': fastest_rank,
+                     'status': status}
+
         return self._build_default_result(endpoint='status',
                                           table='StatusTable',
                                           category=API.Status,
@@ -762,7 +928,8 @@ class Ergast:
                                           result_type=result_type,
                                           auto_cast=auto_cast,
                                           limit=limit,
-                                          offset=offset)
+                                          offset=offset,
+                                          selectors=selectors)
 
     # ### endpoint with multi-result responses ###
     #
@@ -772,6 +939,14 @@ class Ergast:
     # needs to be represented by multiple DataFrame-like objects
     def get_race_results(
             self,
+            season: Optional[Union[Literal['current'], int]] = None,
+            round: Optional[Union[Literal['last'], int]] = None,
+            circuit: Optional[str] = None,
+            constructor: Optional[str] = None,
+            driver: Optional[str] = None,
+            grid_position: Optional[int] = None,
+            fastest_rank: Optional[int] = None,
+            status: Optional[str] = None,
             result_type: Optional[Literal['pandas', 'raw']] = None,
             auto_cast: Optional[bool] = None,
             limit: Optional[int] = None,
@@ -786,6 +961,14 @@ class Ergast:
             :describe-dataframe:
 
         Args:
+            season: select a season by its year
+            round: select a round by its number
+            circuit: select a circuit by its circuit id
+            constructor: select a constructor by its constructor id
+            driver: select a driver by its driver id
+            grid_position: select a grid position by its number
+            fastest_rank: select fastest by rank number
+            status: select by finishing status
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
@@ -793,6 +976,15 @@ class Ergast:
                 Defaults to 0 if not set. See also "Response Paging",
                 https://ergast.com/mrd/.
         """
+        selectors = {'season': season,
+                     'round': round,
+                     'circuit': circuit,
+                     'constructor': constructor,
+                     'driver': driver,
+                     'grid_position': grid_position,
+                     'fastest_rank': fastest_rank,
+                     'status': status}
+
         return self._build_default_result(endpoint='results',
                                           table='RaceTable',
                                           category=API.Races_RaceResults,
@@ -800,10 +992,20 @@ class Ergast:
                                           result_type=result_type,
                                           auto_cast=auto_cast,
                                           limit=limit,
-                                          offset=offset)
+                                          offset=offset,
+                                          selectors=selectors)
 
     def get_qualifying_results(
             self,
+            season: Optional[Union[Literal['current'], int]] = None,
+            round: Optional[Union[Literal['last'], int]] = None,
+            circuit: Optional[str] = None,
+            constructor: Optional[str] = None,
+            driver: Optional[str] = None,
+            grid_position: Optional[int] = None,
+            results_position: Optional[int] = None,
+            fastest_rank: Optional[int] = None,
+            status: Optional[str] = None,
             result_type: Optional[Literal['pandas', 'raw']] = None,
             auto_cast: Optional[bool] = None,
             limit: Optional[int] = None,
@@ -818,6 +1020,15 @@ class Ergast:
             :describe-dataframe:
 
         Args:
+            season: select a season by its year
+            round: select a round by its number
+            circuit: select a circuit by its circuit id
+            constructor: select a constructor by its constructor id
+            driver: select a driver by its driver id
+            grid_position: select a grid position by its number
+            results_position: select a finishing result by its position
+            fastest_rank: select fastest by rank number
+            status: select by finishing status
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
@@ -825,6 +1036,16 @@ class Ergast:
                 Defaults to 0 if not set. See also "Response Paging",
                 https://ergast.com/mrd/.
         """
+        selectors = {'season': season,
+                     'round': round,
+                     'circuit': circuit,
+                     'constructor': constructor,
+                     'driver': driver,
+                     'grid_position': grid_position,
+                     'results_position': results_position,
+                     'fastest_rank': fastest_rank,
+                     'status': status}
+
         return self._build_default_result(endpoint='qualifying',
                                           table='RaceTable',
                                           category=API.Races_QualifyingResults,
@@ -832,10 +1053,18 @@ class Ergast:
                                           result_type=result_type,
                                           auto_cast=auto_cast,
                                           limit=limit,
-                                          offset=offset)
+                                          offset=offset,
+                                          selectors=selectors)
 
     def get_sprint_results(
             self,
+            season: Optional[Union[Literal['current'], int]] = None,
+            round: Optional[Union[Literal['last'], int]] = None,
+            circuit: Optional[str] = None,
+            constructor: Optional[str] = None,
+            driver: Optional[str] = None,
+            grid_position: Optional[int] = None,
+            status: Optional[str] = None,
             result_type: Optional[Literal['pandas', 'raw']] = None,
             auto_cast: Optional[bool] = None,
             limit: Optional[int] = None,
@@ -850,6 +1079,13 @@ class Ergast:
             :describe-dataframe:
 
         Args:
+            season: select a season by its year
+            round: select a round by its number
+            circuit: select a circuit by its circuit id
+            constructor: select a constructor by its constructor id
+            driver: select a driver by its driver id
+            grid_position: select a grid position by its number
+            status: select by finishing status
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
@@ -857,6 +1093,14 @@ class Ergast:
                 Defaults to 0 if not set. See also "Response Paging",
                 https://ergast.com/mrd/.
         """
+        selectors = {'season': season,
+                     'round': round,
+                     'circuit': circuit,
+                     'constructor': constructor,
+                     'driver': driver,
+                     'grid_position': grid_position,
+                     'status': status}
+
         return self._build_default_result(endpoint='sprint',
                                           table='RaceTable',
                                           category=API.Races_SprintResults,
@@ -864,10 +1108,15 @@ class Ergast:
                                           result_type=result_type,
                                           auto_cast=auto_cast,
                                           limit=limit,
-                                          offset=offset)
+                                          offset=offset,
+                                          selectors=selectors)
 
     def get_driver_standings(
             self,
+            season: Optional[Union[Literal['current'], int]] = None,
+            round: Optional[Union[Literal['last'], int]] = None,
+            driver: Optional[str] = None,
+            standings_position: Optional[int] = None,
             result_type: Optional[Literal['pandas', 'raw']] = None,
             auto_cast: Optional[bool] = None,
             limit: Optional[int] = None,
@@ -882,6 +1131,10 @@ class Ergast:
             :describe-dataframe:
 
         Args:
+            season: select a season by its year
+            round: select a round by its number
+            driver: select a driver by its driver id
+            standings_position: select a result by position in the standings
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
@@ -889,6 +1142,11 @@ class Ergast:
                 Defaults to 0 if not set. See also "Response Paging",
                 https://ergast.com/mrd/.
         """
+        selectors = {'season': season,
+                     'round': round,
+                     'driver': driver,
+                     'standings_position': standings_position}
+
         return self._build_default_result(endpoint='driverStandings',
                                           table='StandingsTable',
                                           category=API.StandingsLists_Driver,
@@ -896,10 +1154,15 @@ class Ergast:
                                           result_type=result_type,
                                           auto_cast=auto_cast,
                                           limit=limit,
-                                          offset=offset)
+                                          offset=offset,
+                                          selectors=selectors)
 
     def get_constructor_standings(
             self,
+            season: Optional[Union[Literal['current'], int]] = None,
+            round: Optional[Union[Literal['last'], int]] = None,
+            constructor: Optional[str] = None,
+            standings_position: Optional[int] = None,
             result_type: Optional[Literal['pandas', 'raw']] = None,
             auto_cast: Optional[bool] = None,
             limit: Optional[int] = None,
@@ -914,6 +1177,10 @@ class Ergast:
             :describe-dataframe:
 
         Args:
+            season: select a season by its year
+            round: select a round by its number
+            constructor: select a constructor by its constructor id
+            standings_position: select a result by position in the standings
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
@@ -921,6 +1188,11 @@ class Ergast:
                 Defaults to 0 if not set. See also "Response Paging",
                 https://ergast.com/mrd/.
         """
+        selectors = {'season': season,
+                     'round': round,
+                     'constructor': constructor,
+                     'standings_position': standings_position}
+
         return self._build_default_result(
             endpoint='constructorStandings',
             table='StandingsTable',
@@ -929,10 +1201,15 @@ class Ergast:
             result_type=result_type,
             auto_cast=auto_cast,
             limit=limit,
-            offset=offset
+            offset=offset,
+            selectors=selectors
         )
 
     def get_lap_times(self,
+                      season: Union[Literal['current'], int],
+                      round: Union[Literal['last'], int],
+                      lap_number: Optional[int] = None,
+                      driver: Optional[str] = None,
                       result_type: Optional[Literal['pandas', 'raw']] = None,
                       auto_cast: Optional[bool] = None,
                       limit: Optional[int] = None,
@@ -947,6 +1224,10 @@ class Ergast:
             :describe-dataframe:
 
         Args:
+            season: select a season by its year
+            round: select a round by its number
+            lap_number: select lap times by a specific lap number
+            driver: select a driver by its driver id
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
@@ -954,6 +1235,11 @@ class Ergast:
                 Defaults to 0 if not set. See also "Response Paging",
                 https://ergast.com/mrd/.
         """
+        selectors = {'season': season,
+                     'round': round,
+                     'driver': driver,
+                     'lap_number': lap_number}
+
         return self._build_default_result(endpoint='laps',
                                           table='RaceTable',
                                           category=API.Races_Laps,
@@ -961,9 +1247,15 @@ class Ergast:
                                           result_type=result_type,
                                           auto_cast=auto_cast,
                                           limit=limit,
-                                          offset=offset)
+                                          offset=offset,
+                                          selectors=selectors)
 
     def get_pit_stops(self,
+                      season: Union[Literal['current'], int],
+                      round: Union[Literal['last'], int],
+                      stop_number: Optional[int] = None,
+                      lap_number: Optional[int] = None,
+                      driver: Optional[str] = None,
                       result_type: Optional[Literal['pandas', 'raw']] = None,
                       auto_cast: Optional[bool] = None,
                       limit: Optional[int] = None,
@@ -978,6 +1270,11 @@ class Ergast:
             :describe-dataframe:
 
         Args:
+            season: select a season by its year
+            round: select a round by its number
+            lap_number: select pit stops by a specific lap number
+            stop_number: select pit stops by their stop number
+            driver: select a driver by its driver id
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
@@ -985,6 +1282,12 @@ class Ergast:
                 Defaults to 0 if not set. See also "Response Paging",
                 https://ergast.com/mrd/.
         """
+        selectors = {'season': season,
+                     'round': round,
+                     'driver': driver,
+                     'lap_number': lap_number,
+                     'stop_number': stop_number}
+
         return self._build_default_result(endpoint='pitstops',
                                           table='RaceTable',
                                           category=API.Races_PitStops,
@@ -992,7 +1295,8 @@ class Ergast:
                                           result_type=result_type,
                                           auto_cast=auto_cast,
                                           limit=limit,
-                                          offset=offset)
+                                          offset=offset,
+                                          selectors=selectors)
 
 
 # TODO: document
