@@ -84,6 +84,7 @@ def get_session(*args, **kwargs) -> "Session":
     """
     .. deprecated:: 2.2
         replaced by :func:`fastf1.get_session`
+
     """
     # TODO remove
     warnings.warn("`fastf1.core.get_session` has been deprecated and will be"
