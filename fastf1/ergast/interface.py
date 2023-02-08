@@ -24,6 +24,10 @@ class ErgastResponseMixin:
         self._selectors = selectors
 
     @property
+    def _ergast_constructor(self):
+        return Ergast
+
+    @property
     def total_results(self):
         return int(self._response_headers.get("total", 0))
 
@@ -33,9 +37,9 @@ class ErgastResponseMixin:
         if int(self._response_headers.get('offset', 0)) != 0:
             return False
 
-        # if limit is less than total, data is missing at the end
+        # can only be complete if limit >= total
         return (int(self._response_headers.get("limit", 0))
-                < int(self._response_headers.get("total", 0)))
+                >= int(self._response_headers.get("total", 0)))
 
     def get_next_result_page(self):
         n_last = (int(self._response_headers.get("offset", 0))
@@ -44,7 +48,7 @@ class ErgastResponseMixin:
         if n_last >= int(self._response_headers.get("total", 0)):
             raise ValueError("No more data after this response.")
 
-        return Ergast()._build_default_result(  # noqa: access to builtin
+        return self._ergast_constructor()._build_default_result(  # noqa: access to builtin
             **self._metadata,
             selectors=self._selectors,
             limit=int(self._response_headers.get("limit")),
@@ -60,16 +64,12 @@ class ErgastResponseMixin:
         limit = int(self._response_headers.get("limit", 0))
         new_offset = max(n_first - limit, 0)
 
-        return Ergast()._build_default_result(  # noqa: access to builtin
+        return self._ergast_constructor()._build_default_result(  # noqa: access to builtin
             **self._metadata,
             selectors=self._selectors,
             limit=int(self._response_headers.get("limit")),
             offset=new_offset
         )
-
-    def get_all_results(self):
-        # TODO: may need manual rate limiting; better: add in 'Ergast'
-        raise NotImplementedError
 
 
 class ErgastResultFrame(pd.DataFrame):
@@ -92,7 +92,7 @@ class ErgastResultFrame(pd.DataFrame):
 
     def __init__(self, data=None, *,
                  category: Optional[dict] = None,
-                 response: Optional[dict] = None,
+                 response: Optional[list] = None,
                  auto_cast: bool = True,
                  **kwargs):
         if (data is not None) and (response is not None):
@@ -103,7 +103,7 @@ class ErgastResultFrame(pd.DataFrame):
         super().__init__(data, **kwargs)
 
     @classmethod
-    def _prepare_response(cls, response: dict, category: dict, cast: bool):
+    def _prepare_response(cls, response: list, category: dict, cast: bool):
         data = copy.deepcopy(response)  # TODO: efficiency?
         for i in range(len(data)):
             _, data[i] = cls._flatten_element(data[i], category, cast)
@@ -253,7 +253,7 @@ class ErgastMultiResponse(ErgastResponseMixin):
 
         >>> from fastf1.ergast import Ergast
         >>> ergast = Ergast(result_type='pandas', auto_cast=True)
-        >>> result = ergast.select(season=2022).get_race_results()
+        >>> result = ergast.get_race_results(season=2022)
 
         # The description shows that the result includes data from two
         # grand prix.
@@ -398,7 +398,6 @@ class Ergast:
                  result_type: Literal['raw', 'pandas'] = 'raw',
                  auto_cast: bool = True,
                  limit: Optional[int] = None):
-        self._selectors = []
         self._default_result_type = result_type
         self._default_auto_cast = auto_cast
         self._limit = limit
@@ -486,7 +485,7 @@ class Ergast:
     @classmethod
     def _build_result(
             cls, *,
-            endpoint: Optional[str],
+            endpoint: str,
             table: str,
             category: dict,
             subcategory: Optional[dict],
@@ -551,10 +550,10 @@ class Ergast:
 
     def _build_default_result(
             self, *,
+            selectors: dict,
             result_type: Optional[Literal['pandas', 'raw']] = None,
             auto_cast: Optional[bool] = None,
             limit: Optional[int] = None,
-            selectors: Optional[dict] = None,
             **kwargs
     ) -> Union[ErgastSimpleResponse,
                ErgastMultiResponse,
@@ -566,8 +565,6 @@ class Ergast:
             auto_cast = self._default_auto_cast
         if limit is None:
             limit = self._limit
-        if selectors is None:
-            selectors = self._selectors
 
         return self._build_result(
             result_type=result_type,

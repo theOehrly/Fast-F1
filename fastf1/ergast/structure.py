@@ -35,16 +35,16 @@ def time_from_ergast(t_str) -> Optional[datetime.time]:
 
     res = _time_string_matcher.match(t_str)
 
-    if res[1] and res[2] and res[3]:
-        hour, minute, second = int(res[1][:-1]), int(res[2][:-1]), int(res[3])
-    elif res[1] and res[3]:
-        hour, minute, second = 0, int(res[1][:-1]), int(res[3])
-    elif res[3]:
-        hour, minute, second = 0, 0, int(res[3])
-    else:
+    if res is None:
         logging.debug(f"Failed to parse timestamp '{t_str}' in Ergast"
                       f"response.")
         return None
+    elif res[1] and res[2] and res[3]:
+        hour, minute, second = int(res[1][:-1]), int(res[2][:-1]), int(res[3])
+    elif res[1] and res[3]:
+        hour, minute, second = 0, int(res[1][:-1]), int(res[3])
+    else:
+        hour, minute, second = 0, 0, int(res[3])
 
     if res[4]:
         digits = res[4][1:]
@@ -100,6 +100,9 @@ def _flatten_by_rename(nested: dict, category: dict, flat: dict, *,
     add them to the flattened result dict. This is the default operation that
     is used for most Ergast responses.
 
+    Values that are not defined by category will be skipped and are not added
+    to the flattened result.
+
     This function operates inplace on 'nested' and 'flat'.
     """
     for name, mapping in category['map'].items():
@@ -116,13 +119,13 @@ def _flatten_by_rename(nested: dict, category: dict, flat: dict, *,
             flat[name] = value
 
 
-def _flatten_inline_list_of_dicts(nested: dict, category: dict, flat: dict, *,
+def _flatten_inline_list_of_dicts(nested: list, category: dict, flat: dict, *,
                                   cast: bool = True, rename: bool = True):
     """:meta private:
     The current level is a single list of dictionaries, iterate over them and
     convert from a list of dictionaries::
 
-        "Constructors": [
+        [
             {"constructorId": "mclaren", ... },
             {"constructorId": "mercedes", ... },
             ...
@@ -400,7 +403,8 @@ RaceResults = {
             'grid': {'name': 'grid', 'type': int},
             'laps': {'name': 'laps', 'type': int},
             'status': {'name': 'status', 'type': str}},
-    'sub': [Driver, Constructor, TotalRaceTime, FastestLap],
+    'sub': [Driver, Constructor, TotalRaceTime, FastestLap,
+            FastestLapAvgSpeed],
     'finalize': None
 }
 
