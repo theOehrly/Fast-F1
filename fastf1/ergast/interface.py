@@ -15,16 +15,19 @@ HEADERS = {'User-Agent': f'FastF1/{__version__}'}
 
 
 class ErgastResponseMixin:
+    _internal_names = ['_response_headers', '_query_filters',
+                       '_query_metadata', '_selectors']
+
     def __init__(self, *args, response_headers: dict, query_filters: dict,
                  metadata: dict, selectors: dict, **kwargs):
         super().__init__(*args, **kwargs)
         self._response_headers = response_headers
         self._query_filters = query_filters
-        self._metadata = metadata
+        self._query_metadata = metadata
         self._selectors = selectors
 
     @property
-    def _ergast_constructor(self):
+    def _ergast_constructor(self) -> object:
         return Ergast
 
     @property
@@ -65,7 +68,7 @@ class ErgastResponseMixin:
         new_offset = max(n_first - limit, 0)
 
         return self._ergast_constructor()._build_default_result(  # noqa: access to builtin
-            **self._metadata,
+            **self._query_metadata,
             selectors=self._selectors,
             limit=int(self._response_headers.get("limit")),
             offset=new_offset
@@ -88,7 +91,8 @@ class ErgastResultFrame(pd.DataFrame):
         auto_cast: Determines if values are automatically cast to the most
             appropriate data type from their original string representation
     """
-    _internal_names = ['base_class_view']
+    _internal_names = pd.DataFrame._internal_names + ['base_class_view']
+    _internal_names_set = set(_internal_names)
 
     def __init__(self, data=None, *,
                  category: Optional[dict] = None,
@@ -232,7 +236,10 @@ class ErgastSimpleResponse(ErgastResponseMixin, ErgastResultFrame):
     This class wraps an :class:`ErgastResultFrame` and adds response
     information and paging (see :class:`ErgastResponseMixin`).
     """
-    pass
+    _internal_names = \
+        ErgastResultFrame._internal_names \
+        + ErgastResponseMixin._internal_names
+    _internal_names_set = set(_internal_names)
 
 
 class ErgastMultiResponse(ErgastResponseMixin):
@@ -395,7 +402,7 @@ class Ergast:
             https://ergast.com/mrd/.
     """
     def __init__(self,
-                 result_type: Literal['raw', 'pandas'] = 'raw',
+                 result_type: Literal['raw', 'pandas'] = 'pandas',
                  auto_cast: bool = True,
                  limit: Optional[int] = None):
         self._default_result_type = result_type
