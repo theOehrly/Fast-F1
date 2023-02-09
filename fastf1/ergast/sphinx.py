@@ -103,7 +103,10 @@ class ApiMappingDirective(Directive):
 
         nodes_list = \
             [nodes.raw("",
-                       "<details><summary><a>API Mapping</a></summary>",
+                       "<details><summary><a>API Mapping</a></summary>"
+                       "Structure of the raw response, renamed key names for "
+                       "flattening and dtypes for automatic type casting:"
+                       "</br></br>",
                        format='html'),
              nodes.literal_block("", result_str, language='none'),
              nodes.raw("", "</details>", format='html')]
@@ -114,7 +117,9 @@ class ApiMappingDirective(Directive):
 
             nodes_list.append(nodes.raw(
                 "",
-                "<details><summary><a>DataFrame Description</a></summary>",
+                "<details><summary><a>DataFrame Description</a></summary>"
+                "DataFrame column names and dtypes for automatic type"
+                "casting:</br></br>",
                 format='html'
             ))
 

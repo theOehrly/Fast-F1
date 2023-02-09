@@ -22,6 +22,8 @@ session. This can be done with one of the following functions:
     fastf1.get_event_schedule
 
 
+.. _requests-and-caching:
+
 Requests and Caching
 --------------------
 
@@ -61,7 +63,7 @@ from fastf1.events import (get_session,  # noqa: F401
                            get_testing_event,
                            get_event_schedule)
 
-from fastf1.req import Cache   # noqa: F401
+from fastf1.req import Cache, RateLimitExceededError   # noqa: F401
 from fastf1.version import __version__   # noqa: F401
 
 

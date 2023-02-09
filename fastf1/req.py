@@ -16,7 +16,7 @@ When rate limits are exceeded, FastF1 will either...
 - throttle the rate of requests, if small delays are sufficient to stay within
   the limit (soft rate limit)
 
-- raise a :class:`RateLimitExceeded` exception (hard rate limit)
+- raise a :class:`fastf1.RateLimitExceededError` (hard rate limit)
 
 """
 

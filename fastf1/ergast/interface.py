@@ -15,6 +15,12 @@ HEADERS = {'User-Agent': f'FastF1/{__version__}'}
 
 
 class ErgastResponseMixin:
+    """A Mixin class that adds support for pagination to Ergast response
+    objects.
+
+    All Ergast response objects provide the methods that are implemented by
+    this Mixin.
+    """
     _internal_names = ['_response_headers', '_query_filters',
                        '_query_metadata', '_selectors']
 
@@ -31,11 +37,15 @@ class ErgastResponseMixin:
         return Ergast
 
     @property
-    def total_results(self):
+    def total_results(self) -> int:
+        """Returns the total number of available results for the request
+        associated with this response."""
         return int(self._response_headers.get("total", 0))
 
     @property
-    def is_complete(self):
+    def is_complete(self) -> bool:
+        """Indicates if the response contains all available results for the
+        request that is associated with it."""
         # if offset is non-zero, data is missing at the beginning
         if int(self._response_headers.get('offset', 0)) != 0:
             return False
@@ -44,7 +54,15 @@ class ErgastResponseMixin:
         return (int(self._response_headers.get("limit", 0))
                 >= int(self._response_headers.get("total", 0)))
 
-    def get_next_result_page(self):
+    def get_next_result_page(self) -> Union['ErgastSimpleResponse',
+                                            'ErgastMultiResponse',
+                                            'ErgastRawResponse']:
+        """Returns the next page of results within the limit that was specified
+        in the request that is associated with this response.
+
+        Raises:
+            ValueError: there is no result page after the current page
+        """
         n_last = (int(self._response_headers.get("offset", 0))
                   + int(self._response_headers.get("limit", 0)))
 
@@ -52,13 +70,21 @@ class ErgastResponseMixin:
             raise ValueError("No more data after this response.")
 
         return self._ergast_constructor()._build_default_result(  # noqa: access to builtin
-            **self._metadata,
+            **self._query_metadata,
             selectors=self._selectors,
             limit=int(self._response_headers.get("limit")),
             offset=n_last
         )
 
-    def get_prev_result_page(self):
+    def get_prev_result_page(self) -> Union['ErgastSimpleResponse',
+                                            'ErgastMultiResponse',
+                                            'ErgastRawResponse']:
+        """Returns the previous page of results within the limit that was
+        specified in the request that is associated with this response.
+
+        Raises:
+            ValueError: there is no result page before the current page
+        """
         n_first = int(self._response_headers.get("offset", 0))
 
         if n_first <= 0:
@@ -283,27 +309,14 @@ class ErgastMultiResponse(ErgastResponseMixin):
         0       16         1  ...                     kph             206.018
         1       55         2  ...                     kph             203.501
         2       44         3  ...                     kph             202.469
-        3       63         4  ...                     kph             202.313
-        4       20         5  ...                     kph             201.641
-        5       77         6  ...                     kph             201.691
-        6       31         7  ...                     kph             200.630
-        7       22         8  ...                     kph             200.642
-        8       14         9  ...                     kph             201.412
-        9       24        10  ...                     kph             201.512
-        10      47        11  ...                     kph             200.948
-        11      18        12  ...                     kph             200.555
-        12      23        13  ...                     kph             200.125
-        13       3        14  ...                     kph             200.318
-        14       4        15  ...                     kph             200.882
-        15       6        16  ...                     kph             198.300
-        16      27        17  ...                     kph             198.401
+        ...
         17      11        18  ...                     kph             202.762
         18       1        19  ...                     kph             204.140
         19      10        20  ...                     kph             200.189
         <BLANKLINE>
         [20 rows x 26 columns]
 
-        # The second element is incomplete and only contains the first 11
+        # The second element is incomplete and only contains the first 10
         # positions of the second Grand Prix. This is because by default,
         # every query on Ergast is limited to 30 result values. You can
         # manually change this limit for each request though.
@@ -312,10 +325,7 @@ class ErgastMultiResponse(ErgastResponseMixin):
         0       1         1  ...                     kph             242.191
         1      16         2  ...                     kph             242.556
         2      55         3  ...                     kph             241.841
-        3      11         4  ...                     kph             241.481
-        4      63         5  ...                     kph             239.454
-        5      31         6  ...                     kph             238.729
-        6       4         7  ...                     kph             239.629
+        ...
         7      10         8  ...                     kph             237.796
         8      20         9  ...                     kph             239.562
         9      44        10  ...                     kph             239.001
@@ -378,14 +388,6 @@ class Ergast:
     For each API endpoint, there is a separate method implemented to
     request data. All methods have in common, that they can be preceded by a
     call to :func:`.select` to filter the results.
-
-    Example::
-
-        ergast = Ergast()
-        ergast.get_circuits()
-        # will return all circuits in the database
-        ergast.select(season=2022).get_circuits()
-        # will only return circuits that hosted a GP in 2022
 
     Args:
         result_type: Determines the default type of the returned result object
@@ -1305,12 +1307,15 @@ class Ergast:
 
 # TODO: document
 class ErgastError(Exception):
+    """Base class for Ergast API errors."""
     pass
 
 
 class ErgastJsonError(ErgastError):
+    """The response that was returned by the server could not be parsed."""
     pass
 
 
 class ErgastInvalidRequestError(ErgastError):
+    """The server rejected the request because it was invalid."""
     pass
