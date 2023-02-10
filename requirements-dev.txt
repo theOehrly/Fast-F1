@@ -4,8 +4,7 @@ requests-mock
 sphinx>6.0
 furo
 sphinx-gallery>=0.10.0
-# autodocsumm>=0.2.8  # cross-links don't work correctly in older versions
-git+https://github.com/Chilipp/autodocsumm@96c5c2e  # temporarily install from repo until release
+autodocsumm>=0.2.10  # support for sphinx v6
 sphinx-autodoc-typehints
 wheel
 flake8<5.0.0
