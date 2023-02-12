@@ -1,11 +1,11 @@
 pytest>=6.0.0  # equals pytest min version requirement
 pytest-mpl==0.14.0  # logging issues in newer versions
 requests-mock
-sphinx==4.5.0  # autodocsumm does not support sphinx 5.0
-sphinx-rtd-theme==1.0.0  # rtd-theme and docutils have issues in older versions
-docutils==0.17.1
+sphinx>6.0
+furo
 sphinx-gallery>=0.10.0
-autodocsumm>=0.2.8  # cross-links don't work correctly in older versions
+autodocsumm>=0.2.10  # support for sphinx v6
+sphinx-autodoc-typehints
 wheel
 flake8<5.0.0
 readme-renderer

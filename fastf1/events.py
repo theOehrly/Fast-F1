@@ -155,6 +155,7 @@ import collections
 import datetime
 import logging
 import warnings
+from typing import Union, Optional
 
 import dateutil.parser
 
@@ -173,7 +174,6 @@ from fastf1.core import Session
 import fastf1.ergast
 from fastf1.utils import recursive_dict_get
 
-
 _SESSION_TYPE_ABBREVIATIONS = {
     'R': 'Race',
     'Q': 'Qualifying',
@@ -188,7 +188,14 @@ _SCHEDULE_BASE_URL = "https://raw.githubusercontent.com/" \
                      "theOehrly/f1schedule/master/"
 
 
-def get_session(year, gp, identifier=None, *, force_ergast=False, event=None):
+def get_session(
+        year: int,
+        gp: Union[str, int],
+        identifier: Optional[Union[int, str]] = None,
+        *,
+        force_ergast: bool = False,
+        event=None
+) -> Session:
     """Create a :class:`~fastf1.core.Session` object based on year, event name
     and session identifier.
 
@@ -231,8 +238,8 @@ def get_session(year, gp, identifier=None, *, force_ergast=False, event=None):
             >>> get_session(2021, 5, 3)
 
     Args:
-        year (int): Championship year
-        gp (number or string): Name as str or round number as int. If gp is
+        year: Championship year
+        gp: Name as str or round number as int. If gp is
             a string, a fuzzy match will be performed on all events and the
             closest match will be selected.
             Fuzzy matching uses country, location, name and officialName of
@@ -244,15 +251,12 @@ def get_session(year, gp, identifier=None, *, force_ergast=False, event=None):
             See :func:`get_event_by_name` for some further remarks on the
             fuzzy matching.
 
-        identifier (str or int): see :ref:`SessionIdentifier`
+        identifier: see :ref:`SessionIdentifier`
 
-        force_ergast (bool): Always use data from the ergast database to
+        force_ergast: Always use data from the ergast database to
             create the event schedule
 
         event: deprecated; use identifier instead
-
-    Returns:
-        :class:`~fastf1.core.Session`:
     """
     if identifier and event:
         raise ValueError("The arguments 'identifier' and 'event' are "
@@ -280,18 +284,16 @@ def get_session(year, gp, identifier=None, *, force_ergast=False, event=None):
     return event.get_session(identifier)
 
 
-def get_testing_session(year, test_number, session_number):
+def get_testing_session(year: int, test_number: int, session_number: int) \
+        -> Session:
     """Create a :class:`~fastf1.core.Session` object for testing sessions
     based on year, test  event number and session number.
 
     Args:
-        year (int): Championship year
-        test_number (int): Number of the testing event (usually at most two)
-        session_number (int): Number of the session withing a specific testing
+        year: Championship year
+        test_number: Number of the testing event (usually at most two)
+        session_number: Number of the session withing a specific testing
             event. Each testing event usually has three sessions.
-
-    Returns:
-        :class:`~fastf1.core.Session`
 
     .. versionadded:: 2.2
     """
@@ -299,29 +301,32 @@ def get_testing_session(year, test_number, session_number):
     return event.get_session(session_number)
 
 
-def get_event(year, gp, *, force_ergast=False, strict_search=False):
+def get_event(
+        year: int,
+        gp: Union[int, str],
+        *,
+        force_ergast: bool = False,
+        strict_search: bool = False
+) -> "Event":
     """Create an :class:`~fastf1.events.Event` object for a specific
     season and gp.
 
     To get a testing event, use :func:`get_testing_event`.
 
     Args:
-        year (int): Championship year
-        gp (int or str): Name as str or round number as int. If gp is
+        year: Championship year
+        gp: Name as str or round number as int. If gp is
             a string, a fuzzy match will be performed on all events and the
             closest match will be selected.
             Fuzzy matching uses country, location, name and officialName of
             each event as reference.
             Note that the round number cannot be used to get a testing event,
             as all testing event are round 0!
-        force_ergast (bool): Always use data from the ergast database to
+        force_ergast: Always use data from the ergast database to
             create the event schedule
-        strict_search (bool) : Match precisely the query, or default to
+        strict_search: Match precisely the query, or default to
             fuzzy search. If no event is found with
             ``strict_search=True``, the function will return None
-
-    Returns:
-        :class:`~fastf1.events.Event`
 
     .. versionadded:: 2.2
     """
@@ -336,16 +341,13 @@ def get_event(year, gp, *, force_ergast=False, strict_search=False):
     return event
 
 
-def get_testing_event(year, test_number):
+def get_testing_event(year: int, test_number: int) -> "Event":
     """Create a :class:`fastf1.events.Event` object for testing sessions
     based on year and test event number.
 
     Args:
-        year (int): Championship year
-        test_number (int): Number of the testing event (usually at most two)
-
-    Returns:
-        :class:`~fastf1.events.Event`
+        year: Championship year
+        test_number: Number of the testing event (usually at most two)
 
     .. versionadded:: 2.2
     """
@@ -354,28 +356,30 @@ def get_testing_event(year, test_number):
 
     try:
         assert test_number >= 1
-        return schedule.iloc[test_number-1]
+        return schedule.iloc[test_number - 1]
     except (IndexError, AssertionError):
         raise ValueError(f"Test event number {test_number} does not exist")
 
 
-def get_event_schedule(year, *, include_testing=True, force_ergast=False):
+def get_event_schedule(
+        year: int,
+        *,
+        include_testing: bool = True,
+        force_ergast: bool = False
+) -> "EventSchedule":
     """Create an :class:`~fastf1.events.EventSchedule` object for a specific
     season.
 
     Args:
-        year (int): Championship year
-        include_testing (bool): Include or exclude testing sessions from the
+        year: Championship year
+        include_testing: Include or exclude testing sessions from the
             event schedule.
-        force_ergast (bool): Always use data from the ergast database to
+        force_ergast: Always use data from the ergast database to
             create the event schedule
-
-    Returns:
-        :class:`~fastf1.events.EventSchedule`
 
     .. versionadded:: 2.2
     """
-    if ((year not in range(2018, datetime.datetime.now().year+1))
+    if ((year not in range(2018, datetime.datetime.now().year + 1))
             or force_ergast):
         schedule = _get_schedule_from_ergast(year)
     else:
@@ -392,19 +396,19 @@ def get_event_schedule(year, *, include_testing=True, force_ergast=False):
 
 
 def get_events_remaining(
-        dt=None, *, include_testing=True, force_ergast=False) \
-        -> 'EventSchedule':
+        dt: Optional[datetime.datetime] = None,
+        *,
+        include_testing: bool = True,
+        force_ergast: bool = False
+) -> 'EventSchedule':
     """Create an :class:`~fastf1.events.EventSchedule` object for remaining season.
 
     Args:
-        dt (datetime): Optional DateTime to get events after.
-        include_testing (bool): Include or exclude testing sessions from the
+        dt: Optional DateTime to get events after.
+        include_testing: Include or exclude testing sessions from the
             event schedule.
-        force_ergast (bool): Always use data from the ergast database to
+        force_ergast: Always use data from the ergast database to
             create the event schedule
-
-    Returns:
-        :class:`~fastf1.events.EventSchedule`
 
     .. versionadded:: 2.3
     """
@@ -432,7 +436,7 @@ def _get_schedule(year):
     return schedule
 
 
-def _get_schedule_from_ergast(year):
+def _get_schedule_from_ergast(year) -> "EventSchedule":
     # create an event schedule using data from the ergast database
     season = fastf1.ergast.fetch_season(year)
     data = collections.defaultdict(list)
@@ -532,7 +536,8 @@ class EventSchedule(pd.DataFrame):
 
     _internal_names = ['base_class_view']
 
-    def __init__(self, *args, year=0, force_default_cols=False, **kwargs):
+    def __init__(self, *args, year: int = 0,
+                 force_default_cols: bool = False, **kwargs):
         if force_default_cols:
             kwargs['columns'] = list(self._COL_TYPES)
         super().__init__(*args, **kwargs)
@@ -577,13 +582,11 @@ class EventSchedule(pd.DataFrame):
         testing event."""
         return pd.Series(self['EventFormat'] == 'testing')
 
-    def get_event_by_round(self, round):
+    def get_event_by_round(self, round: int) -> "Event":
         """Get an :class:`Event` by its round number.
 
         Args:
-            round (int): The round number
-        Returns:
-            :class:`Event`
+            round: The round number
         Raises:
             ValueError: The round does not exist in the event schedule
         """
@@ -594,7 +597,7 @@ class EventSchedule(pd.DataFrame):
             raise ValueError(f"Invalid round: {round}")
         return self[mask].iloc[0]
 
-    def _strict_event_search(self, name):
+    def _strict_event_search(self, name: str):
         """
         Match Event Name exactly, ignoring case.
         """
@@ -607,7 +610,7 @@ class EventSchedule(pd.DataFrame):
         else:
             return None
 
-    def _fuzzy_event_search(self, name):
+    def _fuzzy_event_search(self, name: str) -> "Event":
 
         def _matcher_strings(ev):
             strings = list()
@@ -636,7 +639,12 @@ class EventSchedule(pd.DataFrame):
                 index = i
         return self.loc[index]
 
-    def get_event_by_name(self, name, *, strict_search=False):
+    def get_event_by_name(
+            self,
+            name: str,
+            *,
+            strict_search: bool = False
+    ) -> "Event":
         """Get an :class:`Event` by its name.
 
         A fuzzy match is performed to find the event that best matches the
@@ -654,20 +662,16 @@ class EventSchedule(pd.DataFrame):
             Grand Prix" as ``name``.
 
         Args:
-            name (str): The name of the event. For example,
+            name: The name of the event. For example,
                 ``.get_event_by_name("british")`` and
                 ``.get_event_by_name("silverstone")`` will both return the
                 event for the British Grand Prix.
-            strict_search (bool) : Search only for exact query matches
+            strict_search: Search only for exact query matches
                 instead of using fuzzy search. For example,
                 ``.get_event_by_name("British Grand Prix", strict_search=True)`` # noqa: E501
                 will return the event for the British Grand Prix, whereas
                 ``.get_event_by_name("British", strict_search=True)``
                 will return ``None``
-
-        Returns:
-            :class:`Event`
-
         """
 
         if strict_search:
@@ -692,7 +696,7 @@ class Event(pd.Series):
 
     _internal_names = ['date', 'gp']
 
-    def __init__(self, *args, year=None, **kwargs):
+    def __init__(self, *args, year: int = None, **kwargs):
         super().__init__(*args, **kwargs)
         self.year = year
         self._getattr_override = True  # TODO: remove in v2.3
@@ -704,7 +708,7 @@ class Event(pd.Series):
 
         return _new
 
-    def __getattribute__(self, name):
+    def __getattribute__(self, name: str):
         # TODO: remove in v2.3
         if name == 'name' and getattr(self, '_getattr_override', False):
             if 'EventName' in self:
@@ -728,7 +732,7 @@ class Event(pd.Series):
             return super().__repr__()
 
     @property
-    def date(self):
+    def date(self) -> str:
         """Event race date (YYYY-MM-DD)
 
         This wraps ``self['EventDate'].strftime('%Y-%m-%d')``
@@ -745,7 +749,7 @@ class Event(pd.Series):
         return self['EventDate'].strftime('%Y-%m-%d')
 
     @property
-    def gp(self):
+    def gp(self) -> int:
         """Event round number
 
         .. deprecated:: 2.2
@@ -757,12 +761,12 @@ class Event(pd.Series):
                       "instead.", FutureWarning)
         return self['RoundNumber']
 
-    def is_testing(self):
+    def is_testing(self) -> bool:
         """Return `True` or `False`, depending on whether this event is a
         testing event."""
         return self['EventFormat'] == 'testing'
 
-    def get_session_name(self, identifier):
+    def get_session_name(self, identifier) -> str:
         """Return the full session name of a specific session from this event.
 
         Examples:
@@ -777,10 +781,7 @@ class Event(pd.Series):
             'Practice 1'
 
         Args:
-            identifier (str or int): see :ref:`SessionIdentifier`
-
-        Returns:
-            :class:`str`
+            identifier: see :ref:`SessionIdentifier`
 
         Raises:
             ValueError: No matching session or invalid identifier
@@ -822,15 +823,13 @@ class Event(pd.Series):
 
         return session_name
 
-    def get_session_date(self, identifier):
+    def get_session_date(self, identifier: Union[str, int]) \
+            -> datetime.datetime:
         """Return the date and time (if available) at which a specific session
         of this event is or was held.
 
         Args:
-            identifier (str or int): see :ref:`SessionIdentifier`
-
-        Returns:
-            :class:`datetime.datetime`
+            identifier: see :ref:`SessionIdentifier`
 
         Raises:
             ValueError: No matching session or invalid identifier
@@ -850,14 +849,11 @@ class Event(pd.Series):
                                  f"exist for this event")
             return date
 
-    def get_session(self, identifier):
+    def get_session(self, identifier: Union[int, str]) -> "Session":
         """Return a session from this event.
 
         Args:
-            identifier (str or int): see :ref:`SessionIdentifier`
-
-        Returns:
-            :class:`Session` instance
+            identifier: see :ref:`SessionIdentifier`
 
         Raises:
             ValueError: No matching session or invalid identifier
@@ -884,35 +880,21 @@ class Event(pd.Series):
         return Session(event=self, session_name=session_name,
                        f1_api_support=self.F1ApiSupport)
 
-    def get_race(self):
-        """Return the race session.
-
-        Returns:
-            :class:`Session` instance
-        """
+    def get_race(self) -> "Session":
+        """Return the race session."""
         return self.get_session('Race')
 
-    def get_qualifying(self):
-        """Return the qualifying session.
-
-        Returns:
-            :class:`Session` instance
-        """
+    def get_qualifying(self) -> "Session":
+        """Return the qualifying session."""
         return self.get_session('Qualifying')
 
-    def get_sprint(self):
-        """Return the sprint session.
-
-        Returns:
-            :class:`Session` instance
-        """
+    def get_sprint(self) -> "Session":
+        """Return the sprint session."""
         return self.get_session('Sprint')
 
-    def get_practice(self, number):
+    def get_practice(self, number: int) -> "Session":
         """Return the specified practice session.
         Args:
             number: 1, 2 or 3 - Free practice session number
-        Returns:
-            :class:`Session` instance
         """
         return self.get_session(f'Practice {number}')

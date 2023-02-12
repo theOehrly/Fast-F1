@@ -55,7 +55,7 @@ import collections
 from functools import cached_property
 import logging
 import warnings
-from typing import Optional
+from typing import Optional, List, Iterable, Union, Tuple, Any
 
 import numpy as np
 import pandas as pd
@@ -67,20 +67,20 @@ from fastf1.utils import recursive_dict_get, to_timedelta
 logging.basicConfig(level=logging.INFO, style='{',
                     format="{module: <8} {levelname: >10} \t{message}")
 
+D_LOOKUP: List[List] = \
+    [[44, 'HAM', 'Mercedes'], [77, 'BOT', 'Mercedes'],
+     [55, 'SAI', 'Ferrari'], [16, 'LEC', 'Ferrari'],
+     [33, 'VER', 'Red Bull'], [11, 'PER', 'Red Bull'],
+     [3, 'RIC', 'McLaren'], [4, 'NOR', 'McLaren'],
+     [5, 'VET', 'Aston Martin'], [18, 'STR', 'Aston Martin'],
+     [14, 'ALO', 'Alpine'], [31, 'OCO', 'Alpine'],
+     [22, 'TSU', 'AlphaTauri'], [10, 'GAS', 'AlphaTauri'],
+     [47, 'MSC', 'Haas F1 Team'], [9, 'MAZ', 'Haas F1 Team'],
+     [7, 'RAI', 'Alfa Romeo'], [99, 'GIO', 'Alfa Romeo'],
+     [6, 'LAT', 'Williams'], [63, 'RUS', 'Williams']]
 
-D_LOOKUP = [[44, 'HAM', 'Mercedes'], [77, 'BOT', 'Mercedes'],
-            [55, 'SAI', 'Ferrari'], [16, 'LEC', 'Ferrari'],
-            [33, 'VER', 'Red Bull'], [11, 'PER', 'Red Bull'],
-            [3, 'RIC', 'McLaren'], [4, 'NOR', 'McLaren'],
-            [5, 'VET', 'Aston Martin'], [18, 'STR', 'Aston Martin'],
-            [14, 'ALO', 'Alpine'], [31, 'OCO', 'Alpine'],
-            [22, 'TSU', 'AlphaTauri'], [10, 'GAS', 'AlphaTauri'],
-            [47, 'MSC', 'Haas F1 Team'], [9, 'MAZ', 'Haas F1 Team'],
-            [7, 'RAI', 'Alfa Romeo'], [99, 'GIO', 'Alfa Romeo'],
-            [6, 'LAT', 'Williams'], [63, 'RUS', 'Williams']]
 
-
-def get_session(*args, **kwargs):
+def get_session(*args, **kwargs) -> "Session":
     """
     .. deprecated:: 2.2
         replaced by :func:`fastf1.get_session`
@@ -226,7 +226,7 @@ class Telemetry(pd.DataFrame):
     def __init__(self, *args, session=None, driver=None,
                  drop_unknown_channels=False, **kwargs):
         super().__init__(*args, **kwargs)
-        self.session = session
+        self.session: Optional[Session] = session
         self.driver = driver
 
         if drop_unknown_channels:
@@ -277,16 +277,13 @@ class Telemetry(pd.DataFrame):
             setattr(ret, var, val)
         return ret
 
-    def slice_by_mask(self, mask, pad=0, pad_side='both'):
+    def slice_by_mask(self, mask, pad=0, pad_side='both') -> "Telemetry":
         """Slice self using a boolean array as a mask.
 
         Args:
             mask (array-like): Array of boolean values with the same length as self
             pad (int): Number of samples used for padding the sliced data
             pad_side (str): Where to pad the data; possible options: 'both', 'before', 'after'
-
-        Returns:
-            :class:`Telemetry`
         """
         if pad:
             if pad_side in ('both', 'before'):
@@ -304,7 +301,13 @@ class Telemetry(pd.DataFrame):
 
         return data_slice
 
-    def slice_by_lap(self, ref_laps, pad=0, pad_side='both', interpolate_edges=False):
+    def slice_by_lap(
+            self,
+            ref_laps: Union["Lap", "Laps"],
+            pad: int = 0,
+            pad_side: str = 'both',
+            interpolate_edges: bool = False
+    ):
         """Slice self to only include data from the provided lap or laps.
 
         .. note:: Self needs to contain a 'SessionTime' column.
@@ -314,14 +317,12 @@ class Telemetry(pd.DataFrame):
             the sliced result.
 
         Args:
-            ref_laps (Lap or Laps): The lap/laps by which to slice self
-            pad (int): Number of samples used for padding the sliced data
-            pad_side (str): Where to pad the data; possible options: 'both', 'before', 'after
-            interpolate_edges (bool): Add an interpolated sample at the beginning and end to exactly
-                match the provided time window.
-
-        Returns:
-            :class:`Telemetry`
+            ref_laps: The lap/laps by which to slice self
+            pad: Number of samples used for padding the sliced data
+            pad_side: Where to pad the data; possible options:
+                'both', 'before', 'after
+            interpolate_edges: Add an interpolated sample at the beginning
+                and end to exactly match the provided time window.
         """
         if isinstance(ref_laps, Laps) and len(ref_laps) > 1:
             if 'DriverNumber' not in ref_laps.columns:
@@ -345,7 +346,14 @@ class Telemetry(pd.DataFrame):
 
         return self.slice_by_time(start_time, end_time, pad, pad_side, interpolate_edges)
 
-    def slice_by_time(self, start_time, end_time, pad=0, pad_side='both', interpolate_edges=False):
+    def slice_by_time(
+            self,
+            start_time,
+            end_time,
+            pad: int = 0,
+            pad_side: str = 'both',
+            interpolate_edges: bool = False
+    ) -> "Telemetry":
         """Slice self to only include data in a specific time frame.
 
         .. note:: Self needs to contain a 'SessionTime' column. Slicing by time use the 'SessionTime' as its reference.
@@ -353,10 +361,11 @@ class Telemetry(pd.DataFrame):
         Args:
             start_time (Timedelta): Start of the section
             end_time (Timedelta): End of the section
-            pad (int): Number of samples used for padding the sliced data
-            pad_side (str): Where to pad the data; possible options: 'both', 'before', 'after
-            interpolate_edges (bool): Add an interpolated sample at the beginning and end to exactly
-                match the provided time window.
+            pad: Number of samples used for padding the sliced data
+            pad_side: Where to pad the data; possible options:
+                'both', 'before', 'after
+            interpolate_edges: Add an interpolated sample at the beginning
+                and end to exactly match the provided time window.
 
         Returns:
             :class:`Telemetry`
@@ -381,7 +390,11 @@ class Telemetry(pd.DataFrame):
             return data_slice
         return Telemetry().__finalize__(self)
 
-    def merge_channels(self, other, frequency=None):
+    def merge_channels(
+            self,
+            other: Union["Telemetry", pd.DataFrame],
+            frequency: Union[int, str] = None
+    ):
         """Merge telemetry objects containing different telemetry channels.
 
         The two objects don't need to have a common time base. The data will be merged, optionally resampled and
@@ -415,12 +428,9 @@ class Telemetry(pd.DataFrame):
             to preserve accuracy
 
         Args:
-            other (:class:`Telemetry` or :class:`pandas.DataFrame`): Object to be merged with self
-            frequency (str or int): Optional frequency to overwrite global preset. (Either string 'original' or integer
-                for a frequency in Hz)
-
-        Returns:
-            :class:`Telemetry`
+            other: Object to be merged with self
+            frequency: Optional frequency to overwrite global preset.
+                (Either string 'original' or integer for a frequency in Hz)
         """
         # merge the data and interpolate missing; 'Date' needs to be the index
         data = self.set_index('Date')
@@ -494,9 +504,9 @@ class Telemetry(pd.DataFrame):
             resampled_columns['Source'] = res_source
 
             # join resampled columns and make 'Date' a column again
-            merged = Telemetry(resampled_columns)\
-                .__finalize__(self)\
-                .reset_index()\
+            merged = Telemetry(resampled_columns) \
+                .__finalize__(self) \
+                .reset_index() \
                 .rename(columns={'index': 'Date'})
 
             # recalculate the time columns
@@ -512,7 +522,12 @@ class Telemetry(pd.DataFrame):
 
         return merged
 
-    def resample_channels(self, rule=None, new_date_ref=None, **kwargs):
+    def resample_channels(
+            self,
+            rule: Optional[str] = None,
+            new_date_ref: Optional[pd.Series] = None,
+            **kwargs: Optional[Any]
+    ):
         """Resample telemetry data.
 
         Convenience method for frequency conversion and resampling. Up and down sampling of data is supported.
@@ -529,10 +544,10 @@ class Telemetry(pd.DataFrame):
               time reference.
 
         Args:
-            rule (optional, str): Resampling rule for :meth:`pandas.Series.resample`
-            new_date_ref (optional, pandas.Series): New custom Series of reference dates
-            **kwargs (optional, any): Only in combination with 'rule'; additional parameters for
-                :meth:`pandas.Series.resample`
+            rule: Resampling rule for :meth:`pandas.Series.resample`
+            new_date_ref: New custom Series of reference dates
+            **kwargs: Only in combination with 'rule'; additional parameters
+                for :meth:`pandas.Series.resample`
         """
         if rule is not None and new_date_ref is not None:
             raise ValueError("You can only specify one of 'rule' or 'new_index'")
@@ -540,7 +555,7 @@ class Telemetry(pd.DataFrame):
             raise ValueError("You need to specify either 'rule' or 'new_index'")
 
         if new_date_ref is None:
-            st = pd.Series(index=pd.DatetimeIndex(self['Date']), dtype=int)\
+            st = pd.Series(index=pd.DatetimeIndex(self['Date']), dtype=int) \
                 .resample(rule, **kwargs).asfreq()
             new_date_ref = pd.Series(st.index)
 
@@ -600,18 +615,23 @@ class Telemetry(pd.DataFrame):
         return ret
 
     @classmethod
-    def register_new_channel(cls, name, signal_type, interpolation_method=None):
+    def register_new_channel(
+            cls,
+            name: str,
+            signal_type: str,
+            interpolation_method: Optional[str] = None
+    ):
         """Register a custom telemetry channel.
 
         Registered telemetry channels are automatically interpolated when merging or resampling data.
 
         Args:
-            name (str): Telemetry channel/column name
-            signal_type (str): One of three possible signal types:
+            name: Telemetry channel/column name
+            signal_type: One of three possible signal types:
                 - 'continuous': Speed, RPM, Distance, ...
                 - 'discrete': DRS, nGear, status values, ...
                 - 'excluded': Data channel will be ignored during resampling
-            interpolation_method (optional, str): The interpolation method
+            interpolation_method: The interpolation method
                 which should be used. Can only be specified and is required
                 in combination with ``signal_type='continuous'``. See
                 :meth:`pandas.Series.interpolate` for possible interpolation
@@ -632,7 +652,10 @@ class Telemetry(pd.DataFrame):
             return np.min(i_arr)
         return None
 
-    def add_differential_distance(self, drop_existing=True):
+    def add_differential_distance(
+            self,
+            drop_existing: bool = True
+    ) -> "Telemetry":
         """Add column 'DifferentialDistance' to self.
 
         This column contains the distance driven between subsequent samples.
@@ -641,9 +664,10 @@ class Telemetry(pd.DataFrame):
         with self.
 
         Args:
-            drop_existing (bool): Drop and recalculate column if it already exists
+            drop_existing: Drop and recalculate column if it already exists
         Returns:
-            :class:`Telemetry`: self joined with new column or self if column exists and `drop_existing` is False.
+            self joined with new column or self if column exists
+            and `drop_existing` is False.
         """
         if ('DifferentialDistance' in self.columns) and not drop_existing:
             return self
@@ -657,7 +681,7 @@ class Telemetry(pd.DataFrame):
 
         return self.join(new_dif_dist, how='outer')
 
-    def add_distance(self, drop_existing=True):
+    def add_distance(self, drop_existing: bool = True) -> "Telemetry":
         """Add column 'Distance' to self.
 
         This column contains the distance driven since the first sample of self in meters.
@@ -669,9 +693,10 @@ class Telemetry(pd.DataFrame):
         Calls :meth:`integrate_distance` and joins the result with self.
 
         Args:
-            drop_existing (bool): Drop and recalculate column if it already exists
+            drop_existing: Drop and recalculate column if it already exists
         Returns:
-            :class:`Telemetry`: self joined with new column or self if column exists and `drop_existing` is False.
+            self joined with new column or self if column exists
+            and `drop_existing` is False.
         """
         if ('Distance' in self.columns) and not drop_existing:
             return self
@@ -682,7 +707,7 @@ class Telemetry(pd.DataFrame):
 
         return self.join(new_dist, how='outer')
 
-    def add_relative_distance(self, drop_existing=True):
+    def add_relative_distance(self, drop_existing: bool = True) -> "Telemetry":
         """Add column 'RelativeDistance' to self.
 
         This column contains the distance driven since the first sample as
@@ -692,9 +717,10 @@ class Telemetry(pd.DataFrame):
         This is calculated the same way as 'Distance' (see: :meth:`add_distance`). The same warnings apply.
 
         Args:
-            drop_existing (bool): Drop and recalculate column if it already exists
+            drop_existing: Drop and recalculate column if it already exists
         Returns:
-            :class:`Telemetry`: self joined with new column or self if column exists and `drop_existing` is False.
+            self joined with new column or self if column exists
+            and `drop_existing` is False.
         """
         if 'RelativeDistance' in self.columns:
             if drop_existing:
@@ -760,7 +786,7 @@ class Telemetry(pd.DataFrame):
         d['TrackStatus'] = ts
         return d
 
-    def add_driver_ahead(self, drop_existing=True):
+    def add_driver_ahead(self, drop_existing: bool = True) -> "Telemetry":
         """Add column 'DriverAhead' and 'DistanceToDriverAhead' to self.
 
         DriverAhead: Driver number of the driver ahead as string
@@ -779,9 +805,10 @@ class Telemetry(pd.DataFrame):
         Calls :meth:`calculate_driver_ahead` and joins the result with self.
 
         Args:
-            drop_existing (bool): Drop and recalculate column if it already exists
+            drop_existing: Drop and recalculate column if it already exists
         Returns:
-            :class:`Telemetry`: self joined with new column or self if column exists and `drop_existing` is False.
+            self joined with new column or self if column exists
+            and `drop_existing` is False.
         """
         if 'DriverAhead' in self.columns and 'DistanceToDriverAhead' in self.columns:
             if drop_existing:
@@ -819,13 +846,10 @@ class Telemetry(pd.DataFrame):
         return d.join(dtd.loc[:, ('DriverAhead', 'DistanceToDriverAhead')],
                       how='outer')
 
-    def calculate_differential_distance(self):
+    def calculate_differential_distance(self) -> pd.Series:
         """Calculate the distance between subsequent samples of self.
 
         Distance is in meters
-
-        Returns:
-            :class:`pandas.Series`
         """
         if not all([col in self.columns for col in ('Speed', 'Time')]):
             raise ValueError("Telemetry does not contain required channels 'Time' and 'Speed'.")
@@ -852,7 +876,7 @@ class Telemetry(pd.DataFrame):
         else:
             return pd.Series()
 
-    def calculate_driver_ahead(self, return_reference=False):
+    def calculate_driver_ahead(self, return_reference: bool = False):
         """Calculate driver ahead and distance to driver ahead.
 
         Driver ahead: Driver number of the driver ahead as string
@@ -863,7 +887,7 @@ class Telemetry(pd.DataFrame):
             a long distance). If in doubt, do sanity checks (against the legacy version or in another way).
 
         Args:
-            return_reference (bool): Additionally return the reference
+            return_reference: Additionally return the reference
                 telemetry data slice that is used to calculate the new data.
 
         Returns:
@@ -926,7 +950,7 @@ class Telemetry(pd.DataFrame):
                     relevant_laps = drv_laps[
                         (drv_laps['LapNumber'] >= (lap_n_before - pad_before))
                         & (drv_laps['LapNumber'] <= lap_n_after + pad_after)
-                    ]
+                        ]
                 except IndexError:
                     break
 
@@ -953,7 +977,7 @@ class Telemetry(pd.DataFrame):
 
             # first slice by lap and calculate distance, so that distance is zero at finish line
             drv_tel = self.session.car_data[drv] \
-                          .slice_by_lap(relevant_laps)
+                .slice_by_lap(relevant_laps)
 
             if drv_tel.empty:
                 continue
@@ -1009,6 +1033,7 @@ class Weekend:
     .. deprecated:: 2.2
         Use :class:`fastf1.events.Event` instead
     """
+
     def __new__(cls, year, gp):
         warnings.warn("`fastf1.core.Weekend` has been deprecated and will be"
                       "removed in a future version.\n"
@@ -1088,7 +1113,7 @@ class Session:
         return list(self.results['DriverNumber'].unique())
 
     @property
-    def results(self):
+    def results(self) -> "SessionResults":
         """:class:`SessionResults`: Session result with driver information.
 
         Data is available after calling `Session.load`
@@ -1096,7 +1121,7 @@ class Session:
         return self._get_property_warn_not_loaded('_results')
 
     @property
-    def laps(self):
+    def laps(self) -> "Laps":
         """:class:`Laps`: All laps from all drivers driven in this session.
 
         Data is available after calling `Session.load` with ``laps=True``
@@ -1104,7 +1129,7 @@ class Session:
         return self._get_property_warn_not_loaded('_laps')
 
     @property
-    def total_laps(self):
+    def total_laps(self) -> int:
         """:class:`int`: Originally scheduled number of laps for race-like
         sessions such as Race and Sprint. It takes None as a default value
         for other types of sessions or if data is unavailable
@@ -1124,7 +1149,7 @@ class Session:
         return self._get_property_warn_not_loaded('_weather_data')
 
     @property
-    def car_data(self):
+    def car_data(self) -> "Telemetry":
         """Dictionary of car telemetry (Speed, RPM, etc.) as received from
         the api by car number (where car number is a string and the telemetry
         is an instance of :class:`Telemetry`)
@@ -1134,7 +1159,7 @@ class Session:
         return self._get_property_warn_not_loaded('_car_data')
 
     @property
-    def pos_data(self):
+    def pos_data(self) -> "Telemetry":
         """Dictionary of car position data as received from the api by car
         number (where car number is a string and the telemetry
         is an instance of :class:`Telemetry`)
@@ -1171,7 +1196,7 @@ class Session:
         return self._get_property_warn_not_loaded('_race_control_messages')
 
     @property
-    def session_start_time(self):
+    def session_start_time(self) -> pd.Timedelta:
         """:class:`pandas.Timedelta`: Session time at which the session was
         started according to the session status data. This is not the
         time at which the session is scheduled to be started!
@@ -1350,7 +1375,7 @@ class Session:
         drivers = self.drivers
         if not drivers:
             # no driver list, generate from lap data
-            drivers = set(data['Driver'].unique())\
+            drivers = set(data['Driver'].unique()) \
                 .intersection(set(useful['Driver'].unique()))
 
             _nums_df = pd.DataFrame({'DriverNumber': list(drivers)},
@@ -1402,7 +1427,7 @@ class Session:
                 logging.warning(f"No tyre data for driver {driver}")
 
             else:
-                result = pd.merge_asof(d1, d2, on='Time', by='Driver')\
+                result = pd.merge_asof(d1, d2, on='Time', by='Driver') \
                     .rename(columns={'StartLaps': 'TyreLife'})
 
             # calculate lap start time by setting it to the 'Time' of the
@@ -1497,7 +1522,7 @@ class Session:
                         'New': [result['New'].iloc[-1]],
                     })
                     if not only_one_lap:
-                        result = pd.concat([result, new_last])\
+                        result = pd.concat([result, new_last]) \
                             .reset_index(drop=True)
                     else:
                         result = new_last
@@ -1861,7 +1886,7 @@ class Session:
 
         self._laps['LapStartDate'] = self._laps['LapStartTime'] + self.t0_date
 
-    def get_driver(self, identifier):
+    def get_driver(self, identifier) -> "Driver":
         """
         Get a driver object which contains additional information about a driver.
 
@@ -2019,7 +2044,7 @@ class Laps(pd.DataFrame):
     QUICKLAP_THRESHOLD = 1.07
     """Used to determine 'quick' laps. Defaults to the 107% rule."""
 
-    def __init__(self, *args, session=None, **kwargs):
+    def __init__(self, *args, session: Optional[Session] = None, **kwargs):
         super().__init__(*args, **kwargs)
         self.session = session
 
@@ -2044,7 +2069,7 @@ class Laps(pd.DataFrame):
         return pd.DataFrame(self)
 
     @cached_property
-    def telemetry(self):
+    def telemetry(self) -> Telemetry:
         """Telemetry data for all laps in `self`
 
         This is a cached (!) property for :meth:`get_telemetry`. It will return the same value as `get_telemetry`
@@ -2060,7 +2085,7 @@ class Laps(pd.DataFrame):
             instance of :class:`Telemetry`"""
         return self.get_telemetry()
 
-    def get_telemetry(self):
+    def get_telemetry(self) -> Telemetry:
         """Telemetry data for all laps in `self`
 
         Telemetry data is the result of merging the returned data from :meth:`get_car_data` and :meth:`get_pos_data`.
@@ -2082,9 +2107,10 @@ class Laps(pd.DataFrame):
         pos_data = self.get_pos_data(pad=1, pad_side='both')
         car_data = self.get_car_data(pad=1, pad_side='both')
 
-        # calculate driver ahead from from data without padding to
+        # calculate driver ahead from data without padding to
         # prevent out of bounds errors
-        drv_ahead = car_data.iloc[1:-1].add_driver_ahead() \
+        drv_ahead = car_data.iloc[1:-1] \
+            .add_driver_ahead() \
             .loc[:, ('DriverAhead', 'DistanceToDriverAhead',
                      'Date', 'Time', 'SessionTime')]
 
@@ -2093,7 +2119,7 @@ class Laps(pd.DataFrame):
         merged = pos_data.merge_channels(car_data)
         return merged.slice_by_lap(self, interpolate_edges=True)
 
-    def get_car_data(self, **kwargs):
+    def get_car_data(self, **kwargs) -> Telemetry:
         """Car data for all laps in `self`
 
         Slices the car data in :attr:`Session.car_data` using this set of laps and returns the result.
@@ -2118,7 +2144,7 @@ class Laps(pd.DataFrame):
         car_data = self.session.car_data[drv_num].slice_by_lap(self, **kwargs).reset_index(drop=True)
         return car_data
 
-    def get_pos_data(self, **kwargs):
+    def get_pos_data(self, **kwargs) -> Telemetry:
         """Pos data for all laps in `self`
 
         Slices the position data in :attr:`Session.pos_data` using this set of laps and returns the result.
@@ -2140,7 +2166,7 @@ class Laps(pd.DataFrame):
         pos_data = self.session.pos_data[drv_num].slice_by_lap(self, **kwargs).reset_index(drop=True)
         return pos_data
 
-    def get_weather_data(self):
+    def get_weather_data(self) -> pd.DataFrame:
         """Return weather data for each lap in self.
 
         Weather data is updated once per minute. This means that there are
@@ -2219,7 +2245,7 @@ class Laps(pd.DataFrame):
         else:
             return pd.DataFrame(columns=self.session.weather_data.columns)
 
-    def pick_driver(self, identifier):
+    def pick_driver(self, identifier: Union[int, str]) -> "Laps":
         """Return all laps of a specific driver in self based on the driver's
         three letters identifier or based on the driver number ::
 
@@ -2239,7 +2265,7 @@ class Laps(pd.DataFrame):
         else:
             return self[self['Driver'] == identifier]
 
-    def pick_drivers(self, identifiers):
+    def pick_drivers(self, identifiers: Iterable[Union[int, str]]) -> "Laps":
         """Return all laps of the specified drivers in self based on the
         drivers' three letters identifier or based on the driver number. This
         is the same as :meth:`Laps.pick_driver` but for multiple drivers
@@ -2259,7 +2285,7 @@ class Laps(pd.DataFrame):
 
         return self[(drv.isin(names) | num.isin(numbers))]
 
-    def pick_team(self, name):
+    def pick_team(self, name: str) -> "Laps":
         """Return all laps of a specific team in self based on the
         team's name ::
 
@@ -2276,7 +2302,7 @@ class Laps(pd.DataFrame):
         """
         return self[self['Team'] == name]
 
-    def pick_teams(self, names):
+    def pick_teams(self, names: Iterable[str]) -> "Laps":
         """Return all laps of the specified teams in self based on the teams'
         name. This is the same as :meth:`Laps.pick_team` but for multiple
         teams at once. ::
@@ -2291,7 +2317,7 @@ class Laps(pd.DataFrame):
         """
         return self[self['Team'].isin(names)]
 
-    def pick_fastest(self, only_by_time=False):
+    def pick_fastest(self, only_by_time: bool = False) -> "Lap":
         """Return the lap with the fastest lap time.
 
         This method will by default return the quickest lap out of self, that
@@ -2331,7 +2357,7 @@ class Laps(pd.DataFrame):
 
         return lap
 
-    def pick_quicklaps(self, threshold=None):
+    def pick_quicklaps(self, threshold: Optional[float] = None) -> "Laps":
         """Return all laps with `LapTime` faster than a certain limit. By
         default the threshold is 107% of the best `LapTime` of all laps
         in self.
@@ -2349,7 +2375,7 @@ class Laps(pd.DataFrame):
 
         return self[self['LapTime'] < time_threshold]
 
-    def pick_tyre(self, compound):
+    def pick_tyre(self, compound: str) -> "Laps":
         """Return all laps in self which were done on a specific compound.
 
         Args:
@@ -2360,7 +2386,7 @@ class Laps(pd.DataFrame):
         """
         return self[self['Compound'] == compound]
 
-    def pick_track_status(self, status, how='equals'):
+    def pick_track_status(self, status: str, how: str = 'equals') -> "Laps":
         """Return all laps set under a specific track status.
 
         Args:
@@ -2378,7 +2404,7 @@ class Laps(pd.DataFrame):
         else:
             raise ValueError(f"Invalid value '{how}' for kwarg 'how'")
 
-    def pick_wo_box(self):
+    def pick_wo_box(self) -> "Laps":
         """Return all laps which are NOT in laps or out laps.
 
         Returns:
@@ -2386,7 +2412,7 @@ class Laps(pd.DataFrame):
         """
         return self[pd.isnull(self['PitInTime']) & pd.isnull(self['PitOutTime'])]
 
-    def pick_accurate(self):
+    def pick_accurate(self) -> "Laps":
         """Return all laps which pass the accuracy validation check
         (lap['IsAccurate'] is True).
 
@@ -2395,7 +2421,8 @@ class Laps(pd.DataFrame):
         """
         return self[self['IsAccurate']]
 
-    def iterlaps(self, require=()):
+    def iterlaps(self, require: Optional[Iterable] = None) \
+            -> Iterable[Tuple[int, "Lap"]]:
         """Iterator for iterating over all laps in self.
 
         This method wraps :meth:`pandas.DataFrame.iterrows`.
@@ -2439,7 +2466,7 @@ class Lap(pd.Series):
         return _new
 
     @cached_property
-    def telemetry(self):
+    def telemetry(self) -> Telemetry:
         """Telemetry data for this lap
 
         This is a cached (!) property for :meth:`get_telemetry`. It will return the same value as `get_telemetry`
@@ -2453,7 +2480,7 @@ class Lap(pd.Series):
             instance of :class:`Telemetry`"""
         return self.get_telemetry()
 
-    def get_telemetry(self):
+    def get_telemetry(self) -> Telemetry:
         """Telemetry data for this lap
 
         Telemetry data is the result of merging the returned data from :meth:`get_car_data` and :meth:`get_pos_data`.
@@ -2475,7 +2502,8 @@ class Lap(pd.Series):
 
         # calculate driver ahead from from data without padding to
         # prevent out of bounds errors
-        drv_ahead = car_data.iloc[1:-1].add_driver_ahead() \
+        drv_ahead = car_data.iloc[1:-1] \
+            .add_driver_ahead() \
             .loc[:, ('DriverAhead', 'DistanceToDriverAhead',
                      'Date', 'Time', 'SessionTime')]
 
@@ -2484,7 +2512,7 @@ class Lap(pd.Series):
         merged = pos_data.merge_channels(car_data)
         return merged.slice_by_lap(self, interpolate_edges=True)
 
-    def get_car_data(self, **kwargs):
+    def get_car_data(self, **kwargs) -> Telemetry:
         """Car data for this lap
 
         Slices the car data in :attr:`Session.car_data` using this lap and returns the result.
@@ -2501,7 +2529,7 @@ class Lap(pd.Series):
         car_data = self.session.car_data[self['DriverNumber']].slice_by_lap(self, **kwargs).reset_index(drop=True)
         return car_data
 
-    def get_pos_data(self, **kwargs):
+    def get_pos_data(self, **kwargs) -> Telemetry:
         """Pos data for all laps in `self`
 
         Slices the position data in :attr:`Session.pos_data` using this lap and returns the result.
@@ -2515,7 +2543,7 @@ class Lap(pd.Series):
         pos_data = self.session.pos_data[self['DriverNumber']].slice_by_lap(self, **kwargs).reset_index(drop=True)
         return pos_data
 
-    def get_weather_data(self):
+    def get_weather_data(self) -> pd.Series:
         """Return weather data for this lap.
 
         Weather data is updated once per minute. This means that there are
@@ -2685,7 +2713,7 @@ class SessionResults(pd.DataFrame):
 
     _internal_names = ['base_class_view']
 
-    def __init__(self, *args, force_default_cols=False, **kwargs):
+    def __init__(self, *args, force_default_cols: bool = False, **kwargs):
         if force_default_cols:
             kwargs['columns'] = list(self._COL_TYPES.keys())
         super().__init__(*args, **kwargs)
@@ -2780,7 +2808,7 @@ class DriverResult(pd.Series):
             return super().__repr__()
 
     @property
-    def dnf(self):
+    def dnf(self) -> bool:
         """True if driver did not finish"""
         return not (self.Status[3:6] == 'Lap' or self.Status == 'Finished')
 
@@ -2846,6 +2874,7 @@ class Driver:
     .. deprecated:: 2.2
         Use :class:`fastf1.core.DriverResult` instead
     """
+
     def __new__(cls, *args, **kwargs):
         warnings.warn("`fastf1.core.Driver` has been deprecated and will be"
                       "removed in a future version.\n"

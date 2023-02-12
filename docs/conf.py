@@ -36,11 +36,11 @@ extensions = [
     'matplotlib.sphinxext.plot_directive',
     'sphinx.ext.doctest',
     'sphinx.ext.autodoc',
+    'sphinx.ext.napoleon',
+    'sphinx_autodoc_typehints',
     'sphinx.ext.autosummary',
     'sphinx.ext.todo',
     'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon',
-    'sphinx_rtd_theme',
     'sphinx_gallery.gen_gallery',
     'autodocsumm'
 ]
@@ -64,9 +64,8 @@ exclude_patterns = [
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'furo'
 html_theme_options = {
-    'collapse_navigation': False
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,

@@ -1,7 +1,4 @@
 """
-Legacy Functionality - :mod:`fastf1.legacy`
-===========================================
-
 This module contains the legacy implementation for calculating distance to driver ahead.
 
 :func:`inject_driver_ahead` adds 'DriverAhead' and 'DistanceToDriverAhead' to the position data for all laps of all
