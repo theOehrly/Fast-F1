@@ -298,13 +298,11 @@ def test_add_driver_ahead_resampled(reference_laps_data):
     assert test_data['DistanceToDriverAhead'].isnull().sum() <= 1
 
 
-def test_add_track_status():
-    # rainy and short session, good for fast test/quick loading
-    session = fastf1.get_session(2020, 5, 'FP2')
+@pytest.mark.f1telapi
+def test_add_track_status(reference_laps_data):
+    session, laps = reference_laps_data
 
-    # load the data
-    session.load(telemetry=True)
-    test_data = session.laps.pick_driver('VER').get_telemetry()
+    test_data = laps.pick_driver('VER').get_telemetry()
     test_data = test_data.add_track_status()
 
     # Get statuses
