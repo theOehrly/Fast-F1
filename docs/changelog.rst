@@ -7,6 +7,14 @@ v3.0.0
 ======
 
 
+Backwards Incompatible API Changes
+----------------------------------
+
+- :func:`fastf1.utils.to_datetime` and :func:`fastf1.utils.to_timedelta` will
+  now return ``None`` instead of raising an exception when a string cannot
+  be parsed.
+
+
 Removals
 --------
 

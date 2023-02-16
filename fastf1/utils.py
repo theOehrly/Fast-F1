@@ -1,11 +1,10 @@
 """This is a collection of various functions."""
-import warnings
+import datetime
+import logging
 from functools import reduce
-from typing import Tuple, Dict
+from typing import Dict, Tuple, Optional
 
 import numpy as np
-from datetime import datetime, timedelta
-
 import pandas as pd
 
 
@@ -98,7 +97,7 @@ def recursive_dict_get(d: Dict, *keys: str, default_none: bool = False):
         return ret
 
 
-def to_timedelta(x: str) -> timedelta:
+def to_timedelta(x: str) -> Optional[datetime.timedelta]:
     """Fast timedelta object creation from a time string
 
     Permissible string formats:
@@ -140,20 +139,24 @@ def to_timedelta(x: str) -> timedelta:
             else:
                 msus = 0
 
-            return timedelta(hours=int(hours), minutes=int(minutes),
-                             seconds=int(seconds), microseconds=int(msus))
-        except Exception as exc:
-            warnings.warn(
-                "In a future version, `to_timedelta` will return NaT instead "
-                "of raising an exception if a value cannot be parsed.",
-                FutureWarning
+            return datetime.timedelta(
+                hours=int(hours), minutes=int(minutes),
+                seconds=int(seconds), microseconds=int(msus)
             )
-            raise exc
-    elif isinstance(x, timedelta):
+
+        except Exception as exc:
+            logging.debug(f"Failed to parse timedelta string '{x}'",
+                          exc_info=exc)
+            return None
+
+    elif isinstance(x, datetime.timedelta):
         return x
 
+    else:
+        return None
 
-def to_datetime(x):
+
+def to_datetime(x) -> Optional[datetime.datetime]:
     """Fast datetime object creation from a date string.
 
     Permissible string formats:
@@ -189,14 +192,18 @@ def to_datetime(x):
             else:
                 msus = 0
 
-            return datetime(int(year), int(month), int(day), int(hours),
-                            int(minutes), int(seconds), int(msus))
-        except Exception as exc:
-            warnings.warn(
-                "In a future version, `to_datetime` will return NaT instead "
-                "of raising an exception if a value cannot be parsed.",
-                FutureWarning
+            return datetime.datetime(
+                int(year), int(month), int(day), int(hours),
+                int(minutes), int(seconds), int(msus)
             )
-            raise exc
-    elif isinstance(x, datetime):
+
+        except Exception as exc:
+            logging.debug(f"Failed to parse datetime string '{x}'",
+                          exc_info=exc)
+            return None
+
+    elif isinstance(x, datetime.datetime):
         return x
+
+    else:
+        return None
