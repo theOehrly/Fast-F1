@@ -30,27 +30,6 @@ def fetch_season(year):
     )
 
 
-def fetch_weekend(year, gp):
-    warnings.warn(
-        "`fetch_weekend()` is deprecated and will be"
-        "removed without a direct replacement in a "
-        "future version.",
-        FutureWarning
-    )
-    url = f"{base_url}/{year}/{gp}.json"
-    data = _parse_ergast(_parse_json_response(
-        Cache.requests_get(url, headers=_headers)
-    ))[0]
-    url = ("https://www.mapcoordinates.net/admin/component/edit/"
-           + "Vpc_MapCoordinates_Advanced_GoogleMapCoords_Component/"
-           + "Component/json-get-elevation")
-    loc = data['Circuit']['Location']
-    body = {'longitude': loc['long'], 'latitude': loc['lat']}
-    res = _parse_json_response(Cache.requests_post(url, data=body))
-    data['Circuit']['Location']['alt'] = res['elevation']
-    return data
-
-
 def fetch_day(year, gp, day):
     """day can be 'qualifying' or 'results'
     """
