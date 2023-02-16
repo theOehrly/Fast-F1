@@ -13,7 +13,6 @@ All data is provided through the following data objects:
     .. autosummary::
        :nosignatures:
 
-       Weekend
        Session
        Laps
        Lap
@@ -27,7 +26,7 @@ timing data and telemetry data. The :class:`Session` can create a
 :class:`Laps` object which contains all timing, track and session status
 data for a whole session.
 
-Usually you will be using :func:`get_session` to get a :class:`Session`
+Usually you will be using :func:`fastf1.get_session` to get a :class:`Session`
 object.
 
 The :class:`Laps` object holds detailed information about multiples laps.
@@ -39,17 +38,6 @@ an object of type :class:`Lap` will be returned.
 Apart from only providing data, the :class:`Laps`, :class:`Lap` and
 :class:`Telemetry` objects implement various methods for selecting and
 analyzing specific parts of the data.
-
-
-Functions
----------
-
-.. autosummary::
-   :nosignatures:
-
-    get_session
-    get_round
-
 """
 import collections
 from functools import cached_property
