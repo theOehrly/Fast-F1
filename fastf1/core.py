@@ -177,6 +177,8 @@ class Telemetry(pd.DataFrame):
     """Known telemetry channels which are supported by default"""
 
     _metadata = ['session', 'driver']
+    _internal_names = pd.DataFrame._internal_names + ['base_class_view']
+    _internal_names_set = set(_internal_names)
 
     def __init__(self, *args, session=None, driver=None,
                  drop_unknown_channels=False, **kwargs):
@@ -1950,6 +1952,9 @@ class Laps(pd.DataFrame):
     """
 
     _metadata = ['session']
+    _internal_names = pd.DataFrame._internal_names \
+        + ['base_class_view', 'telemetry']
+    _internal_names_set = set(_internal_names)
 
     QUICKLAP_THRESHOLD = 1.07
     """Used to determine 'quick' laps. Defaults to the 107% rule."""
@@ -2364,6 +2369,8 @@ class Lap(pd.Series):
     telemetry data.
     """
     _metadata = ['session']
+    _internal_names = pd.Series._internal_names + ['telemetry']
+    _internal_names_set = set(_internal_names)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -2621,7 +2628,8 @@ class SessionResults(pd.DataFrame):
         'Points': float
     }
 
-    _internal_names = ['base_class_view']
+    _internal_names = pd.DataFrame._internal_names + ['base_class_view']
+    _internal_names_set = set(_internal_names)
 
     def __init__(self, *args, force_default_cols: bool = False, **kwargs):
         if force_default_cols:
@@ -2682,6 +2690,9 @@ class DriverResult(pd.Series):
 
     .. versionadded:: 2.2
     """
+
+    _internal_names = pd.DataFrame._internal_names + ['dnf']
+    _internal_names_set = set(_internal_names)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

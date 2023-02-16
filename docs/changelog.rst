@@ -7,6 +7,14 @@ v3.0.0
 ======
 
 
+Bug Fixes
+---------
+
+- Fixed incorrectly set ``_internal_names`` for objects inheriting from
+  DataFrame or Series. This potentially caused incorrect warnings about
+  incorrectly creating new columns.
+
+
 Backwards Incompatible API Changes
 ----------------------------------
 

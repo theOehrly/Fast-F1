@@ -494,7 +494,8 @@ class EventSchedule(pd.DataFrame):
 
     _metadata = ['year']
 
-    _internal_names = ['base_class_view']
+    _internal_names = pd.DataFrame._internal_names + ['base_class_view']
+    _internal_names_set = set(_internal_names)
 
     def __init__(self, *args, year: int = 0,
                  force_default_cols: bool = False, **kwargs):
@@ -653,8 +654,6 @@ class Event(pd.Series):
           year (int): Championship year
     """
     _metadata = ['year']
-
-    _internal_names = ['date', 'gp']
 
     def __init__(self, *args, year: int = None, **kwargs):
         super().__init__(*args, **kwargs)
