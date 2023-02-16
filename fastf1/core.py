@@ -1973,6 +1973,12 @@ class Laps(pd.DataFrame):
     @property
     def _constructor_sliced(self):
         def _new(*args, **kwargs):
+            name = kwargs.get('name')
+            if name and (name in self.columns):
+                # vertical slice
+                return pd.Series(*args, **kwargs).__finalize__(self)
+
+            # horizontal slice
             return Lap(*args, **kwargs).__finalize__(self)
 
         return _new
@@ -2661,6 +2667,12 @@ class SessionResults(pd.DataFrame):
     @property
     def _constructor_sliced(self):
         def _new(*args, **kwargs):
+            name = kwargs.get('name')
+            if name and (name in self.columns):
+                # vertical slice
+                return pd.Series(*args, **kwargs).__finalize__(self)
+
+            # horizontal slice
             return DriverResult(*args, **kwargs).__finalize__(self)
 
         return _new

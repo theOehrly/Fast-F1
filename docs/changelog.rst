@@ -10,6 +10,10 @@ v3.0.0
 Bug Fixes
 ---------
 
+- Fixed a bug where FastF1 Series-like objects where returned instead of a
+  native pandas ``Series`` when getting a single column of a FastF1
+  DataFrame-like object by slicing vertically.
+
 - Fixed incorrectly set ``_internal_names`` for objects inheriting from
   DataFrame or Series. This potentially caused incorrect warnings about
   incorrectly creating new columns.
