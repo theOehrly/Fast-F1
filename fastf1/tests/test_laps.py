@@ -33,6 +33,11 @@ def test_dtypes_from_api(reference_laps_data):
     ensure_data_type(LAP_DTYPES, laps)
 
 
+def test_dtypes_default_columns():
+    laps = fastf1.core.Laps(force_default_cols=True)
+    ensure_data_type(LAP_DTYPES, laps)
+
+
 @pytest.mark.f1telapi
 def test_dtypes_pick(reference_laps_data):
     session, laps = reference_laps_data

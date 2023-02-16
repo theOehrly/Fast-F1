@@ -10,6 +10,9 @@ v3.0.0
 Bug Fixes
 ---------
 
+- Enforce creation of :class:``fastf1.core.Laps`` with default columns and
+  default dtypes (when created through ``Session.load``) (#310).
+
 - Fixed a bug where FastF1 Series-like objects where returned instead of a
   native pandas ``Series`` when getting a single column of a FastF1
   DataFrame-like object by slicing vertically.

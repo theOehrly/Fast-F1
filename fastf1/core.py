@@ -1494,7 +1494,7 @@ class Session:
 
         else:
             logging.warning("Could not load any valid session status information!")
-        self._laps = Laps(laps, session=self).__finalize__(self)
+        self._laps = Laps(laps, session=self, force_default_cols=True)
         self._check_lap_accuracy()
 
     def __fix_tyre_info(self, df):
@@ -1951,6 +1951,36 @@ class Laps(pd.DataFrame):
               this.)
     """
 
+    _COL_TYPES = {
+        'Time': 'timedelta64[ns]',
+        'Driver': str,
+        'DriverNumber': str,
+        'LapTime': 'timedelta64[ns]',
+        'LapNumber': 'int64',
+        'Stint': 'int64',
+        'PitOutTime': 'timedelta64[ns]',
+        'PitInTime': 'timedelta64[ns]',
+        'Sector1Time': 'timedelta64[ns]',
+        'Sector2Time': 'timedelta64[ns]',
+        'Sector3Time': 'timedelta64[ns]',
+        'Sector1SessionTime': 'timedelta64[ns]',
+        'Sector2SessionTime': 'timedelta64[ns]',
+        'Sector3SessionTime': 'timedelta64[ns]',
+        'SpeedI1': 'float64',
+        'SpeedI2': 'float64',
+        'SpeedFL': 'float64',
+        'SpeedST': 'float64',
+        'IsPersonalBest': bool,
+        'Compound': str,
+        'TyreLife': 'float64',
+        'FreshTyre': bool,
+        'Team': str,
+        'LapStartTime': 'timedelta64[ns]',
+        'LapStartDate': 'datetime64[ns]',
+        'TrackStatus': str,
+        'IsAccurate': bool
+    }
+
     _metadata = ['session']
     _internal_names = pd.DataFrame._internal_names \
         + ['base_class_view', 'telemetry']
@@ -1959,8 +1989,29 @@ class Laps(pd.DataFrame):
     QUICKLAP_THRESHOLD = 1.07
     """Used to determine 'quick' laps. Defaults to the 107% rule."""
 
-    def __init__(self, *args, session: Optional[Session] = None, **kwargs):
+    def __init__(self,
+                 *args,
+                 session: Optional[Session] = None,
+                 force_default_cols: bool = False,
+                 **kwargs):
+
+        if force_default_cols:
+            kwargs['columns'] = list(self._COL_TYPES.keys())
+
         super().__init__(*args, **kwargs)
+
+        # apply column specific dtypes
+        for col, _type in self._COL_TYPES.items():
+            if col not in self.columns:
+                continue
+            if self[col].isna().all():
+                if isinstance(_type, str):
+                    self[col] = pd.Series(dtype=_type)
+                else:
+                    self[col] = _type()
+
+            self[col] = self[col].astype(_type)
+
         self.session = session
 
     @property
@@ -2145,20 +2196,20 @@ class Laps(pd.DataFrame):
             # exclude the 'Time' column from weather data when joining
             >>> joined = pd.concat([laps, weather_data.loc[:, ~(weather_data.columns == 'Time')]], axis=1)
             >>> print(joined)
-                                  Time DriverNumber  ... WindDirection  WindSpeed
-            0   0 days 00:21:01.358000           16  ...           212        2.0
-            1   0 days 00:22:21.775000           16  ...           207        2.7
-            2   0 days 00:24:03.991000           16  ...           210        2.3
-            3   0 days 00:25:24.117000           16  ...           207        3.2
-            4   0 days 00:27:09.461000           16  ...           238        1.8
-            ..                     ...          ...  ...           ...        ...
-            270 0 days 00:36:38.150000           88  ...           192        0.9
-            271 0 days 00:38:37.508000           88  ...           213        0.9
-            272 0 days 00:33:27.227000           33  ...           183        1.3
-            273 0 days 00:35:05.865000           33  ...           272        0.8
-            274 0 days 00:36:47.787000           33  ...           339        1.1
+                                  Time Driver  ... WindDirection WindSpeed
+            0   0 days 00:21:01.358000    LEC  ...           212       2.0
+            1   0 days 00:22:21.775000    LEC  ...           207       2.7
+            2   0 days 00:24:03.991000    LEC  ...           210       2.3
+            3   0 days 00:25:24.117000    LEC  ...           207       3.2
+            4   0 days 00:27:09.461000    LEC  ...           238       1.8
+            ..                     ...    ...  ...           ...       ...
+            270 0 days 00:36:38.150000    KUB  ...           192       0.9
+            271 0 days 00:38:37.508000    KUB  ...           213       0.9
+            272 0 days 00:33:27.227000    VER  ...           183       1.3
+            273 0 days 00:35:05.865000    VER  ...           272       0.8
+            274 0 days 00:36:47.787000    VER  ...           339       1.1
             <BLANKLINE>
-            [275 rows x 33 columns]
+            [275 rows x 34 columns]
         """
         wd = [lap.get_weather_data() for _, lap in self.iterrows()]
         if wd:
@@ -2594,7 +2645,7 @@ class SessionResults(pd.DataFrame):
           not limited to 'Finished', '+ 1 Lap', 'Crash', 'Gearbox', ...
           (values only given if session is 'Race' or 'Sprint Qualifying')
 
-        - ``Status`` | :class:`float` |
+        - ``Points`` | :class:`float` |
           The number of points received by each driver for their finishing
           result.
 
@@ -2624,14 +2675,14 @@ class SessionResults(pd.DataFrame):
         'FirstName': str,
         'LastName': str,
         'FullName': str,
-        'Position': float,
-        'GridPosition': float,
+        'Position': 'float64',
+        'GridPosition': 'float64',
         'Q1': 'timedelta64[ns]',
         'Q2': 'timedelta64[ns]',
         'Q3': 'timedelta64[ns]',
         'Time': 'timedelta64[ns]',
         'Status': str,
-        'Points': float
+        'Points': 'float64'
     }
 
     _internal_names = pd.DataFrame._internal_names + ['base_class_view']
@@ -2647,8 +2698,8 @@ class SessionResults(pd.DataFrame):
             if col not in self.columns:
                 continue
             if self[col].isna().all():
-                if _type == 'timedelta64[ns]':
-                    self[col] = pd.Series(dtype='timedelta64[ns]')
+                if isinstance(_type, str):
+                    self[col] = pd.Series(dtype=_type)
                 else:
                     self[col] = _type()
 

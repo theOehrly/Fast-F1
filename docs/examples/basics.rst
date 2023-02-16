@@ -213,26 +213,26 @@ functionality to speed up data loading and to prevent excessive API requests.
   >>> session.load()
   >>> session.results
      DriverNumber BroadcastName Abbreviation  ... Time Status Points
-  33           33  M VERSTAPPEN          VER  ...  NaT           0.0
-  44           44    L HAMILTON          HAM  ...  NaT           0.0
-  77           77      V BOTTAS          BOT  ...  NaT           0.0
-  11           11       S PEREZ          PER  ...  NaT           0.0
-  55           55       C SAINZ          SAI  ...  NaT           0.0
-  10           10       P GASLY          GAS  ...  NaT           0.0
-  16           16     C LECLERC          LEC  ...  NaT           0.0
-  4             4      L NORRIS          NOR  ...  NaT           0.0
-  14           14      F ALONSO          ALO  ...  NaT           0.0
-  3             3   D RICCIARDO          RIC  ...  NaT           0.0
-  31           31        E OCON          OCO  ...  NaT           0.0
-  5             5      S VETTEL          VET  ...  NaT           0.0
-  99           99  A GIOVINAZZI          GIO  ...  NaT           0.0
-  63           63     G RUSSELL          RUS  ...  NaT           0.0
-  47           47  M SCHUMACHER          MSC  ...  NaT           0.0
-  6             6      N LATIFI          LAT  ...  NaT           0.0
-  7             7   K RAIKKONEN          RAI  ...  NaT           0.0
-  9             9     N MAZEPIN          MAZ  ...  NaT           0.0
-  18           18      L STROLL          STR  ...  NaT           0.0
-  22           22     Y TSUNODA          TSU  ...  NaT           0.0
+  33           33  M VERSTAPPEN          VER  ...  NaT           NaN
+  44           44    L HAMILTON          HAM  ...  NaT           NaN
+  77           77      V BOTTAS          BOT  ...  NaT           NaN
+  11           11       S PEREZ          PER  ...  NaT           NaN
+  55           55       C SAINZ          SAI  ...  NaT           NaN
+  10           10       P GASLY          GAS  ...  NaT           NaN
+  16           16     C LECLERC          LEC  ...  NaT           NaN
+  4             4      L NORRIS          NOR  ...  NaT           NaN
+  14           14      F ALONSO          ALO  ...  NaT           NaN
+  3             3   D RICCIARDO          RIC  ...  NaT           NaN
+  31           31        E OCON          OCO  ...  NaT           NaN
+  5             5      S VETTEL          VET  ...  NaT           NaN
+  99           99  A GIOVINAZZI          GIO  ...  NaT           NaN
+  63           63     G RUSSELL          RUS  ...  NaT           NaN
+  47           47  M SCHUMACHER          MSC  ...  NaT           NaN
+  6             6      N LATIFI          LAT  ...  NaT           NaN
+  7             7   K RAIKKONEN          RAI  ...  NaT           NaN
+  9             9     N MAZEPIN          MAZ  ...  NaT           NaN
+  18           18      L STROLL          STR  ...  NaT           NaN
+  22           22     Y TSUNODA          TSU  ...  NaT           NaN
   <BLANKLINE>
   [20 rows x 16 columns]
 
@@ -276,18 +276,18 @@ as :class:`~fastf1.core.Laps` object which again is a subclass of a
   >>> fastf1.Cache.enable_cache("path/to/empty/folder")  # doctest: +SKIP
   >>> session.load()
   >>> session.laps
-                        Time DriverNumber  ... IsAccurate            LapStartDate
-  0   0 days 00:28:44.908000           33  ...      False 2021-06-19 13:03:06.950
-  1   0 days 00:31:14.909000           33  ...      False 2021-06-19 13:14:12.111
-  2   0 days 00:32:45.910000           33  ...       True 2021-06-19 13:16:42.112
-  3   0 days 00:50:42.329000           33  ...      False 2021-06-19 13:18:13.113
-  4   0 days 00:52:59.529000           33  ...      False 2021-06-19 13:36:10.262
-  ..                     ...          ...  ...        ...                     ...
-  265 0 days 00:39:10.594000           18  ...      False 2021-06-19 13:22:15.102
-  266 0 days 00:41:23.178000           18  ...       True 2021-06-19 13:24:37.797
-  267 0 days 00:41:30.642000           18  ...      False 2021-06-19 13:26:50.381
-  268 0 days 00:17:40.791000           22  ...      False 2021-06-19 13:00:22.952
-  269 0 days 00:26:20.982000           22  ...      False 2021-06-19 13:03:07.994
+                        Time Driver  ... TrackStatus IsAccurate
+  0   0 days 00:28:44.908000    VER  ...          25      False
+  1   0 days 00:31:14.909000    VER  ...           1      False
+  2   0 days 00:32:45.910000    VER  ...           1       True
+  3   0 days 00:50:42.329000    VER  ...          25      False
+  4   0 days 00:52:59.529000    VER  ...           1      False
+  ..                     ...    ...  ...         ...        ...
+  265 0 days 00:39:10.594000    STR  ...           1      False
+  266 0 days 00:41:23.178000    STR  ...           2       True
+  267 0 days 00:41:30.642000    STR  ...          25      False
+  268 0 days 00:17:40.791000    TSU  ...           1      False
+  269 0 days 00:26:20.982000    TSU  ...          25      False
   <BLANKLINE>
   [270 rows x 27 columns]
 
@@ -296,12 +296,12 @@ That's more than 250 laps right there and 26 columns of information.
 The following data columns are available:
 
   >>> session.laps.columns  # doctest: +NORMALIZE_WHITESPACE
-  Index(['Time', 'DriverNumber', 'LapTime', 'LapNumber', 'PitOutTime',
-         'PitInTime', 'Sector1Time', 'Sector2Time', 'Sector3Time',
+  Index(['Time', 'Driver', 'DriverNumber', 'LapTime', 'LapNumber', 'Stint',
+         'PitOutTime', 'PitInTime', 'Sector1Time', 'Sector2Time', 'Sector3Time',
          'Sector1SessionTime', 'Sector2SessionTime', 'Sector3SessionTime',
          'SpeedI1', 'SpeedI2', 'SpeedFL', 'SpeedST', 'IsPersonalBest',
-         'Compound', 'TyreLife', 'FreshTyre', 'Stint', 'LapStartTime', 'Team',
-         'Driver', 'TrackStatus', 'IsAccurate', 'LapStartDate'],
+         'Compound', 'TyreLife', 'FreshTyre', 'Team', 'LapStartTime',
+         'LapStartDate', 'TrackStatus', 'IsAccurate'],
         dtype='object')
 
 The detailed explanation for all these columns can be found in the
