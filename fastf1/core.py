@@ -80,40 +80,6 @@ D_LOOKUP: List[List] = \
      [6, 'LAT', 'Williams'], [63, 'RUS', 'Williams']]
 
 
-def get_session(*args, **kwargs) -> "Session":
-    """
-    .. deprecated:: 2.2
-        replaced by :func:`fastf1.get_session`
-
-    """
-    # TODO remove
-    warnings.warn("`fastf1.core.get_session` has been deprecated and will be"
-                  "removed in a future version.\n"
-                  "Use `fastf1.get_session` instead.", FutureWarning)
-    from fastf1 import events
-    return events.get_session(*args, **kwargs)
-
-
-def get_round(year, match):
-    """
-    .. deprecated:: 2.2
-        will be removed without replacement;
-        Use :func:`fastf1.get_event` instead to get an
-        :class:`~fastf1.events.Event` object which provides
-        information including the round number for the event.
-    """
-    # TODO remove
-    warnings.warn("_func:`fastf1.core.get_round` has been deprecated and will "
-                  "be removed without replacement in a future version.\n"
-                  "Use :func:`fastf1.get_event` instead to get an "
-                  ":class:`~fastf1.events.Event` object which provides "
-                  "information including the round number for the event.",
-                  FutureWarning)
-    from fastf1 import events
-    event = events.get_event(year, match)
-    return event.RoundNumber
-
-
 class Telemetry(pd.DataFrame):
     """Multi-channel time series telemetry data
 
@@ -1029,20 +995,6 @@ class Telemetry(pd.DataFrame):
         return drv_ahead, dist_to_drv_ahead
 
 
-class Weekend:
-    """
-    .. deprecated:: 2.2
-        Use :class:`fastf1.events.Event` instead
-    """
-
-    def __new__(cls, year, gp):
-        warnings.warn("`fastf1.core.Weekend` has been deprecated and will be"
-                      "removed in a future version.\n"
-                      "Use `fastf1.events.Event` instead.", FutureWarning)
-        from fastf1 import events
-        return events.get_event(year, gp)
-
-
 class Session:
     """Object for accessing session specific data.
 
@@ -1095,14 +1047,6 @@ class Session:
             raise DataNotLoadedError("The data you are trying to access has not "
                                      "been loaded yet. See `Session.load`")
         return getattr(self, name, None)
-
-    @property
-    def weekend(self):
-        """Deprecated: use :attr:`Session.event` instead"""
-        warnings.warn("The property `Session.weekend` has been renamed to "
-                      "`Session.event`.\n The old property will be removed in"
-                      "a future version.", FutureWarning)
-        return self.event
 
     @property
     def drivers(self):
@@ -1307,29 +1251,6 @@ class Session:
 
         logging.info(f"Finished loading data for {len(self.drivers)} "
                      f"drivers: {self.drivers}")
-
-    def load_laps(self, with_telemetry=False, livedata=None):
-        """
-        .. deprecated:: 2.2
-            use :func:`Session.load` instead
-        """
-        # TODO: remove in v2.3
-        warnings.warn("`Session.load_laps` is deprecated and will be"
-                      "removed in a future version.\n"
-                      "Use `Session.load` instead.", FutureWarning)
-        self.load(telemetry=with_telemetry, livedata=livedata)
-        return self.laps
-
-    def load_telemetry(self, livedata=None):
-        """
-        .. deprecated:: 2.2
-            use :func:`Session.load` instead
-        """
-        # TODO: remove in v2.3
-        warnings.warn("`Session.load_laps` is deprecated and will be"
-                      "removed in a future version.\n"
-                      "Use `Session.load` instead.", FutureWarning)
-        self._load_telemetry(livedata=livedata)
 
     def _load_laps_data(self, livedata):
         data, _ = api.timing_data(self.api_path, livedata=livedata)
@@ -1887,7 +1808,7 @@ class Session:
 
         self._laps['LapStartDate'] = self._laps['LapStartTime'] + self.t0_date
 
-    def get_driver(self, identifier) -> "Driver":
+    def get_driver(self, identifier) -> "DriverResult":
         """
         Get a driver object which contains additional information about a driver.
 
@@ -2776,7 +2697,6 @@ class DriverResult(pd.Series):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._getattr_override = True  # TODO: remove in v2.3
 
     @property
     def _constructor(self):
@@ -2785,103 +2705,10 @@ class DriverResult(pd.Series):
 
         return _new
 
-    def __getattribute__(self, name):
-        # TODO: remove in v2.3
-        if name == 'name' and getattr(self, '_getattr_override', False):
-            if 'FirstName' in self:
-                warnings.warn(
-                    "The `Driver.name` property is deprecated and will be"
-                    "removed in a future version.\n"
-                    "Use `Driver['FirstName']` or `Driver.FirstName` instead.",
-                    FutureWarning
-                )
-                # name may be accessed by pandas internals to, when data
-                # does not exist yet
-                return self['FirstName']
-
-        return super().__getattribute__(name)
-
-    def __repr__(self):
-        # don't show .name deprecation message when .name is accessed internally
-        with warnings.catch_warnings():
-            warnings.filterwarnings('ignore',
-                                    message=r".*property is deprecated.*")
-            return super().__repr__()
-
     @property
     def dnf(self) -> bool:
         """True if driver did not finish"""
         return not (self.Status[3:6] == 'Lap' or self.Status == 'Finished')
-
-    @property
-    def grid(self):
-        """Grid position
-
-        .. deprecated:: 2.2
-            Use ``Driver['GridPosition']`` instead
-        """
-        # TODO: remove in v2.3
-        warnings.warn("The `Driver.grid` property is deprecated and will be"
-                      "removed in a future version.\n"
-                      "Use `Driver['GridPosition']` or `Driver.GridPosition` "
-                      "instead.", FutureWarning)
-        return self['GridPosition']
-
-    @property
-    def position(self):
-        """Finishing position
-
-        .. deprecated:: 2.2
-            Use ``Driver['Position']`` instead
-        """
-        # TODO: remove in v2.3
-        warnings.warn("The `Driver.position` property is deprecated and will be"
-                      "removed in a future version.\n"
-                      "Use `Driver['Position']` or `Driver.Position` "
-                      "instead.", FutureWarning)
-        return self['Position']
-
-    @property
-    def familyname(self):
-        """Driver family name
-
-        .. deprecated:: 2.2
-            Use ``Driver['LastName']`` instead
-        """
-        # TODO: remove in v2.3
-        warnings.warn("The `Driver.position` property is deprecated and will be"
-                      "removed in a future version.\n"
-                      "Use `Driver['LastName']` or `Driver.LastName` "
-                      "instead.", FutureWarning)
-        return self['LastName']
-
-    @property
-    def team(self):
-        """Team name
-
-        .. deprecated:: 2.2
-            Use ``Driver['TeamName']`` instead
-        """
-        # TODO: remove in v2.3
-        warnings.warn("The `Driver.team` property is deprecated and will be"
-                      "removed in a future version.\n"
-                      "Use `Driver['TeamName']` or `Driver.TeamName` "
-                      "instead.", FutureWarning)
-        return self['TeamName']
-
-
-class Driver:
-    """
-    .. deprecated:: 2.2
-        Use :class:`fastf1.core.DriverResult` instead
-    """
-
-    def __new__(cls, *args, **kwargs):
-        warnings.warn("`fastf1.core.Driver` has been deprecated and will be"
-                      "removed in a future version.\n"
-                      "Use `fastf1.core.DriverResult` instead.",
-                      FutureWarning)
-        return DriverResult()
 
 
 class DataNotLoadedError(Exception):

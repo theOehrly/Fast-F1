@@ -2,6 +2,48 @@
 Changelog
 =========
 
+
+v3.0.0
+======
+
+
+Removals
+--------
+
+The following deprecated API elements have been removed:
+
+  - Properties ``fastf1.events.Event.name``, ``fastf1.events.Event.date` and
+    ``fastf1.events.Event.gp``
+
+  - Creating an ``Event`` object by not specifying a the ``identifier`` argument
+    for ``fastf1.get_session``/``fastf1.events.get_session`` is no longer
+    supported.
+
+  - The argument ``event`` is no longer supported by
+    ``fastf1.get_session``/``fastf1.events.get_session`` and replaced by
+    ``identifier``.
+
+  - Functions ``fastf1.core.get_session`` (use ``fastf1.get_session``),
+    ``fastf1.core.get_round`` (no replacement)
+
+  - Methods ``fastf1.core.Session.load_laps``,
+    ``fastf1.core.Session.load_telemetry``
+
+  - Property ``fastf1.core.Session.weekend``
+
+  - Properties ``fastf1.core.DriverResult.name``,  ,
+    ``fastf1.core.DriverResult.familyname``,
+    ``fastf1.core.DriverResult.grid``,
+    ``fastf1.core.DriverResult.position``,
+    ``fastf1.core.DriverResult.team``
+
+  - ``fastf1.core.Driver``
+
+  - ``fastf1.core.Weekend``
+
+  - Function ``fastf1.ergast.fetch_weekend``
+
+
 v2.3.0
 ======
 

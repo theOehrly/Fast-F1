@@ -56,7 +56,7 @@ session object.
   Session5                                                     Race
   Session5Date                                  2021-06-20 00:00:00
   F1ApiSupport                                                 True
-  Name: French Grand Prix, dtype: object
+  Name: 7, dtype: object
 
 The :class:`~fastf1.events.Event` object is a subclass of a
 :class:`pandas.Series`. The individual values can therefore be accessed as it
@@ -95,7 +95,7 @@ provides methods for accessing the individual associated sessions.
   Session5                                                     Race
   Session5Date                                  2021-06-20 00:00:00
   F1ApiSupport                                                 True
-  Name: French Grand Prix, dtype: object
+  Name: 7, dtype: object
   >>> session = event.get_race()
   >>> session.name
   'Race'

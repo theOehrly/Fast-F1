@@ -3,33 +3,8 @@ import datetime
 import pandas as pd
 import pytest
 
-import warnings
-
 import fastf1.core
 import fastf1.events
-
-
-def test_get_session_deprecations():
-    # deprecated kwarg 'event'
-    with warnings.catch_warnings(record=True) as cap_warn:
-        session = fastf1.get_session(2021, 1, event='Q')
-    assert 'deprecated' in str(cap_warn[0].message)
-    assert isinstance(session, fastf1.core.Session)
-    assert session.name == 'Qualifying'
-
-    # cannot supply kwargs 'identifier' and 'event' simultaneously
-    with pytest.raises(ValueError):
-        fastf1.get_session(2021, 1, 'Q', event='Q')
-
-    # cannot get testing anymore
-    with pytest.raises(DeprecationWarning):
-        fastf1.get_session(2021, 'testing', 1)
-
-    # getting a Weekend/Event object through get session is deprecated
-    with warnings.catch_warnings(record=True) as cap_warn:
-        event = fastf1.get_session(2021, 1)
-    assert 'deprecated' in str(cap_warn[0].message)
-    assert isinstance(event, fastf1.events.Event)
 
 
 @pytest.mark.parametrize("gp", ['Bahrain', 'Bharain', 'Sakhir', 1])
