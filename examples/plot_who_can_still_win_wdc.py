@@ -5,26 +5,22 @@ Calculates which drivers still has chance to win the WDC.
 Simplified since it doesn't compare positions if points are equal.
 
 This example implements 3 functions that it then uses to calculate
-it's result.
+its result.
 """
 
-import requests
-
 import fastf1
+from fastf1.ergast import Ergast
 
 fastf1.Cache.enable_cache("../doc_cache")  # replace with your cache directory
 
 
 ##############################################################################
-# We need a function to get the current driver standings from
-# Ergast and returns as list of drivers.
-# Reference https://ergast.com/mrd/methods/standings/
+# Get the current driver standings from Ergast.
+# Reference https://theoehrly.github.io/Fast-F1-Pre-Release-Documentation/ergast.html#fastf1.ergast.Ergast.get_driver_standings # noqa: E501
 def get_drivers_standings():
-    url = "https://ergast.com/api/f1/current/driverStandings.json"
-    response = requests.get(url)
-    data = response.json()
-    drivers_standings = data['MRData']['StandingsTable']['StandingsLists'][0]['DriverStandings']  # noqa: E501
-    return drivers_standings
+    ergast = Ergast()
+    standings = ergast.get_driver_standings(season=2023)
+    return standings.content[0]
 
 
 ##############################################################################
@@ -35,7 +31,7 @@ def calculate_max_points_for_remaining_season():
     POINTS_FOR_SPRINT = 8 + 25 + 1  # Winning the sprint, race and fastest lap
     POINTS_FOR_CONVENTIONAL = 25 + 1  # Winning the race and fastest lap
 
-    events = fastf1.events.get_events_remaining()
+    events = fastf1.events.get_events_remaining(force_ergast=True)
     # Count how many sprints and conventional races are left
     sprint_events = \
         len(events.loc[events["EventFormat"] == "sprint"])
@@ -57,14 +53,15 @@ def calculate_max_points_for_remaining_season():
 # We currently don't consider the case of two drivers getting equal points
 # since its more complicated and would require comparing positions.
 def calculate_who_can_win(driver_standings, max_points):
-    LEADER_POINTS = int(driver_standings[0]['points'])
+    LEADER_POINTS = int(driver_standings.loc[0]['points'])
 
-    for _, driver in enumerate(driver_standings):
+    for i, _ in enumerate(driver_standings.iterrows()):
+        driver = driver_standings.loc[i]
         driver_max_points = int(driver["points"]) + max_points
         can_win = 'No' if driver_max_points < LEADER_POINTS else 'Yes'
 
         print(f"{driver['position']}: \
-{driver['Driver']['code']}, \
+{driver['givenName'] + ' ' + driver['familyName']}, \
 Current points: {driver['points']}, \
 Theoretical max points: {driver_max_points}, \
 Can win: {can_win}")
