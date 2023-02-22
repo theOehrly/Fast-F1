@@ -1157,9 +1157,12 @@ class Session:
         give you access to. Without specifying any further options, all data
         is loaded by default.
 
-        Downloading and parsing of the data takes a considerable amount of
-        time. Therefore, it is highly recommended to enable caching so that
-        most of the data processing needs to be done only once.
+        Usually, it is recommended to load all available data because
+        internally FastF1 partially mixes data from multiple endpoints and
+        data sources to correct for errors or to add more information. These
+        features are optional and may not work when some data is unavailable.
+        In these cases, FastF1 will return the data to the best of its
+        abilities.
 
         .. note:: **Lap data: drivers crashing and retiring**
 
@@ -1242,6 +1245,8 @@ class Session:
                     "session."
                 )
 
+        self._fix_missing_laps_retired_on_track()
+
         logging.info(f"Finished loading data for {len(self.drivers)} "
                      f"drivers: {self.drivers}")
 
@@ -1282,15 +1287,15 @@ class Session:
                 # tyre info includes correction messages that need to be
                 # applied before continuing
                 d2 = self.__fix_tyre_info(d2)
-            only_one_lap = False
 
+            is_generated = False
             if not len(d1):
                 if ((self.name in ('Race', 'Sprint', 'Sprint Qualifying'))
                         and len(d2)):
                     # add data for drivers who crashed on the very first lap
                     # as a downside, this potentially adds a nonexistent lap
                     # for drivers who could not start the race
-                    only_one_lap = True
+                    is_generated = True
                     result = d1.copy()
                     result['Driver'] = [driver, ]
                     result['NumberOfLaps'] = 0
@@ -1315,6 +1320,10 @@ class Session:
             else:
                 result = pd.merge_asof(d1, d2, on='Time', by='Driver') \
                     .rename(columns={'StartLaps': 'TyreLife'})
+
+            # add flag that indicates if the data for this lap was generated
+            # by FastF1
+            result['FastF1Generated'] = is_generated
 
             # calculate lap start time by setting it to the 'Time' of the
             # previous lap
@@ -1371,49 +1380,8 @@ class Session:
                 sel = result['Stint'] == npit
                 result.loc[sel, 'TyreLife'] += np.arange(0, sel.sum()) + 1
 
-            # check if there is another lap during which the session was aborted
-            # but which is not in the data
-            # if yes, add as much data as possible for it
-            # set the time of abort as lap end time given that there is no
-            # accurate time available
-            # this block of code has no tests; testing would require to mock
-            # the data as the actual data may be updated on the server after
-            # some time and the problem no longer occurs
-            if pd.isna(result['PitInTime'].iloc[-1]) and not only_one_lap:
-                if not pd.isna(result['Time'].iloc[-1]):
-                    next_statuses = self.session_status[
-                        self.session_status['Time'] > result['Time'].iloc[-1]
-                        ]
-                else:
-                    next_statuses = self.session_status[
-                        self.session_status['Time']
-                        > result['LapStartTime'].iloc[-1]
-                        ]
-
-                aborted = False
-                if not next_statuses.empty:
-                    next_status = next_statuses.iloc[0]
-                    aborted = (next_status['Status'] == 'Aborted')
-
-                if aborted:
-                    new_last = pd.DataFrame({
-                        'LapStartTime': [result['Time'].iloc[-1]],
-                        'Time': [next_status['Time']],
-                        'Driver': [result['Driver'].iloc[-1]],
-                        'NumberOfLaps': [result['NumberOfLaps'].iloc[-1] + 1],
-                        'Stint': [result['Stint'].iloc[-1]],
-                        # 'IsPersonalBest': False,
-                        'Compound': [result['Compound'].iloc[-1]],
-                        'TyreLife': [result['TyreLife'].iloc[-1] + 1],
-                        'New': [result['New'].iloc[-1]],
-                    })
-                    if not only_one_lap:
-                        result = pd.concat([result, new_last]) \
-                            .reset_index(drop=True)
-                    else:
-                        result = new_last
-
             df = pd.concat([df, result], sort=False)
+
         if df is None:
             raise NoLapDataError
 
@@ -1439,7 +1407,118 @@ class Session:
         self._laps = Laps(laps, session=self, force_default_cols=True)
         self._check_lap_accuracy()
 
+    def _fix_missing_laps_retired_on_track(self):
+        # generate a last lap entry with assumed end time for cars that
+        # retired on track
+
+        if not hasattr(self, '_laps'):
+            return
+
+        any_new = False
+        for drv in self.laps['DriverNumber'].unique():
+            drv_laps = self._laps[self.laps['DriverNumber'] == drv]
+
+            if (len(drv_laps) == 1) and drv_laps['FastF1Generated'].iloc[0]:
+                # there is only one lap which was added by FastF1, don't
+                # generate a followup lap based on that
+                continue
+
+            # try to get a valid last timestamp for the last lap
+            ref_time = drv_laps['Time'].iloc[-1]
+            if pd.isna(ref_time):
+                ref_time = drv_laps['LapStartTime'].iloc[-1]
+            # split session status at reference timestamp
+            # if ref_time is still NaT, next/prev_statuses will be empty
+            # after comparison
+            next_statuses = self.session_status[
+                self.session_status['Time'] > ref_time
+                ]
+            prev_statuses = self.session_status[
+                self.session_status['Time'] <= ref_time
+                ]
+
+            if ((not prev_statuses.empty)
+                    and (prev_statuses['Status'] == 'Finished').any()):
+                # driver finished session correctly, nothing to do
+                continue
+
+            if (next_statuses.empty
+                    or (not (next_statuses['Status'] == 'Finished').any())):
+                # there are no next statuses or no status message indicates
+                # that the session finished after the current timestamp
+                # -> the data is inconclusive
+                continue
+
+            if not pd.isna(drv_laps['PitInTime'].iloc[-1]):
+                # last lap was an inlap
+                continue
+
+            if ((len(drv_laps) >= 2)
+                    and (not pd.isna(drv_laps['PitInTime'].iloc[-2]))
+                    and pd.isna(drv_laps['PitOutTime'].iloc[-1])):
+                # last lap was an inlap and a new lap was started in the pit
+                # lane but the car did not leave the pits again (happens if
+                # box comes after timing line in pits)
+                continue
+
+            next_status = next_statuses.iloc[0]
+
+            if next_status['Status'] == 'Aborted':
+                # the session was aborted, use the time when the session was
+                # aborted as the end time of the lap
+                assumed_end_time = next_status['Time']
+
+            else:
+                assumed_end_time = pd.NaT
+                if drv in (car_data := getattr(self, '_car_data', {})):
+                    # when car_data is available, get the first time at which
+                    # the car's speed becomes zero after the reference time and
+                    # add 5 seconds of margin
+                    try:
+                        next_zero_speed_time = car_data[drv].loc[
+                            ((car_data[drv]['SessionTime'] > ref_time)
+                             & (car_data[drv]['Speed'] == 0.0))
+                        ].iloc[0]['SessionTime']
+                    except (IndexError, KeyError):
+                        pass
+                    else:
+                        assumed_end_time = next_zero_speed_time
+
+                if pd.isna(assumed_end_time):
+                    # still no valid timestamp extracted
+                    # fallback: use an assumed lap time of 150 seconds;
+                    # this should cover all situations but most of the time
+                    # it will be much too long
+                    assumed_end_time = ref_time + pd.Timedelta(150, 'sec')
+
+            new_last = pd.DataFrame({
+                'LapStartTime': [drv_laps['Time'].iloc[-1]],
+                'Time': [assumed_end_time],
+                'Driver': [drv_laps['Driver'].iloc[-1]],
+                'DriverNumber': [drv_laps['DriverNumber'].iloc[-1]],
+                'Team': [drv_laps['Team'].iloc[-1]],
+                'LapNumber': [drv_laps['LapNumber'].iloc[-1] + 1],
+                'Stint': [drv_laps['Stint'].iloc[-1]],
+                'Compound': [drv_laps['Compound'].iloc[-1]],
+                'TyreLife': [drv_laps['TyreLife'].iloc[-1] + 1],
+                'FreshTyre': [drv_laps['FreshTyre'].iloc[-1]],
+                'FastF1Generated': [True],
+                'IsAccurate': [False]
+            })
+
+            # add generated laps at the end and fix sorting at the end
+            self._laps = pd.concat([self._laps, new_last])
+            any_new = True
+
+        if any_new:
+            # re-sort and re-index to restore correct order of the laps
+            self._laps = self._laps \
+                .sort_values(by=['DriverNumber', 'LapNumber']) \
+                .reset_index(drop=True)
+
     def _add_track_status_to_laps(self, laps):
+        # add track status information to each lap
+
         track_status = getattr(self, '_track_status')
         if track_status is None:
             return
@@ -1573,6 +1652,7 @@ class Session:
                 # require existence, non-existence and specific values for some variables
                 check_1 = (pd.isnull(lap['PitInTime'])
                            & pd.isnull(lap['PitOutTime'])
+                           & (not lap['FastF1Generated'])
                            & (lap['TrackStatus'] in ('1', '2'))  # slightly paranoid, allow only green and yellow flag
                            & (not pd.isnull(lap['LapTime']))
                            & (not pd.isnull(lap['Sector1Time']))
@@ -1954,6 +2034,11 @@ class Laps(pd.DataFrame):
           explained in :func:`fastf1.api.track_status_data`.
           For filtering laps by track status, you may want to use
           :func:`Laps.pick_track_status`.
+        - **FastF1Generated** (bool): Indicates that this lap was added by
+          FastF1. Such a lap will generally have very limited information
+          available and information is partly interpolated or based on
+          reasonable assumptions. Cases were this is used are, for example,
+          when a partial last lap is added for drivers that retired on track.
         - **IsAccurate** (bool): Indicates that the lap start and end time are
           synced correctly with other laps. Do not confuse this with the
           accuracy of the lap time or sector times. They are always considered
@@ -2005,6 +2090,7 @@ class Laps(pd.DataFrame):
         'LapStartTime': 'timedelta64[ns]',
         'LapStartDate': 'datetime64[ns]',
         'TrackStatus': str,
+        'FastF1Generated': bool,
         'IsAccurate': bool
     }
 
@@ -2236,7 +2322,7 @@ class Laps(pd.DataFrame):
             273 0 days 00:35:05.865000    VER  ...           272       0.8
             274 0 days 00:36:47.787000    VER  ...           339       1.1
             <BLANKLINE>
-            [275 rows x 34 columns]
+            [275 rows x 35 columns]
         """
         wd = [lap.get_weather_data() for _, lap in self.iterrows()]
         if wd:

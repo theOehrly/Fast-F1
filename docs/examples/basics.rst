@@ -276,20 +276,20 @@ as :class:`~fastf1.core.Laps` object which again is a subclass of a
   >>> fastf1.Cache.enable_cache("path/to/empty/folder")  # doctest: +SKIP
   >>> session.load()
   >>> session.laps
-                        Time Driver  ... TrackStatus IsAccurate
-  0   0 days 00:28:44.908000    VER  ...          25      False
-  1   0 days 00:31:14.909000    VER  ...           1      False
-  2   0 days 00:32:45.910000    VER  ...           1       True
-  3   0 days 00:50:42.329000    VER  ...          25      False
-  4   0 days 00:52:59.529000    VER  ...           1      False
-  ..                     ...    ...  ...         ...        ...
-  265 0 days 00:39:10.594000    STR  ...           1      False
-  266 0 days 00:41:23.178000    STR  ...           2       True
-  267 0 days 00:41:30.642000    STR  ...          25      False
-  268 0 days 00:17:40.791000    TSU  ...           1      False
-  269 0 days 00:26:20.982000    TSU  ...          25      False
+                        Time Driver  ... FastF1Generated IsAccurate
+  0   0 days 00:17:35.479000    GAS  ...           False      False
+  1   0 days 00:27:42.702000    GAS  ...           False      False
+  2   0 days 00:30:15.038000    GAS  ...           False      False
+  3   0 days 00:31:46.936000    GAS  ...           False       True
+  4   0 days 00:34:20.695000    GAS  ...           False      False
+  ..                     ...    ...  ...             ...        ...
+  265 0 days 00:54:22.881000    GIO  ...           False       True
+  266 0 days 01:00:32.369000    GIO  ...           False      False
+  267 0 days 01:03:24.940000    GIO  ...           False      False
+  268 0 days 01:04:56.753000    GIO  ...           False       True
+  269 0 days 01:06:42.885000    GIO  ...           False      False
   <BLANKLINE>
-  [270 rows x 27 columns]
+  [270 rows x 28 columns]
 
 That's more than 250 laps right there and 26 columns of information.
 
@@ -301,7 +301,7 @@ The following data columns are available:
          'Sector1SessionTime', 'Sector2SessionTime', 'Sector3SessionTime',
          'SpeedI1', 'SpeedI2', 'SpeedFL', 'SpeedST', 'IsPersonalBest',
          'Compound', 'TyreLife', 'FreshTyre', 'Team', 'LapStartTime',
-         'LapStartDate', 'TrackStatus', 'IsAccurate'],
+         'LapStartDate', 'TrackStatus', 'FastF1Generated', 'IsAccurate'],
         dtype='object')
 
 The detailed explanation for all these columns can be found in the

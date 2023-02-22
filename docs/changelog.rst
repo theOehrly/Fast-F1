@@ -6,6 +6,14 @@ Changelog
 v3.0.0
 ======
 
+New Features
+------------
+
+- A partial last lap will now be added to :class:`fastf1.core.Laps` when a
+  driver retires on track. This especially will make it easier to plot
+  telemetry data of such a lap as there is now a corresponding
+  :class:`fastf1.core.Lap`.
+
 
 Bug Fixes
 ---------
