@@ -18,6 +18,10 @@ New Features
 Bug Fixes
 ---------
 
+- The API parser will now correctly detect when lap times were deleted and
+  will not mark these lap times personal best time anymore if the deleted
+  lap was a drivers fastest lap.
+
 - Enforce creation of :class:``fastf1.core.Laps`` with default columns and
   default dtypes (when created through ``Session.load``) (#310).
 
