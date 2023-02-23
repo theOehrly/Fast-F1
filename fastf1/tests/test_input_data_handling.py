@@ -13,34 +13,6 @@ from fastf1.testing.reference_values import LAP_DTYPES
 
 
 @pytest.mark.f1telapi
-@pytest.mark.skip(reason="required data not available")
-def test_partial_position_data(caplog):
-    # RUS is missing the first half of the position data because F1 somehow
-    # switches from development driver to RUS mid-session
-    # this requires recreating missing data (empty) so that the data has the correct size
-    caplog.set_level(logging.INFO)
-
-    session = fastf1.get_session(2020, 'Barcelona', 'FP2')
-    session.load()
-
-    assert "Car data for driver 63 is incomplete!" in caplog.text  # the warning
-    assert "Laps loaded and saved!" in caplog.text  # indicates success
-
-
-@pytest.mark.f1telapi
-@pytest.mark.skip(reason="required data not available")
-def test_history_mod_1(caplog):
-    # api data sometimes goes back in time
-    caplog.set_level(logging.INFO)
-
-    session = fastf1.get_testing_session(2020, 1, 3)
-    session.load()
-
-    assert "The api attempted to rewrite history" in caplog.text  # the warning
-    assert "Laps loaded and saved!" in caplog.text  # indicates success
-
-
-@pytest.mark.f1telapi
 def test_ergast_lookup_fail():
     fastf1.testing.run_in_subprocess(_test_ergast_lookup_fail)
 
@@ -147,3 +119,12 @@ def test_lap_start_time_after_red_flag():
     idx = ver_laps[(ver_laps['Time'] > restart_time)
                    & pd.notna(ver_laps['Time'])].index[0]
     assert ver_laps.loc[idx]['LapStartTime'] > restart_time
+
+
+@pytest.mark.f1telapi
+def test_partial_lap_retired_added():
+    # test that a last (partial) lap is added for drivers that retire on track
+    session = fastf1.get_session(2022, 1, 'R')
+    session.load()
+
+    assert session.laps.pick_driver('11').iloc[-1]['FastF1Generated']
