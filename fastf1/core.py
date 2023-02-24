@@ -2854,16 +2854,17 @@ class SessionResults(pd.DataFrame):
         super().__init__(*args, **kwargs)
 
         # apply column specific dtypes
-        for col, _type in self._COL_TYPES.items():
-            if col not in self.columns:
-                continue
-            if self[col].isna().all():
-                if isinstance(_type, str):
-                    self[col] = pd.Series(dtype=_type)
-                else:
-                    self[col] = _type()
+        if force_default_cols:
+            for col, _type in self._COL_TYPES.items():
+                if col not in self.columns:
+                    continue
+                if self[col].isna().all():
+                    if isinstance(_type, str):
+                        self[col] = pd.Series(dtype=_type)
+                    else:
+                        self[col] = _type()
 
-            self[col] = self[col].astype(_type)
+                self[col] = self[col].astype(_type)
 
     def __repr__(self):
         return self.base_class_view.__repr__()
