@@ -2553,6 +2553,50 @@ class Laps(pd.DataFrame):
         """
         return self[self['IsAccurate']]
 
+    def split_qualifying_sessions(self) -> List[Optional["Laps"]]:
+        """Splits a lap object into individual laps objects for each
+        qualifying session.
+
+        This method only works for qualifying sessions and requires that
+        session status data is loaded.
+
+        Example::
+
+            q1, q2, q3 = laps.split_qualifying_sessions()
+
+        Returns: Three :class:`Laps` objects, one for Q1, Q2 and Q3
+            each. If any of these sessions was cancelled, ``None`` will be
+            returned instead of :class:`Laps`.
+        """
+        if self.session.name != "Qualifying":
+            raise ValueError("Session is not a qualifying session!")
+        elif self.session.session_status is None:
+            raise ValueError("Session status data is unavailable!")
+
+        # get the timestamps for 'Started' from the session status data
+        # note that after a red flag, a session is 'Started' as well.
+        # Therefore, it is necessary to check for red flags and ignore
+        # the first 'Started' entry after a red flag.
+        split_times = list()
+        session_suspended = False
+        for _, row in self.session.session_status.iterrows():
+            if row['Status'] == 'Started':
+                if not session_suspended:
+                    split_times.append(row['Time'])
+                else:
+                    session_suspended = False
+            elif row['Status'] == 'Aborted':
+                session_suspended = True
+
+        # at the very last timestamp, to get an end for the last interval
+        split_times.append(self.session.session_status['Time'].iloc[-1])
+
+        laps = [None, None, None]
+        for i in range(len(split_times) - 1):
+            laps.append(self[(self['Time'] > split_times[i])
+                             & (self['Time'] < split_times[i+1])])
+        return laps
+
     def iterlaps(self, require: Optional[Iterable] = None) \
             -> Iterable[Tuple[int, "Lap"]]:
         """Iterator for iterating over all laps in self.
