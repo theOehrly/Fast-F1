@@ -14,6 +14,11 @@ New Features
   telemetry data of such a lap as there is now a corresponding
   :class:`fastf1.core.Lap`.
 
+- When loaded, race control messages will now be parsed to find which laps
+  were deleted. The :class:`fastf1.core.Laps` object gets two new columns
+  'Deleted' and 'DeletedReason' that indicate that a lap was deleted and why
+  it was deleted.
+
 
 Bug Fixes
 ---------

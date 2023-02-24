@@ -40,9 +40,11 @@ Apart from only providing data, the :class:`Laps`, :class:`Lap` and
 analyzing specific parts of the data.
 """
 import collections
+import re
 from functools import cached_property
 import logging
 import warnings
+import typing
 from typing import Optional, List, Iterable, Union, Tuple, Any
 
 import numpy as np
@@ -1246,6 +1248,7 @@ class Session:
                 )
 
         self._fix_missing_laps_retired_on_track()
+        self._set_laps_deleted_from_rcm()
 
         logging.info(f"Finished loading data for {len(self.drivers)} "
                      f"drivers: {self.drivers}")
@@ -1515,6 +1518,36 @@ class Session:
             self._laps = self._laps \
                 .sort_values(by=['DriverNumber', 'LapNumber']) \
                 .reset_index(drop=True)
+
+    def _set_laps_deleted_from_rcm(self):
+        # parse race control messages to find deleted lap times and
+        # set the 'Deleted' flag in self._laps
+
+        if ((not hasattr(self, '_laps'))
+                or (not hasattr(self, '_race_control_messages'))):
+            return
+
+        # set all to False, then selectively set to True if actually deleted
+        self._laps['Deleted'] = False
+
+        msg_pattern = re.compile(
+            r"CAR (\d{1,2}) .* TIME (\d:\d\d\.\d\d\d) DELETED - (.*)"
+        )
+        timestamp_pattern = re.compile(r"\d\d:\d\d:\d\d")
+
+        for _, row in self._race_control_messages.iterrows():
+            match = msg_pattern.match(row['Message'])
+            if match:
+                drv = match[1]
+                deleted_time = to_timedelta(match[2])
+                # remove timestamp from reasons because confusingly it is given
+                # as local time at the track
+                reason = timestamp_pattern.sub("", match[3])
+                self._laps.loc[
+                    (self._laps['DriverNumber'] == drv)
+                    & (self._laps['LapTime'] == deleted_time),
+                    ('Deleted', 'IsPersonalBest', 'DeletedReason')
+                ] = (True, False, reason)
 
     def _add_track_status_to_laps(self, laps):
         # add track status information to each lap
@@ -2034,6 +2067,11 @@ class Laps(pd.DataFrame):
           explained in :func:`fastf1.api.track_status_data`.
           For filtering laps by track status, you may want to use
           :func:`Laps.pick_track_status`.
+        - **Deleted** (Optional[bool]): Indicates that a lap was deleted by
+          the stewards, for example because of a track limits violation.
+          This data is only available when race control messages are loaded.
+        - **DeletedReason** (str): Gives the reason for a lap time deletion.
+          This data is only available when race control messages are loaded.
         - **FastF1Generated** (bool): Indicates that this lap was added by
           FastF1. Such a lap will generally have very limited information
           available and information is partly interpolated or based on
@@ -2090,6 +2128,8 @@ class Laps(pd.DataFrame):
         'LapStartTime': 'timedelta64[ns]',
         'LapStartDate': 'datetime64[ns]',
         'TrackStatus': str,
+        'Deleted': Optional[bool],
+        'DeletedReason': str,
         'FastF1Generated': bool,
         'IsAccurate': bool
     }
@@ -2113,17 +2153,24 @@ class Laps(pd.DataFrame):
 
         super().__init__(*args, **kwargs)
 
-        # apply column specific dtypes
-        for col, _type in self._COL_TYPES.items():
-            if col not in self.columns:
-                continue
-            if self[col].isna().all():
-                if isinstance(_type, str):
-                    self[col] = pd.Series(dtype=_type)
-                else:
-                    self[col] = _type()
+        if force_default_cols:
+            # apply column specific dtypes
+            for col, _type in self._COL_TYPES.items():
+                if col not in self.columns:
+                    continue
+                convert = True
+                if self[col].isna().all():
+                    if isinstance(_type, str):
+                        self[col] = pd.Series(dtype=_type)
+                    elif type(None) in typing.get_args(_type):
+                        # column is optional, cannot force dtype, set to None
+                        self[col] = None
+                        convert = False
+                    else:
+                        self[col] = _type()
 
-            self[col] = self[col].astype(_type)
+                if convert:
+                    self[col] = self[col].astype(_type)
 
         self.session = session
 
@@ -2322,7 +2369,7 @@ class Laps(pd.DataFrame):
             273 0 days 00:35:05.865000    VER  ...           272       0.8
             274 0 days 00:36:47.787000    VER  ...           339       1.1
             <BLANKLINE>
-            [275 rows x 35 columns]
+            [275 rows x 37 columns]
         """
         wd = [lap.get_weather_data() for _, lap in self.iterrows()]
         if wd:
