@@ -916,8 +916,14 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
 
         # find the index of the corresponding lap by comparing with the lap
         # times and set 'IsPersonalBest' to True for that lap
-        pb_idx = drv_data['LapTime'].index(pb_lap_time)
-        if pb_idx != -1:
+        try:
+            pb_idx = drv_data['LapTime'].index(pb_lap_time)
+        except ValueError:
+            # one example case where this error occurs, are wildly of personal
+            # best times (>2 min lap time) that are sometimes present and
+            # which have no corresponding lap time
+            pass
+        else:
             drv_data['IsPersonalBest'][pb_idx] = True
 
     if integrity_errors:
