@@ -1681,7 +1681,7 @@ def weather_data(path, response=None, livedata=None):
         - Rainfall (bool): Shows if there is rainfall
         - TrackTemp (float): Track temperature [°C]
         - WindDirection (int): Wind direction [°] (0°-359°)
-        - WindSpeed (float): Wind speed [km/h]
+        - WindSpeed (float): Wind speed [m/s]
 
     Weather data is updated once per minute.
 
