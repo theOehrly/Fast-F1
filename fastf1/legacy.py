@@ -54,8 +54,11 @@ versions can be used.
 import numpy as np
 import pandas as pd
 import scipy.spatial
-import logging
 
+from fastf1.logger import get_logger
+
+
+_logger = get_logger(__name__)
 
 REFERENCE_LAP_RESOLUTION = 0.667
 """A distance in meters which indicates the resolution of the reference
@@ -166,7 +169,8 @@ def _make_trajectory(session, ref_lap):
         # fast_query < Increases speed
         for index, drv in enumerate(drivers_list):
             if drv not in session.pos_data.keys():
-                logging.warning(f"Driver {drv: >2}: No position data. (_make_trajectory)")
+                _logger.warning(f"Driver {drv: >2}: No position data. "
+                                f"(_make_trajectory)")
                 continue
             trajectory = session.pos_data[drv][['X', 'Y', 'Z']].values
             projection_index = track_tree.query(trajectory, **fast_query)[1]

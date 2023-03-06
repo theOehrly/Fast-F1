@@ -23,7 +23,6 @@ When rate limits are exceeded, FastF1 will either...
 import collections
 import datetime
 import functools
-import logging
 import math
 import os
 import re
@@ -33,6 +32,11 @@ import time
 
 import requests
 from requests_cache import CacheMixin
+
+from fastf1.logger import get_logger
+
+
+_logger = get_logger(__name__)
 
 
 # A NOTE TO EVERYBODY WHO READS THIS CODE
@@ -347,22 +351,22 @@ class Cache:
 
                     if cached is not None and cls._data_ok_for_use(cached):
                         # cached data is ok for use, return it
-                        logging.info(f"Using cached data for {func_name}")
+                        _logger.info(f"Using cached data for {func_name}")
                         return cached['data']
 
                     else:
                         # cached data needs to be downloaded again and updated
-                        logging.info(f"Updating cache for {func_name}...")
+                        _logger.info(f"Updating cache for {func_name}...")
                         data = func(
                             api_path, response=response, livedata=livedata
                         )
 
                         if data is not None:
                             cls._write_cache(data, cache_file_path)
-                            logging.info("Cache updated!")
+                            _logger.info("Cache updated!")
                             return data
 
-                        logging.critical(
+                        _logger.critical(
                             "A cache update is required but the data failed "
                             "to download. Cannot continue!\nYou may force to "
                             "ignore a cache version mismatch by using the "
@@ -372,17 +376,17 @@ class Cache:
                         exit()
 
                 else:  # cached data does not yet exist for this api request
-                    logging.info(f"No cached data found for {func_name}. "
+                    _logger.info(f"No cached data found for {func_name}. "
                                  f"Loading data...")
                     data = func(
                         api_path, response=response, livedata=livedata
                     )
                     if data is not None:
                         cls._write_cache(data, cache_file_path)
-                        logging.info("Data has been written to cache!")
+                        _logger.info("Data has been written to cache!")
                         return data
 
-                    logging.critical("Failed to load data!")
+                    _logger.critical("Failed to load data!")
                     exit()
 
             else:  # cache was not enabled
@@ -458,20 +462,20 @@ class Cache:
                     try:
                         os.mkdir(cache_dir, mode=0o0700)
                     except Exception as err:
-                        logging.error("Failed to create cache directory {0}. "
+                        _logger.error("Failed to create cache directory {0}. "
                                       "Error {1}".format(cache_dir, err))
                         raise
 
                 # Enable cache with default
                 cls.enable_cache(cache_dir)
-                logging.warning(
+                _logger.warning(
                     f"\n\nDEFAULT CACHE ENABLED!\n\t"
                     f"Cache directory: {cache_dir}.\n\t"
                     f"Size: {cls._convert_size(cls._get_size(cache_dir))}"
                 )
             else:
                 # warn only once and only if cache is not enabled
-                logging.warning(
+                _logger.warning(
                     "\n\nNO CACHE! Api caching has not been enabled! \n\t"
                     "It is highly recommended to enable this feature for much "
                     "faster data loading!\n\t"

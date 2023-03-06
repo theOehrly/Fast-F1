@@ -153,7 +153,6 @@ API Reference
 """  # noqa: W605 invalid escape sequence (escaped space)
 import collections
 import datetime
-import logging
 import warnings
 from typing import Union, Optional
 
@@ -171,8 +170,12 @@ import pandas as pd
 
 from fastf1.core import Session
 import fastf1.ergast
+from fastf1.logger import get_logger
 from fastf1.req import Cache
 from fastf1.utils import recursive_dict_get
+
+
+_logger = get_logger(__name__)
 
 _SESSION_TYPE_ABBREVIATIONS = {
     'R': 'Race',
@@ -346,7 +349,7 @@ def get_event_schedule(
         try:
             schedule = _get_schedule(year)
         except Exception as exc:
-            logging.error(f"Failed to access primary schedule backend. "
+            _logger.error(f"Failed to access primary schedule backend. "
                           f"Falling back to Ergast! Reason: {exc})")
             schedule = _get_schedule_from_ergast(year)
 

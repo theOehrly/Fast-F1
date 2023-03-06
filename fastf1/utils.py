@@ -1,11 +1,15 @@
 """This is a collection of various functions."""
 import datetime
-import logging
 from functools import reduce
 from typing import Dict, Tuple, Optional
 
 import numpy as np
 import pandas as pd
+
+from fastf1.logger import get_logger
+
+
+_logger = get_logger(__name__)
 
 
 def delta_time(reference_lap: pd.Series, compare_lap: pd.Series) -> Tuple:
@@ -145,7 +149,7 @@ def to_timedelta(x: str) -> Optional[datetime.timedelta]:
             )
 
         except Exception as exc:
-            logging.debug(f"Failed to parse timedelta string '{x}'",
+            _logger.debug(f"Failed to parse timedelta string '{x}'",
                           exc_info=exc)
             return None
 
@@ -198,7 +202,7 @@ def to_datetime(x) -> Optional[datetime.datetime]:
             )
 
         except Exception as exc:
-            logging.debug(f"Failed to parse datetime string '{x}'",
+            _logger.debug(f"Failed to parse datetime string '{x}'",
                           exc_info=exc)
             return None
 

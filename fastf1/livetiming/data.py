@@ -5,9 +5,12 @@ Data object for livetiming data
 from datetime import timedelta
 import json
 import hashlib
-import logging
 
+from fastf1.logger import get_logger
 from fastf1.utils import to_datetime, recursive_dict_get
+
+
+_logger = get_logger(__name__)
 
 
 _track_status_mapping = {
@@ -74,7 +77,7 @@ class LiveTimingData:
         automatically the first time :meth:`get`, :meth:`has`
         or :meth:`list_categories` are called.
         """
-        logging.info("Reading live timing data from recording. "
+        _logger.info("Reading live timing data from recording. "
                      "This may take a bit.")
         for fname in self.files:
             self._load_single_file(fname)
@@ -207,7 +210,7 @@ class LiveTimingData:
                 break
         else:
             # didn't find 'Started'
-            logging.error("Error while trying to set correct "
+            _logger.error("Error while trying to set correct "
                           "session start date!")
             return
 
@@ -216,7 +219,7 @@ class LiveTimingData:
         try:
             cat, msg, dt = json.loads(elem)
         except (json.JSONDecodeError, ValueError):
-            logging.error("Error while trying to set correct "
+            _logger.error("Error while trying to set correct "
                           "session start date!")
             return
 
@@ -229,7 +232,7 @@ class LiveTimingData:
                         self._start_date = to_datetime(entry['Utc'])
                     except (KeyError, ValueError, TypeError):
                         self.errorcount += 1
-                        logging.error("Error while trying to set correct "
+                        _logger.error("Error while trying to set correct "
                                       "session start date!")
                         return
         except AttributeError:
@@ -240,7 +243,7 @@ class LiveTimingData:
                         self._start_date = to_datetime(entry['Utc'])
                     except (KeyError, ValueError, TypeError):
                         self.errorcount += 1
-                        logging.error("Error while trying to set correct "
+                        _logger.error("Error while trying to set correct "
                                       "session start date!")
                         return
 

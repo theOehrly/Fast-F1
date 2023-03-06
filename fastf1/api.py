@@ -26,15 +26,17 @@ A collection of functions to interface with the F1 web api.
 import base64
 import datetime
 import json
-import logging
 import zlib
 from typing import Dict
 
 import numpy as np
 import pandas as pd
 
+from fastf1.logger import get_logger
 from fastf1.req import Cache
 from fastf1.utils import recursive_dict_get, to_timedelta, to_datetime
+
+_logger = get_logger(__name__)
 
 base_url = 'https://livetiming.formula1.com'
 
@@ -174,14 +176,14 @@ def timing_data(path, response=None, livedata=None):
     if livedata is not None and livedata.has('TimingData'):
         response = livedata.get('TimingData')
     elif response is None:  # no previous response provided
-        logging.info("Fetching timing data...")
+        _logger.info("Fetching timing data...")
         response = fetch_page(path, 'timing_data')
         if response is None:  # no response received
             raise SessionNotAvailableError(
                 "No data for this session! If this session only finished "
                 "recently, please try again in a few minutes."
             )
-    logging.info("Parsing timing data...")
+    _logger.info("Parsing timing data...")
 
     # split up response per driver for easier iteration and processing later
     resp_per_driver = dict()
@@ -254,8 +256,10 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             in_past = False  # we're back in the present
 
         if 'NumberOfLaps' in resp and ((prev_lapcnt := resp['NumberOfLaps']) < api_lapcnt):
-            logging.warning(f"Driver {drv: >2}: Ignoring late data for a previously processed lap."
-                            f"The data may contain errors (previous: {prev_lapcnt}; current {lapcnt})")
+            _logger.warning(f"Driver {drv: >2}: Ignoring late data for a "
+                            f"previously processed lap.The data may contain "
+                            f"errors (previous: {prev_lapcnt}; "
+                            f"current {lapcnt})")
             in_past = True
             continue
 
@@ -519,7 +523,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             drv_data['IsPersonalBest'][pb_idx] = True
 
     if integrity_errors:
-        logging.warning(
+        _logger.warning(
             f"Driver {drv: >2}: Encountered {len(integrity_errors)} timing "
             f"integrity error(s) near lap(s): {integrity_errors}.\n"
             f"This might be a bug and should be reported.")
@@ -612,7 +616,7 @@ def timing_app_data(path, response=None, livedata=None):
     if livedata is not None and livedata.has('TimingAppData'):
         response = livedata.get('TimingAppData')
     elif response is None:  # no previous response provided
-        logging.info("Fetching timing app data...")
+        _logger.info("Fetching timing app data...")
         response = fetch_page(path, 'timing_app_data')
         if response is None:  # no response received
             raise SessionNotAvailableError(
@@ -647,7 +651,8 @@ def timing_app_data(path, response=None, livedata=None):
                             data[key].append(None)
                     for key in stint:
                         if key not in data:
-                            logging.debug(f"Found unknown key in timing app data: {key}")
+                            _logger.debug(f"Found unknown key in timing app "
+                                          f"data: {key}")
 
                     data['Time'][-1] = time
                     data['Driver'][-1] = driver_number
@@ -709,7 +714,7 @@ def car_data(path, response=None, livedata=None):
         response = livedata.get('CarData.z')
         is_livedata = True
     elif response is None:
-        logging.info("Fetching car data...")
+        _logger.info("Fetching car data...")
         response = fetch_page(path, 'car_data')
         if response is None:  # no response received
             raise SessionNotAvailableError(
@@ -717,7 +722,7 @@ def car_data(path, response=None, livedata=None):
                 "recently, please try again in a few minutes."
             )
 
-    logging.info("Parsing car data...")
+    _logger.info("Parsing car data...")
 
     channels = {'0': 'RPM', '2': 'Speed', '3': 'nGear', '4': 'Throttle', '5': 'Brake', '45': 'DRS'}
     num_channels = ['RPM', 'Speed', 'nGear', 'Throttle', 'DRS']
@@ -761,7 +766,7 @@ def car_data(path, response=None, livedata=None):
             continue
 
     if decode_error_count > 0:
-        logging.warning(f"Car data: failed to decode {decode_error_count} "
+        _logger.warning(f"Car data: failed to decode {decode_error_count} "
                         f"messages ({len(response)} messages total)")
 
     # create one dataframe per driver and check for the longest dataframe
@@ -789,13 +794,13 @@ def car_data(path, response=None, livedata=None):
                 .sort_values(by='Date') \
                 .reset_index(drop=True)
 
-            logging.warning(f"Driver {driver: >2}: Car data is incomplete!")
+            _logger.warning(f"Driver {driver: >2}: Car data is incomplete!")
 
         # ensure that brake data is 'boolean-compatible' in case that this is
         # ever changed
         _unique_brake_values = data[driver].loc[:, 'Brake'].unique()
         if ((_unique_brake_values > 0) & (_unique_brake_values < 100)).any():
-            logging.warning(f"Driver {driver: >2}: Raw brake data contains "
+            _logger.warning(f"Driver {driver: >2}: Raw brake data contains "
                             f"non-boolean values!")
 
         # convert to correct datatypes
@@ -846,7 +851,7 @@ def position_data(path, response=None, livedata=None):
         response = livedata.get('Position.z')
         is_livedata = True
     elif response is None:
-        logging.info("Fetching position data...")
+        _logger.info("Fetching position data...")
         response = fetch_page(path, 'position')
         if response is None:  # no response received
             raise SessionNotAvailableError(
@@ -854,7 +859,7 @@ def position_data(path, response=None, livedata=None):
                 "recently, please try again in a few minutes."
             )
 
-    logging.info("Parsing position data...")
+    _logger.info("Parsing position data...")
 
     if not response:
         return {}
@@ -901,8 +906,9 @@ def position_data(path, response=None, livedata=None):
             continue
 
     if decode_error_count > 0:
-        logging.warning(f"Position data: failed to decode {decode_error_count} "
-                        f"messages ({len(response)} messages total)")
+        _logger.warning(
+            f"Position data: failed to decode {decode_error_count} "
+            f"messages ({len(response)} messages total)")
 
     # create one dataframe per driver and check for the longest dataframe
     most_complete_ref = None
@@ -932,7 +938,8 @@ def position_data(path, response=None, livedata=None):
                 data[driver].loc[:, ['X', 'Y', 'Z']]\
                 .fillna(value=0, inplace=False)
 
-            logging.warning(f"Driver {driver: >2}: Position data is incomplete!")
+            _logger.warning(f"Driver {driver: >2}: Position data is "
+                            f"incomplete!")
 
     return data
 
@@ -975,10 +982,10 @@ def track_status_data(path, response=None, livedata=None):
     """
     if livedata is not None and livedata.has('TrackStatus'):
         # does not need any further processing
-        logging.info("Loading track status data")
+        _logger.info("Loading track status data")
         return livedata.get('TrackStatus')
     elif response is None:
-        logging.info("Fetching track status data...")
+        _logger.info("Fetching track status data...")
         response = fetch_page(path, 'track_status')
         if response is None:  # no response received
             raise SessionNotAvailableError(
@@ -1026,10 +1033,10 @@ def session_status_data(path, response=None, livedata=None):
     """
     if livedata is not None and livedata.has('SessionStatus'):
         # does not need any further processing
-        logging.info("Loading session status data")
+        _logger.info("Loading session status data")
         return livedata.get('SessionStatus')
     elif response is None:
-        logging.info("Fetching session status data...")
+        _logger.info("Fetching session status data...")
         response = fetch_page(path, 'session_status')
         if response is None:  # no response received
             raise SessionNotAvailableError(
@@ -1091,10 +1098,10 @@ def race_control_messages(path, response=None, livedata=None):
     """
     if livedata is not None and livedata.has('RaceControlMessages'):
         # does not need any further processing
-        logging.info("Loading race control messages")
+        _logger.info("Loading race control messages")
         return livedata.get('RaceControlMessages')
     elif response is None:
-        logging.info("Fetching race control messages...")
+        _logger.info("Fetching race control messages...")
         response = fetch_page(path, 'race_control_messages')
         if response is None:  # no response received
             raise SessionNotAvailableError(
@@ -1154,10 +1161,10 @@ def lap_count(path, response=None, livedata=None):
     """
     if livedata is not None and livedata.has('LapCount'):
         # does not need any further processing
-        logging.info("Loading lap count data")
+        _logger.info("Loading lap count data")
         return livedata.get('LapCount')
     elif response is None:
-        logging.info("Fetching lap count data...")
+        _logger.info("Fetching lap count data...")
         response = fetch_page(path, 'lap_count')
         if response is None:  # no response received
             raise SessionNotAvailableError(
@@ -1208,10 +1215,10 @@ def driver_info(path, response=None, livedata=None):
     """
     if livedata is not None and livedata.has('DriverList'):
         # does not need any further processing
-        logging.info("Loading driver list")
+        _logger.info("Loading driver list")
         response = livedata.get('DriverList')
     elif response is None:
-        logging.info("Fetching driver list...")
+        _logger.info("Fetching driver list...")
         response = fetch_page(path, 'driver_list')
         if response is None:  # no response received
             raise SessionNotAvailableError(
@@ -1301,10 +1308,10 @@ def weather_data(path, response=None, livedata=None):
     """
     if livedata is not None and livedata.has('WeatherData'):
         # does not need any further processing
-        logging.info("Loading weather data")
+        _logger.info("Loading weather data")
         response = livedata.get('WeatherData')
     elif response is None:
-        logging.info("Fetching weather data...")
+        _logger.info("Fetching weather data...")
         response = fetch_page(path, 'weather_data')
         if response is None:  # no response received
             raise SessionNotAvailableError(
@@ -1378,7 +1385,7 @@ def fetch_page(path, name):
                         decode_error_count += 1
                         continue
                 if decode_error_count > 0:
-                    logging.warning(f"Failed to decode {decode_error_count}"
+                    _logger.warning(f"Failed to decode {decode_error_count}"
                                     f" messages ({len(records)} messages "
                                     f"total)")
                 return ret
@@ -1410,7 +1417,7 @@ def parse(text, zipped=False):
     if zipped:
         text = zlib.decompress(base64.b64decode(text), -zlib.MAX_WBITS)
         return parse(text.decode('utf-8-sig'))
-    logging.warning("Couldn't parse text")
+    _logger.warning("Couldn't parse text")
     return text
 
 

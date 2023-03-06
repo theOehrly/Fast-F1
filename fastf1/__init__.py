@@ -53,6 +53,28 @@ Cache API
     :members: enable_cache, clear_cache, disabled, set_disabled, set_enabled
     :autosummary:
 
+
+Configure Logging Verbosity
+...........................
+
+All parts of FastF1 generally log at the log level 'INFO'.
+The reason for this is that many data loading processes take multiple
+seconds to complete. Logging is used to give progress information here as well
+as for showing warnings and non-terminal errors.
+
+The logging level for FastF1 can be easily customized::
+
+    import fastf1
+
+    fastf1.set_log_level('WARNING')
+
+    # ... your code  here ... #
+
+The available levels are (in order of increasing severity): DEBUG, INFO,
+WARNING, ERROR and CRITICAL.
+
+For more information see :ref:`logging`.
+
 """
 from typing import Dict
 
@@ -62,6 +84,8 @@ from fastf1.events import (get_session,  # noqa: F401
                            get_events_remaining,
                            get_testing_event,
                            get_event_schedule)
+
+from fastf1.logger import set_log_level  # noqa: F401
 
 from fastf1.req import Cache, RateLimitExceededError   # noqa: F401
 from fastf1.version import __version__   # noqa: F401

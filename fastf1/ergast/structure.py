@@ -1,7 +1,11 @@
 import datetime
-import logging
 import re
 from typing import Optional
+
+from fastf1.logger import get_logger
+
+
+logger = get_logger('ergast')
 
 
 # ##############################################
@@ -36,8 +40,8 @@ def time_from_ergast(t_str) -> Optional[datetime.time]:
     res = _time_string_matcher.match(t_str)
 
     if res is None:
-        logging.debug(f"Failed to parse timestamp '{t_str}' in Ergast"
-                      f"response.")
+        logger.debug(f"Failed to parse timestamp '{t_str}' in Ergast"
+                     f"response.")
         return None
     elif res[1] and res[2] and res[3]:
         hour, minute, second = int(res[1][:-1]), int(res[2][:-1]), int(res[3])
@@ -63,8 +67,8 @@ def time_from_ergast(t_str) -> Optional[datetime.time]:
         return datetime.time(hour=hour, minute=minute, second=second,
                              microsecond=microsecond, tzinfo=tzinfo)
     except ValueError:
-        logging.debug(f"Failed to parse timestamp '{t_str}' in Ergast"
-                      f"response.")
+        logger.debug(f"Failed to parse timestamp '{t_str}' in Ergast"
+                     f"response.")
         return None
 
 

@@ -82,6 +82,7 @@ You can also install using `conda`:
    utils
    plotting
    livetiming
+   logging
    legacy
 
 .. toctree::
