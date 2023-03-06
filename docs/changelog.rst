@@ -19,6 +19,9 @@ New Features
   'Deleted' and 'DeletedReason' that indicate that a lap was deleted and why
   it was deleted.
 
+- Added method :func:`fastf1.core.Laps.split_qualifying_sessions` to split
+  laps for a qualifying session into Q1, Q2 and Q3.
+
 
 Bug Fixes
 ---------
@@ -27,7 +30,7 @@ Bug Fixes
   will not mark these lap times personal best time anymore if the deleted
   lap was a drivers fastest lap.
 
-- Enforce creation of :class:``fastf1.core.Laps`` with default columns and
+- Enforce creation of :class:`fastf1.core.Laps` with default columns and
   default dtypes (when created through ``Session.load``) (#310).
 
 - Fixed a bug where FastF1 Series-like objects where returned instead of a
