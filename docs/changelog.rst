@@ -87,6 +87,14 @@ The following deprecated API elements have been removed:
   - Function ``fastf1.ergast.fetch_weekend``
 
 
+
+v2.3.1
+======
+
+Maintenance release for updating driver names and colors for the 2023 season
+(#326 by @Casper-Guo).
+
+
 v2.3.0
 ======
 
