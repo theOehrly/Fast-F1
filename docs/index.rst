@@ -122,8 +122,21 @@ Indices and tables
 * :ref:`search`
 
 
-For questions feel free to contact me:
-oehrly@mailbox.org
+Questions, Contacting the Maintainer and Code of Conduct
+========================================================
+
+For questions that may be of interest to the whole community, please use the
+Github Discussions section to ask for help.
+
+In case of questions that you prefer to discuss privately, feel free to contact
+me via email at oehrly@mailbox.org. Any requests to this address will be
+treated with confidentiality if desired.
+
+FastF1 has a Code of Conduct. Complaints about a perceived breach of this code
+of conduct should be sent to the above email address as well, in almost all
+cases. Please refer to the Code of Conduct, available through the main page of
+the GitHub repository, for information on how breaches are reported, how the
+Code of Conduct is enforced and what values FastF1 encourages.
 
 
 Notice
