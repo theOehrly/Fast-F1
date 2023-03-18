@@ -19,8 +19,7 @@ Requirements
 ------------
 
 To run the tests you will need to
-:ref:`set up FastF1 for development <installing_for_devs>`. Note in
-particular the additional dependencies for testing.
+:ref:`set up FastF1 for development <installing_for_devs>`.
 
 
 Running the tests
@@ -29,6 +28,9 @@ Running the tests
 In the root directory of your development repository run::
 
    python -m pytest
+
+
+pytest expects the cache directory :file:`test_cache/` to exist. You will have to create it the first time.
 
 
 pytest can be configured via a lot of `command-line parameters`_. Some
