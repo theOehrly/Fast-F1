@@ -2381,7 +2381,7 @@ class Laps(pd.DataFrame):
         """Return all laps of a specific LapNumber in self based on LapNumber
 
             lap_1 = ff1.pick_lap(1)
-            lap_25 = ff1.pick_lap(25)            
+            lap_25 = ff1.pick_lap(25)
 
         Args:
             lap_number (int): Lap number
@@ -2390,7 +2390,6 @@ class Laps(pd.DataFrame):
             instance of :class:`Laps`
         """
         return self[self['LapNumber'] == lap_number]
-        
 
     def pick_driver(self, identifier: Union[int, str]) -> "Laps":
         """Return all laps of a specific driver in self based on the driver's
