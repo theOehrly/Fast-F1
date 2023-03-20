@@ -64,7 +64,7 @@ documentation, run the following command within the :file:`Fast-F1` directory::
     python -m pip install -r requirements-dev.txt
 
 [Optional] Installing pre-commit hooks
-===========================
+======================================
 You can optionally install `pre-commit <https://pre-commit.com/>`_ hooks.
 These will automatically check flake8 and other style issues when you run
 ``git commit``. The hooks are defined in the top level
