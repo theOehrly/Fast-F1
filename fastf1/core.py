@@ -2376,7 +2376,7 @@ class Laps(pd.DataFrame):
             return pd.concat(wd, axis=1).T
         else:
             return pd.DataFrame(columns=self.session.weather_data.columns)
-   
+
     def pick_lap(self, lap_number: int) -> "Laps":
         """Return all laps of a specific LapNumber in self based on LapNumber
 
