@@ -1951,7 +1951,7 @@ class Session:
                 example 'VER') or driver number as string
 
         Returns:
-            instance of :class:`Driver`
+            instance of :class:`DriverResult`
         """
         mask = ((self.results['Abbreviation'] == identifier)
                 | (self.results['DriverNumber'] == identifier))
