@@ -1034,6 +1034,10 @@ class Session:
         self._weather_data: pd.DataFrame
         self._results: SessionResults
 
+    def __repr__(self):
+        return (f"{self.event.year} Season Round {self.event.RoundNumber}: "
+                f"{self.event.EventName} - {self.name}")
+
     def _get_property_warn_not_loaded(self, name):
         if not hasattr(self, name):
             raise DataNotLoadedError("The data you are trying to access has not "
