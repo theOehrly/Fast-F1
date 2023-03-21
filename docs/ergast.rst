@@ -15,12 +15,11 @@ Ergast API.
 
 The terms of use of Ergast apply (https://ergast.com/mrd/terms/).
 Especially take care not to exceed the specified rate limits.
-
 FastF1 will handle caching and it will try to enforce rate limits where
-possible. Make sure to know what limits apply. For more information on
-caching and rate limiting see :ref:`requests-and-caching`.
+possible. Make sure to know what limits apply. For more information on how
+FastF1 handles caching and rate limiting see :ref:`requests-and-caching`.
 
-Response Types
+Result Types
 ..............
 
 Data can be returned in two different formats:
@@ -44,7 +43,7 @@ This format is a JSON-like representation of the original JSON data (using
    ~interface.ErgastMultiResponse
 
 The complexity of the data that is returned by the API endpoint determines
-the exact response type. The return type is documented for each endpoint.
+the exact result type. The return type is documented for each endpoint.
 
 An :class:`~fastf1.ergast.interface.ErgastSimpleResponse` wraps a Pandas
 ``DataFrame`` directly.
@@ -74,6 +73,23 @@ individually for each endpoint method:
         if this value is not set. The maximum allowed value is 1000 results.
 
 
+Common Surprises
+................
+
+This is a list of things that may be surprising or unexpected for first-time
+users.
+
+  - API results are always returned in ascending order. As a result, for
+    example, if you query the race schedule without specifying a season, you
+    will receive the schedule for the oldest seasons first, starting in 1950.
+
+  - Only some combinations of filter parameters are possible and those vary for
+    each API endpoint. FastF1 does not impose restrictions on these
+    combinations as the relationships are fairly complex. Instead, an
+    :class:`~fastf1.ergast.interface.InvalidRequestError` will be returned in
+    such a case. The exception will contain the error response of the server.
+
+
 Examples
 ........
 
@@ -85,7 +101,10 @@ all default arguments.
     >>> from fastf1.ergast import Ergast
     >>> ergast = Ergast()
 
-Now, get information about all circuits that hosted a Grand Prix in 2022.
+Simple DataFrame Responses
+::::::::::::::::::::::::::
+
+Get information about all circuits that hosted a Grand Prix in 2022.
 This is an endpoint that returns an
 :class:`~fastf1.ergast.interface.ErgastSimpleResponse`, meaning one single
 DataFrame.
@@ -106,7 +125,10 @@ DataFrame.
     <BLANKLINE>
     [22 rows x 7 columns]
 
-To get the raw data instead of the DataFrame response, specify the return type
+Raw Responses
+:::::::::::::
+
+To get the raw data instead of the DataFrame result, specify the return type
 as 'raw':
 
 .. doctest::
@@ -121,11 +143,19 @@ as 'raw':
                  'country': 'Australia'}},
   ...]
 
-Note that in the response DataFrame some keys are renamed from the raw response
+Note that FastF1's "raw" response is not actually the complete JSON response
+that the API provides. Instead, only the actual data part of the response is
+returned while metadata (version, query parameters, response length, ...)
+are not included.
+
+Renamed Keys and Type Casting
+:::::::::::::::::::::::::::::
+
+In the response DataFrame, some keys are renamed from the raw result
 so that all column names are unique when flattening more complex responses.
-Compare the column names from the result frame with the raw response above and
-note that 'url' has changed to 'circuitUrl'. This is because other responses
-include a 'constructorUrl' and a 'driverUrl', for example.
+Compare the column names from the result data frame with the raw response above
+and note that 'url' has changed to 'circuitUrl' (Responses can include other
+URLs as well).
 
 .. doctest::
 
@@ -153,16 +183,20 @@ but with ``auto_cast=False`` both values remain ``str``.
   >>> ergast.get_circuits(season=2022, result_type='raw', auto_cast=False)[0]['Location']
   {'lat': '-37.8497', 'long': '144.968', 'locality': 'Melbourne', 'country': 'Australia'}
 
-The documentation for each API endpoint will include an "API Mapping" that
+The documentation for each API endpoint includes an "API Mapping" that
 shows the structure of the raw response, the updated key names for flattening
-and the data types for automatic type casting. Additionally, there is be a
+and the data types for automatic type casting. Additionally, there is a
 "DataFrame Description" that shows which column names will be present in the
 result frame. This way it easy to see which keys are renamed.
 Additionally, both the "API Mapping" and the "DataFrame Description" will
 show the data type to which a value is cast when ``auto_cast=True``.
 
-Also, there are API endpoints that return more complex responses. When 'pandas'
-is selected as response type, these endpoints return a
+
+MultiResponse DataFrames
+::::::::::::::::::::::::
+
+There are API endpoints that return complex data structures as a
+response. When 'pandas' is selected as result type, these endpoints return a
 :class:`~fastf1.ergast.interface.ErgastMultiResponse`. One such endpoint is
 the constructor standings endpoint.
 
@@ -183,6 +217,10 @@ of the response:
   2    1960     10
 
 
+Note that the API always returns results in an ascending order.
+Therefore, when no season is specified, the constructor standings are returned
+for the oldest available seasons.
+
 Due to the maximum number of returned results being limited, only data for
 three seasons is returned, as can be seen.
 
@@ -202,6 +240,9 @@ The first element in ``.content`` is associated with the first row of the
   8         9            9  ...             OSCA                 Italian
   <BLANKLINE>
   [9 rows x 8 columns]
+
+Pagination
+::::::::::
 
 All Ergast response objects inherit from
 :class:`~fastf1.ergast.interface.ErgastResultMixin`. This object provides

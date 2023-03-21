@@ -215,6 +215,13 @@ class ErgastRawResponse(ErgastResponseMixin, list):
     This class wraps a ``list`` and adds response information
     and paging (see :class:`ErgastResponseMixin`).
 
+    This "raw" response does not actually contain the complete JSON response
+    that the API provides. Instead, only the actual data part of the response
+    is returned while metadata (version, query parameters, response length,
+    ...) are not included. But metadata is used internally to provide
+    pagination and information that are implemented by the
+    :class:`ErgastResponseMixin`.
+
     Args:
         category: Reference to a category from :mod:`fastf1.ergast.structure`
             that describes the result data
@@ -276,7 +283,7 @@ class ErgastMultiResponse(ErgastResponseMixin):
     This class additionally offers response information and paging
     (see :class:`ErgastResponseMixin`).
 
-    Note: You this object is usually not instantiated by the user. Instead
+    Note: This object is usually not instantiated by the user. Instead,
     you should use one of the API endpoint methods that are provided by
     :class:`Ergast` get data from the API.
 
@@ -392,15 +399,15 @@ class Ergast:
     Args:
         result_type: Determines the default type of the returned result object
 
-            - 'raw': :class:`ErgastRawResponse`
-            - 'pandas': :class:`ErgastSimpleResponse` or
-              :class:`ErgastMultiResponse` depending on endpoint
+            - 'raw': :class:`~interface.ErgastRawResponse`
+            - 'pandas': :class:`~interface.ErgastSimpleResponse` or
+              :class:`~interface.ErgastMultiResponse` depending on endpoint
 
         auto_cast: Determines whether result values are cast from there default
             string representation to a better matching type
 
         limit: The maximum number of results returned by the API. Defaults to
-            30 if not set. Maximum: 1000. See also "Response Paging",
+            30 if not set. Maximum: 1000. See also "Response Paging" on
             https://ergast.com/mrd/.
     """
     def __init__(self,
@@ -608,19 +615,26 @@ class Ergast:
             :describe-dataframe:
 
         Args:
-            circuit: select a circuit by its circuit id
+            circuit: select a circuit by its circuit id (default: all)
             constructor: select a constructor by its constructor id
-            driver: select a driver by its driver id
-            grid_position: select a grid position by its number
+                (default: all)
+            driver: select a driver by its driver id (default: all)
+            grid_position: select a grid position by its number (default: all)
             results_position: select a finishing result by its position
-            fastest_rank: select fastest by rank number
-            status: select by finishing status
+                (default: all)
+            fastest_rank: select fastest by rank number (default: all)
+            status: select by finishing status (default: all)
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
             offset: An offset into the result set for response paging.
                 Defaults to 0 if not set. See also "Response Paging",
                 https://ergast.com/mrd/.
+
+        Returns:
+            :class:`~interface.ErgastSimpleResponse` or
+            :class:`~interface.ErgastRawResponse`, depending on the
+            ``result_type`` parameter
         """
         selectors = {'circuit': circuit,
                      'constructor': constructor,
@@ -664,21 +678,28 @@ class Ergast:
             :describe-dataframe:
 
         Args:
-            season: select a season by its year
-            round: select a round by its number
-            circuit: select a circuit by its circuit id
+            season: select a season by its year (default: all, oldest first)
+            round: select a round by its number (default: all)
+            circuit: select a circuit by its circuit id (default: all)
             constructor: select a constructor by its constructor id
-            driver: select a driver by its driver id
-            grid_position: select a grid position by its number
+                (default: all)
+            driver: select a driver by its driver id (default: all)
+            grid_position: select a grid position by its number (default: all)
             results_position: select a finishing result by its position
-            fastest_rank: select fastest by rank number
-            status: select by finishing status
+                (default: all)
+            fastest_rank: select fastest by rank number (default: all)
+            status: select by finishing status (default: all)
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
             offset: An offset into the result set for response paging.
                 Defaults to 0 if not set. See also "Response Paging",
                 https://ergast.com/mrd/.
+
+        Returns:
+            :class:`~interface.ErgastSimpleResponse` or
+            :class:`~interface.ErgastRawResponse`, depending on the
+            ``result_type`` parameter
         """
         selectors = {'season': season,
                      'round': round,
@@ -724,21 +745,28 @@ class Ergast:
             :describe-dataframe:
 
         Args:
-            season: select a season by its year
-            round: select a round by its number
-            circuit: select a circuit by its circuit id
+            season: select a season by its year (default: all, oldest first)
+            round: select a round by its number (default: all)
+            circuit: select a circuit by its circuit id (default: all)
             constructor: select a constructor by its constructor id
-            driver: select a driver by its driver id
-            grid_position: select a grid position by its number
+                (default: all)
+            driver: select a driver by its driver id (default: all)
+            grid_position: select a grid position by its number (default: all)
             results_position: select a finishing result by its position
-            fastest_rank: select fastest by rank number
-            status: select by finishing status
+                (default: all)
+            fastest_rank: select fastest by rank number (default: all)
+            status: select by finishing status (default: all)
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
             offset: An offset into the result set for response paging.
                 Defaults to 0 if not set. See also "Response Paging",
                 https://ergast.com/mrd/.
+
+        Returns:
+            :class:`~interface.ErgastSimpleResponse` or
+            :class:`~interface.ErgastRawResponse`, depending on the
+            ``result_type`` parameter
         """
         selectors = {'season': season,
                      'round': round,
@@ -784,21 +812,28 @@ class Ergast:
             :describe-dataframe:
 
         Args:
-            season: select a season by its year
-            round: select a round by its number
-            circuit: select a circuit by its circuit id
+            season: select a season by its year (default: all, oldest first)
+            round: select a round by its number (default: all)
+            circuit: select a circuit by its circuit id (default: all)
             constructor: select a constructor by its constructor id
-            driver: select a driver by its driver id
-            grid_position: select a grid position by its number
+                (default: all)
+            driver: select a driver by its driver id (default: all)
+            grid_position: select a grid position by its number (default: all)
             results_position: select a finishing result by its position
-            fastest_rank: select fastest by rank number
-            status: select by finishing status
+                (default: all)
+            fastest_rank: select fastest by rank number (default: all)
+            status: select by finishing status (default: all)
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
             offset: An offset into the result set for response paging.
                 Defaults to 0 if not set. See also "Response Paging",
                 https://ergast.com/mrd/.
+
+        Returns:
+            :class:`~interface.ErgastSimpleResponse` or
+            :class:`~interface.ErgastRawResponse`, depending on the
+            ``result_type`` parameter
         """
         selectors = {'season': season,
                      'round': round,
@@ -843,20 +878,27 @@ class Ergast:
             :describe-dataframe:
 
         Args:
-            season: select a season by its year
-            round: select a round by its number
+            season: select a season by its year (default: all, oldest first)
+            round: select a round by its number (default: all)
             constructor: select a constructor by its constructor id
-            driver: select a driver by its driver id
-            grid_position: select a grid position by its number
+                (default: all)
+            driver: select a driver by its driver id (default: all)
+            grid_position: select a grid position by its number (default: all)
             results_position: select a finishing result by its position
-            fastest_rank: select fastest by rank number
-            status: select by finishing status
+                (default: all)
+            fastest_rank: select fastest by rank number (default: all)
+            status: select by finishing status (default: all)
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
             offset: An offset into the result set for response paging.
                 Defaults to 0 if not set. See also "Response Paging",
                 https://ergast.com/mrd/.
+
+        Returns:
+            :class:`~interface.ErgastSimpleResponse` or
+            :class:`~interface.ErgastRawResponse`, depending on the
+            ``result_type`` parameter
         """
         selectors = {'season': season,
                      'round': round,
@@ -901,21 +943,28 @@ class Ergast:
             :describe-dataframe:
 
         Args:
-            season: select a season by its year
-            round: select a round by its number
-            circuit: select a circuit by its circuit id
+            season: select a season by its year (default: all, oldest first)
+            round: select a round by its number (default: all)
+            circuit: select a circuit by its circuit id (default: all)
             constructor: select a constructor by its constructor id
-            driver: select a driver by its driver id
-            grid_position: select a grid position by its number
+                (default: all)
+            driver: select a driver by its driver id (default: all)
+            grid_position: select a grid position by its number (default: all)
             results_position: select a finishing result by its position
-            fastest_rank: select fastest by rank number
-            status: select by finishing status
+                (default: all)
+            fastest_rank: select fastest by rank number (default: all)
+            status: select by finishing status (default: all)
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
             offset: An offset into the result set for response paging.
                 Defaults to 0 if not set. See also "Response Paging",
                 https://ergast.com/mrd/.
+
+        Returns:
+            :class:`~interface.ErgastSimpleResponse` or
+            :class:`~interface.ErgastRawResponse`, depending on the
+            ``result_type`` parameter
         """
         selectors = {'season': season,
                      'round': round,
@@ -967,20 +1016,26 @@ class Ergast:
             :describe-dataframe:
 
         Args:
-            season: select a season by its year
-            round: select a round by its number
-            circuit: select a circuit by its circuit id
+            season: select a season by its year (default: all, oldest first)
+            round: select a round by its number (default: all)
+            circuit: select a circuit by its circuit id (default: all)
             constructor: select a constructor by its constructor id
-            driver: select a driver by its driver id
-            grid_position: select a grid position by its number
-            fastest_rank: select fastest by rank number
-            status: select by finishing status
+                (default: all)
+            driver: select a driver by its driver id (default: all)
+            grid_position: select a grid position by its number (default: all)
+            fastest_rank: select fastest by rank number (default: all)
+            status: select by finishing status (default: all)
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
             offset: An offset into the result set for response paging.
                 Defaults to 0 if not set. See also "Response Paging",
                 https://ergast.com/mrd/.
+
+        Returns:
+            :class:`~interface.ErgastMultiResponse` or
+            :class:`~interface.ErgastRawResponse`, depending on the
+            ``result_type`` parameter
         """
         selectors = {'season': season,
                      'round': round,
@@ -1026,21 +1081,28 @@ class Ergast:
             :describe-dataframe:
 
         Args:
-            season: select a season by its year
-            round: select a round by its number
-            circuit: select a circuit by its circuit id
+            season: select a season by its year (default: all, oldest first)
+            round: select a round by its number (default: all)
+            circuit: select a circuit by its circuit id (default: all)
             constructor: select a constructor by its constructor id
-            driver: select a driver by its driver id
-            grid_position: select a grid position by its number
+                (default: all)
+            driver: select a driver by its driver id (default: all)
+            grid_position: select a grid position by its number (default: all)
             results_position: select a finishing result by its position
-            fastest_rank: select fastest by rank number
-            status: select by finishing status
+                (default: all)
+            fastest_rank: select fastest by rank number (default: all)
+            status: select by finishing status (default: all)
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
             offset: An offset into the result set for response paging.
                 Defaults to 0 if not set. See also "Response Paging",
                 https://ergast.com/mrd/.
+
+        Returns:
+            :class:`~interface.ErgastMultiResponse` or
+            :class:`~interface.ErgastRawResponse`, depending on the
+            ``result_type`` parameter
         """
         selectors = {'season': season,
                      'round': round,
@@ -1085,19 +1147,25 @@ class Ergast:
             :describe-dataframe:
 
         Args:
-            season: select a season by its year
-            round: select a round by its number
-            circuit: select a circuit by its circuit id
+            season: select a season by its year (default: all, oldest first)
+            round: select a round by its number (default: all)
+            circuit: select a circuit by its circuit id (default: all)
             constructor: select a constructor by its constructor id
-            driver: select a driver by its driver id
-            grid_position: select a grid position by its number
-            status: select by finishing status
+                (default: all)
+            driver: select a driver by its driver id (default: all)
+            grid_position: select a grid position by its number (default: all)
+            status: select by finishing status (default: all)
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
             offset: An offset into the result set for response paging.
                 Defaults to 0 if not set. See also "Response Paging",
                 https://ergast.com/mrd/.
+
+        Returns:
+            :class:`~interface.ErgastMultiResponse` or
+            :class:`~interface.ErgastRawResponse`, depending on the
+            ``result_type`` parameter
         """
         selectors = {'season': season,
                      'round': round,
@@ -1137,16 +1205,22 @@ class Ergast:
             :describe-dataframe:
 
         Args:
-            season: select a season by its year
-            round: select a round by its number
-            driver: select a driver by its driver id
+            season: select a season by its year (default: all, oldest first)
+            round: select a round by its number (default: all)
+            driver: select a driver by its driver id (default: all)
             standings_position: select a result by position in the standings
+                (default: all)
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
             offset: An offset into the result set for response paging.
                 Defaults to 0 if not set. See also "Response Paging",
                 https://ergast.com/mrd/.
+
+        Returns:
+            :class:`~interface.ErgastMultiResponse` or
+            :class:`~interface.ErgastRawResponse`, depending on the
+            ``result_type`` parameter
         """
         selectors = {'season': season,
                      'round': round,
@@ -1183,16 +1257,23 @@ class Ergast:
             :describe-dataframe:
 
         Args:
-            season: select a season by its year
-            round: select a round by its number
+            season: select a season by its year (default: all, oldest first)
+            round: select a round by its number (default: all)
             constructor: select a constructor by its constructor id
+                (default: all)
             standings_position: select a result by position in the standings
+                (default: all)
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
             offset: An offset into the result set for response paging.
                 Defaults to 0 if not set. See also "Response Paging",
                 https://ergast.com/mrd/.
+
+        Returns:
+            :class:`~interface.ErgastMultiResponse` or
+            :class:`~interface.ErgastRawResponse`, depending on the
+            ``result_type`` parameter
         """
         selectors = {'season': season,
                      'round': round,
@@ -1230,16 +1311,22 @@ class Ergast:
             :describe-dataframe:
 
         Args:
-            season: select a season by its year
-            round: select a round by its number
+            season: select a season by its year (default: all, oldest first)
+            round: select a round by its number (default: all)
             lap_number: select lap times by a specific lap number
-            driver: select a driver by its driver id
+                (default: all)
+            driver: select a driver by its driver id (default: all)
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
             offset: An offset into the result set for response paging.
                 Defaults to 0 if not set. See also "Response Paging",
                 https://ergast.com/mrd/.
+
+        Returns:
+            :class:`~interface.ErgastMultiResponse` or
+            :class:`~interface.ErgastRawResponse`, depending on the
+            ``result_type`` parameter
         """
         selectors = {'season': season,
                      'round': round,
@@ -1276,17 +1363,24 @@ class Ergast:
             :describe-dataframe:
 
         Args:
-            season: select a season by its year
-            round: select a round by its number
+            season: select a season by its year (default: all, oldest first)
+            round: select a round by its number (default: all)
             lap_number: select pit stops by a specific lap number
+                (default: all)
             stop_number: select pit stops by their stop number
-            driver: select a driver by its driver id
+                (default: all)
+            driver: select a driver by its driver id (default: all)
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
             offset: An offset into the result set for response paging.
                 Defaults to 0 if not set. See also "Response Paging",
                 https://ergast.com/mrd/.
+
+        Returns:
+            :class:`~interface.ErgastMultiResponse` or
+            :class:`~interface.ErgastRawResponse`, depending on the
+            ``result_type`` parameter
         """
         selectors = {'season': season,
                      'round': round,
@@ -1305,7 +1399,6 @@ class Ergast:
                                           selectors=selectors)
 
 
-# TODO: document
 class ErgastError(Exception):
     """Base class for Ergast API errors."""
     pass
