@@ -2381,6 +2381,20 @@ class Laps(pd.DataFrame):
         else:
             return pd.DataFrame(columns=self.session.weather_data.columns)
 
+    def pick_lap(self, lap_number: int) -> "Laps":
+        """Return all laps of a specific LapNumber in self based on LapNumber
+
+            lap_1 = ff1.pick_lap(1)
+            lap_25 = ff1.pick_lap(25)
+
+        Args:
+            lap_number (int): Lap number
+
+        Returns:
+            instance of :class:`Laps`
+        """
+        return self[self['LapNumber'] == lap_number]
+
     def pick_driver(self, identifier: Union[int, str]) -> "Laps":
         """Return all laps of a specific driver in self based on the driver's
         three letters identifier or based on the driver number ::
