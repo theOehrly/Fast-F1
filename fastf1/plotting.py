@@ -113,7 +113,7 @@ DRIVER_COLORS: Dict[str, str] = {
     "carlos sainz": "#ff8181",
 
     "kevin magnussen": "#ffffff",
-    "nico hulkenburg": "#cacaca",
+    "nico hulkenberg": "#cacaca",
 
     "oscar piastri": "#ff8700",
     "lando norris": "#eeb370",
@@ -137,7 +137,7 @@ DRIVER_TRANSLATE: Dict[str, str] = {
     'GAS': 'pierre gasly', 'OCO': 'esteban ocon',
     'BOT': 'valtteri bottas', 'ZHO': 'zhou guanyu',
     'DEV': 'nyck de vries', 'TSU': 'yuki tsunoda',
-    'MAG': 'kevin magnussen', 'HUL': 'nico hulkenburg',
+    'MAG': 'kevin magnussen', 'HUL': 'nico hulkenberg',
     'ALO': 'fernando alonso', 'STR': 'lance stroll', 'DRU': 'felipe drugovich',
     'HAM': 'lewis hamilton', 'RUS': 'george russell',
     'ALB': 'alexander albon', 'SAR': 'logan sargeant'}
