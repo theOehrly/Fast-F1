@@ -63,7 +63,7 @@ Important Notes
 - You should use the cache with saved live timing data too. This will speed up
   loading of the data considerably after the first run.
 
-- You need to used different cache directories if you want to cache
+- You need to use different cache directories if you want to cache
   saved live timing data and api data **for the same session**!
   The cache cannot tell the data sources apart. If cached data from one source
   already exists it will not be reloaded automatically from a different source.
