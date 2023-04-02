@@ -220,3 +220,26 @@ def test_lap_count_data():
     for col, dtype in zip(data.values(), dtypes):
         assert isinstance(col[0], dtype)
         assert len(col) == 57
+
+
+def test_driver_list():
+    response = list()
+    tl = 12  # length of timestamp: len('00:00:00:000')
+    with open('fastf1/testing/reference_data/'
+              '2020_05_FP2/driver_list.raw', 'rb') as fobj:
+        for line in fobj.readlines():
+            dec = line.decode('utf-8-sig')
+            response.append([dec[:tl], fastf1.api.parse(dec[tl:])])
+
+    # parse data; api path is unused here so it does not need to be valid
+    data = fastf1.api.driver_info('api/path', response=response)
+
+    # ########## verify driver data
+    assert isinstance(data, dict)
+    assert len(data.keys()) == 20
+    dtypes = [str, str, str, str, int, str, str, str, str, str, str,
+              datetime.timedelta, datetime.timedelta, datetime.timedelta,
+              datetime.timedelta, str, float]
+    for driver in data.values():
+        for col, dtype in zip(driver.values(), dtypes):
+            assert isinstance(col, dtype)
