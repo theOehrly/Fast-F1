@@ -1797,7 +1797,8 @@ class Session:
                 'BroadcastName': 'BroadcastName',
                 'Tla': 'Abbreviation', 'TeamName': 'TeamName',
                 'TeamColour': 'TeamColor', 'FirstName': 'FirstName',
-                'LastName': 'LastName', 'HeadshotUrl': 'HeadshotUrl'
+                'LastName': 'LastName', 'HeadshotUrl': 'HeadshotUrl',
+                'CountryCode': 'CountryCode'
             }.items():
                 for entry in f1di.values():
                     driver_info[key2].append(entry.get(key1))
@@ -2839,6 +2840,9 @@ class SessionResults(pd.DataFrame):
         - ``HeadshotUrl`` | :class:`str` |
           The URL to the driver's headshot
 
+        - ``CountryCode`` | :class:`str` |
+          The driver's country code (e.g. "FRA")
+
         - ``Position`` | :class:`float` |
           The drivers finishing position (values only given if session is
           'Race', 'Qualifying' or 'Sprint Qualifying')
@@ -2901,6 +2905,7 @@ class SessionResults(pd.DataFrame):
         'LastName': str,
         'FullName': str,
         'HeadshotUrl': str,
+        'CountryCode': str,
         'Position': 'float64',
         'GridPosition': 'float64',
         'Q1': 'timedelta64[ns]',
