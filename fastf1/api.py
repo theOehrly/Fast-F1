@@ -807,12 +807,12 @@ def car_data(path, response=None, livedata=None):
                             f"non-boolean values!")
 
         # convert to correct datatypes
-        data[driver].loc[:, num_channels] = \
+        data[driver][num_channels] = \
             data[driver].loc[:, num_channels] \
             .fillna(value=0, inplace=False) \
             .astype('int64')
 
-        data[driver].loc[:, bool_channels] = \
+        data[driver][bool_channels] = \
             data[driver].loc[:, bool_channels] \
             .fillna(value=False, inplace=False) \
             .astype('bool')
