@@ -1,3 +1,4 @@
+# flake8: noqa
 """Who can still win the drivers WDC?
 ======================================
 
@@ -16,7 +17,7 @@ fastf1.Cache.enable_cache("../doc_cache")  # replace with your cache directory
 
 ##############################################################################
 # Get the current driver standings from Ergast.
-# Reference https://theoehrly.github.io/Fast-F1-Pre-Release-Documentation/ergast.html#fastf1.ergast.Ergast.get_driver_standings # noqa: E501
+# Reference https://theoehrly.github.io/Fast-F1-Pre-Release-Documentation/ergast.html#fastf1.ergast.Ergast.get_driver_standings
 def get_drivers_standings():
     ergast = Ergast()
     standings = ergast.get_driver_standings(season=2023)
@@ -33,10 +34,8 @@ def calculate_max_points_for_remaining_season():
 
     events = fastf1.events.get_events_remaining(force_ergast=True)
     # Count how many sprints and conventional races are left
-    sprint_events = \
-        len(events.loc[events["EventFormat"] == "sprint"])
-    conventional_events = \
-        len(events.loc[events["EventFormat"] == "conventional"])
+    sprint_events = len(events.loc[events["EventFormat"] == "sprint"])
+    conventional_events = len(events.loc[events["EventFormat"] == "conventional"])
 
     # Calculate points for each
     sprint_points = sprint_events * POINTS_FOR_SPRINT
@@ -60,11 +59,10 @@ def calculate_who_can_win(driver_standings, max_points):
         driver_max_points = int(driver["points"]) + max_points
         can_win = 'No' if driver_max_points < LEADER_POINTS else 'Yes'
 
-        print(f"{driver['position']}: \
-{driver['givenName'] + ' ' + driver['familyName']}, \
-Current points: {driver['points']}, \
-Theoretical max points: {driver_max_points}, \
-Can win: {can_win}")
+        print(f"{driver['position']}: {driver['givenName'] + ' ' + driver['familyName']}, "
+              f"Current points: {driver['points']}, "
+              f"Theoretical max points: {driver_max_points}, "
+              f"Can win: {can_win}")
 
 
 ##############################################################################
