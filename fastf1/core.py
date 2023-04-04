@@ -475,7 +475,7 @@ class Telemetry(pd.DataFrame):
         # restore data types from before merging
         for col in dtype_map.keys():
             try:
-                merged.loc[:, col] = merged.loc[:, col].astype(dtype_map[col])
+                merged[col] = merged.loc[:, col].astype(dtype_map[col])
             except ValueError:
                 logging.warning(f"Failed to preserve data type for column '{col}' while merging telemetry.")
 
