@@ -194,7 +194,6 @@ def get_session(
         identifier: Optional[Union[int, str]] = None,
         *,
         force_ergast: bool = False,
-        event=None
 ) -> Session:
     """Create a :class:`~fastf1.core.Session` object based on year, event name
     and session identifier.
@@ -203,21 +202,6 @@ def get_session(
         object, but it will not load any session specific data like lap timing,
         telemetry, ... yet. For this, you will need to call
         :func:`~fastf1.core.Session.load` on the returned object.
-
-    .. deprecated:: 2.2
-        Creating :class:`~fastf1.events.Event` objects (previously
-        :class:`fastf1.core.Weekend`) by not specifying an ``identifier`` has
-        been deprecated. Use :func:`get_event` instead.
-
-    .. deprecated:: 2.2
-        The argument ``event`` has been replaced with ``identifier`` to adhere
-        to new naming conventions.
-
-    .. deprecated:: 2.2
-        Testing sessions can no longer be created by specifying
-        ``gp='testing'``. Use :func:`get_testing_session` instead. There is
-        **no grace period** for this change. This will stop working immediately
-        with the release of v2.2!
 
     To get a testing session, use :func:`get_testing_session`.
 
@@ -255,32 +239,8 @@ def get_session(
 
         force_ergast: Always use data from the ergast database to
             create the event schedule
-
-        event: deprecated; use identifier instead
     """
-    if identifier and event:
-        raise ValueError("The arguments 'identifier' and 'event' are "
-                         "mutually exclusive!")
-
-    if gp == 'testing':
-        raise DeprecationWarning('Accessing test sessions through '
-                                 '`get_session` has been deprecated!\nUse '
-                                 '`get_testing_session` instead.')
-
-    if event is not None:
-        warnings.warn("The keyword argument 'event' has been deprecated and "
-                      "will be removed in a future version.\n"
-                      "Use 'identifier' instead.", FutureWarning)
-        identifier = event
-
     event = get_event(year, gp, force_ergast=force_ergast)
-
-    if identifier is None:
-        warnings.warn("Getting `Event` objects (previously `Session`) through "
-                      "`get_session` has been deprecated.\n"
-                      "Use `fastf1.get_event` instead.", FutureWarning)
-        return event  # TODO: remove in v2.3
-
     return event.get_session(identifier)
 
 
@@ -534,7 +494,8 @@ class EventSchedule(pd.DataFrame):
 
     _metadata = ['year']
 
-    _internal_names = ['base_class_view']
+    _internal_names = pd.DataFrame._internal_names + ['base_class_view']
+    _internal_names_set = set(_internal_names)
 
     def __init__(self, *args, year: int = 0,
                  force_default_cols: bool = False, **kwargs):
@@ -694,12 +655,9 @@ class Event(pd.Series):
     """
     _metadata = ['year']
 
-    _internal_names = ['date', 'gp']
-
     def __init__(self, *args, year: int = None, **kwargs):
         super().__init__(*args, **kwargs)
         self.year = year
-        self._getattr_override = True  # TODO: remove in v2.3
 
     @property
     def _constructor(self):
@@ -707,59 +665,6 @@ class Event(pd.Series):
             return Event(*args, **kwargs).__finalize__(self)
 
         return _new
-
-    def __getattribute__(self, name: str):
-        # TODO: remove in v2.3
-        if name == 'name' and getattr(self, '_getattr_override', False):
-            if 'EventName' in self:
-                warnings.warn(
-                    "The `Weekend.name` property is deprecated and will be"
-                    "removed in a future version.\n"
-                    "Use `Event['EventName']` or `Event.EventName` instead.",
-                    FutureWarning
-                )
-                # name may be accessed by pandas internals to, when data
-                # does not exist yet
-                return self['EventName']
-
-        return super().__getattribute__(name)
-
-    def __repr__(self):
-        # don't show .name deprecation message when .name is accessed internally
-        with warnings.catch_warnings():
-            warnings.filterwarnings('ignore',
-                                    message=r".*property is deprecated.*")
-            return super().__repr__()
-
-    @property
-    def date(self) -> str:
-        """Event race date (YYYY-MM-DD)
-
-        This wraps ``self['EventDate'].strftime('%Y-%m-%d')``
-
-        .. deprecated:: 2.2
-            use :attr:`Event.EventDate` or :attr:`Event['EventDate']` and
-            use :func:`datetime.datetime.strftime` to format the desired
-            string representation of the datetime object
-        """
-        warnings.warn("The `Weekend.date` property is deprecated and will be"
-                      "removed in a future version.\n"
-                      "Use `Event['EventDate']` or `Event.EventDate` instead.",
-                      FutureWarning)
-        return self['EventDate'].strftime('%Y-%m-%d')
-
-    @property
-    def gp(self) -> int:
-        """Event round number
-
-        .. deprecated:: 2.2
-            use :attr:`Event.eventNumber` or :attr:`Event['eventNumber']`
-        """
-        warnings.warn("The `Weekend.gp` property is deprecated and will be"
-                      "removed in a future version.\n"
-                      "Use `Event['RoundNumber']` or `Event.RoundNumber` "
-                      "instead.", FutureWarning)
-        return self['RoundNumber']
 
     def is_testing(self) -> bool:
         """Return `True` or `False`, depending on whether this event is a

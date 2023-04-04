@@ -110,15 +110,14 @@ class LiveTimingData:
         # load the three parts of each data element
         elem = self._fix_json(elem)
         try:
-            cat, msg, dt = json.loads(elem)
+            cat, msg, dt_str = json.loads(elem)
         except (json.JSONDecodeError, ValueError):
             self.errorcount += 1
             return
 
         # convert string to datetime
-        try:
-            dt = to_datetime(dt)
-        except (ValueError, TypeError):
+        dt = to_datetime(dt_str)
+        if dt is None:
             self.errorcount += 1
             return
 

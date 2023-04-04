@@ -291,7 +291,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
     # api_lapcnt does not count backwards even if the source data does
     in_past = False  # flag for when the data went back in time
 
-    personal_best_lap_time = None
+    personal_best_lap_times = list()
 
     pitstops = -1  # start with -1 because first is out lap, needs to be zero after that
 
@@ -365,7 +365,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
                 pitstops += 1
 
         if val := recursive_dict_get(resp, 'BestLapTime', 'Value'):
-            personal_best_lap_time = to_timedelta(val)
+            personal_best_lap_times.append(to_timedelta(val))
 
         # new lap; create next row
         if 'NumberOfLaps' in resp and resp['NumberOfLaps'] > api_lapcnt:
@@ -498,10 +498,33 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
                 < drv_data['Sector3SessionTime'][i+1]:
             drv_data['Sector3SessionTime'][i+1] = new_s3_time
 
-    for i, time in enumerate(drv_data['LapTime']):
-        if time == personal_best_lap_time:
-            drv_data['IsPersonalBest'][i] = True
-            break
+    # iterate over list of personal lap times set 'IsPersonalBest'
+    # when a lap is deleted, the API resends the previous personal best.
+    # Therefore, by iterating in reverse, if any lap is encountered that is
+    # quicker than already processed personal best lap times, it must have
+    # been deleted.
+    _corrected_personal_best_lap_times = list()
+    # list is only used for backreference within the loop
+    for pb_lap_time in reversed(personal_best_lap_times):
+        if _corrected_personal_best_lap_times:
+            if pb_lap_time in _corrected_personal_best_lap_times:
+                continue
+            elif pb_lap_time < min(_corrected_personal_best_lap_times):
+                continue
+
+        _corrected_personal_best_lap_times.append(pb_lap_time)
+
+        # find the index of the corresponding lap by comparing with the lap
+        # times and set 'IsPersonalBest' to True for that lap
+        try:
+            pb_idx = drv_data['LapTime'].index(pb_lap_time)
+        except ValueError:
+            # one example case where this error occurs, are wildly of personal
+            # best times (>2 min lap time) that are sometimes present and
+            # which have no corresponding lap time
+            pass
+        else:
+            drv_data['IsPersonalBest'][pb_idx] = True
 
     if integrity_errors:
         logging.warning(
@@ -1264,7 +1287,7 @@ def weather_data(path, response=None, livedata=None):
         - Rainfall (bool): Shows if there is rainfall
         - TrackTemp (float): Track temperature [°C]
         - WindDirection (int): Wind direction [°] (0°-359°)
-        - WindSpeed (float): Wind speed [km/h]
+        - WindSpeed (float): Wind speed [m/s]
 
     Weather data is updated once per minute.
 

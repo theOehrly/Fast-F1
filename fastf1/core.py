@@ -13,7 +13,6 @@ All data is provided through the following data objects:
     .. autosummary::
        :nosignatures:
 
-       Weekend
        Session
        Laps
        Lap
@@ -27,7 +26,7 @@ timing data and telemetry data. The :class:`Session` can create a
 :class:`Laps` object which contains all timing, track and session status
 data for a whole session.
 
-Usually you will be using :func:`get_session` to get a :class:`Session`
+Usually you will be using :func:`fastf1.get_session` to get a :class:`Session`
 object.
 
 The :class:`Laps` object holds detailed information about multiples laps.
@@ -39,22 +38,13 @@ an object of type :class:`Lap` will be returned.
 Apart from only providing data, the :class:`Laps`, :class:`Lap` and
 :class:`Telemetry` objects implement various methods for selecting and
 analyzing specific parts of the data.
-
-
-Functions
----------
-
-.. autosummary::
-   :nosignatures:
-
-    get_session
-    get_round
-
 """
 import collections
+import re
 from functools import cached_property
 import logging
 import warnings
+import typing
 from typing import Optional, List, Iterable, Union, Tuple, Any
 
 import numpy as np
@@ -78,40 +68,6 @@ D_LOOKUP: List[List] = \
      [47, 'MSC', 'Haas F1 Team'], [9, 'MAZ', 'Haas F1 Team'],
      [7, 'RAI', 'Alfa Romeo'], [99, 'GIO', 'Alfa Romeo'],
      [6, 'LAT', 'Williams'], [63, 'RUS', 'Williams']]
-
-
-def get_session(*args, **kwargs) -> "Session":
-    """
-    .. deprecated:: 2.2
-        replaced by :func:`fastf1.get_session`
-
-    """
-    # TODO remove
-    warnings.warn("`fastf1.core.get_session` has been deprecated and will be"
-                  "removed in a future version.\n"
-                  "Use `fastf1.get_session` instead.", FutureWarning)
-    from fastf1 import events
-    return events.get_session(*args, **kwargs)
-
-
-def get_round(year, match):
-    """
-    .. deprecated:: 2.2
-        will be removed without replacement;
-        Use :func:`fastf1.get_event` instead to get an
-        :class:`~fastf1.events.Event` object which provides
-        information including the round number for the event.
-    """
-    # TODO remove
-    warnings.warn("_func:`fastf1.core.get_round` has been deprecated and will "
-                  "be removed without replacement in a future version.\n"
-                  "Use :func:`fastf1.get_event` instead to get an "
-                  ":class:`~fastf1.events.Event` object which provides "
-                  "information including the round number for the event.",
-                  FutureWarning)
-    from fastf1 import events
-    event = events.get_event(year, match)
-    return event.RoundNumber
 
 
 class Telemetry(pd.DataFrame):
@@ -223,6 +179,8 @@ class Telemetry(pd.DataFrame):
     """Known telemetry channels which are supported by default"""
 
     _metadata = ['session', 'driver']
+    _internal_names = pd.DataFrame._internal_names + ['base_class_view']
+    _internal_names_set = set(_internal_names)
 
     def __init__(self, *args, session=None, driver=None,
                  drop_unknown_channels=False, **kwargs):
@@ -738,6 +696,55 @@ class Telemetry(pd.DataFrame):
             rel_dist = dist / dist.iloc[-1]
         return d.join(pd.DataFrame({'RelativeDistance': rel_dist}), how='outer')
 
+    def add_track_status(self, drop_existing=True):
+        """Add column 'TrackStatus' to self.
+
+        This column contains the Track Status for each event as a number.
+
+        See :func:`fastf1.api.track_status_data` for more information.
+
+        Args:
+            drop_existing (bool): Drop and recalculate column if it already
+                exists.
+        Returns:
+            :class:`Telemetry`: self joined with new column or self if column
+                exists and `drop_existing` is False.
+        """
+        if 'TrackStatus' in self.columns:
+            if drop_existing:
+                d = self.drop(labels='TrackStatus', axis=1)
+            else:
+                return self
+        else:
+            d = self
+
+        ts = []
+        statuses = d.session.track_status['Status']
+        events = d.session.t0_date + d.session.track_status['Time']
+
+        # |--- event K ---|--- N telemetry samples ---|--- event K + 1 ---|
+        #                           ^
+        #                   all samples have the same
+        #                 track status because of event K
+        #
+        # For each track status event, calculate the in between events of the
+        # telemetry, up until the next track status event. For each of the in
+        # between events add the corresponding track status to an array. At
+        # last, create the new column 'TrackStatus' with the array of track
+        # statuses.
+        for index in range(events.shape[0] - 1):
+            curr_e = events[index]
+            next_e = events[index+1]
+
+            dd_shape = d[(d['Date'] < next_e) & (d['Date'] >= curr_e)].shape[0]
+            ts.extend([statuses[index]] * dd_shape)
+
+        dd_shape = d[(d['Date'] > events.iloc[-1])].shape[0]
+        ts.extend([statuses.iloc[-1]] * dd_shape)
+
+        d['TrackStatus'] = ts
+        return d
+
     def add_driver_ahead(self, drop_existing: bool = True) -> "Telemetry":
         """Add column 'DriverAhead' and 'DistanceToDriverAhead' to self.
 
@@ -980,20 +987,6 @@ class Telemetry(pd.DataFrame):
         return drv_ahead, dist_to_drv_ahead
 
 
-class Weekend:
-    """
-    .. deprecated:: 2.2
-        Use :class:`fastf1.events.Event` instead
-    """
-
-    def __new__(cls, year, gp):
-        warnings.warn("`fastf1.core.Weekend` has been deprecated and will be"
-                      "removed in a future version.\n"
-                      "Use `fastf1.events.Event` instead.", FutureWarning)
-        from fastf1 import events
-        return events.get_event(year, gp)
-
-
 class Session:
     """Object for accessing session specific data.
 
@@ -1041,19 +1034,15 @@ class Session:
         self._weather_data: pd.DataFrame
         self._results: SessionResults
 
+    def __repr__(self):
+        return (f"{self.event.year} Season Round {self.event.RoundNumber}: "
+                f"{self.event.EventName} - {self.name}")
+
     def _get_property_warn_not_loaded(self, name):
         if not hasattr(self, name):
             raise DataNotLoadedError("The data you are trying to access has not "
                                      "been loaded yet. See `Session.load`")
         return getattr(self, name, None)
-
-    @property
-    def weekend(self):
-        """Deprecated: use :attr:`Session.event` instead"""
-        warnings.warn("The property `Session.weekend` has been renamed to "
-                      "`Session.event`.\n The old property will be removed in"
-                      "a future version.", FutureWarning)
-        return self.event
 
     @property
     def drivers(self):
@@ -1174,9 +1163,12 @@ class Session:
         give you access to. Without specifying any further options, all data
         is loaded by default.
 
-        Downloading and parsing of the data takes a considerable amount of
-        time. Therefore, it is highly recommended to enable caching so that
-        most of the data processing needs to be done only once.
+        Usually, it is recommended to load all available data because
+        internally FastF1 partially mixes data from multiple endpoints and
+        data sources to correct for errors or to add more information. These
+        features are optional and may not work when some data is unavailable.
+        In these cases, FastF1 will return the data to the best of its
+        abilities.
 
         .. note:: **Lap data: drivers crashing and retiring**
 
@@ -1220,7 +1212,10 @@ class Session:
         if self.f1_api_support:
             if laps:
                 try:
-                    self._load_laps_data(livedata)
+                    self._load_session_status_data(livedata=livedata)
+                    self._load_total_lap_count(livedata=livedata)
+                    self._load_track_status_data(livedata=livedata)
+                    self._load_laps_data(livedata=livedata)
                 except Exception as exc:
                     logging.warning("Failed to load lap data!")
                     logging.debug("Lap data failure traceback:", exc_info=exc)
@@ -1256,33 +1251,13 @@ class Session:
                     "session."
                 )
 
+        self._fix_missing_laps_retired_on_track()
+        self._set_laps_deleted_from_rcm()
+
         logging.info(f"Finished loading data for {len(self.drivers)} "
                      f"drivers: {self.drivers}")
 
-    def load_laps(self, with_telemetry=False, livedata=None):
-        """
-        .. deprecated:: 2.2
-            use :func:`Session.load` instead
-        """
-        # TODO: remove in v2.3
-        warnings.warn("`Session.load_laps` is deprecated and will be"
-                      "removed in a future version.\n"
-                      "Use `Session.load` instead.", FutureWarning)
-        self.load(telemetry=with_telemetry, livedata=livedata)
-        return self.laps
-
-    def load_telemetry(self, livedata=None):
-        """
-        .. deprecated:: 2.2
-            use :func:`Session.load` instead
-        """
-        # TODO: remove in v2.3
-        warnings.warn("`Session.load_laps` is deprecated and will be"
-                      "removed in a future version.\n"
-                      "Use `Session.load` instead.", FutureWarning)
-        self._load_telemetry(livedata=livedata)
-
-    def _load_laps_data(self, livedata):
+    def _load_laps_data(self, livedata=None):
         data, _ = api.timing_data(self.api_path, livedata=livedata)
         app_data = api.timing_app_data(self.api_path, livedata=livedata)
         logging.info("Processing timing data...")
@@ -1293,39 +1268,10 @@ class Session:
         useful = app_data[['Driver', 'Time', 'Compound', 'StartLaps', 'New',
                            'Stint']]
         useful = useful[~useful['Compound'].isnull()]
-        # check when a session was started; for a race this indicates the
-        # start of the race
-        session_status = api.session_status_data(self.api_path,
-                                                 livedata=livedata)
-        for i in range(len(session_status['Status'])):
-            if session_status['Status'][i] == 'Started':
-                self._session_start_time = session_status['Time'][i]
-                break
-        else:
-            logging.warning("Failed to determine `Session.session_start_time`")
-            self._session_start_time = None
-        self._session_status = pd.DataFrame(session_status)
-
-        # Lap count data only exists for race-like sessions.
-        if self.name in ('Race', 'Sprint', 'Sprint Qualifying'):
-            try:
-                lap_count = api.lap_count(self.api_path, livedata=livedata)
-                # A race-like session can have multiple intended total laps,
-                # the first one being the original schedule
-                self._total_laps = lap_count['TotalLaps'][0]
-            except IndexError:
-                self._total_laps = None
-                logging.warning("No lap count data for this session.")
-        else:
-            self._total_laps = None
-
-        df = None
-
-        track_status = api.track_status_data(self.api_path, livedata=livedata)
-        self._track_status = pd.DataFrame(track_status)
 
         drivers = self.drivers
         if not drivers:
+            # TODO: refactor into a separate method once ergast is implemented
             # no driver list, generate from lap data
             drivers = set(data['Driver'].unique()) \
                 .intersection(set(useful['Driver'].unique()))
@@ -1340,23 +1286,23 @@ class Session:
             logging.warning("Generating minimal driver "
                             "list from timing data.")
 
+        df = None
         for i, driver in enumerate(drivers):
             d1 = data[data['Driver'] == driver]
             d2 = useful[useful['Driver'] == driver]
-            # TODO: replace number of pitstops with stint?
             if d2.shape[0] != len(d2['Stint'].unique()):
                 # tyre info includes correction messages that need to be
                 # applied before continuing
                 d2 = self.__fix_tyre_info(d2)
-            only_one_lap = False
 
+            is_generated = False
             if not len(d1):
                 if ((self.name in ('Race', 'Sprint', 'Sprint Qualifying'))
                         and len(d2)):
                     # add data for drivers who crashed on the very first lap
                     # as a downside, this potentially adds a nonexistent lap
                     # for drivers who could not start the race
-                    only_one_lap = True
+                    is_generated = True
                     result = d1.copy()
                     result['Driver'] = [driver, ]
                     result['NumberOfLaps'] = 0
@@ -1381,6 +1327,10 @@ class Session:
             else:
                 result = pd.merge_asof(d1, d2, on='Time', by='Driver') \
                     .rename(columns={'StartLaps': 'TyreLife'})
+
+            # add flag that indicates if the data for this lap was generated
+            # by FastF1
+            result['FastF1Generated'] = is_generated
 
             # calculate lap start time by setting it to the 'Time' of the
             # previous lap
@@ -1437,56 +1387,21 @@ class Session:
                 sel = result['Stint'] == npit
                 result.loc[sel, 'TyreLife'] += np.arange(0, sel.sum()) + 1
 
-            # check if there is another lap during which the session was aborted
-            # but which is not in the data
-            # if yes, add as much data as possible for it
-            # set the time of abort as lap end time given that there is no
-            # accurate time available
-            # this block of code has no tests; testing would require to mock
-            # the data as the actual data may be updated on the server after
-            # some time and the problem no longer occurs
-            if pd.isna(result['PitInTime'].iloc[-1]) and not only_one_lap:
-                if not pd.isna(result['Time'].iloc[-1]):
-                    next_statuses = self.session_status[
-                        self.session_status['Time'] > result['Time'].iloc[-1]
-                        ]
-                else:
-                    next_statuses = self.session_status[
-                        self.session_status['Time']
-                        > result['LapStartTime'].iloc[-1]
-                        ]
-
-                aborted = False
-                if not next_statuses.empty:
-                    next_status = next_statuses.iloc[0]
-                    aborted = (next_status['Status'] == 'Aborted')
-
-                if aborted:
-                    new_last = pd.DataFrame({
-                        'LapStartTime': [result['Time'].iloc[-1]],
-                        'Time': [next_status['Time']],
-                        'Driver': [result['Driver'].iloc[-1]],
-                        'NumberOfLaps': [result['NumberOfLaps'].iloc[-1] + 1],
-                        'Stint': [result['Stint'].iloc[-1]],
-                        # 'IsPersonalBest': False,
-                        'Compound': [result['Compound'].iloc[-1]],
-                        'TyreLife': [result['TyreLife'].iloc[-1] + 1],
-                        'New': [result['New'].iloc[-1]],
-                    })
-                    if not only_one_lap:
-                        result = pd.concat([result, new_last]) \
-                            .reset_index(drop=True)
-                    else:
-                        result = new_last
-
             df = pd.concat([df, result], sort=False)
+
         if df is None:
             raise NoLapDataError
+
         laps = df.reset_index(drop=True)  # noqa: F821
+
+        # rename some columns
         laps.rename(columns={'Driver': 'DriverNumber',
                              'NumberOfLaps': 'LapNumber',
                              'New': 'FreshTyre'}, inplace=True)
+
         laps['Stint'] += 1  # counting stints from 1
+
+        # add team names and driver names based on driver number
         t_map = {r['DriverNumber']: r['TeamName']
                  for _, r in self.results.iterrows()}
         laps['Team'] = laps['DriverNumber'].map(t_map)
@@ -1494,7 +1409,158 @@ class Session:
                  for _, r in self.results.iterrows()}
         laps['Driver'] = laps['DriverNumber'].map(d_map)
 
-        # add track status data
+        self._add_track_status_to_laps(laps)
+
+        self._laps = Laps(laps, session=self, force_default_cols=True)
+        self._check_lap_accuracy()
+
+    def _fix_missing_laps_retired_on_track(self):
+        # generate a last lap entry with assumed end time for cars that
+        # retired on track
+
+        if not hasattr(self, '_laps'):
+            return
+
+        any_new = False
+        for drv in self.laps['DriverNumber'].unique():
+            drv_laps = self._laps[self.laps['DriverNumber'] == drv]
+
+            if (len(drv_laps) == 1) and drv_laps['FastF1Generated'].iloc[0]:
+                # there is only one lap which was added by FastF1, don't
+                # generate a followup lap based on that
+                continue
+
+            # try to get a valid last timestamp for the last lap
+            ref_time = drv_laps['Time'].iloc[-1]
+            if pd.isna(ref_time):
+                ref_time = drv_laps['LapStartTime'].iloc[-1]
+            # split session status at reference timestamp
+            # if ref_time is still NaT, next/prev_statuses will be empty
+            # after comparison
+            next_statuses = self.session_status[
+                self.session_status['Time'] > ref_time
+                ]
+            prev_statuses = self.session_status[
+                self.session_status['Time'] <= ref_time
+                ]
+
+            if ((not prev_statuses.empty)
+                    and (prev_statuses['Status'] == 'Finished').any()):
+                # driver finished session correctly, nothing to do
+                continue
+
+            if (next_statuses.empty
+                    or (not (next_statuses['Status'] == 'Finished').any())):
+                # there are no next statuses or no status message indicates
+                # that the session finished after the current timestamp
+                # -> the data is inconclusive
+                continue
+
+            if not pd.isna(drv_laps['PitInTime'].iloc[-1]):
+                # last lap was an inlap
+                continue
+
+            if ((len(drv_laps) >= 2)
+                    and (not pd.isna(drv_laps['PitInTime'].iloc[-2]))
+                    and pd.isna(drv_laps['PitOutTime'].iloc[-1])):
+                # last lap was an inlap and a new lap was started in the pit
+                # lane but the car did not leave the pits again (happens if
+                # box comes after timing line in pits)
+                continue
+
+            next_status = next_statuses.iloc[0]
+
+            if next_status['Status'] == 'Aborted':
+                # the session was aborted, use the time when the session was
+                # aborted as the end time of the lap
+                assumed_end_time = next_status['Time']
+
+            else:
+                assumed_end_time = pd.NaT
+                if drv in (car_data := getattr(self, '_car_data', {})):
+                    # when car_data is available, get the first time at which
+                    # the car's speed becomes zero after the reference time and
+                    # add 5 seconds of margin
+                    try:
+                        next_zero_speed_time = car_data[drv].loc[
+                            ((car_data[drv]['SessionTime'] > ref_time)
+                             & (car_data[drv]['Speed'] == 0.0))
+                        ].iloc[0]['SessionTime']
+                    except (IndexError, KeyError):
+                        pass
+                    else:
+                        assumed_end_time = next_zero_speed_time
+
+                if pd.isna(assumed_end_time):
+                    # still no valid timestamp extracted
+                    # fallback: use an assumed lap time of 150 seconds;
+                    # this should cover all situations but most of the time
+                    # it will be much too long
+                    assumed_end_time = ref_time + pd.Timedelta(150, 'sec')
+
+            new_last = pd.DataFrame({
+                'LapStartTime': [drv_laps['Time'].iloc[-1]],
+                'Time': [assumed_end_time],
+                'Driver': [drv_laps['Driver'].iloc[-1]],
+                'DriverNumber': [drv_laps['DriverNumber'].iloc[-1]],
+                'Team': [drv_laps['Team'].iloc[-1]],
+                'LapNumber': [drv_laps['LapNumber'].iloc[-1] + 1],
+                'Stint': [drv_laps['Stint'].iloc[-1]],
+                'Compound': [drv_laps['Compound'].iloc[-1]],
+                'TyreLife': [drv_laps['TyreLife'].iloc[-1] + 1],
+                'FreshTyre': [drv_laps['FreshTyre'].iloc[-1]],
+                'FastF1Generated': [True],
+                'IsAccurate': [False]
+            })
+
+            # add generated laps at the end and fix sorting at the end
+            self._laps = pd.concat([self._laps, new_last])
+            any_new = True
+
+        if any_new:
+            # re-sort and re-index to restore correct order of the laps
+            self._laps = self._laps \
+                .sort_values(by=['DriverNumber', 'LapNumber']) \
+                .reset_index(drop=True)
+
+    def _set_laps_deleted_from_rcm(self):
+        # parse race control messages to find deleted lap times and
+        # set the 'Deleted' flag in self._laps
+
+        if ((not hasattr(self, '_laps'))
+                or (not hasattr(self, '_race_control_messages'))):
+            return
+
+        # set all to False, then selectively set to True if actually deleted
+        self._laps['Deleted'] = False
+
+        msg_pattern = re.compile(
+            r"CAR (\d{1,2}) .* TIME (\d:\d\d\.\d\d\d) DELETED - (.*)"
+        )
+        timestamp_pattern = re.compile(r"\d\d:\d\d:\d\d")
+
+        for _, row in self._race_control_messages.iterrows():
+            match = msg_pattern.match(row['Message'])
+            if match:
+                drv = match[1]
+                deleted_time = to_timedelta(match[2])
+                # remove timestamp from reasons because confusingly it is given
+                # as local time at the track
+                reason = timestamp_pattern.sub("", match[3])
+                self._laps.loc[
+                    (self._laps['DriverNumber'] == drv)
+                    & (self._laps['LapTime'] == deleted_time),
+                    ('Deleted', 'IsPersonalBest', 'DeletedReason')
+                ] = (True, False, reason)
+
+    def _add_track_status_to_laps(self, laps):
+        # add track status information to each lap
+
+        track_status = getattr(self, '_track_status')
+        if track_status is None:
+            return
+
+        # first set all laps to green flag as a starting point
         laps['TrackStatus'] = '1'
 
         def applicator(new_status, current_status):
@@ -1508,20 +1574,26 @@ class Session:
         if len(track_status['Time']) > 0:
             t = track_status['Time'][0]
             status = track_status['Status'][0]
-            for next_t, next_status in zip(track_status['Time'][1:], track_status['Status'][1:]):
+            for next_t, next_status in zip(track_status['Time'][1:],
+                                           track_status['Status'][1:]):
                 if status != '1':
-                    # status change partially in lap partially outside
+                    # status change partially in lap and partially outside
                     sel = (((next_t >= laps['LapStartTime'])
                             & (laps['LapStartTime'] >= t))
                            | ((t <= laps['Time']) & (laps['Time'] <= next_t)))
-                    laps.loc[sel, 'TrackStatus'] = laps.loc[sel, 'TrackStatus'].apply(
-                        lambda curr: applicator(status, curr)
+
+                    laps.loc[sel, 'TrackStatus'] \
+                        = laps.loc[sel, 'TrackStatus'].apply(
+                            lambda curr: applicator(status, curr)
                     )
 
-                    # status change two times in one lap (e.g. short yellow flag)
-                    sel = ((laps['LapStartTime'] <= t) & (laps['Time'] >= next_t))
-                    laps.loc[sel, 'TrackStatus'] = laps.loc[sel, 'TrackStatus'].apply(
-                        lambda curr: applicator(status, curr)
+                    # status change two times in one lap (short yellow flag)
+                    sel = ((laps['LapStartTime'] <= t)
+                           & (laps['Time'] >= next_t))
+
+                    laps.loc[sel, 'TrackStatus'] \
+                        = laps.loc[sel, 'TrackStatus'].apply(
+                            lambda curr: applicator(status, curr)
                     )
 
                 t = next_t
@@ -1532,10 +1604,41 @@ class Session:
                 lambda curr: applicator(status, curr)
             )
 
+    def _load_track_status_data(self, livedata=None):
+        track_status = api.track_status_data(self.api_path, livedata=livedata)
+        self._track_status = pd.DataFrame(track_status)
+        if not self._track_status.size:
+            logging.warning("Could not load any valid session status "
+                            "information!")
+
+    def _load_total_lap_count(self, livedata=None):
+        # Get the number of originally scheduled laps
+        # Lap count data only exists for race-like sessions.
+        if self.name in ('Race', 'Sprint', 'Sprint Qualifying'):
+            try:
+                lap_count = api.lap_count(self.api_path, livedata=livedata)
+                # A race-like session can have multiple intended total laps,
+                # the first one being the original schedule
+                self._total_laps = lap_count['TotalLaps'][0]
+            except IndexError:
+                self._total_laps = None
+                logging.warning("No lap count data for this session.")
         else:
-            logging.warning("Could not load any valid session status information!")
-        self._laps = Laps(laps, session=self).__finalize__(self)
-        self._check_lap_accuracy()
+            self._total_laps = None
+
+    def _load_session_status_data(self, livedata=None):
+        # check when a session was started; for a race this indicates the
+        # start of the race
+        session_status = api.session_status_data(self.api_path,
+                                                 livedata=livedata)
+        for i in range(len(session_status['Status'])):
+            if session_status['Status'][i] == 'Started':
+                self._session_start_time = session_status['Time'][i]
+                break
+        else:
+            logging.warning("Failed to determine `Session.session_start_time`")
+            self._session_start_time = None
+        self._session_status = pd.DataFrame(session_status)
 
     def __fix_tyre_info(self, df):
         # Sometimes later corrections of tyre info are sent through the api.
@@ -1586,6 +1689,7 @@ class Session:
                 # require existence, non-existence and specific values for some variables
                 check_1 = (pd.isnull(lap['PitInTime'])
                            & pd.isnull(lap['PitOutTime'])
+                           & (not lap['FastF1Generated'])
                            & (lap['TrackStatus'] in ('1', '2'))  # slightly paranoid, allow only green and yellow flag
                            & (not pd.isnull(lap['LapTime']))
                            & (not pd.isnull(lap['Sector1Time']))
@@ -1838,7 +1942,7 @@ class Session:
 
         self._laps['LapStartDate'] = self._laps['LapStartTime'] + self.t0_date
 
-    def get_driver(self, identifier) -> "Driver":
+    def get_driver(self, identifier) -> "DriverResult":
         """
         Get a driver object which contains additional information about a driver.
 
@@ -1847,7 +1951,7 @@ class Session:
                 example 'VER') or driver number as string
 
         Returns:
-            instance of :class:`Driver`
+            instance of :class:`DriverResult`
         """
         mask = ((self.results['Abbreviation'] == identifier)
                 | (self.results['DriverNumber'] == identifier))
@@ -1967,6 +2071,16 @@ class Laps(pd.DataFrame):
           explained in :func:`fastf1.api.track_status_data`.
           For filtering laps by track status, you may want to use
           :func:`Laps.pick_track_status`.
+        - **Deleted** (Optional[bool]): Indicates that a lap was deleted by
+          the stewards, for example because of a track limits violation.
+          This data is only available when race control messages are loaded.
+        - **DeletedReason** (str): Gives the reason for a lap time deletion.
+          This data is only available when race control messages are loaded.
+        - **FastF1Generated** (bool): Indicates that this lap was added by
+          FastF1. Such a lap will generally have very limited information
+          available and information is partly interpolated or based on
+          reasonable assumptions. Cases were this is used are, for example,
+          when a partial last lap is added for drivers that retired on track.
         - **IsAccurate** (bool): Indicates that the lap start and end time are
           synced correctly with other laps. Do not confuse this with the
           accuracy of the lap time or sector times. They are always considered
@@ -1991,13 +2105,77 @@ class Laps(pd.DataFrame):
               this.)
     """
 
+    _COL_TYPES = {
+        'Time': 'timedelta64[ns]',
+        'Driver': str,
+        'DriverNumber': str,
+        'LapTime': 'timedelta64[ns]',
+        'LapNumber': 'int64',
+        'Stint': 'int64',
+        'PitOutTime': 'timedelta64[ns]',
+        'PitInTime': 'timedelta64[ns]',
+        'Sector1Time': 'timedelta64[ns]',
+        'Sector2Time': 'timedelta64[ns]',
+        'Sector3Time': 'timedelta64[ns]',
+        'Sector1SessionTime': 'timedelta64[ns]',
+        'Sector2SessionTime': 'timedelta64[ns]',
+        'Sector3SessionTime': 'timedelta64[ns]',
+        'SpeedI1': 'float64',
+        'SpeedI2': 'float64',
+        'SpeedFL': 'float64',
+        'SpeedST': 'float64',
+        'IsPersonalBest': bool,
+        'Compound': str,
+        'TyreLife': 'float64',
+        'FreshTyre': bool,
+        'Team': str,
+        'LapStartTime': 'timedelta64[ns]',
+        'LapStartDate': 'datetime64[ns]',
+        'TrackStatus': str,
+        'Deleted': Optional[bool],
+        'DeletedReason': str,
+        'FastF1Generated': bool,
+        'IsAccurate': bool
+    }
+
     _metadata = ['session']
+    _internal_names = pd.DataFrame._internal_names \
+        + ['base_class_view', 'telemetry']
+    _internal_names_set = set(_internal_names)
 
     QUICKLAP_THRESHOLD = 1.07
     """Used to determine 'quick' laps. Defaults to the 107% rule."""
 
-    def __init__(self, *args, session: Optional[Session] = None, **kwargs):
+    def __init__(self,
+                 *args,
+                 session: Optional[Session] = None,
+                 force_default_cols: bool = False,
+                 **kwargs):
+
+        if force_default_cols:
+            kwargs['columns'] = list(self._COL_TYPES.keys())
+
         super().__init__(*args, **kwargs)
+
+        if force_default_cols:
+            # apply column specific dtypes
+            for col, _type in self._COL_TYPES.items():
+                if col not in self.columns:
+                    continue
+                convert = True
+                if self[col].isna().all():
+                    if isinstance(_type, str):
+                        self[col] = pd.Series(dtype=_type)
+                    elif type(None) in typing.get_args(_type):
+                        # column is optional, cannot force dtype, set to None
+                        self[col] = None
+                        convert = False
+                    else:
+                        self[col] = _type()
+
+                if convert:
+                    self[col] = self[col].astype(_type)
+
         self.session = session
 
     @property
@@ -2010,6 +2188,12 @@ class Laps(pd.DataFrame):
     @property
     def _constructor_sliced(self):
         def _new(*args, **kwargs):
+            name = kwargs.get('name')
+            if name and (name in self.columns):
+                # vertical slice
+                return pd.Series(*args, **kwargs).__finalize__(self)
+
+            # horizontal slice
             return Lap(*args, **kwargs).__finalize__(self)
 
         return _new
@@ -2176,26 +2360,40 @@ class Laps(pd.DataFrame):
             # exclude the 'Time' column from weather data when joining
             >>> joined = pd.concat([laps, weather_data.loc[:, ~(weather_data.columns == 'Time')]], axis=1)
             >>> print(joined)
-                                  Time DriverNumber  ... WindDirection  WindSpeed
-            0   0 days 00:21:01.358000           16  ...           212        2.0
-            1   0 days 00:22:21.775000           16  ...           207        2.7
-            2   0 days 00:24:03.991000           16  ...           210        2.3
-            3   0 days 00:25:24.117000           16  ...           207        3.2
-            4   0 days 00:27:09.461000           16  ...           238        1.8
-            ..                     ...          ...  ...           ...        ...
-            270 0 days 00:36:38.150000           88  ...           192        0.9
-            271 0 days 00:38:37.508000           88  ...           213        0.9
-            272 0 days 00:33:27.227000           33  ...           183        1.3
-            273 0 days 00:35:05.865000           33  ...           272        0.8
-            274 0 days 00:36:47.787000           33  ...           339        1.1
+                                  Time Driver  ... WindDirection WindSpeed
+            0   0 days 00:21:01.358000    LEC  ...           212       2.0
+            1   0 days 00:22:21.775000    LEC  ...           207       2.7
+            2   0 days 00:24:03.991000    LEC  ...           210       2.3
+            3   0 days 00:25:24.117000    LEC  ...           207       3.2
+            4   0 days 00:27:09.461000    LEC  ...           238       1.8
+            ..                     ...    ...  ...           ...       ...
+            270 0 days 00:36:38.150000    KUB  ...           192       0.9
+            271 0 days 00:38:37.508000    KUB  ...           213       0.9
+            272 0 days 00:33:27.227000    VER  ...           183       1.3
+            273 0 days 00:35:05.865000    VER  ...           272       0.8
+            274 0 days 00:36:47.787000    VER  ...           339       1.1
             <BLANKLINE>
-            [275 rows x 33 columns]
+            [275 rows x 37 columns]
         """
         wd = [lap.get_weather_data() for _, lap in self.iterrows()]
         if wd:
             return pd.concat(wd, axis=1).T
         else:
             return pd.DataFrame(columns=self.session.weather_data.columns)
+
+    def pick_lap(self, lap_number: int) -> "Laps":
+        """Return all laps of a specific LapNumber in self based on LapNumber
+
+            lap_1 = ff1.pick_lap(1)
+            lap_25 = ff1.pick_lap(25)
+
+        Args:
+            lap_number (int): Lap number
+
+        Returns:
+            instance of :class:`Laps`
+        """
+        return self[self['LapNumber'] == lap_number]
 
     def pick_driver(self, identifier: Union[int, str]) -> "Laps":
         """Return all laps of a specific driver in self based on the driver's
@@ -2373,6 +2571,50 @@ class Laps(pd.DataFrame):
         """
         return self[self['IsAccurate']]
 
+    def split_qualifying_sessions(self) -> List[Optional["Laps"]]:
+        """Splits a lap object into individual laps objects for each
+        qualifying session.
+
+        This method only works for qualifying sessions and requires that
+        session status data is loaded.
+
+        Example::
+
+            q1, q2, q3 = laps.split_qualifying_sessions()
+
+        Returns: Three :class:`Laps` objects, one for Q1, Q2 and Q3
+            each. If any of these sessions was cancelled, ``None`` will be
+            returned instead of :class:`Laps`.
+        """
+        if self.session.name != "Qualifying":
+            raise ValueError("Session is not a qualifying session!")
+        elif self.session.session_status is None:
+            raise ValueError("Session status data is unavailable!")
+
+        # get the timestamps for 'Started' from the session status data
+        # note that after a red flag, a session is 'Started' as well.
+        # Therefore, it is necessary to check for red flags and ignore
+        # the first 'Started' entry after a red flag.
+        split_times = list()
+        session_suspended = False
+        for _, row in self.session.session_status.iterrows():
+            if row['Status'] == 'Started':
+                if not session_suspended:
+                    split_times.append(row['Time'])
+                else:
+                    session_suspended = False
+            elif row['Status'] == 'Aborted':
+                session_suspended = True
+
+        # at the very last timestamp, to get an end for the last interval
+        split_times.append(self.session.session_status['Time'].iloc[-1])
+
+        laps = [None, None, None]
+        for i in range(len(split_times) - 1):
+            laps.append(self[(self['Time'] > split_times[i])
+                             & (self['Time'] < split_times[i+1])])
+        return laps
+
     def iterlaps(self, require: Optional[Iterable] = None) \
             -> Iterable[Tuple[int, "Lap"]]:
         """Iterator for iterating over all laps in self.
@@ -2406,6 +2648,8 @@ class Lap(pd.Series):
     telemetry data.
     """
     _metadata = ['session']
+    _internal_names = pd.Series._internal_names + ['telemetry']
+    _internal_names_set = set(_internal_names)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -2623,7 +2867,7 @@ class SessionResults(pd.DataFrame):
           not limited to 'Finished', '+ 1 Lap', 'Crash', 'Gearbox', ...
           (values only given if session is 'Race' or 'Sprint Qualifying')
 
-        - ``Status`` | :class:`float` |
+        - ``Points`` | :class:`float` |
           The number of points received by each driver for their finishing
           result.
 
@@ -2653,17 +2897,18 @@ class SessionResults(pd.DataFrame):
         'FirstName': str,
         'LastName': str,
         'FullName': str,
-        'Position': float,
-        'GridPosition': float,
+        'Position': 'float64',
+        'GridPosition': 'float64',
         'Q1': 'timedelta64[ns]',
         'Q2': 'timedelta64[ns]',
         'Q3': 'timedelta64[ns]',
         'Time': 'timedelta64[ns]',
         'Status': str,
-        'Points': float
+        'Points': 'float64'
     }
 
-    _internal_names = ['base_class_view']
+    _internal_names = pd.DataFrame._internal_names + ['base_class_view']
+    _internal_names_set = set(_internal_names)
 
     def __init__(self, *args, force_default_cols: bool = False, **kwargs):
         if force_default_cols:
@@ -2671,16 +2916,17 @@ class SessionResults(pd.DataFrame):
         super().__init__(*args, **kwargs)
 
         # apply column specific dtypes
-        for col, _type in self._COL_TYPES.items():
-            if col not in self.columns:
-                continue
-            if self[col].isna().all():
-                if _type == 'timedelta64[ns]':
-                    self[col] = pd.Series(dtype='timedelta64[ns]')
-                else:
-                    self[col] = _type()
+        if force_default_cols:
+            for col, _type in self._COL_TYPES.items():
+                if col not in self.columns:
+                    continue
+                if self[col].isna().all():
+                    if isinstance(_type, str):
+                        self[col] = pd.Series(dtype=_type)
+                    else:
+                        self[col] = _type()
 
-            self[col] = self[col].astype(_type)
+                self[col] = self[col].astype(_type)
 
     def __repr__(self):
         return self.base_class_view.__repr__()
@@ -2695,6 +2941,12 @@ class SessionResults(pd.DataFrame):
     @property
     def _constructor_sliced(self):
         def _new(*args, **kwargs):
+            name = kwargs.get('name')
+            if name and (name in self.columns):
+                # vertical slice
+                return pd.Series(*args, **kwargs).__finalize__(self)
+
+            # horizontal slice
             return DriverResult(*args, **kwargs).__finalize__(self)
 
         return _new
@@ -2725,9 +2977,11 @@ class DriverResult(pd.Series):
     .. versionadded:: 2.2
     """
 
+    _internal_names = pd.DataFrame._internal_names + ['dnf']
+    _internal_names_set = set(_internal_names)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._getattr_override = True  # TODO: remove in v2.3
 
     @property
     def _constructor(self):
@@ -2736,103 +2990,10 @@ class DriverResult(pd.Series):
 
         return _new
 
-    def __getattribute__(self, name):
-        # TODO: remove in v2.3
-        if name == 'name' and getattr(self, '_getattr_override', False):
-            if 'FirstName' in self:
-                warnings.warn(
-                    "The `Driver.name` property is deprecated and will be"
-                    "removed in a future version.\n"
-                    "Use `Driver['FirstName']` or `Driver.FirstName` instead.",
-                    FutureWarning
-                )
-                # name may be accessed by pandas internals to, when data
-                # does not exist yet
-                return self['FirstName']
-
-        return super().__getattribute__(name)
-
-    def __repr__(self):
-        # don't show .name deprecation message when .name is accessed internally
-        with warnings.catch_warnings():
-            warnings.filterwarnings('ignore',
-                                    message=r".*property is deprecated.*")
-            return super().__repr__()
-
     @property
     def dnf(self) -> bool:
         """True if driver did not finish"""
         return not (self.Status[3:6] == 'Lap' or self.Status == 'Finished')
-
-    @property
-    def grid(self):
-        """Grid position
-
-        .. deprecated:: 2.2
-            Use ``Driver['GridPosition']`` instead
-        """
-        # TODO: remove in v2.3
-        warnings.warn("The `Driver.grid` property is deprecated and will be"
-                      "removed in a future version.\n"
-                      "Use `Driver['GridPosition']` or `Driver.GridPosition` "
-                      "instead.", FutureWarning)
-        return self['GridPosition']
-
-    @property
-    def position(self):
-        """Finishing position
-
-        .. deprecated:: 2.2
-            Use ``Driver['Position']`` instead
-        """
-        # TODO: remove in v2.3
-        warnings.warn("The `Driver.position` property is deprecated and will be"
-                      "removed in a future version.\n"
-                      "Use `Driver['Position']` or `Driver.Position` "
-                      "instead.", FutureWarning)
-        return self['Position']
-
-    @property
-    def familyname(self):
-        """Driver family name
-
-        .. deprecated:: 2.2
-            Use ``Driver['LastName']`` instead
-        """
-        # TODO: remove in v2.3
-        warnings.warn("The `Driver.position` property is deprecated and will be"
-                      "removed in a future version.\n"
-                      "Use `Driver['LastName']` or `Driver.LastName` "
-                      "instead.", FutureWarning)
-        return self['LastName']
-
-    @property
-    def team(self):
-        """Team name
-
-        .. deprecated:: 2.2
-            Use ``Driver['TeamName']`` instead
-        """
-        # TODO: remove in v2.3
-        warnings.warn("The `Driver.team` property is deprecated and will be"
-                      "removed in a future version.\n"
-                      "Use `Driver['TeamName']` or `Driver.TeamName` "
-                      "instead.", FutureWarning)
-        return self['TeamName']
-
-
-class Driver:
-    """
-    .. deprecated:: 2.2
-        Use :class:`fastf1.core.DriverResult` instead
-    """
-
-    def __new__(cls, *args, **kwargs):
-        warnings.warn("`fastf1.core.Driver` has been deprecated and will be"
-                      "removed in a future version.\n"
-                      "Use `fastf1.core.DriverResult` instead.",
-                      FutureWarning)
-        return DriverResult()
 
 
 class DataNotLoadedError(Exception):

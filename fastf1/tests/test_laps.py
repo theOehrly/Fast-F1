@@ -33,6 +33,11 @@ def test_dtypes_from_api(reference_laps_data):
     ensure_data_type(LAP_DTYPES, laps)
 
 
+def test_dtypes_default_columns():
+    laps = fastf1.core.Laps(force_default_cols=True)
+    ensure_data_type(LAP_DTYPES, laps)
+
+
 @pytest.mark.f1telapi
 def test_dtypes_pick(reference_laps_data):
     session, laps = reference_laps_data
@@ -85,7 +90,7 @@ def test_laps_get_telemetry(reference_laps_data):
 def test_laps_get_weather_data(reference_laps_data):
     session, laps = reference_laps_data
     wd = laps.get_weather_data()
-    assert wd.shape == (926, 8)
+    assert wd.shape == (927, 8)
     for col in ('AirTemp', 'Humidity', 'Pressure', 'Rainfall',
                 'TrackTemp', 'WindDirection', 'WindSpeed', 'Time'):
         assert col in wd.columns

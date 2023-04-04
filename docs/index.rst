@@ -46,15 +46,23 @@ Have fun!
 Installation
 ============
 
-It is recommended to install FastF1 using pip:
+It is recommended to install FastF1 using `pip`:
 
-    pip install fastf1
+.. code-block:: bash
+
+   pip install fastf1
 
 Note that Python 3.8 or higher is required.
 (The live timing client does not support Python 3.10, therefore full
 functionality is only available with Python 3.8 and 3.9)
 
 Alternatively, a wheel or a source distribution can be downloaded from Pypi.
+
+You can also install using `conda`:
+
+.. code-block:: bash
+
+  conda install -c conda-forge fastf1
 
 
 .. toctree::
@@ -123,8 +131,21 @@ Indices and tables
 * :ref:`search`
 
 
-For questions feel free to contact me:
-oehrly@mailbox.org
+Questions, Contacting the Maintainer and Code of Conduct
+========================================================
+
+For questions that may be of interest to the whole community, please use the
+Github Discussions section to ask for help.
+
+In case of questions that you prefer to discuss privately, feel free to contact
+me via email at oehrly@mailbox.org. Any requests to this address will be
+treated with confidentiality if desired.
+
+FastF1 has a Code of Conduct. Complaints about a perceived breach of this code
+of conduct should be sent to the above email address as well, in almost all
+cases. Please refer to the Code of Conduct, available through the main page of
+the GitHub repository, for information on how breaches are reported, how the
+Code of Conduct is enforced and what values FastF1 encourages.
 
 
 Notice

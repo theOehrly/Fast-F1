@@ -22,9 +22,7 @@ The documentation for FastF1 is generated from reStructuredText (ReST_)
 using the Sphinx_ documentation generation tool.
 
 To build the documentation you will need to
-:ref:`set up FastF1 for development <installing_for_devs>`. Note in
-particular the additional dependencies required to
-build the documentation.
+:ref:`set up FastF1 for development <installing_for_devs>`.
 
 Building the docs
 -----------------
@@ -38,6 +36,9 @@ from the project root directory:
 .. code:: sh
 
   python setup.py build_sphinx
+
+
+The documentation build expects the cache directory :file:`doc_cache/` to exist. You will have to create it the first time.
 
 
 The generated documentation can be found in :file:`docs/_build/html` and viewed

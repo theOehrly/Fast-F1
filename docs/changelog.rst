@@ -2,6 +2,99 @@
 Changelog
 =========
 
+
+v3.0.0
+======
+
+New Features
+------------
+
+- A partial last lap will now be added to :class:`fastf1.core.Laps` when a
+  driver retires on track. This especially will make it easier to plot
+  telemetry data of such a lap as there is now a corresponding
+  :class:`fastf1.core.Lap`.
+
+- When loaded, race control messages will now be parsed to find which laps
+  were deleted. The :class:`fastf1.core.Laps` object gets two new columns
+  'Deleted' and 'DeletedReason' that indicate that a lap was deleted and why
+  it was deleted.
+
+- Added method :func:`fastf1.core.Laps.split_qualifying_sessions` to split
+  laps for a qualifying session into Q1, Q2 and Q3.
+
+
+Bug Fixes
+---------
+
+- The API parser will now correctly detect when lap times were deleted and
+  will not mark these lap times personal best time anymore if the deleted
+  lap was a drivers fastest lap.
+
+- Enforce creation of :class:`fastf1.core.Laps` with default columns and
+  default dtypes (when created through ``Session.load``) (#310).
+
+- Fixed a bug where FastF1 Series-like objects where returned instead of a
+  native pandas ``Series`` when getting a single column of a FastF1
+  DataFrame-like object by slicing vertically.
+
+- Fixed incorrectly set ``_internal_names`` for objects inheriting from
+  DataFrame or Series. This potentially caused incorrect warnings about
+  incorrectly creating new columns.
+
+
+Backwards Incompatible API Changes
+----------------------------------
+
+- :func:`fastf1.utils.to_datetime` and :func:`fastf1.utils.to_timedelta` will
+  now return ``None`` instead of raising an exception when a string cannot
+  be parsed.
+
+
+Removals
+--------
+
+The following deprecated API elements have been removed:
+
+  - Properties ``fastf1.events.Event.name``, ``fastf1.events.Event.date` and
+    ``fastf1.events.Event.gp``
+
+  - Creating an ``Event`` object by not specifying a the ``identifier`` argument
+    for ``fastf1.get_session``/``fastf1.events.get_session`` is no longer
+    supported.
+
+  - The argument ``event`` is no longer supported by
+    ``fastf1.get_session``/``fastf1.events.get_session`` and replaced by
+    ``identifier``.
+
+  - Functions ``fastf1.core.get_session`` (use ``fastf1.get_session``),
+    ``fastf1.core.get_round`` (no replacement)
+
+  - Methods ``fastf1.core.Session.load_laps``,
+    ``fastf1.core.Session.load_telemetry``
+
+  - Property ``fastf1.core.Session.weekend``
+
+  - Properties ``fastf1.core.DriverResult.name``,  ,
+    ``fastf1.core.DriverResult.familyname``,
+    ``fastf1.core.DriverResult.grid``,
+    ``fastf1.core.DriverResult.position``,
+    ``fastf1.core.DriverResult.team``
+
+  - ``fastf1.core.Driver``
+
+  - ``fastf1.core.Weekend``
+
+  - Function ``fastf1.ergast.fetch_weekend``
+
+
+
+v2.3.1
+======
+
+Maintenance release for updating driver names and colors for the 2023 season
+(#326 by @Casper-Guo).
+
+
 v2.3.0
 ======
 

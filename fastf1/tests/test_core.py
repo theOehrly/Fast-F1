@@ -1,29 +1,6 @@
-import pytest
+import pandas as pd
 
-import fastf1.core
-import fastf1.events
-
-
-def test_get_session_deprecated():
-    with pytest.warns(FutureWarning, match='deprecated'):
-        session = fastf1.core.get_session(2021, 1, 'FP1')
-    assert isinstance(session, fastf1.core.Session)
-    assert session.event.year == 2021
-    assert session.event['RoundNumber'] == 1
-
-
-def test_get_round_deprecated():
-    with pytest.warns(FutureWarning, match='deprecated'):
-        round_number = fastf1.core.get_round(2021, 'Bahrain')
-    assert round_number == 1
-
-
-def test_weekend_deprecated():
-    with pytest.warns(FutureWarning, match='deprecated'):
-        weekend = fastf1.core.Weekend(2021, 1)
-    assert isinstance(weekend, fastf1.events.Event)
-    assert weekend.year == 2021
-    assert weekend.RoundNumber == 1
+from fastf1 import core
 
 
 def test_laps_constructor_metadata_propagation(reference_laps_data):
@@ -32,3 +9,23 @@ def test_laps_constructor_metadata_propagation(reference_laps_data):
     assert laps.session is session
     assert laps.iloc[0:2].session is session
     assert laps.iloc[0].session is session
+
+
+def test_laps_constructor_sliced():
+    results = core.Laps({'A': [1, 2], 'B': [1, 2]})
+
+    assert isinstance(results.iloc[0], pd.Series)
+    assert isinstance(results.iloc[0], core.Lap)
+
+    assert isinstance(results.loc[:, 'A'], pd.Series)
+    assert not isinstance(results.loc[:, 'A'], core.Lap)
+
+
+def test_session_results_constructor_sliced():
+    results = core.SessionResults({'A': [1, 2], 'B': [1, 2]})
+
+    assert isinstance(results.iloc[0], pd.Series)
+    assert isinstance(results.iloc[0], core.DriverResult)
+
+    assert isinstance(results.loc[:, 'A'], pd.Series)
+    assert not isinstance(results.loc[:, 'A'], core.DriverResult)
