@@ -169,9 +169,9 @@ with warnings.catch_warnings():
 
 import pandas as pd
 
-from fastf1.api import Cache
 from fastf1.core import Session
 import fastf1.ergast
+from fastf1.req import Cache
 from fastf1.utils import recursive_dict_get
 
 _SESSION_TYPE_ABBREVIATIONS = {

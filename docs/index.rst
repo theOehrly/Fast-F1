@@ -78,6 +78,7 @@ You can also install using `conda`:
    core
    events
    api
+   ergast
    utils
    plotting
    livetiming

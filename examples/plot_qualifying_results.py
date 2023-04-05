@@ -8,6 +8,7 @@ Plot the qualifying result with visualization the fastest times.
 import matplotlib.pyplot as plt
 import pandas as pd
 from timple.timedelta import strftimedelta
+
 import fastf1
 import fastf1.plotting
 from fastf1.core import Laps

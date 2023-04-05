@@ -1,11 +1,9 @@
 import json
 import warnings
 
-from fastf1.api import Cache
-from fastf1.version import __version__
-
-base_url = 'https://ergast.com/api/f1'
-_headers = {'User-Agent': f'FastF1/{__version__}'}
+from fastf1.req import Cache
+from fastf1.ergast.interface import BASE_URL as base_url
+from fastf1.ergast.interface import HEADERS as _headers
 
 
 def fetch_results(year, gp, session):
@@ -30,27 +28,6 @@ def fetch_season(year):
     return _parse_ergast(_parse_json_response(
         Cache.requests_get(url, headers=_headers))
     )
-
-
-def fetch_weekend(year, gp):
-    warnings.warn(
-        "`fetch_weekend()` is deprecated and will be"
-        "removed without a direct replacement in a "
-        "future version.",
-        FutureWarning
-    )
-    url = f"{base_url}/{year}/{gp}.json"
-    data = _parse_ergast(_parse_json_response(
-        Cache.requests_get(url, headers=_headers)
-    ))[0]
-    url = ("https://www.mapcoordinates.net/admin/component/edit/"
-           + "Vpc_MapCoordinates_Advanced_GoogleMapCoords_Component/"
-           + "Component/json-get-elevation")
-    loc = data['Circuit']['Location']
-    body = {'longitude': loc['long'], 'latitude': loc['lat']}
-    res = _parse_json_response(Cache.requests_post(url, data=body))
-    data['Circuit']['Location']['alt'] = res['elevation']
-    return data
 
 
 def fetch_day(year, gp, day):

@@ -3,6 +3,7 @@ import datetime
 import numpy as np
 import pandas as pd
 
+from fastf1 import Cache
 import fastf1.api
 
 
@@ -85,7 +86,7 @@ def test_timing_app_data():
 
 
 def test_car_data(caplog):
-    with fastf1.api.Cache.disabled():
+    with Cache.disabled():
         response = list()
         with open('fastf1/testing/reference_data/'
                   '2020_05_FP2/car_data.raw', 'rb') as fobj:
@@ -111,7 +112,7 @@ def test_car_data(caplog):
 
 
 def test_position_data(caplog):
-    with fastf1.api.Cache.disabled():
+    with Cache.disabled():
         response = list()
         with open('fastf1/testing/reference_data/'
                   '2020_05_FP2/position.raw', 'rb') as fobj:

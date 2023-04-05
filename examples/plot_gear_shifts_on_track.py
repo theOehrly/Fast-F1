@@ -3,7 +3,6 @@
 
 Plot which gear is being used at which point of the track
 """
-
 ##############################################################################
 # Import FastF1 and load the data
 

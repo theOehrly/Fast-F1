@@ -25,21 +25,16 @@ A collection of functions to interface with the F1 web api.
 """
 import base64
 import datetime
-import functools
 import json
 import logging
-import math
-import os
-import sys
-import pickle
 import zlib
 from typing import Dict
+import warnings
 
 import numpy as np
 import pandas as pd
-import requests
-import requests_cache
 
+from fastf1.req import Cache as _Cache
 from fastf1.utils import recursive_dict_get, to_timedelta, to_datetime
 
 base_url = 'https://livetiming.formula1.com'
@@ -77,406 +72,11 @@ pages: Dict[str, str] = {
 """Known API requests"""
 
 
-class Cache:
-    """Pickle and requests based API cache.
-
-    Fast-F1 will per default enable caching. While this can be disabled, it
-    should almost always be enabled to speed up the runtime of your scripts
-    and to prevent exceeding the rate limit of api servers.
-
-    The parsed API data will be saved as a pickled object.
-    Raw GET requests are cached in a sqlite db using the 'requests-cache'
-    module.
-
-    The cache has two "stages".
-
-        - Stage 1: Caching of raw GET requests. This works for all requests.
-          Cache control is employed to refresh the cached data periodically.
-        - Stage 2: Caching of the parsed data. This saves a lot of time when
-          running your scripts,  as parsing of the data is computationally
-          expensive. Stage 2 caching is only used for some api functions.
-
-    You can explicitly configure right at the beginning of your script:
-
-        >>> import fastf1
-        >>> fastf1.Cache.enable_cache('path/to/cache')  # doctest: +SKIP
-        # change cache directory to an exisitng empty directory on your machine
-        >>> session = fastf1.get_session(2021, 5, 'Q')
-        >>> # ...
-
-    An alternative way to set the cache directory is to configure an
-    environment variable `FASTF1_CACHE`. However, this value will be
-    ignored if `Cache.enable_cache()` is called.
-
-    If no explicit location is provied, Fast-F1 will use a default location
-    depending on operating system.
-
-        - Windows: `%LOCALAPPDATA%\\\\Temp\\\\fastf1`
-        - macOS: `~/Library/Caches/fastf1`
-        - Linux: `~/.cache/fastf1` if `~/.cache` exists otherwise `~/.fastf1`
-
-    Cached data can be deleted at any time to reclaim disk space. However,
-    this also means you will have to redownload the same data again if you
-    need which will lead to reduced performance.
-    """
-    _CACHE_DIR = None
-    # version of the api parser code (unrelated to release version number)
-    _API_CORE_VERSION = 8
-    _IGNORE_VERSION = False
-    _FORCE_RENEW = False
-
-    _requests_session = None
-    _default_cache_enabled = False  # flag to ensure that warning about disabled cache is logged once only # noqa: E501
-    _tmp_disabled = False
-
-    @classmethod
-    def enable_cache(
-            cls, cache_dir: str, ignore_version: bool = False,
-            force_renew: bool = False,
-            use_requests_cache: bool = True):
-        """Enables the API cache.
-
-        Args:
-            cache_dir: Path to the directory which should be used to store cached data. Path needs to exist.
-            ignore_version: Ignore if cached data was create with a different version of the API parser
-                (not recommended: this can cause crashes or unrecognized errors as incompatible data may be loaded)
-            force_renew: Ignore existing cached data. Download data and update the cache instead.
-            use_requests_cache: Do caching of the raw GET and POST requests.
-        """
-        # Allow users to use paths such as %LOCALAPPDATA%
-        cache_dir = os.path.expandvars(cache_dir)
-
-        # Allow users to use paths such as ~user or ~/
-        cache_dir = os.path.expanduser(cache_dir)
-
-        if not os.path.exists(cache_dir):
-            raise NotADirectoryError("Cache directory does not exist! Please check for typos or create it first.")
-        cls._CACHE_DIR = cache_dir
-        cls._IGNORE_VERSION = ignore_version
-        cls._FORCE_RENEW = force_renew
-        if use_requests_cache:
-            cls._requests_session = requests_cache.CachedSession(
-                cache_name=os.path.join(cache_dir, 'fastf1_http_cache'),
-                backend='sqlite',
-                allowable_methods=('GET', 'POST'),
-                expire_after=datetime.timedelta(hours=12),
-                cache_control=True,
-                stale_if_error=True
-            )
-            if force_renew:
-                cls._requests_session.cache.clear()
-
-    @classmethod
-    def requests_get(cls, *args, **kwargs):
-        """Wraps `requests.Session().get()` with caching if enabled.
-
-        All GET requests that require caching should be performed through this
-        wrapper. Caching will be done if the module-wide cache has been
-        enabled. Else, `requests.Session().get()` will be called without any
-        caching.
-        """
-        cls._enable_default_cache()
-        if (cls._requests_session is None) or cls._tmp_disabled:
-            return requests.get(*args, **kwargs)
-        return cls._requests_session.get(*args, **kwargs)
-
-    @classmethod
-    def requests_post(cls, *args, **kwargs):
-        """Wraps `requests.Session().post()` with caching if enabled.
-
-        All POST requests that require caching should be performed through this
-        wrapper. Caching will be done if the module-wide cache has been
-        enabled. Else, `requests.Session().get()` will be called without any
-        caching.
-        """
-        cls._enable_default_cache()
-        if (cls._requests_session is None) or cls._tmp_disabled:
-            return requests.post(*args, **kwargs)
-        return cls._requests_session.post(*args, **kwargs)
-
-    @classmethod
-    def clear_cache(cls, cache_dir=None, deep=False):
-        """Clear all cached data.
-
-        Deletes all files in the cache directory. By default, it will clear
-        the default cache directory. However, if a cache directory is
-        provided as an argument this will be cleared instead. Optionally,
-        the requests cache can be cleared too.
-
-        Can be called without enabling the cache first.
-
-        Deleting specific events or sessions is not supported but can be done manually (stage 2 cache).
-        The cached data is structured by year, event and session. The structure is more or less self-explanatory.
-        To delete specific events or sessions delete the corresponding folder within the cache directory.
-        Deleting specific requests from the requests cache (stage 1) is not possible. To delete the requests cache only,
-        delete the sqlite file in the root of the cache directory.
-
-        Args:
-            cache_dir (str): Path to the directory which is used to store cached data.
-            deep (bool): Clear the requests cache (stage 1) too.
-        """
-        if cache_dir is None:
-            if cls._CACHE_DIR is None:
-                cache_dir = cls.get_default_cache_path()
-            else:
-                cache_dir = cls._CACHE_DIR
-
-        # We need to expand the directory to support ~/
-        cache_dir = os.path.expandvars(cache_dir)
-        cache_dir = os.path.expanduser(cache_dir)
-        if not os.path.exists(cache_dir):
-            raise NotADirectoryError("Cache directory does not exist!")
-
-        for dirpath, dirnames, filenames in os.walk(cache_dir):
-            for filename in filenames:
-                if filename.endswith('.ff1pkl'):
-                    os.remove(os.path.join(dirpath, filename))
-
-        if deep:
-            cache_db_path = os.path.join(cache_dir, 'fastf1_http_cache.sqlite')
-            if os.path.exists(cache_db_path):
-                os.remove(cache_db_path)
-
-    @classmethod
-    def api_request_wrapper(cls, func):
-        """Wrapper function for adding stage 2 caching to api functions.
-
-        Args:
-            func: function to be wrapped
-
-        Returns:
-            The wrapped function
-        """
-
-        @functools.wraps(func)
-        def _cached_api_request(api_path, response=None, livedata=None):
-            if cls._CACHE_DIR and not cls._tmp_disabled:
-                # caching is enabled
-                func_name = str(func.__name__)
-                cache_file_path = cls._get_cache_file_path(api_path, func_name)
-
-                if os.path.isfile(cache_file_path):
-                    # file exists already, try to load it
-                    try:
-                        cached = pickle.load(open(cache_file_path, 'rb'))
-                    except:  # noqa: E722 (bare except)
-                        # don't like the bare exception clause but who knows
-                        # which dependency will raise which internal exception
-                        # after it was updated
-                        cached = None
-
-                    if cached is not None and cls._data_ok_for_use(cached):
-                        # cached data is ok for use, return it
-                        logging.info(f"Using cached data for {func_name}")
-                        return cached['data']
-
-                    else:
-                        # cached data needs to be downloaded again and updated
-                        logging.info(f"Updating cache for {func_name}...")
-                        data = func(
-                            api_path, response=response, livedata=livedata
-                        )
-
-                        if data is not None:
-                            cls._write_cache(data, cache_file_path)
-                            logging.info("Cache updated!")
-                            return data
-
-                        logging.critical(
-                            "A cache update is required but the data failed "
-                            "to download. Cannot continue!\nYou may force to "
-                            "ignore a cache version mismatch by using the "
-                            "`ignore_version=True` keyword when enabling the "
-                            "cache (not recommended)."
-                        )
-                        exit()
-
-                else:  # cached data does not yet exist for this api request
-                    logging.info(f"No cached data found for {func_name}. "
-                                 f"Loading data...")
-                    data = func(
-                        api_path, response=response, livedata=livedata
-                    )
-                    if data is not None:
-                        cls._write_cache(data, cache_file_path)
-                        logging.info("Data has been written to cache!")
-                        return data
-
-                    logging.critical("Failed to load data!")
-                    exit()
-
-            else:  # cache was not enabled
-                if not cls._tmp_disabled:
-                    cls._enable_default_cache()
-                return func(api_path, response=response, livedata=livedata)
-
-        return _cached_api_request
-
-    @classmethod
-    def _get_cache_file_path(cls, api_path, name):
-        # extend the cache dir path using the api path and a file name
-        # leading '/static/' is dropped form api path
-        cache_dir_path = os.path.join(cls._CACHE_DIR, api_path[8:])
-        if not os.path.exists(cache_dir_path):
-            # create subfolders if they don't yet exist
-            os.makedirs(cache_dir_path)
-
-        file_name = name + '.ff1pkl'
-        cache_file_path = os.path.join(cache_dir_path, file_name)
-        return cache_file_path
-
-    @classmethod
-    def _data_ok_for_use(cls, cached):
-        # check if cached data is ok or needs to be downloaded again
-        if cls._FORCE_RENEW:
-            return False
-        elif cls._IGNORE_VERSION:
-            return True
-        elif cached['version'] == cls._API_CORE_VERSION:
-            return True
-        return False
-
-    @classmethod
-    def _write_cache(cls, data, cache_file_path, **kwargs):
-        new_cached = dict(
-            **{'version': cls._API_CORE_VERSION, 'data': data},
-            **kwargs
-        )
-        with open(cache_file_path, 'wb') as cache_file_obj:
-            pickle.dump(new_cached, cache_file_obj)
-
-    @classmethod
-    def get_default_cache_path(cls):
-        if sys.platform == "linux":
-            # If .cache exists we will use it. Otherwise, ~/
-            tmp = os.path.expanduser("~/.cache")
-            if os.path.exists(tmp):
-                return r"~/.cache/fastf1"
-            else:
-                return r"~/.fastf1"
-        elif sys.platform == "darwin":
-            return r"~/Library/Caches/fastf1"
-        elif sys.platform == "win32":
-            return r"%LOCALAPPDATA%\Temp\fastf1"
-        else:
-            return None
-
-    @classmethod
-    def _enable_default_cache(cls):
-        if not cls._CACHE_DIR and not cls._default_cache_enabled:
-            cache_dir = None
-            if "FASTF1_CACHE" in os.environ:
-                cache_dir = os.environ.get("FASTF1_CACHE")
-            else:
-                cache_dir = cls.get_default_cache_path()
-
-            if cache_dir is not None:
-                # Ensure the default cache folder exists
-                cache_dir = os.path.expandvars(cache_dir)
-                cache_dir = os.path.expanduser(cache_dir)
-                if not os.path.exists(cache_dir):
-                    try:
-                        os.mkdir(cache_dir, mode=0o0700)
-                    except Exception as err:
-                        logging.error("Failed to create cache directory {0}. Error {1}".format(cache_dir, err))  # noqa: E501
-                        raise
-
-                # Enable cache with default
-                cls.enable_cache(cache_dir)
-                logging.warning(
-                    f"\n\nDEFAULT CACHE ENABLED!\n\t"
-                    f"Cache directory: {cache_dir}.\n\t"
-                    f"Size: {cls._convert_size(cls._get_size(cache_dir))}"
-                )
-            else:
-                # warn only once and only if cache is not enabled
-                logging.warning(
-                    "\n\nNO CACHE! Api caching has not been enabled! \n\t"
-                    "It is highly recommended to enable this feature for much "
-                    "faster data loading!\n\t"
-                    "Use `fastf1.Cache.enable_cache('path/to/cache/')`\n")
-
-                cls._default_cache_enabled = True
-
-    @classmethod
-    def disabled(cls):
-        """Returns a context manager object that creates a context within
-        which the cache is temporarily disabled.
-
-        Example::
-
-            with Cache.disabled():
-                # no caching takes place here
-                ...
-
-        .. note::
-            The context manager is not multithreading-safe
-        """
-        return _NoCacheContext()
-
-    @classmethod
-    def set_disabled(cls):
-        """Disable the cache while keeping the configuration intact.
-
-        This disables stage 1 and stage 2 caching!
-
-        You can enable the cache at any time using :func:`set_enabled`
-
-        .. note:: You may prefer to use :func:`disabled` to get a context
-            manager object and disable the cache only within a specific
-            context.
-
-        .. note::
-            This function is not multithreading-safe
-        """
-        cls._tmp_disabled = True
-
-    @classmethod
-    def set_enabled(cls):
-        """Enable the cache after it has been disabled with
-        :func:`set_disabled`.
-
-        .. warning::
-            To enable the cache it needs to be configured properly. You need
-            to call :func`enable_cache` once to enable the cache initially.
-            :func:`set_enabled` and :func:`set_disabled` only serve to
-            (temporarily) disable the cache for specific parts of code that
-            should be run without caching.
-
-        .. note::
-            This function is not multithreading-safe
-        """
-        cls._tmp_disabled = False
-
-    @classmethod
-    def _convert_size(cls, size_bytes):  # https://stackoverflow.com/questions/5194057/better-way-to-convert-file-sizes-in-python # noqa: E501
-        if size_bytes == 0:
-            return "0B"
-        size_name = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
-        i = int(math.floor(math.log(size_bytes, 1024)))
-        p = math.pow(1024, i)
-        s = round(size_bytes / p, 2)
-        return "%s %s" % (s, size_name[i])
-
-    @classmethod
-    def _get_size(cls, start_path='.'):  # https://stackoverflow.com/questions/1392413/calculating-a-directorys-size-using-python # noqa: E501
-        total_size = 0
-        for dirpath, dirnames, filenames in os.walk(start_path):
-            for f in filenames:
-                fp = os.path.join(dirpath, f)
-                # skip if it is symbolic link
-                if not os.path.islink(fp):
-                    total_size += os.path.getsize(fp)
-
-        return total_size
-
-
-class _NoCacheContext:
-    def __enter__(self):
-        Cache.set_disabled()
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        Cache.set_enabled()
+class Cache(_Cache):
+    """:meta-private:"""
+    warnings.warn("The import 'from fastf1.api import Cache' will be removed "
+                  "in a future version. Please use 'from fastf1 import Cache' "
+                  "instead.", UserWarning)
 
 
 def make_path(wname, wdate, sname, sdate):
@@ -512,7 +112,7 @@ EMPTY_STREAM = {'Time': pd.NaT, 'Driver': str(), 'Position': np.NaN,
                 'GapToLeader': np.NaN, 'IntervalToPositionAhead': np.NaN}
 
 
-@Cache.api_request_wrapper
+@_Cache.api_request_wrapper
 def timing_data(path, response=None, livedata=None):
     """Fetch and parse timing data.
 
@@ -982,7 +582,7 @@ def _stream_data_driver(driver_raw, empty_vals, drv):
     return drv_data
 
 
-@Cache.api_request_wrapper
+@_Cache.api_request_wrapper
 def timing_app_data(path, response=None, livedata=None):
     """Fetch and parse 'timing app data'.
 
@@ -1068,7 +668,7 @@ def timing_app_data(path, response=None, livedata=None):
     return df
 
 
-@Cache.api_request_wrapper
+@_Cache.api_request_wrapper
 def car_data(path, response=None, livedata=None):
     """Fetch and parse car data.
 
@@ -1220,7 +820,7 @@ def car_data(path, response=None, livedata=None):
     return data
 
 
-@Cache.api_request_wrapper
+@_Cache.api_request_wrapper
 def position_data(path, response=None, livedata=None):
     """Fetch and parse position data.
 
@@ -1345,7 +945,7 @@ def position_data(path, response=None, livedata=None):
     return data
 
 
-@Cache.api_request_wrapper
+@_Cache.api_request_wrapper
 def track_status_data(path, response=None, livedata=None):
     """Fetch and parse track status data.
 
@@ -1409,7 +1009,7 @@ def track_status_data(path, response=None, livedata=None):
     return data
 
 
-@Cache.api_request_wrapper
+@_Cache.api_request_wrapper
 def session_status_data(path, response=None, livedata=None):
     """Fetch and parse session status data.
 
@@ -1460,7 +1060,7 @@ def session_status_data(path, response=None, livedata=None):
     return data
 
 
-@Cache.api_request_wrapper
+@_Cache.api_request_wrapper
 def race_control_messages(path, response=None, livedata=None):
     """Fetch and parse race control messages.
 
@@ -1531,7 +1131,7 @@ def race_control_messages(path, response=None, livedata=None):
     return data
 
 
-@Cache.api_request_wrapper
+@_Cache.api_request_wrapper
 def lap_count(path, response=None, livedata=None):
     """Fetch and parse lap count data.
 
@@ -1590,7 +1190,7 @@ def lap_count(path, response=None, livedata=None):
     return data
 
 
-@Cache.api_request_wrapper
+@_Cache.api_request_wrapper
 def driver_info(path, response=None, livedata=None):
     """Fetch driver information.
 
@@ -1674,7 +1274,7 @@ def driver_info(path, response=None, livedata=None):
         return drv_info
 
 
-@Cache.api_request_wrapper
+@_Cache.api_request_wrapper
 def weather_data(path, response=None, livedata=None):
     """Fetch and parse weather data.
 
@@ -1767,7 +1367,7 @@ def fetch_page(path, name):
     page = pages[name]
     is_stream = 'jsonStream' in page
     is_z = '.z.' in page
-    r = Cache.requests_get(base_url + path + pages[name], headers=headers)
+    r = _Cache.requests_get(base_url + path + pages[name], headers=headers)
     if r.status_code == 200:
         raw = r.content.decode('utf-8-sig')
         if is_stream:

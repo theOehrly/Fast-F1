@@ -22,30 +22,22 @@ session. This can be done with one of the following functions:
     fastf1.get_event_schedule
 
 
-Caching
--------
+.. _requests-and-caching:
 
-Caching should almost always be enabled to speed up the runtime of your
-scripts and to prevent exceeding the rate limit of api servers.
-FastF1 will print an annoyingly obnoxious warning message if you do not
-enable caching.
+Requests and Caching
+--------------------
 
-The following class-level functions are used to setup, enable and
-(temporarily) disable caching.
+.. automodule::
+    fastf1.req
 
-.. autosummary::
-    fastf1.Cache.enable_cache
-    fastf1.Cache.clear_cache
-    fastf1.Cache.disabled
-    fastf1.Cache.set_disabled
-    fastf1.Cache.set_enabled
+.. currentmodule:: fastf1
 
 
 General Functions - API Reference
 ---------------------------------
 
-Events API
-..........
+Event and Session API
+.....................
 
 .. autofunction:: get_session
 .. autofunction:: get_testing_session
@@ -71,7 +63,7 @@ from fastf1.events import (get_session,  # noqa: F401
                            get_testing_event,
                            get_event_schedule)
 
-from fastf1.api import Cache  # noqa: F401
+from fastf1.req import Cache, RateLimitExceededError   # noqa: F401
 from fastf1.version import __version__   # noqa: F401
 
 

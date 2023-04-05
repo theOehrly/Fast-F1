@@ -3,7 +3,6 @@
 
 (Example provided by @JSEHV on Github)
 """
-
 import fastf1 as ff1
 import numpy as np
 import matplotlib as mpl
