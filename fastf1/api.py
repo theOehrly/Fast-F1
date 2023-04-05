@@ -29,12 +29,11 @@ import json
 import logging
 import zlib
 from typing import Dict
-import warnings
 
 import numpy as np
 import pandas as pd
 
-from fastf1.req import Cache as _Cache
+from fastf1.req import Cache
 from fastf1.utils import recursive_dict_get, to_timedelta, to_datetime
 
 base_url = 'https://livetiming.formula1.com'
@@ -72,13 +71,6 @@ pages: Dict[str, str] = {
 """Known API requests"""
 
 
-class Cache(_Cache):
-    """:meta-private:"""
-    warnings.warn("The import 'from fastf1.api import Cache' will be removed "
-                  "in a future version. Please use 'from fastf1 import Cache' "
-                  "instead.", UserWarning)
-
-
 def make_path(wname, wdate, sname, sdate):
     """Create the api path base string to append on livetiming.formula1.com for api
     requests.
@@ -112,7 +104,7 @@ EMPTY_STREAM = {'Time': pd.NaT, 'Driver': str(), 'Position': np.NaN,
                 'GapToLeader': np.NaN, 'IntervalToPositionAhead': np.NaN}
 
 
-@_Cache.api_request_wrapper
+@Cache.api_request_wrapper
 def timing_data(path, response=None, livedata=None):
     """Fetch and parse timing data.
 
@@ -582,7 +574,7 @@ def _stream_data_driver(driver_raw, empty_vals, drv):
     return drv_data
 
 
-@_Cache.api_request_wrapper
+@Cache.api_request_wrapper
 def timing_app_data(path, response=None, livedata=None):
     """Fetch and parse 'timing app data'.
 
@@ -668,7 +660,7 @@ def timing_app_data(path, response=None, livedata=None):
     return df
 
 
-@_Cache.api_request_wrapper
+@Cache.api_request_wrapper
 def car_data(path, response=None, livedata=None):
     """Fetch and parse car data.
 
@@ -820,7 +812,7 @@ def car_data(path, response=None, livedata=None):
     return data
 
 
-@_Cache.api_request_wrapper
+@Cache.api_request_wrapper
 def position_data(path, response=None, livedata=None):
     """Fetch and parse position data.
 
@@ -945,7 +937,7 @@ def position_data(path, response=None, livedata=None):
     return data
 
 
-@_Cache.api_request_wrapper
+@Cache.api_request_wrapper
 def track_status_data(path, response=None, livedata=None):
     """Fetch and parse track status data.
 
@@ -1009,7 +1001,7 @@ def track_status_data(path, response=None, livedata=None):
     return data
 
 
-@_Cache.api_request_wrapper
+@Cache.api_request_wrapper
 def session_status_data(path, response=None, livedata=None):
     """Fetch and parse session status data.
 
@@ -1060,7 +1052,7 @@ def session_status_data(path, response=None, livedata=None):
     return data
 
 
-@_Cache.api_request_wrapper
+@Cache.api_request_wrapper
 def race_control_messages(path, response=None, livedata=None):
     """Fetch and parse race control messages.
 
@@ -1131,7 +1123,7 @@ def race_control_messages(path, response=None, livedata=None):
     return data
 
 
-@_Cache.api_request_wrapper
+@Cache.api_request_wrapper
 def lap_count(path, response=None, livedata=None):
     """Fetch and parse lap count data.
 
@@ -1190,7 +1182,7 @@ def lap_count(path, response=None, livedata=None):
     return data
 
 
-@_Cache.api_request_wrapper
+@Cache.api_request_wrapper
 def driver_info(path, response=None, livedata=None):
     """Fetch driver information.
 
@@ -1274,7 +1266,7 @@ def driver_info(path, response=None, livedata=None):
         return drv_info
 
 
-@_Cache.api_request_wrapper
+@Cache.api_request_wrapper
 def weather_data(path, response=None, livedata=None):
     """Fetch and parse weather data.
 
@@ -1367,7 +1359,7 @@ def fetch_page(path, name):
     page = pages[name]
     is_stream = 'jsonStream' in page
     is_z = '.z.' in page
-    r = _Cache.requests_get(base_url + path + pages[name], headers=headers)
+    r = Cache.requests_get(base_url + path + pages[name], headers=headers)
     if r.status_code == 200:
         raw = r.content.decode('utf-8-sig')
         if is_stream:
