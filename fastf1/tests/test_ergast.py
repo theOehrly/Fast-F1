@@ -475,7 +475,7 @@ def test_ergast_result_frame_prepare_response():
 
 
 def test_ergast_result_series_constructor():
-    series = ErgastResultSeries({'A': 1, 'B': 2, 'C': 3})
+    series = ErgastResultSeries(data=[1, 2, 3], index=['A', 'B', 'C'])
     assert isinstance(series[1:], ErgastResultSeries)
 
 
