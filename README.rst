@@ -1,10 +1,3 @@
-**Looking for Feedback**
-
-I am planning to add full support for the Ergast API with the next major
-release of FastF1 and I am looking for feedback before finalizing this
-feature. You can find more information here:
-https://github.com/theOehrly/Fast-F1/pull/311
-
 =======
 Fast F1
 =======
