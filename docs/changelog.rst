@@ -3,6 +3,12 @@ Changelog
 =========
 
 
+v2.3.2
+======
+
+Maintenance release to limit the version of pandas to <2.0.0.
+
+
 v2.3.1
 ======
 
