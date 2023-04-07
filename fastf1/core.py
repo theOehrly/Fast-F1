@@ -1008,7 +1008,7 @@ class Session:
         self.f1_api_support = f1_api_support
         """bool: The official F1 API supports this event and lap timing data and
         telemetry data are available."""
-        self.date = self.event.get_session_date(session_name)
+        self.date = self.event.get_session_date(session_name, utc=True)
         """pandas.Datetime: Date at which this session took place."""
         self.api_path = api.make_path(
             self.event['EventName'],

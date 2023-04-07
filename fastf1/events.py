@@ -168,11 +168,11 @@ with warnings.catch_warnings():
 
 import pandas as pd
 
+import fastf1.api
 from fastf1.core import Session
 import fastf1.ergast
 from fastf1.logger import get_logger
-from fastf1.req import Cache
-from fastf1.utils import recursive_dict_get
+from fastf1.utils import recursive_dict_get, to_datetime, to_timedelta
 
 
 _logger = get_logger(__name__)
@@ -186,9 +186,6 @@ _SESSION_TYPE_ABBREVIATIONS = {
     'FP2': 'Practice 2',
     'FP3': 'Practice 3'
 }
-
-_SCHEDULE_BASE_URL = "https://raw.githubusercontent.com/" \
-                     "theOehrly/f1schedule/master/"
 
 
 def get_session(
@@ -255,7 +252,7 @@ def get_testing_session(year: int, test_number: int, session_number: int) \
     Args:
         year: Championship year
         test_number: Number of the testing event (usually at most two)
-        session_number: Number of the session withing a specific testing
+        session_number: Number of the session within a specific testing
             event. Each testing event usually has three sessions.
 
     .. versionadded:: 2.2
@@ -385,17 +382,57 @@ def get_events_remaining(
 
 
 def _get_schedule(year):
-    response = Cache.requests_get(
-        _SCHEDULE_BASE_URL + f"schedule_{year}.json"
-    )
-    df = pd.read_json(response.text)
+    # create an event schedule using data from the F1 API
+    response = fastf1.api.season_schedule(f'/static/{year}/')
+    data = collections.defaultdict(list)
 
-    # change column names from snake_case to UpperCamelCase
-    col_renames = {col: ''.join([s.capitalize() for s in col.split('_')])
-                   for col in df.columns}
-    df = df.rename(columns=col_renames)
+    for event in response:
+        data['Country'].append(event['Country']['Name'])
+        data['Location'].append(event['Location'])
+        data['EventName'].append(event['Name'])
+        data['OfficialEventName'].append(event['OfficialName'])
 
-    schedule = EventSchedule(df, year=year, force_default_cols=True)
+        n_events = min(len(event['Sessions']), 5)
+        # number of events, usually 3 for testing, 5 for race weekends
+        # in special cases there are additional unrelated events
+
+        if (n_events >= 4) and (event['Sessions'][3]['Name'] == 'Sprint'):
+            data['EventFormat'].append('sprint')
+            data['RoundNumber'].append(event['Number'])
+        elif 'test' in event['Name'].lower():
+            data['EventFormat'].append('testing')
+            data['RoundNumber'].append(0)
+        else:
+            data['EventFormat'].append('conventional')
+            data['RoundNumber'].append(event['Number'])
+
+        data['F1ApiSupport'].append(True)
+
+        for i in range(0, 5):
+            # parse the up to five sessions for each event
+            try:
+                session = event['Sessions'][i]
+            except IndexError:
+                data[f'Session{i+1}'].append(None)
+                data[f'Session{i+1}Date'].append(None)
+                data[f'Session{i+1}DateUTC'].append(None)
+            else:
+                data[f'Session{i+1}'].append(session['Name'])
+                # save timestamp as tz-aware local time and non-tz-aware utc
+                date = to_datetime(session['StartDate'])
+                gmt_offset = to_timedelta(session['GmtOffset'])
+                date = date.replace(tzinfo=datetime.timezone(gmt_offset))
+                date_utc = date.astimezone(datetime.timezone.utc) \
+                    .replace(tzinfo=None)
+                data[f'Session{i+1}Date'].append(pd.Timestamp(date))
+                data[f'Session{i+1}DateUTC'].append(pd.Timestamp(date_utc))
+
+        # set the event date to the date of the last session
+        ev_date = data[f'Session{n_events}DateUTC'][-1]
+        ev_date = ev_date.replace(hour=0, minute=0, second=0)
+        data['EventDate'].append(ev_date)
+
+    schedule = EventSchedule(data, year=year, force_default_cols=True)
     return schedule
 
 
@@ -426,27 +463,35 @@ def _get_schedule_from_ergast(year) -> "EventSchedule":
             sprint_name = 'Sprint Qualifying' if year == 2021 else 'Sprint'
             data['EventFormat'].append("sprint")
             data['Session1'].append('Practice 1')
-            data['Session1Date'].append(date.floor('D') - pd.Timedelta(days=2))
+            data['Session1DateUTC'].append(
+                date.floor('D') - pd.Timedelta(days=2))
             data['Session2'].append('Qualifying')
-            data['Session2Date'].append(date.floor('D') - pd.Timedelta(days=2))
+            data['Session2DateUTC'].append(
+                date.floor('D') - pd.Timedelta(days=2))
             data['Session3'].append('Practice 2')
-            data['Session3Date'].append(date.floor('D') - pd.Timedelta(days=1))
+            data['Session3DateUTC'].append(
+                date.floor('D') - pd.Timedelta(days=1))
             data['Session4'].append(sprint_name)
-            data['Session4Date'].append(date.floor('D') - pd.Timedelta(days=1))
+            data['Session4DateUTC'].append(
+                date.floor('D') - pd.Timedelta(days=1))
             data['Session5'].append('Race')
-            data['Session5Date'].append(date)
+            data['Session5DateUTC'].append(date)
         else:
             data['EventFormat'].append("conventional")
             data['Session1'].append('Practice 1')
-            data['Session1Date'].append(date.floor('D') - pd.Timedelta(days=2))
+            data['Session1DateUTC'].append(
+                date.floor('D') - pd.Timedelta(days=2))
             data['Session2'].append('Practice 2')
-            data['Session2Date'].append(date.floor('D') - pd.Timedelta(days=2))
+            data['Session2DateUTC'].append(
+                date.floor('D') - pd.Timedelta(days=2))
             data['Session3'].append('Practice 3')
-            data['Session3Date'].append(date.floor('D') - pd.Timedelta(days=1))
+            data['Session3DateUTC'].append(
+                date.floor('D') - pd.Timedelta(days=1))
             data['Session4'].append('Qualifying')
-            data['Session4Date'].append(date.floor('D') - pd.Timedelta(days=1))
+            data['Session4DateUTC'].append(
+                date.floor('D') - pd.Timedelta(days=1))
             data['Session5'].append('Race')
-            data['Session5Date'].append(date)
+            data['Session5DateUTC'].append(date)
 
         data['F1ApiSupport'].append(True if year >= 2018 else False)
         # simplified; this is only true most of the time
@@ -483,15 +528,20 @@ class EventSchedule(pd.DataFrame):
         'EventName': str,
         'EventFormat': str,
         'Session1': str,
-        'Session1Date': 'datetime64[ns]',
+        'Session1Date': object,  # tz-aware datetime.datetime
+        'Session1DateUTC': 'datetime64[ns]',
         'Session2': str,
-        'Session2Date': 'datetime64[ns]',
+        'Session2Date': object,
+        'Session2DateUTC': 'datetime64[ns]',
         'Session3': str,
-        'Session3Date': 'datetime64[ns]',
+        'Session3Date': object,
+        'Session3DateUTC': 'datetime64[ns]',
         'Session4': str,
-        'Session4Date': 'datetime64[ns]',
+        'Session4Date': object,
+        'Session4DateUTC': 'datetime64[ns]',
         'Session5': str,
-        'Session5Date': 'datetime64[ns]',
+        'Session5Date': object,
+        'Session5DateUTC': 'datetime64[ns]',
         'F1ApiSupport': bool
     }
 
@@ -731,13 +781,14 @@ class Event(pd.Series):
 
         return session_name
 
-    def get_session_date(self, identifier: Union[str, int]) \
-            -> datetime.datetime:
+    def get_session_date(self, identifier: Union[str, int], utc=False) \
+            -> pd.Timestamp:
         """Return the date and time (if available) at which a specific session
         of this event is or was held.
 
         Args:
             identifier: see :ref:`SessionIdentifier`
+            utc: return a non-timezone-aware UTC timestamp
 
         Raises:
             ValueError: No matching session or invalid identifier
@@ -751,7 +802,10 @@ class Event(pd.Series):
                              f"for this event")
         else:
             _name = mask.idxmax()
-            date = self[f"{_name}Date"]
+            if utc:
+                date = self[f"{_name}DateUTC"]
+            else:
+                date = self[f"{_name}Date"]
             if pd.isnull(date):
                 raise ValueError(f"Session type '{identifier}' does not "
                                  f"exist for this event")

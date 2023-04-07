@@ -26,7 +26,7 @@ For example, let's load the Qualifying of the 7th race of the 2021 season:
   >>> session.name
   'Qualifying'
   >>> session.date
-  Timestamp('2021-06-19 00:00:00')
+  Timestamp('2021-06-19 13:00:00')
 
 
 Now, which race weekend are we actually looking at here?
@@ -46,17 +46,22 @@ session object.
   EventName                                       French Grand Prix
   EventFormat                                          conventional
   Session1                                               Practice 1
-  Session1Date                                  2021-06-18 00:00:00
+  Session1Date                            2021-06-18 11:30:00+02:00
+  Session1DateUTC                               2021-06-18 09:30:00
   Session2                                               Practice 2
-  Session2Date                                  2021-06-18 00:00:00
+  Session2Date                            2021-06-18 15:00:00+02:00
+  Session2DateUTC                               2021-06-18 13:00:00
   Session3                                               Practice 3
-  Session3Date                                  2021-06-19 00:00:00
+  Session3Date                            2021-06-19 12:00:00+02:00
+  Session3DateUTC                               2021-06-19 10:00:00
   Session4                                               Qualifying
-  Session4Date                                  2021-06-19 00:00:00
+  Session4Date                            2021-06-19 15:00:00+02:00
+  Session4DateUTC                               2021-06-19 13:00:00
   Session5                                                     Race
-  Session5Date                                  2021-06-20 00:00:00
+  Session5Date                            2021-06-20 15:00:00+02:00
+  Session5DateUTC                               2021-06-20 13:00:00
   F1ApiSupport                                                 True
-  Name: 7, dtype: object
+  Name: 6, dtype: object
 
 The :class:`~fastf1.events.Event` object is a subclass of a
 :class:`pandas.Series`. The individual values can therefore be accessed as it
@@ -85,17 +90,22 @@ provides methods for accessing the individual associated sessions.
   EventName                                       French Grand Prix
   EventFormat                                          conventional
   Session1                                               Practice 1
-  Session1Date                                  2021-06-18 00:00:00
+  Session1Date                            2021-06-18 11:30:00+02:00
+  Session1DateUTC                               2021-06-18 09:30:00
   Session2                                               Practice 2
-  Session2Date                                  2021-06-18 00:00:00
+  Session2Date                            2021-06-18 15:00:00+02:00
+  Session2DateUTC                               2021-06-18 13:00:00
   Session3                                               Practice 3
-  Session3Date                                  2021-06-19 00:00:00
+  Session3Date                            2021-06-19 12:00:00+02:00
+  Session3DateUTC                               2021-06-19 10:00:00
   Session4                                               Qualifying
-  Session4Date                                  2021-06-19 00:00:00
+  Session4Date                            2021-06-19 15:00:00+02:00
+  Session4DateUTC                               2021-06-19 13:00:00
   Session5                                                     Race
-  Session5Date                                  2021-06-20 00:00:00
+  Session5Date                            2021-06-20 15:00:00+02:00
+  Session5DateUTC                               2021-06-20 13:00:00
   F1ApiSupport                                                 True
-  Name: 7, dtype: object
+  Name: 6, dtype: object
   >>> session = event.get_race()
   >>> session.name
   'Race'
@@ -154,38 +164,39 @@ is a subclass of a :class:`pandas.DataFrame`.
 
   >>> schedule = fastf1.get_event_schedule(2021)
   >>> schedule
-      RoundNumber       Country      Location  ... Session5 Session5Date F1ApiSupport
-  0             0       Bahrain        Sakhir  ...     None          NaT         True
-  1             1       Bahrain        Sakhir  ...     Race   2021-03-28         True
-  2             2         Italy         Imola  ...     Race   2021-04-18         True
-  3             3      Portugal      Portimão  ...     Race   2021-05-02         True
-  4             4         Spain      Montmeló  ...     Race   2021-05-09         True
-  5             5        Monaco   Monte-Carlo  ...     Race   2021-05-23         True
-  6             6    Azerbaijan          Baku  ...     Race   2021-06-06         True
-  7             7        France  Le Castellet  ...     Race   2021-06-20         True
-  8             8       Austria     Spielberg  ...     Race   2021-06-27         True
-  9             9       Austria     Spielberg  ...     Race   2021-07-04         True
-  10           10            UK   Silverstone  ...     Race   2021-07-18         True
-  11           11       Hungary      Budapest  ...     Race   2021-08-01         True
-  12           12       Belgium           Spa  ...     Race   2021-08-29         True
-  13           13   Netherlands     Zandvoort  ...     Race   2021-09-05         True
-  14           14         Italy         Monza  ...     Race   2021-09-12         True
-  15           15        Russia         Sochi  ...     Race   2021-09-26         True
-  16           16        Turkey      Istanbul  ...     Race   2021-10-10         True
-  17           17           USA        Austin  ...     Race   2021-10-24         True
-  18           18        Mexico   Mexico City  ...     Race   2021-11-07         True
-  19           19        Brazil     São Paulo  ...     Race   2021-11-14         True
-  20           20         Qatar     Al Daayen  ...     Race   2021-11-21         True
-  21           21  Saudi Arabia        Jeddah  ...     Race   2021-12-05         True
-  22           22           UAE     Abu Dhabi  ...     Race   2021-12-12         True
+      RoundNumber               Country  ...     Session5DateUTC F1ApiSupport
+  0             1               Bahrain  ... 2021-03-28 15:00:00         True
+  1             2                 Italy  ... 2021-04-18 13:00:00         True
+  2             3              Portugal  ... 2021-05-02 14:00:00         True
+  3             4                 Spain  ... 2021-05-09 13:00:00         True
+  4             5                Monaco  ... 2021-05-23 13:00:00         True
+  5             6            Azerbaijan  ... 2021-06-06 12:00:00         True
+  6             7                France  ... 2021-06-20 13:00:00         True
+  7             8               Austria  ... 2021-06-27 13:00:00         True
+  8             9               Austria  ... 2021-07-04 13:00:00         True
+  9            10         Great Britain  ... 2021-07-18 14:00:00         True
+  10           11               Hungary  ... 2021-08-01 13:00:00         True
+  11           12               Belgium  ... 2021-08-29 13:00:00         True
+  12           13           Netherlands  ... 2021-09-05 13:00:00         True
+  13           14                 Italy  ... 2021-09-12 13:00:00         True
+  14           15                Russia  ... 2021-09-26 12:00:00         True
+  15           16                Turkey  ... 2021-10-10 12:00:00         True
+  16           17         United States  ... 2021-10-24 19:00:00         True
+  17           18                Mexico  ... 2021-11-07 19:00:00         True
+  18           19                Brazil  ... 2021-11-14 17:00:00         True
+  19           20                 Qatar  ... 2021-11-21 14:00:00         True
+  20           21          Saudi Arabia  ... 2021-12-05 17:30:00         True
+  21           22  United Arab Emirates  ... 2021-12-12 13:00:00         True
   <BLANKLINE>
-  [23 rows x 18 columns]
+  [22 rows x 23 columns]
   >>> schedule.columns  # doctest: +NORMALIZE_WHITESPACE
   Index(['RoundNumber', 'Country', 'Location', 'OfficialEventName', 'EventDate',
-       'EventName', 'EventFormat', 'Session1', 'Session1Date', 'Session2',
-       'Session2Date', 'Session3', 'Session3Date', 'Session4', 'Session4Date',
-       'Session5', 'Session5Date', 'F1ApiSupport'],
-      dtype='object')
+         'EventName', 'EventFormat', 'Session1', 'Session1Date',
+         'Session1DateUTC', 'Session2', 'Session2Date', 'Session2DateUTC',
+         'Session3', 'Session3Date', 'Session3DateUTC', 'Session4',
+         'Session4Date', 'Session4DateUTC', 'Session5', 'Session5Date',
+         'Session5DateUTC', 'F1ApiSupport'],
+        dtype='object')
 
 The event schedule provides methods for selecting specific events:
 
@@ -194,7 +205,7 @@ The event schedule provides methods for selecting specific events:
   'Belgium'
   >>> gp_austin = schedule.get_event_by_name('Austin')
   >>> gp_austin['Country']
-  'USA'
+  'United States'
 
 
 Displaying driver info and session results

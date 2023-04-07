@@ -22,12 +22,12 @@ def test_get_session(gp, identifier):
 )
 def test_get_testing_session(test_n, session_n, pass_1, pass_2):
     if pass_1 and pass_2:
-        session = fastf1.get_testing_session(2021, test_n, session_n)
+        session = fastf1.get_testing_session(2022, test_n, session_n)
         assert isinstance(session, fastf1.core.Session)
         assert session.name == f"Practice {session_n}"
     else:
         with pytest.raises(ValueError):
-            fastf1.get_testing_session(2021, test_n, session_n)
+            fastf1.get_testing_session(2022, test_n, session_n)
 
 
 @pytest.mark.parametrize("dt", [datetime.datetime(year=2022, month=6, day=1)])
@@ -46,7 +46,7 @@ def test_events_remaining_after_season(dt):
 @pytest.mark.parametrize("dt", [datetime.datetime(year=2022, month=1, day=1)])
 def test_events_remaining_before_season(dt):
     events = fastf1.get_events_remaining(dt)
-    assert len(events) == 24
+    assert len(events) == 23
 
 
 @pytest.mark.parametrize("gp", ['Bahrain', 'Bharain', 'Sakhir', 1])
@@ -63,9 +63,9 @@ def test_get_event_round_zero():
 def test_get_testing_event():
     # 0 is not a valid number for a testing event
     with pytest.raises(ValueError):
-        fastf1.get_testing_event(2021, 0)
+        fastf1.get_testing_event(2022, 0)
 
-    session = fastf1.get_testing_event(2021, 1)
+    session = fastf1.get_testing_event(2022, 1)
     assert isinstance(session, fastf1.events.Event)
 
     # only one testing event in 2021
@@ -75,10 +75,12 @@ def test_get_testing_event():
 
 def test_event_schedule_partial_data_init():
     schedule = fastf1.events.EventSchedule(
-        {'EventName': ['A', 'B', 'C'], 'Session1Date': [None, None, None]}
+        {'EventName': ['A', 'B', 'C'], 'Session1Date': [None, None, None],
+         'Session1DateUTC': [None, None, None]}
     )
     assert schedule.dtypes['EventName'] == 'object'
-    assert schedule.dtypes['Session1Date'] == '<M8[ns]'
+    assert schedule.dtypes['Session1Date'] == 'object'
+    assert schedule.dtypes['Session1DateUTC'] == '<M8[ns]'
 
 
 def test_event_schedule_constructor_sliced():
@@ -128,8 +130,8 @@ def test_event_schedule_get_by_name():
 
 
 def test_event_is_testing():
-    assert fastf1.get_testing_event(2021, 1).is_testing()
-    assert not fastf1.get_event(2021, 1).is_testing()
+    assert fastf1.get_testing_event(2022, 1).is_testing()
+    assert not fastf1.get_event(2022, 1).is_testing()
 
 
 def test_event_get_session_name():
@@ -156,7 +158,12 @@ def test_event_get_session_name():
 
 def test_event_get_session_date():
     event = fastf1.get_event(2021, 1)
-    sd = event.get_session_date('Q')
+
+    sd = event.get_session_date('Q', utc=True)
+    assert sd == event.Session4DateUTC
+    assert isinstance(sd, pd.Timestamp)
+
+    sd = event.get_session_date('Q', utc=False)
     assert sd == event.Session4Date
     assert isinstance(sd, pd.Timestamp)
 

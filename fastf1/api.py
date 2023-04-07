@@ -68,7 +68,8 @@ pages: Dict[str, str] = {
     'content_streams': 'ContentStreams.jsonStream',  # Lap by lap feeds
     'timing_data': 'TimingData.jsonStream',  # Gap to car ahead
     'lap_count': 'LapCount.jsonStream',  # Lap counter
-    'championship_prediction': 'ChampionshipPrediction.jsonStream'  # Points
+    'championship_prediction': 'ChampionshipPrediction.jsonStream',  # Points
+    'index': 'Index.json'
 }
 """Known API requests"""
 
@@ -1348,6 +1349,20 @@ def weather_data(path, response=None, livedata=None):
                 data[key].append(conv(0))
 
     return data
+
+
+@Cache.api_request_wrapper
+def season_schedule(path, response=None):
+    if response is None:
+        _logger.info("Fetching season schedule...")
+        response = fetch_page(path, 'index')
+        if response is None:  # no response received
+            raise SessionNotAvailableError(
+                "No data for this session! If this session only finished "
+                "recently, please try again in a few minutes."
+            )
+
+    return response['Meetings']
 
 
 def fetch_page(path, name):

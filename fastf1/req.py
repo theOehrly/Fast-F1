@@ -333,7 +333,7 @@ class Cache:
         """
 
         @functools.wraps(func)
-        def _cached_api_request(api_path, response=None, livedata=None):
+        def _cached_api_request(api_path, **func_kwargs):
             if cls._CACHE_DIR and not cls._tmp_disabled:
                 # caching is enabled
                 func_name = str(func.__name__)
@@ -357,9 +357,7 @@ class Cache:
                     else:
                         # cached data needs to be downloaded again and updated
                         _logger.info(f"Updating cache for {func_name}...")
-                        data = func(
-                            api_path, response=response, livedata=livedata
-                        )
+                        data = func(api_path, **func_kwargs)
 
                         if data is not None:
                             cls._write_cache(data, cache_file_path)
@@ -378,9 +376,7 @@ class Cache:
                 else:  # cached data does not yet exist for this api request
                     _logger.info(f"No cached data found for {func_name}. "
                                  f"Loading data...")
-                    data = func(
-                        api_path, response=response, livedata=livedata
-                    )
+                    data = func(api_path, **func_kwargs)
                     if data is not None:
                         cls._write_cache(data, cache_file_path)
                         _logger.info("Data has been written to cache!")
@@ -392,7 +388,7 @@ class Cache:
             else:  # cache was not enabled
                 if not cls._tmp_disabled:
                     cls._enable_default_cache()
-                return func(api_path, response=response, livedata=livedata)
+                return func(api_path, **func_kwargs)
 
         return _cached_api_request
 

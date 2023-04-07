@@ -22,6 +22,19 @@ New Features
 - Added method :func:`fastf1.core.Laps.split_qualifying_sessions` to split
   laps for a qualifying session into Q1, Q2 and Q3.
 
+- Event schedule data will now be loaded from the F1 data API. This is the new
+  primary schedule backend. Ergast is still used as a fallback and for seasons
+  before 2018 that are not supported by the F1 API (#260).
+
+  ``Session*Date`` is now a timezone aware timestamp for the session start time
+  as local time (was not timezone aware previously). ``Session*DateUTC`` was
+  added and provides a non-timezone-aware UTC timestamp for the session start
+  time. Timezone aware local timestamps are only available when the primary
+  schedule backend is used.
+
+  Testing sessions that are not supported by the F1 API will no longer be
+  included in the event schedule.
+
 
 Bug Fixes
 ---------
@@ -48,6 +61,9 @@ Backwards Incompatible API Changes
 - :func:`fastf1.utils.to_datetime` and :func:`fastf1.utils.to_timedelta` will
   now return ``None`` instead of raising an exception when a string cannot
   be parsed.
+
+- Testing sessions that are not supported by the F1 API will no longer be
+  included in the event schedule.
 
 
 Removals

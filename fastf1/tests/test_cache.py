@@ -32,32 +32,23 @@ def _test_cache_used_and_clear(tmpdir):
         Cache.enable_cache(tmpdir, use_requests_cache=False)
 
         with open('fastf1/testing/reference_data/'
-                  'schedule_2020.json', 'rb') as fobj:
+                  'Index2020.json', 'rb') as fobj:
             content = fobj.read()
-        mocker.get('https://raw.githubusercontent.com/theOehrly/'
-                   'f1schedule/master/schedule_2020.json',
+        mocker.get('https://livetiming.formula1.com/static/2020/Index.json',
                    content=content, status_code=200)
 
         # create mock repsonses for general api requests
         with open('fastf1/testing/reference_data/2020_05_FP2/'
                   'ergast_race.raw', 'rb') as fobj:
             content = fobj.read()
-        mocker.get('http://ergast.com/api/f1/2020/5.json',
+        mocker.get('https://ergast.com/api/f1/2020/5.json',
                    content=content, status_code=200)
 
         with open('fastf1/testing/reference_data/2020_05_FP2/'
                   'ergast_race_result.raw', 'rb') as fobj:
             content = fobj.read()
-        mocker.get('http://ergast.com/api/f1/2020/5/results.json',
+        mocker.get('https://ergast.com/api/f1/2020/5/results.json',
                    content=content, status_code=200)
-
-        with open('fastf1/testing/reference_data/2020_05_FP2/'
-                  'map_data.raw', 'rb') as fobj:
-            content = fobj.read()
-        mocker.post('https://www.mapcoordinates.net/admin/component/edit/'
-                    'Vpc_MapCoordinates_Advanced_GoogleMapCoords_Component/'
-                    'Component/json-get-elevation',
-                    content=content, status_code=200)
 
         # rainy and short session, good for fast test/quick loading
         session = fastf1.get_session(2020, 5, 'FP2')
