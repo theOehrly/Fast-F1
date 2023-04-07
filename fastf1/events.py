@@ -171,7 +171,7 @@ import pandas as pd
 import fastf1.api
 from fastf1.core import Session
 import fastf1.ergast
-from fastf1.logger import get_logger
+from fastf1.logger import get_logger, soft_exceptions
 from fastf1.utils import recursive_dict_get, to_datetime, to_timedelta
 
 
@@ -343,12 +343,15 @@ def get_event_schedule(
             or force_ergast):
         schedule = _get_schedule_from_ergast(year)
     else:
-        try:
-            schedule = _get_schedule(year)
-        except Exception as exc:
-            _logger.error(f"Failed to access primary schedule backend. "
-                          f"Falling back to Ergast! Reason: {exc})")
+        schedule = _get_schedule(year)
+
+        if schedule is None:  # try fallback
+            _logger.error("Falling back to Ergast API schedule backend. "
+                          "Data will be limited!")
             schedule = _get_schedule_from_ergast(year)
+
+        if schedule is None:  # raise Error if fallback failed as well
+            raise ValueError("Failed to load any schedule data.")
 
     if not include_testing:
         schedule = schedule[~schedule.is_testing()]
@@ -381,6 +384,9 @@ def get_events_remaining(
     return result
 
 
+@soft_exceptions("F1 API schedule",
+                 "Failed to load schedule from F1 API backend!",
+                 _logger)
 def _get_schedule(year):
     # create an event schedule using data from the F1 API
     response = fastf1.api.season_schedule(f'/static/{year}/')
@@ -436,6 +442,9 @@ def _get_schedule(year):
     return schedule
 
 
+@soft_exceptions("Ergast API Schedule",
+                 "Failed to load schedule from Ergast API backend!",
+                 _logger)
 def _get_schedule_from_ergast(year) -> "EventSchedule":
     # create an event schedule using data from the ergast database
     season = fastf1.ergast.fetch_season(year)

@@ -1239,7 +1239,7 @@ class Session:
         _logger.info(f"Finished loading data for {len(self.drivers)} "
                      f"drivers: {self.drivers}")
 
-    @soft_exceptions("lap timing data", _logger)
+    @soft_exceptions("lap timing data", "Failed to load timing data!", _logger)
     def _load_laps_data(self, livedata=None):
         data, _ = api.timing_data(self.api_path, livedata=livedata)
         app_data = api.timing_app_data(self.api_path, livedata=livedata)
@@ -1587,7 +1587,8 @@ class Session:
                 lambda curr: applicator(status, curr)
             )
 
-    @soft_exceptions("track status data", _logger)
+    @soft_exceptions("track status data", "Failed to load track status data!",
+                     _logger)
     def _load_track_status_data(self, livedata=None):
         track_status = api.track_status_data(self.api_path, livedata=livedata)
         self._track_status = pd.DataFrame(track_status)
@@ -1595,7 +1596,8 @@ class Session:
             _logger.warning("Could not load any valid session status "
                             "information!")
 
-    @soft_exceptions("total lap count", _logger)
+    @soft_exceptions("total lap count", "Failed to load total lap count!",
+                     _logger)
     def _load_total_lap_count(self, livedata=None):
         # Get the number of originally scheduled laps
         # Lap count data only exists for race-like sessions.
@@ -1611,7 +1613,8 @@ class Session:
         else:
             self._total_laps = None
 
-    @soft_exceptions("session status data", _logger)
+    @soft_exceptions("session status data",
+                     "Failed to load session status data!", _logger)
     def _load_session_status_data(self, livedata=None):
         # check when a session was started; for a race this indicates the
         # start of the race
@@ -1719,7 +1722,7 @@ class Session:
                     f"Driver {drv: >2}: Lap timing integrity check "
                     f"failed for {integrity_errors} lap(s)")
 
-    @soft_exceptions("driver results", _logger)
+    @soft_exceptions("results", "Failed to load results data!", _logger)
     def _load_drivers_results(self, *, livedata=None):
         # get list of drivers
         driver_info = None
@@ -1862,20 +1865,22 @@ class Session:
 
         return d
 
-    @soft_exceptions("weather data", _logger)
+    @soft_exceptions("weather data", "Failed to load weather data!", _logger)
     def _load_weather_data(self, livedata=None):
         weather_data = api.weather_data(self.api_path, livedata=livedata)
         weather_df = pd.DataFrame(weather_data)
         self._weather_data = weather_df
 
-    @soft_exceptions("race control messages", _logger)
+    @soft_exceptions("race control messages",
+                     "Failed to load race control messages!", _logger)
     def _load_race_control_messages(self, livedata=None):
         race_control_messages = api.race_control_messages(self.api_path,
                                                           livedata=livedata)
         race_control_df = pd.DataFrame(race_control_messages)
         self._race_control_messages = race_control_df
 
-    @soft_exceptions("telemetry data", _logger)
+    @soft_exceptions("telemetry data", "Failed to load telemetry data!",
+                     _logger)
     def _load_telemetry(self, livedata=None):
         """Load telemetry data from the API.
 

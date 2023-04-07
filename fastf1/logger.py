@@ -122,7 +122,7 @@ def set_log_level(level: Union[str, int]):
     LoggingManager.set_level(level)
 
 
-def soft_exceptions(descr_name: str, logger: logging.Logger):
+def soft_exceptions(descr_name: str, msg: str, logger: logging.Logger):
     """Wrapper method for wrapping any function into catch-all error handling
     that can be disabled by setting :attr:`~fastf1.logger.LoggingManager.debug`
     to `True`.
@@ -130,6 +130,7 @@ def soft_exceptions(descr_name: str, logger: logging.Logger):
     Args:
         descr_name: descriptive name for the type of data that should have
             been loaded by the wrapped function
+        msg: Short message that is shown as error message to users
         logger: the logger that should be used to log errors
     """
     # This function is used to wrap individual data loading functions that are
@@ -148,7 +149,7 @@ def soft_exceptions(descr_name: str, logger: logging.Logger):
                 try:
                     return func(*args, **kwargs)
                 except Exception as exc:
-                    logger.warning(f"Failed to load {descr_name}!")
+                    logger.warning(msg)
                     logger.debug(f"Traceback for failure in {descr_name}",
                                  exc_info=exc)
             else:
