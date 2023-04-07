@@ -1,0 +1,64 @@
+
+v2.3.0
+------
+
+Bug Fixes:
+
+  - The matplotlib dependency version is now required to be >= 3.3.3 to prevent
+    incompatibility. (#210)
+
+  - Fixed: NaT values for 'Time' or 'LapStartTime' may cause a crash
+    in :func:`fastf1.core.Telemetry.calculate_driver_ahead` (#151)
+
+  - Fixed: Data for speed trap 'SpeedST' is added to the wrong lap.
+    This additionally caused empty laps to exist for some drivers at the
+    beginning of some sessions.
+
+  - Fixed: :func:`fastf1.core.Telemetry.add_driver_ahead` could not
+    be called on previously resampled telemetry data. (#178)
+
+  - Added: Better error handling for sessions that did not take place.
+
+  - Fixed: Tyre compound shown for some laps was incorrect in some special
+    cases. (#204)
+
+  - Fixed: Incorrect first and last name for Hulkenberg in fallback driver list
+    (by @niallmcevoy)
+
+  - Fixed: metadata for :class:`~fastf1.core.Telemetry` was not propagated
+    correctly in :func:`fastf1.core.Telemetry.merge_channels` and
+    :func:`fastf1.core.Telemetry.resample_channels`.
+
+  - Fixed: incorrect call of scipy method in
+    :func:`fastf1.legacy.inject_driver_ahead`
+
+  - Fixed: Error handling regression in :func:`fastf1.core.Session.load`
+
+  - Fixed: :exc:`~fastf1.core.DataNotLoadedError` not raised for `car_data` and
+    `pos_data`.
+
+
+New Features:
+
+  - Added: Function :func:`fastf1.get_events_remaining` (by @oscr)
+
+  - Added: Support for shorthand paths (e.g. '~/cache') in
+    :func:`fastf1.Cache.enable_cache` (by @oscr)
+
+
+Changes:
+
+  - The default base url scheme for Ergast is changed from http to https.
+
+
+Deprecations and Notices for Upcoming Changes:
+
+  - Deprecation: Undocumented function :func:`fastf1.ergast.fetch_weekend`
+    will be removed without a direct replacement in a future version
+    (target: v3.0.0).
+
+  - Change: :func:`fastf1.utils.to_timedelta` and
+    :func:`fastf1.utils.to_datetime` will return `NaT` instead of raising and
+    exception if a valued cannot be parsed in a future version
+    (target: v3.0.0).
+

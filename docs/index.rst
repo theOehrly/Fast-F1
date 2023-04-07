@@ -1,6 +1,6 @@
-====================
+####################
 FastF1 documentation
-====================
+####################
 
 For the passionate F1 nerds.
 
@@ -18,7 +18,7 @@ to get started.
   - `How I Analyze Formula 1 Data With Python: 2021 Italian GP (medium.com) <https://medium.com/@jaspervhat/how-i-analyze-formula-1-data-with-python-2021-italian-gp-dfb11db4b73>`_
 
 
-
+============
 Introduction
 ============
 
@@ -42,7 +42,7 @@ All data is downloaded from two sources:
 
 Have fun!
 
-
+============
 Installation
 ============
 
@@ -94,7 +94,7 @@ You can also install using `conda`:
    known_bugs
    troubleshooting
    contributing/index
-   changelog
+   changelog/index
 
 
 ==============
@@ -124,6 +124,7 @@ to functions and objects used to work with this data.
   See :class:`~fastf1.core.Telemetry`
 
 
+==================
 Indices and tables
 ==================
 
@@ -132,6 +133,7 @@ Indices and tables
 * :ref:`search`
 
 
+========================================================
 Questions, Contacting the Maintainer and Code of Conduct
 ========================================================
 

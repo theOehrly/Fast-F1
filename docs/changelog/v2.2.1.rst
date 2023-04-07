@@ -1,0 +1,19 @@
+
+v2.2.1
+------
+
+Changes:
+
+  - Log ergast error tracebacks on level DEBUG instead of WARNING to avoid
+    confusion when a failure was to be expected.
+
+Bug Fixes:
+
+  - Fixed: no session results for Verstappen (driver number 1 vs 33)
+    (by @vlesierse)
+  - Fixed: slicing telemetry by using multiple laps as a reference returns no
+    data if some laps have NaT values for 'Time' or 'LapStartTime'
+  - Fixed regression: Loading of livetiming no longer possible since v2.2.0 if
+    recording does not contain a driver list
+
+

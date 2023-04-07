@@ -1,0 +1,11 @@
+
+v2.1.13
+-------
+
+- fixed issue #74: don't assume that a further session status change
+  (e.g. ended, finalized) exists after the last lap
+- improved error handling if there exists no usable lap data for any
+  driver (#73, e.g. Imola 2021 FP1)
+- :func:`fastf1.core.get_session` should not quietly return
+  :class:`fastf1.core.Weekend` instead of :class:`fastf1.core.Session`
+  if an invalid event name is given.

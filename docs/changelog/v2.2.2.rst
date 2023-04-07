@@ -1,0 +1,19 @@
+
+v2.2.2
+------
+
+Changes:
+
+  - Implement support for reading information about a drivers personal best
+    lap from the api. :func:`~fastf1.core.Laps.pick_fastest` will now by
+    default return the quickest lap that is also marked as personal best lap
+    of any driver. This fixes the long standing problem that the fastest lap
+    returned by this function may actually be a deleted lap.
+
+
+Bug Fixes:
+
+  - Fixed: data for the 2022 Saudi Arabian Grand Prix can not be loaded (#135)
+  - Fixed: incorrect python version check in live timing client, that
+    prevented running on actually supported versions of python (#132)
+

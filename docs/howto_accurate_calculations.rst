@@ -1,3 +1,5 @@
+.. _howto_accurate_calculations:
+
 ======================================
 How to perform calculations accurately
 ======================================

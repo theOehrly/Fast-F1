@@ -73,6 +73,8 @@ The logging level for FastF1 can be easily customized::
 The available levels are (in order of increasing severity): DEBUG, INFO,
 WARNING, ERROR and CRITICAL.
 
+.. autofunction:: set_log_level
+
 For more information see :ref:`logging`.
 
 """

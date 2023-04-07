@@ -1,0 +1,12 @@
+
+v2.1.12
+-------
+
+- fix: crash in lap data parser if a driver did not do any proper laps in a
+  session
+- fix: crash in :func:`fastf1.core.Telemetry.calculate_driver_ahead` if a
+  driver did not participate in the session (by @bambz96)
+- enable automatic cache expiration for requests-cache (#57)
+- fix: requests cache not cleared if `force_renew=True` is used with
+  :func:`fastf1.api.Cache.enable_cache`
+

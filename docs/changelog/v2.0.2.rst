@@ -1,0 +1,44 @@
+v2.0.2: API code overhaul
+==========================
+This version integrates a major overhaul of the api code (:mod:`fastf1.api`)
+
+- Possibly breaking changes:
+
+  - Renamed dataframe column 'LastLapTime' to 'LapTime' for the dataframe returned by :func:`api.timing_data`
+    First, this makes more sense.
+    Second, this column is currently already renamed to 'LapTime' later and already accessible under this name
+    in the dataframe returned by :func:`core.Session.load_laps`. Therefore the renaming makes the column name
+    be consistend between api and core.
+
+    (This also applies to the dictionary returned by the private function :func:`api._laps_data_driver`),
+
+  - Data types in dataframes may have changed
+
+  - Some private functions (prefixed by '_') may have a different name, parameters and return value now
+
+- Changes:
+  - rewrote large parts of :mod:`fastf1.api` with a somewhat cleaner implementation
+
+    - more stability
+
+    - better/more correct PitIn/PitOut and general lap data in some sessions (was missing last lap sometimes but had
+      a first lap that didn't actually exist
+
+    - api.timing_data and thereby also session.load_laps will raise api.SessionNotAvailableError
+      if the api request returned no data. This usually happens if the session never took place because it was cancelled.
+
+    - Attempted to fix a bug where timing data from two sources can not be merged. This is caused by the received API
+      data going backwards in time by one lap. This causes data to be added to the wrong lap.
+      This problem was the reason for having patch files for some drivers/sessions. The patch files have now been
+      removed as they are no longer necessary.
+
+    - improved documentation a bit
+
+  - light cleanup and light documentation improvements of :mod:`fastf1.core`
+
+  - supressed python-levenshtein warning; it is really not necessary to have it installed for this module
+
+  - changed logging format for hopefully better readability
+
+  - tried to fix lap time axis again; hopefully this time I got it right
+

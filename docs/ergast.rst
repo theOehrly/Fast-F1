@@ -1,3 +1,5 @@
+.. _ergast:
+
 Ergast API Interface - :mod:`fastf1.ergast`
 ===========================================
 

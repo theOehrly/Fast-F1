@@ -1,0 +1,18 @@
+
+v2.2.6
+------
+
+Bug Fixes:
+
+  - Fixed incorrect lap start times for first lap after a red flag restart
+
+  - Fixed first lap missing if a driver crashed during the first lap of a
+    sprint race (#175)
+
+  - Fixed headshot url missing from result of :func:`fastf1.api.driver_info`
+    (by @bruzie in #173)
+
+New Features:
+
+  - Added a check detect and to remove incorrect lap times in the api parser
+    (#167)

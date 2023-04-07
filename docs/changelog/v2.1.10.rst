@@ -1,0 +1,8 @@
+
+v2.1.10
+-------
+
+ Ergast compatibility
+
+- introduce a custom user agent to identify FastF1 when requesting data from the Ergast API
+
