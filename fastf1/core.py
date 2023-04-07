@@ -1933,7 +1933,9 @@ class Session:
             self._car_data[drv] = drv_car
             self._pos_data[drv] = drv_pos
 
-        self._laps['LapStartDate'] = self._laps['LapStartTime'] + self.t0_date
+        if hasattr(self, '_laps'):
+            self._laps['LapStartDate'] \
+                = self._laps['LapStartTime'] + self.t0_date
 
     def get_driver(self, identifier) -> "DriverResult":
         """

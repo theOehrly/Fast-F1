@@ -755,8 +755,9 @@ def car_data(path, response=None, livedata=None):
                     data[driver]['Date'].append(date)
 
                     for n in channels:
-                        val = recursive_dict_get(entry, 'Cars', driver, 'Channels', n)
-                        if not val:
+                        try:
+                            val = entry['Cars'][driver]['Channels'][n]
+                        except (KeyError, IndexError):
                             val = 0
                         data[driver][channels[n]].append(int(val))
 
@@ -788,9 +789,8 @@ def car_data(path, response=None, livedata=None):
             # zero, except Time which is left as NaT and will be calculated
             # correctly based on Session.t0_date anyways when creating Telemetry
             # instances in Session.load_telemetry
-            index_df = pd.DataFrame(data={'Date': most_complete_ref})
             data[driver] = data[driver] \
-                .merge(index_df, how='outer') \
+                .merge(most_complete_ref, how='outer') \
                 .sort_values(by='Date') \
                 .reset_index(drop=True)
 
@@ -894,7 +894,10 @@ def position_data(path, response=None, livedata=None):
                     for coord in ['X', 'Y', 'Z']:
                         data[driver][coord].append(recursive_dict_get(sample, 'Entries', driver, coord))
 
-                    status = recursive_dict_get(sample, 'Entries', driver, 'Status')
+                    try:
+                        status = sample['Entries'][driver]['Status']
+                    except KeyError:
+                        status = None
                     if str(status).isdigit():
                         # Fallback on older api status mapping and convert
                         status = 'OffTrack' if int(status) else 'OnTrack'
@@ -928,9 +931,8 @@ def position_data(path, response=None, livedata=None):
             # correctly based on Session.t0_date anyways when creating Telemetry
             # instances in Session.load_telemetry
             # and except Status which should be 'OffTrack' for missing data
-            index_df = pd.DataFrame(data={'Date': most_complete_ref})
             data[driver] = data[driver] \
-                .merge(index_df, how='outer') \
+                .merge(most_complete_ref, how='outer') \
                 .sort_values(by='Date') \
                 .reset_index(drop=True)
             data[driver]['Status'].fillna(value='OffTrack', inplace=True)
