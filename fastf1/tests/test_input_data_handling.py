@@ -25,13 +25,15 @@ def _test_ergast_lookup_fail():
 
     def fail_load(*args, **kwargs):
         raise Exception
-    fastf1.ergast.fetch_results = fail_load  # force function call to fail
+
+    fastf1.ergast.Ergast._get = fail_load  # force function call to fail
 
     session = fastf1.get_session(2020, 3, 'FP2')  # rainy and short session, good for fast test/quick loading
     session.load(telemetry=False, weather=False)
 
-    assert "Failed to load data from Ergast API!" in log_handle.text  # the warning
-    assert "Finished loading data" in log_handle.text  # indicates success
+    # ensure that a warning is shown but overall data loading finishes
+    assert "Failed to load result data from Ergast!" in log_handle.text
+    assert "Finished loading data" in log_handle.text
 
 
 @pytest.mark.f1telapi

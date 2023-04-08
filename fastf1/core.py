@@ -52,7 +52,7 @@ import pandas as pd
 import fastf1
 from fastf1 import api, ergast
 from fastf1.logger import get_logger, soft_exceptions
-from fastf1.utils import recursive_dict_get, to_timedelta
+from fastf1.utils import to_timedelta
 
 _logger = get_logger(__name__)
 
@@ -998,8 +998,6 @@ class Session:
     """
 
     def __init__(self, event, session_name, f1_api_support=False):
-        # TODO: load drivers immediately
-        # TODO: load driver list for older seasons through ergast
         self.event = event
         """:class:`~fastf1.events.Event`: Reference to the associated event
         object."""
@@ -1016,6 +1014,8 @@ class Session:
             self.name, self.date.strftime('%Y-%m-%d')
         )
         """str: API base path for this session"""
+
+        self._ergast = ergast.Ergast()
 
         self._session_status: pd.DataFrame
         self._race_control_messages: pd.DataFrame
@@ -1737,10 +1737,11 @@ class Session:
                 driver_info = self._drivers_results_from_ergast(
                     load_drivers=True, load_results=True
                 )
-                self._results = SessionResults(
-                    driver_info, index=driver_info['DriverNumber'],
-                    force_default_cols=True
-                )
+                if driver_info is not None:
+                    self._results = SessionResults(
+                        driver_info, force_default_cols=True
+                    )
+                    self._results.index = driver_info['DriverNumber']
             else:
                 _logger.warning("Failed to load driver list and "
                                 "session results!")
@@ -1755,9 +1756,9 @@ class Session:
             else:
                 r = None
 
-            if r:
+            if r is not None:
                 # join driver info and session results
-                results = pd.DataFrame(r).set_index('DriverNumber')
+                results = r.set_index('DriverNumber')
                 self._results = SessionResults(
                     drivers.join(results, how='outer'), force_default_cols=True
                 )
@@ -1800,8 +1801,9 @@ class Session:
                     driver_info['FullName'].append(f"{first} {last}")
         return driver_info
 
-    def _drivers_results_from_ergast(self, *, load_drivers=False,
-                                     load_results=False):
+    def _drivers_results_from_ergast(
+            self, *, load_drivers=False, load_results=False
+    ) -> Optional[pd.DataFrame]:
         if self.name in ('Qualifying', 'Sprint Qualifying', 'Sprint', 'Race'):
             session_name = self.name
         else:
@@ -1810,58 +1812,69 @@ class Session:
             session_name = 'Race'
             load_results = False
 
-        d = collections.defaultdict(list)
-        try:
-            data = ergast.fetch_results(
-                self.event.year, self.event['RoundNumber'], session_name
-            )
-        except Exception as exc:
-            _logger.warning("Failed to load data from Ergast API! "
-                            "(This is expected for recent sessions)")
-            _logger.debug("Ergast failure traceback:", exc_info=exc)
-            return d
+        @soft_exceptions("ergast result data",
+                         "Failed to load result data from Ergast! (This is "
+                         "expected for recent sessions)",
+                         _logger)
+        def _get_data():
+            if session_name == 'Race':
+                return self._ergast.get_race_results(
+                    self.event.year, self.event.RoundNumber
+                ).content[0]
+            elif session_name == 'Qualifying':
+                return self._ergast.get_qualifying_results(
+                    self.event.year, self.event.RoundNumber
+                ).content[0]
+            else:
+                return self._ergast.get_sprint_results(
+                    self.event.year, self.event.RoundNumber
+                ).content[0]
 
-        time0 = None
-        for r in data:
-            d['DriverNumber'].append(r.get('number'))
-            if load_drivers:
-                d['Abbreviation'].append(
-                    recursive_dict_get(r, 'Driver', 'code',
-                                       default_none=True))
-                first_name = recursive_dict_get(r, 'Driver', 'givenName',
-                                                default_none=True)
-                last_name = recursive_dict_get(r, 'Driver', 'familyName',
-                                               default_none=True)
-                d['FirstName'].append(first_name)
-                d['LastName'].append(last_name)
-                d['FullName'].append(f"{first_name} {last_name}")
-                d['TeamName'].append(
-                    recursive_dict_get(r, 'Constructor', 'name',
-                                       default_none=True))
-            if load_results:
-                d['Position'].append(r.get('position'))
-                d['GridPosition'].append(r.get('grid'))
-                d['Q1'].append(to_timedelta(r.get('Q1')))
-                d['Q2'].append(to_timedelta(r.get('Q2')))
-                d['Q3'].append(to_timedelta(r.get('Q3')))
-                if time0 is None:
-                    ts = recursive_dict_get(r, 'Time', 'time',
-                                            default_none=True)
-                    if ts:
-                        time0 = to_timedelta(ts)
-                    else:
-                        time0 = pd.NaT
-                    d['Time'].append(time0)
-                else:
-                    ts = recursive_dict_get(r, 'Time', 'time',
-                                            default_none=True)
-                    if ts:
-                        dt = to_timedelta(ts)
-                    else:
-                        dt = pd.NaT
-                    d['Time'].append(time0 + dt)
-                d['Status'].append(r.get('status'))
-                d['Points'].append(r.get('points'))
+        data = _get_data()
+
+        if data is None:
+            return None
+
+        rename_return = {
+            'number': 'DriverNumber',
+            'driverId': 'DriverId',
+            'constructorId': 'TeamId'
+        }
+
+        if load_drivers:
+            rename_return.update({
+                'driverCode': 'Abbreviation',
+                'givenName': 'FirstName',
+                'familyName': 'LastName',
+                'constructorName': 'TeamName',
+            })
+
+        if load_results:
+            rename_return.update({
+                'position': 'Position',
+            })
+
+            if session_name in ('Sprint Qualifying', 'Sprint', 'Race'):
+                rename_return.update({
+                    'grid': 'GridPosition',
+                    'status': 'Status',
+                    'points': 'Points',
+                    'totalRaceTime': 'Time'
+                })
+
+            if session_name == 'Qualifying':
+                rename_return.update({
+                    'Q1': 'Q1',
+                    'Q2': 'Q2',
+                    'Q3': 'Q3',
+                })
+
+        d = data.loc[:, list(rename_return.keys())] \
+            .rename(columns=rename_return) \
+            .astype({'DriverNumber': 'str'})
+
+        if load_drivers:
+            d['FullName'] = d['FirstName'] + " " + d['LastName']
 
         return d
 
@@ -2824,11 +2837,17 @@ class SessionResults(pd.DataFrame):
         - ``Abbreviation`` | :class:`str` |
           The drivers three letter abbreviation (e.g. "GAS")
 
+        - ``DriverId`` | :class:`str` |
+          ``driverId`` that is used by the Ergast API
+
         - ``TeamName`` | :class:`str` |
           The team name (short version without title sponsors)
 
         - ``TeamColor`` | :class:`str` |
           The color commonly associated with this team (hex value)
+
+        - ``TeamId`` | :class:`str` |
+          ``constructorId`` that is used by the Ergast API
 
         - ``FirstName`` | :class:`str` |
           The drivers first name
@@ -2898,8 +2917,10 @@ class SessionResults(pd.DataFrame):
         'DriverNumber': str,
         'BroadcastName': str,
         'Abbreviation': str,
+        'DriverId': str,
         'TeamName': str,
         'TeamColor': str,
+        'TeamId': str,
         'FirstName': str,
         'LastName': str,
         'FullName': str,
