@@ -134,6 +134,10 @@ Bug Fixes
 
 - Documentation improvements. (by @lmontrieux)
 
+- Fixed a bug where specific temporary error responses from Ergast where
+  cached. This then required the cache to be cleared so that the specific
+  API request would work again.
+
 
 Backwards Incompatible API Changes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

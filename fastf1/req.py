@@ -276,6 +276,17 @@ class Cache:
             return cls._requests_session.post(*args, **kwargs)
         return cls._requests_session_cached.post(*args, **kwargs)
 
+    @staticmethod
+    def _custom_cache_filter(response: requests.Response):
+        # this function provides custom filtering to decide which responses
+        # get cached
+
+        # workaround for Ergast returning error with status code 200
+        if 'Unable to select database' in response.text:
+            return False
+
+        return True
+
     @classmethod
     def clear_cache(cls, cache_dir=None, deep=False):
         """Clear all cached data.
