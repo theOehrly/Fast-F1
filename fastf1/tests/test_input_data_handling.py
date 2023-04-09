@@ -18,6 +18,11 @@ def test_ergast_lookup_fail():
 
 
 def _test_ergast_lookup_fail():
+    from fastf1.logger import LoggingManager
+    LoggingManager.debug = False
+    # special, relevant on Linux only.
+    # debug=True does not propagate to subprocess on windows
+
     fastf1.Cache.enable_cache('test_cache')
     log_handle = fastf1.testing.capture_log()
 
@@ -28,7 +33,8 @@ def _test_ergast_lookup_fail():
 
     fastf1.ergast.Ergast._get = fail_load  # force function call to fail
 
-    session = fastf1.get_session(2020, 3, 'FP2')  # rainy and short session, good for fast test/quick loading
+    # rainy and short session, good for fast test/quick loading
+    session = fastf1.get_session(2020, 3, 'FP2')
     session.load(telemetry=False, weather=False)
 
     # ensure that a warning is shown but overall data loading finishes
