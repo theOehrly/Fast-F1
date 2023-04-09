@@ -1215,6 +1215,7 @@ class Session:
                 self._load_total_lap_count(livedata=livedata)
                 self._load_track_status_data(livedata=livedata)
                 self._load_laps_data(livedata=livedata)
+                self._add_first_lap_time_from_ergast()
 
             if telemetry:
                 self._load_telemetry(livedata=livedata)
@@ -1254,7 +1255,6 @@ class Session:
 
         drivers = self.drivers
         if not drivers:
-            # TODO: refactor into a separate method once ergast is implemented
             # no driver list, generate from lap data
             drivers = set(data['Driver'].unique()) \
                 .intersection(set(useful['Driver'].unique()))
@@ -1586,6 +1586,54 @@ class Session:
             laps.loc[sel, 'TrackStatus'] = laps.loc[sel, 'TrackStatus'].apply(
                 lambda curr: applicator(status, curr)
             )
+
+    @soft_exceptions("first lap time",
+                     "Failed to add first lap time from Ergast!",
+                     _logger)
+    def _add_first_lap_time_from_ergast(self):
+        # The f1 api does not provide a value for the first lap time.
+        # For races, lap times are also available on Ergast -> add the
+        # first lap time from there
+
+        if not self.name == 'Race':
+            return
+
+        # load lap times for first lap from Ergast and add driver number
+        # based on driver id from results
+        response = self._ergast.get_lap_times(
+            self.event.year, self.event.RoundNumber, lap_number=1
+        )
+        if response.description.empty:
+            _logger.warning("Cannot load lap times for first lap from Ergast. "
+                            "Timing data is not available for this session.")
+            return  # no data returned
+
+        first_lap_times = response.content[0].set_index('driverId')
+
+        drv_num_ref = self.results \
+                          .loc[:, ('DriverNumber', 'DriverId')] \
+                          .set_index('DriverId')
+        first_lap_times = first_lap_times.join(drv_num_ref)
+
+        # set the first lap time for each driver individually
+        # (.merge, .update, ... not easily usable because not shared index)
+        failed_drvs = list()
+        for _, row in first_lap_times.iterrows():
+            drv = row['DriverNumber']
+            try:
+                self._laps.loc[
+                    (self._laps['LapNumber'] == 1)
+                    & (self._laps['DriverNumber'] == drv),
+                    'LapTime'
+                ] = row['time']
+            except Exception as exc:
+                _logger.debug(f"Failed to add first lap time for "
+                              f"driver '{drv}'", exc_info=exc)
+                failed_drvs.append(drv)
+
+        if failed_drvs:
+            _logger.warning(f"Failed to add first lap time from Ergast for "
+                            f"drivers: {failed_drvs}")
 
     @soft_exceptions("track status data", "Failed to load track status data!",
                      _logger)

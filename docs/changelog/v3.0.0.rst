@@ -96,6 +96,9 @@ New Features
   is available. Offline mode can be enabled using
   :func:`fastf1.Cache.offline_mode`.
 
+- For race sessions, the previously missing first lap time is now automatically
+  added from Ergast (#293).
+
 
 Bug Fixes
 ^^^^^^^^^

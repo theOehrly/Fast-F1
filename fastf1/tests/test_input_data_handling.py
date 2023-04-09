@@ -130,3 +130,11 @@ def test_partial_lap_retired_added():
     session.load()
 
     assert session.laps.pick_driver('11').iloc[-1]['FastF1Generated']
+
+
+@pytest.mark.f1telapi
+def test_first_lap_time_added_from_ergast_in_race():
+    session = fastf1.get_session(2022, 1, 'R')
+    session.load(telemetry=False)
+
+    assert not pd.isna(session.laps.pick_lap(1)['LapTime']).any()
