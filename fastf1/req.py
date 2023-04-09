@@ -29,6 +29,7 @@ import re
 import pickle
 import sys
 import time
+from typing import Optional
 
 import requests
 from requests_cache import CacheMixin
@@ -200,8 +201,8 @@ class Cache:
     _IGNORE_VERSION = False
     _FORCE_RENEW = False
 
-    _requests_session_cached = None
-    _requests_session = _SessionWithRateLimiting()
+    _requests_session_cached: Optional[_CachedSessionWithRateLimiting] = None
+    _requests_session: requests.Session = _SessionWithRateLimiting()
     _default_cache_enabled = False  # flag to ensure that warning about disabled cache is logged once only # noqa: E501
     _tmp_disabled = False
 
@@ -528,6 +529,18 @@ class Cache:
             This function is not multithreading-safe
         """
         cls._tmp_disabled = False
+
+    @classmethod
+    def offline_mode(cls, enabled: bool):
+        """Enable or disable offline mode.
+
+        In this mode, no actual requests will be sent and only cached data is
+        returned. This can be useful for freezing the state of the cache or
+        working with an unstable internet connection.
+        """
+        if cls._requests_session_cached is None:
+            cls._enable_default_cache()
+        cls._requests_session_cached.settings.only_if_cached = enabled
 
     @classmethod
     def _convert_size(cls, size_bytes):  # https://stackoverflow.com/questions/5194057/better-way-to-convert-file-sizes-in-python # noqa: E501

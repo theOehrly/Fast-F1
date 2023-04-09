@@ -91,6 +91,11 @@ New Features
 - Tyre compound colors are now available through
   :attr:`fastf1.plotting.COMPOUND_COLORS`. (by @Caspar-Guo)
 
+- The cache now supports "offline mode" where only cached responses are
+  returned and now actual requests are sent even if an internet connection
+  is available. Offline mode can be enabled using
+  :func:`fastf1.Cache.offline_mode`.
+
 
 Bug Fixes
 ^^^^^^^^^
