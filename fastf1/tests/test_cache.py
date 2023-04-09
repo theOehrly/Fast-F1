@@ -22,7 +22,10 @@ def _test_cache_used_and_clear(tmpdir):
     # other tests can depend on fastf1's internal cache (which is tested here)
     # for offline running, after they've had one online run
     import fastf1
+    from fastf1.logger import LoggingManager
     import requests_mock
+
+    LoggingManager.debug = True
 
     with requests_mock.Mocker() as mocker:
         # create a custom requests session here so that requests_mock is
@@ -56,9 +59,10 @@ def _test_cache_used_and_clear(tmpdir):
         # create mock responses for f1 api requests
         req_pages = ['timing_data', 'timing_app_data', 'track_status',
                      'session_status', 'car_data', 'position',
-                     'weather_data', 'driver_list']
+                     'weather_data', 'driver_list', 'race_control_messages']
         for p in req_pages:
-            with open(f'fastf1/testing/reference_data/2020_05_FP2/{p}.raw', 'rb') as fobj:
+            with open(f'fastf1/testing/reference_data/'
+                      f'2020_05_FP2/{p}.raw', 'rb') as fobj:
                 lines = fobj.readlines()
 
             # ensure correct newline character (as expected by api parser)
@@ -82,7 +86,8 @@ def _test_cache_used_and_clear(tmpdir):
                              'session_status_data.ff1pkl',
                              'timing_app_data.ff1pkl', 'timing_data.ff1pkl',
                              'track_status_data.ff1pkl',
-                             'weather_data.ff1pkl']
+                             'weather_data.ff1pkl',
+                             'race_control_messages.ff1pkl']
         # test both ways round
         assert all(elem in expected_dir_list for elem in dir_list)
         assert all(elem in dir_list for elem in expected_dir_list)

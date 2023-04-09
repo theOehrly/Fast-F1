@@ -34,7 +34,9 @@ def pytest_configure(config):
 
 def pytest_sessionstart(session):
     import fastf1
+    from fastf1.logger import LoggingManager
     fastf1.Cache.enable_cache('test_cache')
+    LoggingManager.debug = True
 
 
 def pytest_collection_modifyitems(config, items):
