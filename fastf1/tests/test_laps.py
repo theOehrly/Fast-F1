@@ -164,3 +164,15 @@ def test_lap_get_weather_data(reference_laps_data):
     lap['LapStartTime'] = lap['Time'] - datetime.timedelta(seconds=30)
     wd_last = lap.get_weather_data()
     pd.testing.assert_series_equal(wd_last, session.weather_data.iloc[-1])
+
+
+@pytest.mark.f1telapi
+def test_split_quali_laps():
+    session = fastf1.get_session(2023, 2, 'Q')
+    session.load(telemetry=False, weather=False)
+
+    q1, q2, q3 = session.laps.split_qualifying_sessions()
+
+    assert len(q1['DriverNumber'].unique()) == 20
+    assert len(q2['DriverNumber'].unique()) == 15
+    assert len(q3['DriverNumber'].unique()) == 10

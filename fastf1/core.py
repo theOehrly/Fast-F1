@@ -2672,8 +2672,8 @@ class Laps(pd.DataFrame):
 
         laps = [None, None, None]
         for i in range(len(split_times) - 1):
-            laps.append(self[(self['Time'] > split_times[i])
-                             & (self['Time'] < split_times[i+1])])
+            laps[i] = self[(self['Time'] > split_times[i])
+                           & (self['Time'] < split_times[i + 1])]
         return laps
 
     def iterlaps(self, require: Optional[Iterable] = None) \
