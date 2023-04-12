@@ -74,4 +74,6 @@ fig.update_layout(plot_bgcolor='rgba(0,0,0,0)')   # White background
 fig.update_layout(coloraxis_showscale=False)      # Remove legend
 fig.update_layout(xaxis=dict(side='top'))         # x-axis on top
 fig.show()
-pio.write_html(fig, file='examples/results_tracker.html', auto_open=False)
+with open('examples/results_tracker.html', 'w') as f:
+    f.write(fig.to_html(full_html=False, include_plotlyjs='cdn'))
+f.close()
