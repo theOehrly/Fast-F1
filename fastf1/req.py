@@ -205,6 +205,7 @@ class Cache:
     _requests_session: requests.Session = _SessionWithRateLimiting()
     _default_cache_enabled = False  # flag to ensure that warning about disabled cache is logged once only # noqa: E501
     _tmp_disabled = False
+    _ci_mode = False
 
     @classmethod
     def enable_cache(
@@ -261,6 +262,15 @@ class Cache:
         cls._enable_default_cache()
         if (cls._requests_session_cached is None) or cls._tmp_disabled:
             return cls._requests_session.get(*args, **kwargs)
+
+        if cls._ci_mode:
+            # try to return a cached response first
+            resp = cls._requests_session_cached.get(
+                *args, only_if_cached=True, **kwargs)
+            # 504 indicates that no cached response was found
+            if resp.status_code != 504:
+                return resp
+
         return cls._requests_session_cached.get(*args, **kwargs)
 
     @classmethod
@@ -275,7 +285,23 @@ class Cache:
         cls._enable_default_cache()
         if (cls._requests_session_cached is None) or cls._tmp_disabled:
             return cls._requests_session.post(*args, **kwargs)
+
+        if cls._ci_mode:
+            # try to return a cached response first
+            resp = cls._requests_session_cached.post(
+                *args, only_if_cached=True, **kwargs)
+            # 504 indicates that no cached response was found
+            if resp.status_code != 504:
+                return resp
+
         return cls._requests_session_cached.post(*args, **kwargs)
+
+    @classmethod
+    def delete_response(cls, url):
+        """Deletes a single cached response from the cache, if caching is
+        enabled. If caching is not enabled, this call is ignored."""
+        if cls._requests_session_cached is not None:
+            cls._requests_session_cached.cache.delete(urls=[url])
 
     @staticmethod
     def _custom_cache_filter(response: requests.Response):
@@ -553,6 +579,22 @@ class Cache:
         if cls._requests_session_cached is None:
             cls._enable_default_cache()
         cls._requests_session_cached.settings.only_if_cached = enabled
+
+    @classmethod
+    def ci_mode(cls, enabled: bool):
+        """Enable or disable CI mode.
+
+        In this mode, cached requests will be reused even if they are expired.
+        Only uncached data will actually be requested and is then cached. This
+        means, as long as CI mode is enabled, every request is only ever made
+        once and reused indefinetly.
+
+        This serves two purposes. First, reduce the number of requests that is
+        sent on when a large number of tests is run in parallel, potentially
+        in multiple environments simultaneously. Second, make test runs more
+        predictable because data usually does not change between runs.
+        """
+        cls._ci_mode = enabled
 
     @classmethod
     def _convert_size(cls, size_bytes):  # https://stackoverflow.com/questions/5194057/better-way-to-convert-file-sizes-in-python # noqa: E501

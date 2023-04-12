@@ -87,5 +87,6 @@ def reference_laps_data():
 def fastf1_setup():
     import fastf1
     from fastf1.logger import LoggingManager
-    fastf1.Cache.enable_cache('test_cache')
-    LoggingManager.debug = True
+    fastf1.Cache.enable_cache('test_cache')  # use specific cache directory
+    fastf1.Cache.ci_mode(True)  # only request uncached data
+    LoggingManager.debug = True  # raise all exceptions

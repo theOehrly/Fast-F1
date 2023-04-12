@@ -489,6 +489,7 @@ class Ergast:
             try:
                 return json.loads(r.content.decode('utf-8'))
             except Exception as exc:
+                Cache.delete_response(url)  # don't keep a corrupted response
                 raise ErgastJsonError(
                     f"Failed to parse Ergast response ({url})"
                 ) from exc
