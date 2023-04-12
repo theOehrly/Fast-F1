@@ -4,12 +4,14 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('../'))
+import sys
 import os.path
 from datetime import datetime
 import re
+
+import plotly.io as pio
+
+sys.path.insert(0, os.path.abspath('../'))
 
 # -- Project information -----------------------------------------------------
 
@@ -79,8 +81,11 @@ html_static_path = ['_static']
 html_css_files = [
     'css/custom.css',
 ]
-
 doc_cache = os.path.abspath('../doc_cache')
+
+# Plotly configuration: use sphinx to render plotly
+pio.renderers.default = 'sphinx_gallery'
+
 # matplotlib plot directive options
 plot_pre_code = f"import numpy as np;" \
                 f"from matplotlib import pyplot as plt;" \

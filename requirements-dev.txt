@@ -13,3 +13,4 @@ xdoctest
 pre-commit
 requests>=2.28.1
 websockets>=10.3
+plotly
