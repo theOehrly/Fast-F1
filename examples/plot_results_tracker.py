@@ -20,10 +20,10 @@ ergast = Ergast()
 races = ergast.get_race_schedule(2022)  # Races in year 2022
 results = []
 for rnd, race in races['raceName'].items():
-    temp = ergast.get_race_results(season=2022, round=rnd)  # Race results
+    temp = ergast.get_race_results(season=2022, round=rnd + 1)  # Race results
     temp = temp.content[0]                                  # Points scored
-    sprint = ergast.get_sprint_results(season=2022, round=rnd)
-    if sprint.content and sprint.description['round'][0] == rnd:  # If sprint
+    sprint = ergast.get_sprint_results(season=2022, round=rnd + 1)
+    if sprint.content and sprint.description['round'][0] == rnd + 1:
         temp = pd.merge(temp, sprint.content[0], on='driverCode', how='left')
         temp['points'] = temp['points_x'] + temp['points_y']
         temp.drop(columns=['points_x', 'points_y'], inplace=True)
