@@ -13,8 +13,6 @@ import re
 
 import plotly.io as pio
 
-sys.path.insert(0, os.path.abspath('../'))
-
 # -- Project information -----------------------------------------------------
 
 # load version number from file in sources dir without importing
