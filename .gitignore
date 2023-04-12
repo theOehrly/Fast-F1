@@ -28,6 +28,7 @@ docs/examples_gallery/
 
 # all variations of cache directories
 *_cache/
+.DS_Store
 
 # other data directories
 reference/
