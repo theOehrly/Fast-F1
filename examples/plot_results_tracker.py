@@ -7,6 +7,7 @@ https://public.tableau.com/app/profile/mateusz.karmalski/viz/F1ResultsTracker202
 
 import pandas as pd
 import plotly.express as px
+from plotly.io import show
 
 from fastf1.ergast import Ergast
 
@@ -85,3 +86,4 @@ fig.update_layout(coloraxis_showscale=False)        # Remove legend
 fig.update_layout(xaxis=dict(side='top'))           # x-axis on top
 fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))  # Remove border margins
 fig
+show(fig)
