@@ -11,6 +11,9 @@ import os.path
 from datetime import datetime
 import re
 
+import plotly.io as pio
+from plotly.io._sg_scraper import plotly_sg_scraper
+
 # -- Project information -----------------------------------------------------
 
 # load version number from file in sources dir without importing
@@ -79,8 +82,11 @@ html_static_path = ['_static']
 html_css_files = [
     'css/custom.css',
 ]
-
 doc_cache = os.path.abspath('../doc_cache')
+
+# Plotly configuration: use sphinx to render plotly
+pio.renderers.default = 'sphinx_gallery_png'
+
 # matplotlib plot directive options
 plot_pre_code = f"import numpy as np;" \
                 f"from matplotlib import pyplot as plt;" \
@@ -106,6 +112,7 @@ sphinx_gallery_conf = {
     'gallery_dirs': 'examples_gallery',
     'download_all_examples': False,
     'remove_config_comments': True,
+    'image_scrapers': ('matplotlib', plotly_sg_scraper)  # For plotly thumbnail
 }
 
 # options for latexpdf build
