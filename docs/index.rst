@@ -153,5 +153,9 @@ Code of Conduct is enforced and what values FastF1 encourages.
 
 Notice
 ------
-FastF1 is unofficial software and in no way associated with the Formula 1
-group of companies.
+
+FastF1 and this website are unofficial and are not associated in any way with
+the Formula 1 companies. F1, FORMULA ONE, FORMULA 1, FIA FORMULA ONE WORLD
+CHAMPIONSHIP, GRAND PRIX and related marks are trade marks of Formula One
+Licensing B.V.
+
