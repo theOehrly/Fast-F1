@@ -7,10 +7,11 @@ import fastf1.core
 import fastf1.events
 
 
+@pytest.mark.parametrize('backend', ['fastf1', 'f1timing', 'ergast'])
 @pytest.mark.parametrize("gp", ['Bahrain', 'Bharain', 'Sakhir', 1])
 @pytest.mark.parametrize("identifier", ['Q', 4, 'Qualifying'])
-def test_get_session(gp, identifier):
-    session = fastf1.get_session(2021, gp, identifier)
+def test_get_session(backend, gp, identifier):
+    session = fastf1.get_session(2021, gp, identifier, backend=backend)
     assert session.event['EventName'] == 'Bahrain Grand Prix'
     assert session.name == 'Qualifying'
 
@@ -22,12 +23,12 @@ def test_get_session(gp, identifier):
 )
 def test_get_testing_session(test_n, session_n, pass_1, pass_2):
     if pass_1 and pass_2:
-        session = fastf1.get_testing_session(2022, test_n, session_n)
+        session = fastf1.get_testing_session(2021, test_n, session_n)
         assert isinstance(session, fastf1.core.Session)
         assert session.name == f"Practice {session_n}"
     else:
         with pytest.raises(ValueError):
-            fastf1.get_testing_session(2022, test_n, session_n)
+            fastf1.get_testing_session(2021, test_n, session_n)
 
 
 @pytest.mark.parametrize("dt", [datetime.datetime(year=2022, month=6, day=1)])
@@ -46,12 +47,13 @@ def test_events_remaining_after_season(dt):
 @pytest.mark.parametrize("dt", [datetime.datetime(year=2022, month=1, day=1)])
 def test_events_remaining_before_season(dt):
     events = fastf1.get_events_remaining(dt)
-    assert len(events) == 23
+    assert len(events) == 24
 
 
+@pytest.mark.parametrize('backend', ['fastf1', 'f1timing', 'ergast'])
 @pytest.mark.parametrize("gp", ['Bahrain', 'Bharain', 'Sakhir', 1])
-def test_get_event(gp):
-    event = fastf1.get_event(2021, gp)
+def test_get_event(backend, gp):
+    event = fastf1.get_event(2021, gp, backend=backend)
     assert event.EventName == 'Bahrain Grand Prix'
 
 
@@ -63,9 +65,9 @@ def test_get_event_round_zero():
 def test_get_testing_event():
     # 0 is not a valid number for a testing event
     with pytest.raises(ValueError):
-        fastf1.get_testing_event(2022, 0)
+        fastf1.get_testing_event(2021, 0)
 
-    session = fastf1.get_testing_event(2022, 1)
+    session = fastf1.get_testing_event(2021, 1)
     assert isinstance(session, fastf1.events.Event)
 
     # only one testing event in 2021
@@ -76,11 +78,11 @@ def test_get_testing_event():
 def test_event_schedule_partial_data_init():
     schedule = fastf1.events.EventSchedule(
         {'EventName': ['A', 'B', 'C'], 'Session1Date': [None, None, None],
-         'Session1DateUTC': [None, None, None]}
+         'Session1DateUtc': [None, None, None]}
     )
     assert schedule.dtypes['EventName'] == 'object'
     assert schedule.dtypes['Session1Date'] == 'object'
-    assert schedule.dtypes['Session1DateUTC'] == '<M8[ns]'
+    assert schedule.dtypes['Session1DateUtc'] == '<M8[ns]'
 
 
 def test_event_schedule_constructor_sliced():
@@ -129,43 +131,65 @@ def test_event_schedule_get_by_name():
     assert schedule.get_event_by_name('test-test').EventName == 'test_test'
 
 
-def test_event_is_testing():
-    assert fastf1.get_testing_event(2022, 1).is_testing()
-    assert not fastf1.get_event(2022, 1).is_testing()
+@pytest.mark.parametrize(
+    'backend, no_testing_support',
+    [('fastf1', False), ('f1timing', False), ('ergast', True)],
+)
+def test_event_is_testing(backend, no_testing_support):
+    if no_testing_support:
+        with pytest.raises(ValueError):
+            fastf1.get_testing_event(2022, 1, backend=backend)
+    else:
+        assert fastf1.get_testing_event(2022, 1, backend=backend).is_testing()
+    assert not fastf1.get_event(2022, 1, backend=backend).is_testing()
 
 
-def test_event_get_session_name():
-    event = fastf1.get_event(2021, 1)
+@pytest.mark.parametrize('backend', ['fastf1', 'f1timing', 'ergast'])
+def test_event_get_session_name(backend):
+    event = fastf1.get_event(2021, 1, backend=backend)
     assert event.get_session_name(3) == 'Practice 3'
     assert event.get_session_name('Q') == 'Qualifying'
     assert event.get_session_name('praCtice 1') == 'Practice 1'
 
     # sprint qualifying name peculiarities
-    event = fastf1.get_event(2021, 14)
+    event = fastf1.get_event(2021, 14, backend=backend)
     assert event.year == 2021
-    assert event.get_session_name('SQ') == 'Sprint Qualifying'
-    assert event.get_session_name('S') == 'Sprint Qualifying'
-    assert event.get_session_name('Sprint') == 'Sprint Qualifying'
-    assert event.get_session_name('Sprint Qualifying') == 'Sprint Qualifying'
+    assert event.EventFormat == 'sprint'
+    assert event.get_session_name('SQ') == 'Sprint'
+    assert event.get_session_name('S') == 'Sprint'
+    assert event.get_session_name('Sprint') == 'Sprint'
+    assert event.get_session_name('Sprint Qualifying') == 'Sprint'
 
-    event = fastf1.get_event(2022, 4)
+    event = fastf1.get_event(2022, 4, backend=backend)
     assert event.year == 2022
+    assert event.EventFormat == 'sprint'
     assert event.get_session_name('SQ') == 'Sprint'
     assert event.get_session_name('S') == 'Sprint'
     assert event.get_session_name('Sprint') == 'Sprint'
     assert event.get_session_name('Sprint Qualifying') == 'Sprint'
 
 
-def test_event_get_session_date():
-    event = fastf1.get_event(2021, 1)
+@pytest.mark.parametrize(
+    'backend, tz_support',
+    [('fastf1', True), ('f1timing', True), ('ergast', False)]
+)
+def test_event_get_session_date(backend, tz_support):
+    event = fastf1.get_event(2021, 1, backend=backend)
 
     sd = event.get_session_date('Q', utc=True)
-    assert sd == event.Session4DateUTC
+    assert sd == event.Session4DateUtc
     assert isinstance(sd, pd.Timestamp)
+    if tz_support:
+        assert sd.tz is None  # utc timestamp is timezone-naive
 
-    sd = event.get_session_date('Q', utc=False)
-    assert sd == event.Session4Date
-    assert isinstance(sd, pd.Timestamp)
+    if tz_support:
+        sd2 = event.get_session_date('Q', utc=False)
+        assert sd2 == event.Session4Date
+        assert isinstance(sd2, pd.Timestamp)
+        assert sd2.tz is not None
+    else:
+        with pytest.raises(ValueError, match='Local timestamp'):
+            event.get_session_date('Q', utc=False)
 
 
 @pytest.mark.parametrize(
@@ -176,7 +200,7 @@ def test_event_get_session_date():
         ['get_session', [1], 'Practice 1'],
         ['get_race', [], 'Race'],
         ['get_qualifying', [], 'Qualifying'],
-        ['get_sprint', [], 'Sprint Qualifying'],
+        ['get_sprint', [], 'Sprint'],
         ['get_practice', [1], 'Practice 1'],
         ['get_practice', [2], 'Practice 2'],
     ]

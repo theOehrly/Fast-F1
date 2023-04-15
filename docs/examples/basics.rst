@@ -47,21 +47,21 @@ session object.
   EventFormat                                          conventional
   Session1                                               Practice 1
   Session1Date                            2021-06-18 11:30:00+02:00
-  Session1DateUTC                               2021-06-18 09:30:00
+  Session1DateUtc                               2021-06-18 09:30:00
   Session2                                               Practice 2
   Session2Date                            2021-06-18 15:00:00+02:00
-  Session2DateUTC                               2021-06-18 13:00:00
+  Session2DateUtc                               2021-06-18 13:00:00
   Session3                                               Practice 3
   Session3Date                            2021-06-19 12:00:00+02:00
-  Session3DateUTC                               2021-06-19 10:00:00
+  Session3DateUtc                               2021-06-19 10:00:00
   Session4                                               Qualifying
   Session4Date                            2021-06-19 15:00:00+02:00
-  Session4DateUTC                               2021-06-19 13:00:00
+  Session4DateUtc                               2021-06-19 13:00:00
   Session5                                                     Race
   Session5Date                            2021-06-20 15:00:00+02:00
-  Session5DateUTC                               2021-06-20 13:00:00
+  Session5DateUtc                               2021-06-20 13:00:00
   F1ApiSupport                                                 True
-  Name: 6, dtype: object
+  Name: 7, dtype: object
 
 The :class:`~fastf1.events.Event` object is a subclass of a
 :class:`pandas.Series`. The individual values can therefore be accessed as it
@@ -91,21 +91,21 @@ provides methods for accessing the individual associated sessions.
   EventFormat                                          conventional
   Session1                                               Practice 1
   Session1Date                            2021-06-18 11:30:00+02:00
-  Session1DateUTC                               2021-06-18 09:30:00
+  Session1DateUtc                               2021-06-18 09:30:00
   Session2                                               Practice 2
   Session2Date                            2021-06-18 15:00:00+02:00
-  Session2DateUTC                               2021-06-18 13:00:00
+  Session2DateUtc                               2021-06-18 13:00:00
   Session3                                               Practice 3
   Session3Date                            2021-06-19 12:00:00+02:00
-  Session3DateUTC                               2021-06-19 10:00:00
+  Session3DateUtc                               2021-06-19 10:00:00
   Session4                                               Qualifying
   Session4Date                            2021-06-19 15:00:00+02:00
-  Session4DateUTC                               2021-06-19 13:00:00
+  Session4DateUtc                               2021-06-19 13:00:00
   Session5                                                     Race
   Session5Date                            2021-06-20 15:00:00+02:00
-  Session5DateUTC                               2021-06-20 13:00:00
+  Session5DateUtc                               2021-06-20 13:00:00
   F1ApiSupport                                                 True
-  Name: 6, dtype: object
+  Name: 7, dtype: object
   >>> session = event.get_race()
   >>> session.name
   'Race'
@@ -164,38 +164,39 @@ is a subclass of a :class:`pandas.DataFrame`.
 
   >>> schedule = fastf1.get_event_schedule(2021)
   >>> schedule
-      RoundNumber               Country  ...     Session5DateUTC F1ApiSupport
-  0             1               Bahrain  ... 2021-03-28 15:00:00         True
-  1             2                 Italy  ... 2021-04-18 13:00:00         True
-  2             3              Portugal  ... 2021-05-02 14:00:00         True
-  3             4                 Spain  ... 2021-05-09 13:00:00         True
-  4             5                Monaco  ... 2021-05-23 13:00:00         True
-  5             6            Azerbaijan  ... 2021-06-06 12:00:00         True
-  6             7                France  ... 2021-06-20 13:00:00         True
-  7             8               Austria  ... 2021-06-27 13:00:00         True
-  8             9               Austria  ... 2021-07-04 13:00:00         True
-  9            10         Great Britain  ... 2021-07-18 14:00:00         True
-  10           11               Hungary  ... 2021-08-01 13:00:00         True
-  11           12               Belgium  ... 2021-08-29 13:00:00         True
-  12           13           Netherlands  ... 2021-09-05 13:00:00         True
-  13           14                 Italy  ... 2021-09-12 13:00:00         True
-  14           15                Russia  ... 2021-09-26 12:00:00         True
-  15           16                Turkey  ... 2021-10-10 12:00:00         True
-  16           17         United States  ... 2021-10-24 19:00:00         True
-  17           18                Mexico  ... 2021-11-07 19:00:00         True
-  18           19                Brazil  ... 2021-11-14 17:00:00         True
-  19           20                 Qatar  ... 2021-11-21 14:00:00         True
-  20           21          Saudi Arabia  ... 2021-12-05 17:30:00         True
-  21           22  United Arab Emirates  ... 2021-12-12 13:00:00         True
+      RoundNumber        Country  ...     Session5DateUtc F1ApiSupport
+  0             0        Bahrain  ...                 NaT        False
+  1             1        Bahrain  ... 2021-03-28 15:00:00         True
+  2             2          Italy  ... 2021-04-18 13:00:00         True
+  3             3       Portugal  ... 2021-05-02 14:00:00         True
+  4             4          Spain  ... 2021-05-09 13:00:00         True
+  5             5         Monaco  ... 2021-05-23 13:00:00         True
+  6             6     Azerbaijan  ... 2021-06-06 12:00:00         True
+  7             7         France  ... 2021-06-20 13:00:00         True
+  8             8        Austria  ... 2021-06-27 13:00:00         True
+  9             9        Austria  ... 2021-07-04 13:00:00         True
+  10           10  Great Britain  ... 2021-07-18 14:00:00         True
+  11           11        Hungary  ... 2021-08-01 13:00:00         True
+  12           12        Belgium  ... 2021-08-29 13:00:00         True
+  13           13    Netherlands  ... 2021-09-05 13:00:00         True
+  14           14          Italy  ... 2021-09-12 13:00:00         True
+  15           15         Russia  ... 2021-09-26 12:00:00         True
+  16           16         Turkey  ... 2021-10-10 12:00:00         True
+  17           17  United States  ... 2021-10-24 19:00:00         True
+  18           18         Mexico  ... 2021-11-07 19:00:00         True
+  19           19         Brazil  ... 2021-11-14 17:00:00         True
+  20           20          Qatar  ... 2021-11-21 14:00:00         True
+  21           21   Saudi Arabia  ... 2021-12-05 17:30:00         True
+  22           22      Abu Dhabi  ... 2021-12-12 13:00:00         True
   <BLANKLINE>
-  [22 rows x 23 columns]
+  [23 rows x 23 columns]
   >>> schedule.columns  # doctest: +NORMALIZE_WHITESPACE
   Index(['RoundNumber', 'Country', 'Location', 'OfficialEventName', 'EventDate',
          'EventName', 'EventFormat', 'Session1', 'Session1Date',
-         'Session1DateUTC', 'Session2', 'Session2Date', 'Session2DateUTC',
-         'Session3', 'Session3Date', 'Session3DateUTC', 'Session4',
-         'Session4Date', 'Session4DateUTC', 'Session5', 'Session5Date',
-         'Session5DateUTC', 'F1ApiSupport'],
+         'Session1DateUtc', 'Session2', 'Session2Date', 'Session2DateUtc',
+         'Session3', 'Session3Date', 'Session3DateUtc', 'Session4',
+         'Session4Date', 'Session4DateUtc', 'Session5', 'Session5Date',
+         'Session5DateUtc', 'F1ApiSupport'],
         dtype='object')
 
 The event schedule provides methods for selecting specific events:

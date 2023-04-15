@@ -53,13 +53,18 @@ New Features
 - Added method :func:`fastf1.core.Laps.split_qualifying_sessions` to split
   laps for a qualifying session into Q1, Q2 and Q3.
 
-- Event schedule data will now be loaded from the F1 data API. This is the new
-  primary schedule backend. Ergast is still used as a fallback and for seasons
-  before 2018 that are not supported by the F1 API (#260).
+- The F1 timing data API has been added as an additional fallback backend for
+  retrieving event schedule data (#260).
+
+- In the event schedule, ``Session*Date`` will now be a timezone-aware local
+  timestamp (previously: local, but not timezone-aware). Additionally, for each
+  session there now exists a non-timezone aware UTC timestamp in
+  ``Session*DateUtc`` (#253). Timezone information and UTC timestamps are only
+  available when using one of ``'fastf1'`` or ``'f1timing'`` as backend.
 
   ``Session*Date`` is now a timezone aware timestamp for the session start time
-  as local time (was not timezone aware previously). ``Session*DateUTC`` was
-  added and provides a non-timezone-aware UTC timestamp for the session start
+  as local time (was not timezone aware previously). ``Session*DateUtc`` was
+  added and provides a non-timezone-aware Utc timestamp for the session start
   time. Timezone aware local timestamps are only available when the primary
   schedule backend is used.
 
@@ -151,6 +156,10 @@ Backwards Incompatible API Changes
 
 - Testing sessions that are not supported by the F1 API will no longer be
   included in the event schedule.
+
+- The name of a Sprint session will now always be 'Sprint'. Previously, it was
+  'Sprint Qualifying' for the 2021 seasons and 'Sprint' for all subsequent
+  seasons.
 
 
 Removals

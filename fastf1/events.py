@@ -45,14 +45,22 @@ DataFrame columns or Series values:
 
   - ``Session*`` | :class:`str` |
     The name of the session. One of 'Practice 1', 'Practice 2', 'Practice 3',
-    'Qualifying', 'Sprint Qualifying' or 'Race'.
+    'Qualifying', 'Sprint' or 'Race'.
     Testing sessions are considered practice.
     ``*`` denotes the number of
     the session (1, 2, 3, 4, 5).
 
-  - ``Session*Date`` | :class:`datetime` |
+  - ``Session*Date`` | :class:`pd.Timestamp` |
     The date and time at which the session is scheduled to start or was
-    scheduled to start.
+    scheduled to start as timezone-aware local timestamp.
+    (Timezone information is not available when the ``'ergast'`` backend
+    is used.)
+    ``*`` denotes the number of the session (1, 2, 3, 4, 5).
+
+  - ``Session*DateUtc`` | :class:`pd.Timestamp` |
+    The date and time at which the session is scheduled to start or was
+    scheduled to start as non-timezone-aware UTC timestamp.
+    (UTC timestamps are not available when the ``'ergast'`` backend is used.)
     ``*`` denotes the number of the session (1, 2, 3, 4, 5).
 
   - ``F1ApiSupport`` | :class:`bool` |
@@ -100,18 +108,16 @@ Multiple event (schedule) related functions and methods make use of a session
 identifier to differentiate between the various sessions of one event.
 This identifier can currently be one of the following:
 
-    - session name abbreviation: ``'FP1', 'FP2', 'FP3', 'Q', 'S',
-      'SQ', 'R'``
+    - session name abbreviation: ``'FP1', 'FP2', 'FP3', 'Q', 'S', R'``
     - full session name: ``'Practice 1', 'Practice 2',
-      'Practice 3', 'Sprint Qualifying', 'Sprint', 'Qualifying', 'Race'``;
+      'Practice 3', 'Sprint', 'Qualifying', 'Race'``;
       provided names will be normalized, so that the name is
       case-insensitive
     - number of the session: ``1, 2, 3, 4, 5``
 
-Note that 'Sprint' is called 'Sprint Qualifying' only in the 2021 season.
-The event name will silently be corrected if you use 'Sprint'/'S' for the 2021
-season or 'Sprint Qualifying'/'SQ' for the subsequent seasons.
-
+Note that 'Sprint Qualifying' is now always called 'Sprint'.
+The event name will silently be corrected if you use 'Sprint Qualifying'/'SQ'
+instead of 'Sprint'/'S'.
 
 Functions for accessing schedule data
 -------------------------------------
@@ -153,8 +159,9 @@ API Reference
 """  # noqa: W605 invalid escape sequence (escaped space)
 import collections
 import datetime
+import json
 import warnings
-from typing import Union, Optional
+from typing import Literal, Union, Optional
 
 import dateutil.parser
 
@@ -172,6 +179,7 @@ import fastf1.api
 from fastf1.core import Session
 import fastf1.ergast
 from fastf1.logger import get_logger, soft_exceptions
+from fastf1.req import Cache
 from fastf1.utils import recursive_dict_get, to_datetime, to_timedelta
 
 
@@ -187,12 +195,16 @@ _SESSION_TYPE_ABBREVIATIONS = {
     'FP3': 'Practice 3'
 }
 
+_SCHEDULE_BASE_URL = "https://raw.githubusercontent.com/" \
+                     "theOehrly/f1schedule/master/"
+
 
 def get_session(
         year: int,
         gp: Union[str, int],
         identifier: Optional[Union[int, str]] = None,
         *,
+        backend: Optional[Literal['fastf1', 'f1timing', 'ergast']] = None,
         force_ergast: bool = False,
 ) -> Session:
     """Create a :class:`~fastf1.core.Session` object based on year, event name
@@ -223,6 +235,7 @@ def get_session(
 
     Args:
         year: Championship year
+
         gp: Name as str or round number as int. If gp is
             a string, a fuzzy match will be performed on all events and the
             closest match will be selected.
@@ -237,27 +250,63 @@ def get_session(
 
         identifier: see :ref:`SessionIdentifier`
 
-        force_ergast: Always use data from the ergast database to
-            create the event schedule
+        backend: select a specific backend as data source, options:
+            - ``'fastf1'``: FastF1's own backend, full support for 2018 to now
+
+            - ``'f1timing'``: uses data from the F1 live timing API, sessions
+              for which no timing data is available are not listed
+              (supports 2018 to now)
+
+            - ``'ergast'``: uses data from Ergast, no local times are
+              available, no information about availability of f1 timing data is
+              available (supports 1950 to now)
+
+            When no backend is specified, ``'fastf1'`` is used as a default and
+            the other backends are used as a fallback in case the default
+            is not available.
+
+            For seasons older than 2018 ``'ergast'`` is always used.
+
+        force_ergast: [Deprecated, use ``backend='ergast'``] Always use data
+            from the ergast database to create the event schedule
     """
-    event = get_event(year, gp, force_ergast=force_ergast)
+    event = get_event(year, gp, force_ergast=force_ergast, backend=backend)
     return event.get_session(identifier)
 
 
-def get_testing_session(year: int, test_number: int, session_number: int) \
-        -> Session:
+def get_testing_session(
+        year: int,
+        test_number: int,
+        session_number: int,
+        *,
+        backend: Optional[Literal['fastf1', 'f1timing']] = None
+) -> Session:
     """Create a :class:`~fastf1.core.Session` object for testing sessions
     based on year, test  event number and session number.
 
     Args:
         year: Championship year
+
         test_number: Number of the testing event (usually at most two)
+
         session_number: Number of the session within a specific testing
             event. Each testing event usually has three sessions.
 
+        backend: select a specific backend as data source, options:
+
+            - ``'fastf1'``: FastF1's own backend, full support for 2018 to now
+
+            - ``'f1timing'``: uses data from the F1 live timing API, sessions
+                for which no timing data is available are not listed
+                (supports 2018 to now)
+
+            When no backend is specified, ``'fastf1'`` is used as a default and
+            ``f1timing`` is used as a fallback in case the default
+            is not available.
+
     .. versionadded:: 2.2
     """
-    event = get_testing_event(year, test_number)
+    event = get_testing_event(year, test_number, backend=backend)
     return event.get_session(session_number)
 
 
@@ -265,6 +314,7 @@ def get_event(
         year: int,
         gp: Union[int, str],
         *,
+        backend: Optional[Literal['fastf1', 'f1timing', 'ergast']] = None,
         force_ergast: bool = False,
         strict_search: bool = False
 ) -> "Event":
@@ -275,6 +325,7 @@ def get_event(
 
     Args:
         year: Championship year
+
         gp: Name as str or round number as int. If gp is
             a string, a fuzzy match will be performed on all events and the
             closest match will be selected.
@@ -282,8 +333,28 @@ def get_event(
             each event as reference.
             Note that the round number cannot be used to get a testing event,
             as all testing event are round 0!
-        force_ergast: Always use data from the ergast database to
-            create the event schedule
+
+        backend: select a specific backend as data source, options:
+
+            - ``'fastf1'``: FastF1's own backend, full support for 2018 to now
+
+            - ``'f1timing'``: uses data from the F1 live timing API, sessions
+              for which no timing data is available are not listed
+              (supports 2018 to now)
+
+            - ``'ergast'``: uses data from Ergast, no local times are
+              available, no information about availability of f1 timing data is
+              available (supports 1950 to now)
+
+            When no backend is specified, ``'fastf1'`` is used as a default and
+            the other backends are used as a fallback in case the default
+            is not available.
+
+            For seasons older than 2018 ``'ergast'`` is always used.
+
+        force_ergast: [Deprecated, use ``backend='ergast'``] Always use data
+            from the ergast database to create the event schedule
+
         strict_search: Match precisely the query, or default to
             fuzzy search. If no event is found with
             ``strict_search=True``, the function will return None
@@ -291,7 +362,8 @@ def get_event(
     .. versionadded:: 2.2
     """
     schedule = get_event_schedule(year=year, include_testing=False,
-                                  force_ergast=force_ergast)
+                                  force_ergast=force_ergast,
+                                  backend=backend)
 
     if type(gp) is str:
         event = schedule.get_event_by_name(gp, strict_search=strict_search)
@@ -301,17 +373,36 @@ def get_event(
     return event
 
 
-def get_testing_event(year: int, test_number: int) -> "Event":
+def get_testing_event(
+        year: int,
+        test_number: int,
+        *,
+        backend: Optional[Literal['fastf1', 'f1timing']] = None
+) -> "Event":
     """Create a :class:`fastf1.events.Event` object for testing sessions
     based on year and test event number.
 
     Args:
         year: Championship year
         test_number: Number of the testing event (usually at most two)
+        backend: select a specific backend as data source, options:
+
+            - ``'fastf1'``: FastF1's own backend, full support for 2018 to now
+
+            - ``'f1timing'``: uses data from the F1 live timing API, sessions
+              for which no timing data is available are not listed
+              (supports 2018 to now)
+
+            When no backend is specified, ``'fastf1'`` is used as a default and
+            ``f1timing`` is used as a fallback in case the default
+            is not available.
 
     .. versionadded:: 2.2
     """
-    schedule = get_event_schedule(year=year)
+    if backend == 'ergast':
+        raise ValueError("The 'ergast' backend does not support "
+                         "testing events!")
+    schedule = get_event_schedule(year=year, backend=backend)
     schedule = schedule[schedule.is_testing()]
 
     try:
@@ -325,6 +416,7 @@ def get_event_schedule(
         year: int,
         *,
         include_testing: bool = True,
+        backend: Optional[Literal['fastf1', 'f1timing', 'ergast']] = None,
         force_ergast: bool = False
 ) -> "EventSchedule":
     """Create an :class:`~fastf1.events.EventSchedule` object for a specific
@@ -332,26 +424,60 @@ def get_event_schedule(
 
     Args:
         year: Championship year
+
         include_testing: Include or exclude testing sessions from the
             event schedule.
-        force_ergast: Always use data from the ergast database to
-            create the event schedule
+
+        backend: select a specific backend as data source, options:
+
+            - ``'fastf1'``: FastF1's own backend, full support for 2018 to now
+
+            - ``'f1timing'``: uses data from the F1 live timing API, sessions
+              for which no timing data is available are not listed
+              (supports 2018 to now)
+
+            - ``'ergast'``: uses data from Ergast, no local times are
+              available, no information about availability of f1 timing data is
+              available (supports 1950 to now)
+
+            When no backend is specified, ``'fastf1'`` is used as a default and
+            the other backends are used as a fallback in case the default
+            is not available.
+
+            For seasons older than 2018 ``'ergast'`` is always used.
+
+        force_ergast: [Deprecated, use ``backend='ergast'``] Always use data
+            from the ergast database to create the event schedule
 
     .. versionadded:: 2.2
+
     """
-    if ((year not in range(2018, datetime.datetime.now().year + 1))
-            or force_ergast):
-        schedule = _get_schedule_from_ergast(year)
+    if force_ergast:
+        warnings.warn("Option ``force_ergast`` has been deprecated, use"
+                      "``backend='ergast'`` instead")
+        backend = 'ergast'
+
+    _backends_named_order = {
+        'fastf1': _get_schedule_ff1,
+        'f1timing': _get_schedule_from_f1_timing,
+        'ergast': _get_schedule_from_ergast
+    }
+
+    if backend is not None:
+        _backends = [_backends_named_order[backend]]
+    elif year < 2018:
+        _backends = [_backends_named_order['ergast']]
     else:
-        schedule = _get_schedule(year)
+        _backends = list(_backends_named_order.values())
 
-        if schedule is None:  # try fallback
-            _logger.error("Falling back to Ergast API schedule backend. "
-                          "Data will be limited!")
-            schedule = _get_schedule_from_ergast(year)
+    schedule = None
+    for func in _backends:
+        schedule = func(year)
+        if schedule is not None:
+            break
 
-        if schedule is None:  # raise Error if fallback failed as well
-            raise ValueError("Failed to load any schedule data.")
+    if schedule is None:  # raise Error if fallback failed as well
+        raise ValueError("Failed to load any schedule data.")
 
     if not include_testing:
         schedule = schedule[~schedule.is_testing()]
@@ -362,16 +488,37 @@ def get_events_remaining(
         dt: Optional[datetime.datetime] = None,
         *,
         include_testing: bool = True,
+        backend: Optional[Literal['fastf1', 'f1timing', 'ergast']] = None,
         force_ergast: bool = False
 ) -> 'EventSchedule':
     """Create an :class:`~fastf1.events.EventSchedule` object for remaining season.
 
     Args:
         dt: Optional DateTime to get events after.
+
         include_testing: Include or exclude testing sessions from the
             event schedule.
-        force_ergast: Always use data from the ergast database to
-            create the event schedule
+
+        backend: select a specific backend as data source, options:
+
+            - ``'fastf1'``: FastF1's own backend, full support for 2018 to now
+
+            - ``'f1timing'``: uses data from the F1 live timing API, sessions
+              for which no timing data is available are not listed
+              (supports 2018 to now)
+
+            - ``'ergast'``: uses data from Ergast, no local times are
+              available, no information about availability of f1 timing data is
+              available (supports 1950 to now)
+
+            When no backend is specified, ``'fastf1'`` is used as a default and
+            the other backends are used as a fallback in case the default
+            is not available.
+
+            For seasons older than 2018 ``'ergast'`` is always used.
+
+        force_ergast: [Deprecated, use ``backend='ergast'``] Always use data
+            from the ergast database to create the event schedule
 
     .. versionadded:: 2.3
     """
@@ -379,15 +526,77 @@ def get_events_remaining(
         dt = datetime.datetime.now()
 
     events = get_event_schedule(
-        dt.year, include_testing=include_testing, force_ergast=force_ergast)
+        dt.year, include_testing=include_testing,
+        force_ergast=force_ergast, backend=backend
+    )
     result = events.loc[events["EventDate"] >= dt]
     return result
+
+
+@soft_exceptions("FastF1 schedule",
+                 "Failed to load schedule from FastF1 backend!",
+                 _logger)
+def _get_schedule_ff1(year):
+    response = Cache.requests_get(
+        _SCHEDULE_BASE_URL + f"schedule_{year}.json"
+    )
+
+    data = dict()
+    json_data = json.loads(response.text)
+    for key in json_data.keys():
+        data[key] = list(json_data[key].values())
+
+    # convert gmt offset to timedelta
+    gmt_offset = list()
+    for go in data.pop('gmt_offset'):
+        if go is None:
+            gmt_offset.append(datetime.timedelta(0))
+        else:
+            # hh:mm -> hh:mm:00 before to_timedelta
+            gmt_offset.append(to_timedelta(f"{go}:00"))
+
+    length = len(gmt_offset)
+
+    # create additional columns for UTC timestamps
+    for n in range(5):
+        data[f'session{n+1}_date_Utc'] = [None, ] * length
+
+    # convert and set all timestamps
+    for i in range(length):
+        data['event_date'][i] = to_datetime(data['event_date'][i]) \
+            .replace(hour=0, minute=0, second=0)
+
+        for j in range(5):
+            date = to_datetime(data[f'session{j+1}_date'][i])
+            if date is None:
+                date_utc = None
+            else:
+                # create tz-aware local time
+                date = date.replace(tzinfo=datetime.timezone(gmt_offset[i]))
+
+                # create non-tz-aware utc time
+                date_utc = date.astimezone(datetime.timezone.utc) \
+                    .replace(tzinfo=None)
+
+            data[f'session{j+1}_date'][i] = pd.Timestamp(date)
+            data[f'session{j+1}_date_Utc'][i] = pd.Timestamp(date_utc)
+
+    str().capitalize()
+
+    df = pd.DataFrame(data)
+    # change column names from snake_case to UpperCamelCase
+    col_renames = {col: ''.join([s.capitalize() for s in col.split('_')])
+                   for col in df.columns}
+    df = df.rename(columns=col_renames)
+
+    schedule = EventSchedule(df, year=year, force_default_cols=True)
+    return schedule
 
 
 @soft_exceptions("F1 API schedule",
                  "Failed to load schedule from F1 API backend!",
                  _logger)
-def _get_schedule(year):
+def _get_schedule_from_f1_timing(year):
     # create an event schedule using data from the F1 API
     response = fastf1.api.season_schedule(f'/static/{year}/')
     data = collections.defaultdict(list)
@@ -402,7 +611,10 @@ def _get_schedule(year):
         # number of events, usually 3 for testing, 5 for race weekends
         # in special cases there are additional unrelated events
 
-        if (n_events >= 4) and (event['Sessions'][3]['Name'] == 'Sprint'):
+        if (n_events >= 4) and ('Sprint' in event['Sessions'][3]['Name']):
+            if event['Sessions'][3]['Name'] == 'Sprint Qualifying':
+                # fix for 2021 where Sprint was called Sprint Qualifying
+                event['Sessions'][3]['Name'] = 'Sprint'
             data['EventFormat'].append('sprint')
             data['RoundNumber'].append(event['Number'])
         elif 'test' in event['Name'].lower():
@@ -421,7 +633,7 @@ def _get_schedule(year):
             except IndexError:
                 data[f'Session{i+1}'].append(None)
                 data[f'Session{i+1}Date'].append(None)
-                data[f'Session{i+1}DateUTC'].append(None)
+                data[f'Session{i+1}DateUtc'].append(None)
             else:
                 data[f'Session{i+1}'].append(session['Name'])
                 # save timestamp as tz-aware local time and non-tz-aware utc
@@ -431,10 +643,10 @@ def _get_schedule(year):
                 date_utc = date.astimezone(datetime.timezone.utc) \
                     .replace(tzinfo=None)
                 data[f'Session{i+1}Date'].append(pd.Timestamp(date))
-                data[f'Session{i+1}DateUTC'].append(pd.Timestamp(date_utc))
+                data[f'Session{i+1}DateUtc'].append(pd.Timestamp(date_utc))
 
         # set the event date to the date of the last session
-        ev_date = data[f'Session{n_events}DateUTC'][-1]
+        ev_date = data[f'Session{n_events}DateUtc'][-1]
         ev_date = ev_date.replace(hour=0, minute=0, second=0)
         data['EventDate'].append(ev_date)
 
@@ -469,38 +681,37 @@ def _get_schedule_from_ergast(year) -> "EventSchedule":
         data['EventDate'].append(date)
 
         if 'Sprint' in rnd:
-            sprint_name = 'Sprint Qualifying' if year == 2021 else 'Sprint'
             data['EventFormat'].append("sprint")
             data['Session1'].append('Practice 1')
-            data['Session1DateUTC'].append(
+            data['Session1DateUtc'].append(
                 date.floor('D') - pd.Timedelta(days=2))
             data['Session2'].append('Qualifying')
-            data['Session2DateUTC'].append(
+            data['Session2DateUtc'].append(
                 date.floor('D') - pd.Timedelta(days=2))
             data['Session3'].append('Practice 2')
-            data['Session3DateUTC'].append(
+            data['Session3DateUtc'].append(
                 date.floor('D') - pd.Timedelta(days=1))
-            data['Session4'].append(sprint_name)
-            data['Session4DateUTC'].append(
+            data['Session4'].append('Sprint')
+            data['Session4DateUtc'].append(
                 date.floor('D') - pd.Timedelta(days=1))
             data['Session5'].append('Race')
-            data['Session5DateUTC'].append(date)
+            data['Session5DateUtc'].append(date)
         else:
             data['EventFormat'].append("conventional")
             data['Session1'].append('Practice 1')
-            data['Session1DateUTC'].append(
+            data['Session1DateUtc'].append(
                 date.floor('D') - pd.Timedelta(days=2))
             data['Session2'].append('Practice 2')
-            data['Session2DateUTC'].append(
+            data['Session2DateUtc'].append(
                 date.floor('D') - pd.Timedelta(days=2))
             data['Session3'].append('Practice 3')
-            data['Session3DateUTC'].append(
+            data['Session3DateUtc'].append(
                 date.floor('D') - pd.Timedelta(days=1))
             data['Session4'].append('Qualifying')
-            data['Session4DateUTC'].append(
+            data['Session4DateUtc'].append(
                 date.floor('D') - pd.Timedelta(days=1))
             data['Session5'].append('Race')
-            data['Session5DateUTC'].append(date)
+            data['Session5DateUtc'].append(date)
 
         data['F1ApiSupport'].append(True if year >= 2018 else False)
         # simplified; this is only true most of the time
@@ -538,19 +749,19 @@ class EventSchedule(pd.DataFrame):
         'EventFormat': str,
         'Session1': str,
         'Session1Date': object,  # tz-aware datetime.datetime
-        'Session1DateUTC': 'datetime64[ns]',
+        'Session1DateUtc': 'datetime64[ns]',
         'Session2': str,
         'Session2Date': object,
-        'Session2DateUTC': 'datetime64[ns]',
+        'Session2DateUtc': 'datetime64[ns]',
         'Session3': str,
         'Session3Date': object,
-        'Session3DateUTC': 'datetime64[ns]',
+        'Session3DateUtc': 'datetime64[ns]',
         'Session4': str,
         'Session4Date': object,
-        'Session4DateUTC': 'datetime64[ns]',
+        'Session4DateUtc': 'datetime64[ns]',
         'Session5': str,
         'Session5Date': object,
-        'Session5DateUTC': 'datetime64[ns]',
+        'Session5DateUtc': 'datetime64[ns]',
         'F1ApiSupport': bool
     }
 
@@ -573,6 +784,8 @@ class EventSchedule(pd.DataFrame):
             if self[col].isna().all():
                 if _type == 'datetime64[ns]':
                     self[col] = pd.NaT
+                elif _type == object:
+                    self[col] = None
                 else:
                     self[col] = _type()
             self[col] = self[col].astype(_type)
@@ -769,9 +982,7 @@ class Event(pd.Series):
                     raise ValueError(f"Invalid session type '{identifier}'")
 
             # 'Sprint' is called 'Sprint Qualifying' only in 2021
-            if (self.year == 2021) and (session_name == 'Sprint'):
-                session_name = 'Sprint Qualifying'
-            elif (self.year > 2021) and (session_name == 'Sprint Qualifying'):
+            if session_name == 'Sprint Qualifying':
                 session_name = 'Sprint'
 
             if session_name not in self.values:
@@ -811,13 +1022,12 @@ class Event(pd.Series):
                              f"for this event")
         else:
             _name = mask.idxmax()
+            date_utc = self[f"{_name}DateUtc"]
+            date = self[f"{_name}Date"]
+            if (not utc) and pd.isnull(date) and (not pd.isnull(date_utc)):
+                raise ValueError("Local timestamp is not available")
             if utc:
-                date = self[f"{_name}DateUTC"]
-            else:
-                date = self[f"{_name}Date"]
-            if pd.isnull(date):
-                raise ValueError(f"Session type '{identifier}' does not "
-                                 f"exist for this event")
+                return date_utc
             return date
 
     def get_session(self, identifier: Union[int, str]) -> "Session":
