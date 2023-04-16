@@ -68,9 +68,6 @@ New Features
   time. Timezone aware local timestamps are only available when the primary
   schedule backend is used.
 
-  Testing sessions that are not supported by the F1 API will no longer be
-  included in the event schedule.
-
 - Added ``strict_search`` parameter to :func:`fastf1.get_event` that disables
   fuzzy matching for exact matching of session names. (by @Neron-png)
 
@@ -97,7 +94,7 @@ New Features
   :attr:`fastf1.plotting.COMPOUND_COLORS`. (by @Caspar-Guo)
 
 - The cache now supports "offline mode" where only cached responses are
-  returned and now actual requests are sent even if an internet connection
+  returned and no actual requests are sent even if an internet connection
   is available. Offline mode can be enabled using
   :func:`fastf1.Cache.offline_mode`.
 
@@ -153,9 +150,6 @@ Backwards Incompatible API Changes
 - :func:`fastf1.utils.to_datetime` and :func:`fastf1.utils.to_timedelta` will
   now return ``None`` instead of raising an exception when a string cannot
   be parsed.
-
-- Testing sessions that are not supported by the F1 API will no longer be
-  included in the event schedule.
 
 - The name of a Sprint session will now always be 'Sprint'. Previously, it was
   'Sprint Qualifying' for the 2021 seasons and 'Sprint' for all subsequent
