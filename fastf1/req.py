@@ -379,6 +379,11 @@ class Cache:
                 cache_file_path = cls._get_cache_file_path(api_path, func_name)
 
                 if os.path.isfile(cache_file_path):
+                    if cls._ci_mode:
+                        # skip pickle cache in ci mode so that API parser code
+                        # is always executed. Only http cache is active
+                        return func(api_path, **func_kwargs)
+
                     # file exists already, try to load it
                     try:
                         cached = pickle.load(open(cache_file_path, 'rb'))
@@ -388,7 +393,7 @@ class Cache:
                         # after it was updated
                         cached = None
 
-                    if cached is not None and cls._data_ok_for_use(cached):
+                    if (cached is not None) and cls._data_ok_for_use(cached):
                         # cached data is ok for use, return it
                         _logger.info(f"Using cached data for {func_name}")
                         return cached['data']
@@ -587,12 +592,16 @@ class Cache:
         In this mode, cached requests will be reused even if they are expired.
         Only uncached data will actually be requested and is then cached. This
         means, as long as CI mode is enabled, every request is only ever made
-        once and reused indefinetly.
+        once and reused indefinitely.
 
         This serves two purposes. First, reduce the number of requests that is
         sent on when a large number of tests is run in parallel, potentially
         in multiple environments simultaneously. Second, make test runs more
         predictable because data usually does not change between runs.
+
+        Additionally, the pickle cache (stage 2) is disabled completely, so
+        no parsed data is cached. This means that the API parser code is
+        always executed and not skipped due to caching.
         """
         cls._ci_mode = enabled
 

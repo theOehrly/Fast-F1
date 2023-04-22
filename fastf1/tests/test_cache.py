@@ -2,6 +2,7 @@ import logging
 import os
 
 from fastf1 import Cache
+from fastf1.logger import LoggingManager
 import fastf1.testing
 
 
@@ -28,8 +29,20 @@ def _test_cache_used_and_clear(tmpdir):
         # create a custom requests session here so that requests_mock is
         # properly used
 
+        Cache.ci_mode(False)
+        LoggingManager.debug = True
+        # special, relevant on Linux only.
+        # ci mode does not propagate to subprocess on windows
+
         # enable fastf1's own pickle cache
         Cache.enable_cache(tmpdir, use_requests_cache=False)
+
+        with open('fastf1/testing/reference_data/'
+                  'schedule_2020.json', 'rb') as fobj:
+            content = fobj.read()
+        mocker.get('https://raw.githubusercontent.com/theOehrly/f1schedule/'
+                   'master/schedule_2020.json',
+                   content=content, status_code=200)
 
         with open('fastf1/testing/reference_data/'
                   'Index2020.json', 'rb') as fobj:
