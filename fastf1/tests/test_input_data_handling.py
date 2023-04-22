@@ -175,3 +175,33 @@ def test_consecutive_equal_sector_times():
            == pd.Timedelta(seconds=31.442)
     assert lt.pick_lap(19)['Sector1Time'].iloc[0] \
            == lt.pick_lap(20)['Sector1Time'].iloc[0]
+
+
+@pytest.mark.f1telapi
+def test_laps_aligned_across_drivers():
+    # Without postprocessing, lap start and end times are not correctly aligned
+    # between drivers. Test that this is done correctly by calculating the
+    # gap to the leader for all drivers at the end of the race and compare
+    # with the official classification
+    session = fastf1.get_session(2023, 1, 'R')
+    session.load(telemetry=False, weather=False)
+
+    ref = {
+        '11': pd.Timedelta(seconds=11.987),
+        '14': pd.Timedelta(seconds=38.637),
+        '55': pd.Timedelta(seconds=48.052),
+        '44': pd.Timedelta(seconds=50.977),
+        '18': pd.Timedelta(seconds=54.502),
+        '63': pd.Timedelta(seconds=55.873),
+        '77': pd.Timedelta(seconds=72.647),
+        '10': pd.Timedelta(seconds=73.753),
+        '23': pd.Timedelta(seconds=89.774),
+        '22': pd.Timedelta(seconds=90.870),
+    }
+
+    leader = session.results['DriverNumber'].iloc[0]
+    leader_time = session.laps.pick_driver(leader).iloc[-1]['Time']
+    finished = (session.results['Status'] == 'Finished')
+    for drv in session.results.loc[finished, 'DriverNumber'].iloc[1:]:
+        other_time = session.laps.pick_driver(drv).iloc[-1]['Time']
+        assert (other_time - leader_time) == ref[drv]

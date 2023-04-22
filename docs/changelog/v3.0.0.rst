@@ -101,6 +101,10 @@ New Features
 - For race sessions, the previously missing first lap time is now automatically
   added from Ergast (#293).
 
+- For race sessions, lap start and end times are now correctly aligned between
+  drivers. Previously, there was a small difference in the order of a few tens
+  of milliseconds.
+
 
 Bug Fixes
 ^^^^^^^^^

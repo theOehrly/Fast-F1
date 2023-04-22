@@ -32,7 +32,7 @@ from typing import Dict
 import numpy as np
 import pandas as pd
 
-from fastf1.logger import get_logger
+from fastf1.logger import get_logger, soft_exceptions
 from fastf1.req import Cache
 from fastf1.utils import recursive_dict_get, to_timedelta, to_datetime
 
@@ -217,10 +217,75 @@ def timing_data(path, response=None, livedata=None):
     laps_data = pd.DataFrame(laps_data)
     stream_data = pd.DataFrame(stream_data)
 
+    _align_laps(laps_data, stream_data)
+
     # pandas doesn't correctly infer bool dtype columns, set type explicitly
     laps_data[['IsPersonalBest']] = laps_data[['IsPersonalBest']].astype(bool)
 
     return laps_data, stream_data
+
+
+@soft_exceptions("lap alignment",
+                 "Failed to align laps between drivers!",
+                 logger=_logger)
+def _align_laps(laps_data, stream_data):
+    # align lap start and end times between drivers based on Gap to leader
+    if not pd.isnull(stream_data['GapToLeader']).all():
+        expected_gap = dict()
+        delta = dict()
+        leader = None
+        max_delta = None
+
+        # find the leader after the first lap and get the expected gaps to the
+        # leader for all other drivers
+        for drv in laps_data['Driver'].unique():
+            try:
+                gap_str = _get_gap_str_for_drv(drv, 0, laps_data, stream_data)
+                if 'LAP' in gap_str:
+                    leader = drv
+                else:
+                    expected_gap[drv] = to_timedelta(gap_str)
+            except IndexError:
+                expected_gap[drv] = None
+
+        # find the greatest delta between actual gap and currently calculated
+        # gap
+        leader_time = laps_data[laps_data['Driver'] == leader].iloc[0]['Time']
+        for drv in expected_gap.keys():
+            if expected_gap[drv] is None:
+                delta[drv] = None
+                continue
+
+            other_time = laps_data[laps_data['Driver'] == drv].iloc[0]['Time']
+            is_gap = other_time - leader_time
+            delta[drv] = expected_gap[drv] - is_gap
+            if (max_delta is None) or (delta[drv] > max_delta):
+                max_delta = delta[drv]
+
+        # Subtract the maximum delta from all leader timestamps.
+        # It is impossible that the data was received too early, which in turn
+        # means that it must have been received too late if the delta is
+        # greater than zero
+        if max_delta > datetime.timedelta(0):
+            max_delta = datetime.timedelta(0)
+        laps_data.loc[laps_data['Driver'] == leader, 'Time'] -= max_delta
+
+        # Subtract the delta between actual gap and currently calculated gap
+        # from each drivers timestamps to align them. Correct for the max
+        # delta shift of the timestamps of the leader.
+        for drv in delta.keys():
+            if delta[drv] is None:
+                continue
+            laps_data.loc[laps_data['Driver'] == drv, 'Time'] \
+                -= (max_delta - delta[drv])
+
+
+def _get_gap_str_for_drv(drv, idx, laps_data, stream_data):
+    first_time = laps_data[laps_data['Driver'] == drv].iloc[idx]['Time']
+    ref_idx = (stream_data[stream_data['Driver'] == drv]['Time']
+               - first_time).abs().idxmin()
+    gap_str = stream_data.loc[ref_idx]['GapToLeader']
+    return gap_str
 
 
 def _laps_data_driver(driver_raw, empty_vals, drv):
