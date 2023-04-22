@@ -10,9 +10,15 @@
 import os.path
 from datetime import datetime
 import re
+import warnings
 
 import plotly.io as pio
 from plotly.io._sg_scraper import plotly_sg_scraper
+
+
+# ignore warning on import of fastf1.api
+warnings.filterwarnings(action='ignore',
+                        message=r'`fastf1.api` will be considered private .*')
 
 # -- Project information -----------------------------------------------------
 

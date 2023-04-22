@@ -1,6 +1,7 @@
 import logging
 import os
 
+import fastf1._api
 from fastf1 import Cache
 from fastf1.logger import LoggingManager
 import fastf1.testing
@@ -82,7 +83,10 @@ def _test_cache_used_and_clear(tmpdir):
             for line in lines:
                 content += line.strip(b'\n').strip(b'\r') + b'\r\n'
 
-            path = fastf1.api.base_url + session.api_path + fastf1.api.pages[p]
+            path = fastf1._api.base_url \
+                + session.api_path \
+                + fastf1._api.pages[p]
+
             mocker.get(path, content=content, status_code=200)
 
         # load the data

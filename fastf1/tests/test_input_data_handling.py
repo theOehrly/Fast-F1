@@ -88,7 +88,7 @@ def _test_no_timing_app_data():
              'LapCountTime': [], 'StartLaps': [], 'Outlap': []}
         )
 
-    fastf1.api.timing_app_data = _mock
+    fastf1._api.timing_app_data = _mock
 
     session = fastf1.get_session(2020, 'Italy', 'R')
     with fastf1.Cache.disabled():

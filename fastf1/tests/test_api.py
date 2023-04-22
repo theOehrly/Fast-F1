@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from fastf1 import Cache
-import fastf1.api
+import fastf1._api
 
 
 def test_timing_data():
@@ -14,11 +14,11 @@ def test_timing_data():
               '2020_05_FP2/timing_data.raw', 'rb') as fobj:
         for line in fobj.readlines():
             dec = line.decode('utf-8-sig')
-            response.append([dec[:tl], fastf1.api.parse(dec[tl:])])
+            response.append([dec[:tl], fastf1._api.parse(dec[tl:])])
 
     # parse data; api path is unused here so it does not need to be valid
     lap_data, stream_data = \
-        fastf1.api.timing_data('api/path', response=response)
+        fastf1._api.timing_data('api/path', response=response)
 
     # ########## verify lap data
     assert (isinstance(lap_data, pd.DataFrame)
@@ -71,10 +71,10 @@ def test_timing_app_data():
               '2020_05_FP2/timing_app_data.raw', 'rb') as fobj:
         for line in fobj.readlines():
             dec = line.decode('utf-8-sig')
-            response.append([dec[:tl], fastf1.api.parse(dec[tl:])])
+            response.append([dec[:tl], fastf1._api.parse(dec[tl:])])
 
     # parse data; api path is unused here so it does not need to be valid
-    data = fastf1.api.timing_app_data('api/path', response=response)
+    data = fastf1._api.timing_app_data('api/path', response=response)
 
     # ########## verify lap data
     assert isinstance(data, pd.DataFrame)
@@ -94,7 +94,7 @@ def test_car_data(caplog):
                 response.append(line.decode('utf-8-sig'))
 
         # parse data; api path is unused here so it does not need to be valid
-        data = fastf1.api.car_data('api/path', response=response)
+        data = fastf1._api.car_data('api/path', response=response)
         assert "failed to decode" not in caplog.text
         assert isinstance(data, dict)
         assert len(data) == 36  # 20 drivers and some problem with the raw data
@@ -107,7 +107,7 @@ def test_car_data(caplog):
         # truncate one response: missing data -> cannot be decoded
         response[10] = response[10][:20]
         # parse and verify that error message is logged
-        data = fastf1.api.position_data('api/path', response=response)
+        data = fastf1._api.position_data('api/path', response=response)
         assert "failed to decode" in caplog.text
 
 
@@ -120,7 +120,7 @@ def test_position_data(caplog):
                 response.append(line.decode('utf-8-sig'))
 
         # parse data; api path is unused here so it does not need to be valid
-        data = fastf1.api.position_data('api/path', response=response)
+        data = fastf1._api.position_data('api/path', response=response)
         assert "failed to decode" not in caplog.text
         assert isinstance(data, dict)
         assert len(data) == 20  # 20 drivers
@@ -133,7 +133,7 @@ def test_position_data(caplog):
         # truncate one response: missing data -> cannot be decoded
         response[10] = response[10][:20]
         # parse and verify that error message is logged
-        data = fastf1.api.position_data('api/path', response=response)
+        data = fastf1._api.position_data('api/path', response=response)
         assert "failed to decode" in caplog.text
 
 
@@ -144,10 +144,10 @@ def test_track_status_data():
               '2020_05_FP2/track_status.raw', 'rb') as fobj:
         for line in fobj.readlines():
             dec = line.decode('utf-8-sig')
-            response.append([dec[:tl], fastf1.api.parse(dec[tl:])])
+            response.append([dec[:tl], fastf1._api.parse(dec[tl:])])
 
     # parse data; api path is unused here so it does not need to be valid
-    data = fastf1.api.track_status_data('api/path', response=response)
+    data = fastf1._api.track_status_data('api/path', response=response)
 
     # ########## verify lap data
     assert isinstance(data, dict)
@@ -165,10 +165,10 @@ def test_session_status_data():
               '2020_05_FP2/session_status.raw', 'rb') as fobj:
         for line in fobj.readlines():
             dec = line.decode('utf-8-sig')
-            response.append([dec[:tl], fastf1.api.parse(dec[tl:])])
+            response.append([dec[:tl], fastf1._api.parse(dec[tl:])])
 
     # parse data; api path is unused here so it does not need to be valid
-    data = fastf1.api.session_status_data('api/path', response=response)
+    data = fastf1._api.session_status_data('api/path', response=response)
 
     # ########## verify lap data
     assert isinstance(data, dict)
@@ -186,10 +186,10 @@ def test_weather_data():
               '2020_05_FP2/weather_data.raw', 'rb') as fobj:
         for line in fobj.readlines():
             dec = line.decode('utf-8-sig')
-            response.append([dec[:tl], fastf1.api.parse(dec[tl:])])
+            response.append([dec[:tl], fastf1._api.parse(dec[tl:])])
 
     # parse data; api path is unused here so it does not need to be valid
-    data = fastf1.api.weather_data('api/path', response=response)
+    data = fastf1._api.weather_data('api/path', response=response)
 
     # ########## verify lap data
     assert isinstance(data, dict)
@@ -209,10 +209,10 @@ def test_lap_count_data():
               '2021_01_R/lap_count.raw', 'rb') as fobj:
         for line in fobj.readlines():
             dec = line.decode('utf-8-sig')
-            response.append([dec[:tl], fastf1.api.parse(dec[tl:])])
+            response.append([dec[:tl], fastf1._api.parse(dec[tl:])])
 
     # parse data; api path is unused here so it does not need to be valid
-    data = fastf1.api.lap_count('api/path', response=response)
+    data = fastf1._api.lap_count('api/path', response=response)
 
     # ########## verify lap data
     assert isinstance(data, dict)
@@ -230,10 +230,10 @@ def test_driver_list():
               '2020_05_FP2/driver_list.raw', 'rb') as fobj:
         for line in fobj.readlines():
             dec = line.decode('utf-8-sig')
-            response.append([dec[:tl], fastf1.api.parse(dec[tl:])])
+            response.append([dec[:tl], fastf1._api.parse(dec[tl:])])
 
     # parse data; api path is unused here so it does not need to be valid
-    data = fastf1.api.driver_info('api/path', response=response)
+    data = fastf1._api.driver_info('api/path', response=response)
 
     # ########## verify driver data
     assert isinstance(data, dict)

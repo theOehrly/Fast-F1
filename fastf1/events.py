@@ -175,7 +175,7 @@ with warnings.catch_warnings():
 
 import pandas as pd
 
-import fastf1.api
+import fastf1._api
 from fastf1.core import Session
 import fastf1.ergast
 from fastf1.logger import get_logger, soft_exceptions
@@ -598,7 +598,7 @@ def _get_schedule_ff1(year):
                  _logger)
 def _get_schedule_from_f1_timing(year):
     # create an event schedule using data from the F1 API
-    response = fastf1.api.season_schedule(f'/static/{year}/')
+    response = fastf1._api.season_schedule(f'/static/{year}/')
     data = collections.defaultdict(list)
 
     for event in response:

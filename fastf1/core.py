@@ -50,7 +50,8 @@ import numpy as np
 import pandas as pd
 
 import fastf1
-from fastf1 import api, ergast
+from fastf1 import _api as api
+from fastf1 import ergast
 from fastf1.logger import get_logger, soft_exceptions
 from fastf1.utils import to_timedelta
 

@@ -210,7 +210,15 @@ The following deprecated API elements have been removed:
 Performance Improvements
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-  - performance improvement in :func:``fastf1.api.car_data``
-    and :func:``fastf1.api.pos_data``
+- performance improvement in :func:``fastf1.api.car_data``
+  and :func:``fastf1.api.pos_data``
 
+
+Deprecations
+^^^^^^^^^^^^
+
+- :mod:`fastf1.api` will be considered private in future releases and may be
+  removed or changed. Please do not use functionality from :mod:`fastf1.api`.
+  If you currently require functionality from there, please open an issue
+  on Github with details about what you require and why.
 
