@@ -1392,6 +1392,21 @@ class Session:
                  for _, r in self.results.iterrows()}
         laps['Driver'] = laps['DriverNumber'].map(d_map)
 
+        # add Position based on lap timing
+        laps['Position'] = np.NaN  # create empty column
+        if self.name in ('Race', 'Sprint', 'Sprint Qualifying'):
+            for lap_n in laps['LapNumber'].unique():
+                # get each drivers lap for the current lap number, sorted by
+                # the time when each lap was set
+                laps_eq_n = laps.loc[
+                    laps['LapNumber'] == lap_n, ('Time', 'Position')
+                ].reset_index(drop=True).sort_values(by='Time')
+
+                # number positions and restore previous order by index
+                laps_eq_n['Position'] = range(1, len(laps_eq_n) + 1)
+                laps.loc[laps['LapNumber'] == lap_n, 'Position'] \
+                    = laps_eq_n.sort_index()['Position'].to_list()
+
         self._add_track_status_to_laps(laps)
 
         self._laps = Laps(laps, session=self, force_default_cols=True)
@@ -1492,6 +1507,7 @@ class Session:
                 'Compound': [drv_laps['Compound'].iloc[-1]],
                 'TyreLife': [drv_laps['TyreLife'].iloc[-1] + 1],
                 'FreshTyre': [drv_laps['FreshTyre'].iloc[-1]],
+                'Position': [np.NaN],
                 'FastF1Generated': [True],
                 'IsAccurate': [False]
             })
@@ -2132,6 +2148,9 @@ class Laps(pd.DataFrame):
           explained in :func:`fastf1.api.track_status_data`.
           For filtering laps by track status, you may want to use
           :func:`Laps.pick_track_status`.
+        - **Position** (float): Position of the driver at the end of each lap.
+          This value is NaN for FP1, FP2, FP3 and Qualifying as well as for
+          crash laps.
         - **Deleted** (Optional[bool]): Indicates that a lap was deleted by
           the stewards, for example because of a track limits violation.
           This data is only available when race control messages are loaded.
@@ -2193,6 +2212,7 @@ class Laps(pd.DataFrame):
         'LapStartTime': 'timedelta64[ns]',
         'LapStartDate': 'datetime64[ns]',
         'TrackStatus': str,
+        'Position': 'float64',  # need to support NaN
         'Deleted': Optional[bool],
         'DeletedReason': str,
         'FastF1Generated': bool,
@@ -2434,7 +2454,7 @@ class Laps(pd.DataFrame):
             273 0 days 00:35:05.865000    VER  ...           272       0.8
             274 0 days 00:36:47.787000    VER  ...           339       1.1
             <BLANKLINE>
-            [275 rows x 37 columns]
+            [275 rows x 38 columns]
         """
         wd = [lap.get_weather_data() for _, lap in self.iterrows()]
         if wd:

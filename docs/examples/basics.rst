@@ -302,7 +302,7 @@ as :class:`~fastf1.core.Laps` object which again is a subclass of a
   268 0 days 01:04:56.753000    GIO  ...           False       True
   269 0 days 01:06:42.885000    GIO  ...           False      False
   <BLANKLINE>
-  [270 rows x 30 columns]
+  [270 rows x 31 columns]
 
 That's more than 250 laps right there and 26 columns of information.
 
@@ -314,7 +314,7 @@ The following data columns are available:
          'Sector1SessionTime', 'Sector2SessionTime', 'Sector3SessionTime',
          'SpeedI1', 'SpeedI2', 'SpeedFL', 'SpeedST', 'IsPersonalBest',
          'Compound', 'TyreLife', 'FreshTyre', 'Team', 'LapStartTime',
-         'LapStartDate', 'TrackStatus', 'Deleted', 'DeletedReason',
+         'LapStartDate', 'TrackStatus', 'Position', 'Deleted', 'DeletedReason',
          'FastF1Generated', 'IsAccurate'],
         dtype='object')
 

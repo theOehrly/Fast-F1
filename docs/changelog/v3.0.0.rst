@@ -105,6 +105,9 @@ New Features
   drivers. Previously, there was a small difference in the order of a few tens
   of milliseconds.
 
+- Add current ``Position`` at the end of each lap to :class:`fastf1.core.Laps`
+  and :class:`fastf1.core.Lap` (#295).
+
 
 Bug Fixes
 ^^^^^^^^^
