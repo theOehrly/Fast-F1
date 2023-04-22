@@ -143,6 +143,9 @@ Bug Fixes
   cached. This then required the cache to be cleared so that the specific
   API request would work again.
 
+- Fixed a bug where lap times and sector times were missing if the previous
+  value was exactly equal
+
 
 Backwards Incompatible API Changes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

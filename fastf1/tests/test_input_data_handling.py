@@ -144,3 +144,34 @@ def test_first_lap_time_added_from_ergast_in_race():
     session.load(telemetry=False)
 
     assert not pd.isna(session.laps.pick_lap(1)['LapTime']).any()
+
+
+@pytest.mark.f1telapi
+def test_consecutive_equal_lap_times():
+    # No update for the lap time value is given if the lap time is exactly
+    # equal to the previous value. Ensure that this is recognized and corrected
+    # by calculating the lap time from the sector times.
+    session = fastf1.get_session(2023, 1, 'R')
+    session.load(telemetry=False, weather=False)
+    lt = session.laps.pick_driver('16')
+
+    assert lt.pick_lap(37)['LapTime'].iloc[0] == pd.Timedelta(seconds=97.170)
+
+    assert lt.pick_lap(37)['LapTime'].iloc[0] \
+           == lt.pick_lap(38)['LapTime'].iloc[0]
+
+
+@pytest.mark.f1telapi
+def test_consecutive_equal_sector_times():
+    # No update for a sector time value is given if the sector time is exactly
+    # equal to the previous value. Ensure that this is recognized and corrected
+    # by calculating the sector time from the lap time and the other sector
+    # times.
+    session = fastf1.get_session(2023, 1, 'R')
+    session.load(telemetry=False, weather=False)
+    lt = session.laps.pick_driver('21')
+
+    assert lt.pick_lap(20)['Sector1Time'].iloc[0] \
+           == pd.Timedelta(seconds=31.442)
+    assert lt.pick_lap(19)['Sector1Time'].iloc[0] \
+           == lt.pick_lap(20)['Sector1Time'].iloc[0]

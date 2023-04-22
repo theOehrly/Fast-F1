@@ -409,18 +409,50 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         # ensure that there is still data left after potentially removing a lap
         return drv_data
 
-    # check for incorrect lap times and remove them
-    # fixes GH#167 among others
     for i in range(len(drv_data['Time'])):
         sector_sum = datetime.timedelta(0)
+        na_sectors = list()  # list of keys for missing sector times
         for key in ('Sector1Time', 'Sector2Time', 'Sector3Time'):
             st = drv_data[key][i]
             if pd.isna(st):
+                na_sectors.append(key)
                 continue
             sector_sum += st
+
+        # check for incorrect lap times and remove them
+        # fixes GH#167 among others
         if sector_sum > drv_data['LapTime'][i]:
             drv_data['LapTime'][i] = pd.NaT
             integrity_errors.append(i + 1)
+
+        if i == 0:
+            # only do following corrections for 2nd lap and onwards
+            continue
+
+        # The API only sends and update if a state changes, therefore, if two
+        # lap times or sector times are exactly equal, the second value will
+        # be missing. Missing sector times and lap times are calculated here
+        # based on the available values for a lap (max one may be missing). If
+        # the calculated value matches the previous value, it will be set.
+
+        # lap time is missing
+        if (not na_sectors) and pd.isna(drv_data['LapTime'][i]) \
+                and (drv_data['LapTime'][i - 1] == sector_sum):
+
+            drv_data['LapTime'][i] = sector_sum
+
+        # one sector time is missing
+        elif (len(na_sectors) == 1) and not pd.isna(drv_data['LapTime'][i]):
+            # create a list with the two keys for available sector times
+            ref_sec = ['Sector1Time', 'Sector2Time', 'Sector3Time']
+            ref_sec.remove(na_sectors[0])
+
+            if (sec1 := (drv_data['LapTime'][i]
+                         - drv_data[ref_sec[0]][i]
+                         - drv_data[ref_sec[1]][i])) \
+                    == drv_data[na_sectors[0]][i - 1]:
+
+                drv_data[na_sectors[0]][i] = sec1
 
     # lap time sync; check which sector time was triggered with the lowest latency
     # Sector3SessionTime == end of lap
