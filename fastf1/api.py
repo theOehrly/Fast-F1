@@ -205,6 +205,9 @@ def timing_data(path, response=None, livedata=None):
         drv_laps_data = _laps_data_driver(resp_per_driver[drv], EMPTY_LAPS, drv)
         drv_stream_data = _stream_data_driver(resp_per_driver[drv], EMPTY_STREAM, drv)
 
+        if (drv_laps_data is None) or (drv_stream_data is None):
+            continue
+
         for key in EMPTY_LAPS.keys():
             laps_data[key].extend(drv_laps_data[key])
 
@@ -376,7 +379,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
                 lapcnt += 1
 
     if lapcnt == 0:  # no data at all for this driver
-        return drv_data
+        return None
 
     # done reading the data, do postprocessing
 
