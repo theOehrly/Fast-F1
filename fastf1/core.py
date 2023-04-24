@@ -1921,6 +1921,7 @@ class Session:
 
             if session_name in ('Sprint Qualifying', 'Sprint', 'Race'):
                 rename_return.update({
+                    'positionText': 'ClassifiedPosition',
                     'grid': 'GridPosition',
                     'status': 'Status',
                     'points': 'Points',
@@ -2932,7 +2933,14 @@ class SessionResults(pd.DataFrame):
 
         - ``Position`` | :class:`float` |
           The drivers finishing position (values only given if session is
-          'Race', 'Qualifying' or 'Sprint Qualifying')
+          'Race', 'Qualifying' or 'Sprint Qualifying').
+
+        - ``ClassifiedPosition`` | :class:`str` |
+          The official classification result for each driver.
+          This is either an integer value if the driver is
+          officially classified or one of "R" (retired), "D" (disqualified),
+          "E" (excluded), "W" (withdrawn), "F" (failed to qualify) or
+          "N" (not classified).
 
         - ``GridPosition`` | :class:`float` |
           The drivers starting position (values only given if session is
@@ -2996,6 +3004,7 @@ class SessionResults(pd.DataFrame):
         'HeadshotUrl': str,
         'CountryCode': str,
         'Position': 'float64',
+        'ClassifiedPosition': str,
         'GridPosition': 'float64',
         'Q1': 'timedelta64[ns]',
         'Q2': 'timedelta64[ns]',

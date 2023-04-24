@@ -108,6 +108,12 @@ New Features
 - Add current ``Position`` at the end of each lap to :class:`fastf1.core.Laps`
   and :class:`fastf1.core.Lap` (#295).
 
+- Add official classification as ``ClassifiedPosition`` for Races and Sprints
+  to :class:`fastf1.core.SessionResults` and :class:`fastf1.core.DriverResult`.
+  The ``ClassifiedPosition`` lists the finishing position for drivers who are
+  officially classified or a reason for not being classified, for example if
+  a driver retired, was disqualified or similar. (#294)
+
 
 Bug Fixes
 ^^^^^^^^^

@@ -246,7 +246,7 @@ functionality to speed up data loading and to prevent excessive API requests.
   18           18      L STROLL          STR  ...  NaT           NaN
   22           22     Y TSUNODA          TSU  ...  NaT           NaN
   <BLANKLINE>
-  [20 rows x 20 columns]
+  [20 rows x 21 columns]
 
 The results object (:class:`fastf1.core.SessionResults`) is a subclass of a
 :class:`pandas.DataFrame`. Therefore, we can take a look at what data columns
@@ -255,8 +255,8 @@ there are:
   >>> session.results.columns  # doctest: +NORMALIZE_WHITESPACE
   Index(['DriverNumber', 'BroadcastName', 'Abbreviation', 'DriverId', 'TeamName',
          'TeamColor', 'TeamId', 'FirstName', 'LastName', 'FullName',
-         'HeadshotUrl', 'CountryCode', 'Position', 'GridPosition', 'Q1', 'Q2',
-         'Q3', 'Time', 'Status', 'Points'],
+         'HeadshotUrl', 'CountryCode', 'Position', 'ClassifiedPosition',
+         'GridPosition', 'Q1', 'Q2', 'Q3', 'Time', 'Status', 'Points'],
         dtype='object')
 
 As an example, lets display the top ten drivers and their
