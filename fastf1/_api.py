@@ -31,7 +31,7 @@ pages: Dict[str, str] = {
     'audio_streams': 'AudioStreams.jsonStream',  # Link to audio commentary
     'driver_list': 'DriverList.jsonStream',  # Driver info and line story
     'extrapolated_clock': 'ExtrapolatedClock.jsonStream',  # Boolean
-    'race_control_messages': 'RaceControlMessages.json',  # Flags etc
+    'race_control_messages': 'RaceControlMessages.jsonStream',  # Flags etc
     'session_status': 'SessionStatus.jsonStream',  # Start and finish times
     'team_radio': 'TeamRadio.jsonStream',  # Links to team radios
     'timing_app_data': 'TimingAppData.jsonStream',  # Tyres and laps (juicy)
@@ -1238,15 +1238,19 @@ def race_control_messages(path, response=None, livedata=None):
                  'RacingNumber')
     converters = (str, str, str, str, str, int, str)
 
-    for entry in response['Messages']:
-        data['Time'].append(to_datetime(entry['Utc']))
+    for line in response:
+        messages = line[1]['Messages']
+        if isinstance(messages, dict):
+            messages = list(messages.values())
+        for entry in messages:
+            data['Time'].append(to_datetime(entry['Utc']))
 
-        for key, conv in zip(data_keys, converters):
-            try:
-                data[key].append(conv(entry[key]))
-            except (KeyError, ValueError):
-                # type conversion failed or key is missing
-                data[key].append(None)
+            for key, conv in zip(data_keys, converters):
+                try:
+                    data[key].append(conv(entry[key]))
+                except (KeyError, ValueError):
+                    # type conversion failed or key is missing
+                    data[key].append(None)
 
     return data
 
