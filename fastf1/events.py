@@ -45,7 +45,7 @@ DataFrame columns or Series values:
 
   - ``Session*`` | :class:`str` |
     The name of the session. One of 'Practice 1', 'Practice 2', 'Practice 3',
-    'Qualifying', 'Sprint' or 'Race'.
+    'Qualifying', 'Sprint', 'Sprint Shootout' or 'Race'.
     Testing sessions are considered practice.
     ``*`` denotes the number of
     the session (1, 2, 3, 4, 5).
@@ -108,9 +108,9 @@ Multiple event (schedule) related functions and methods make use of a session
 identifier to differentiate between the various sessions of one event.
 This identifier can currently be one of the following:
 
-    - session name abbreviation: ``'FP1', 'FP2', 'FP3', 'Q', 'S', R'``
+    - session name abbreviation: ``'FP1', 'FP2', 'FP3', 'Q', 'S', 'SS', R'``
     - full session name: ``'Practice 1', 'Practice 2',
-      'Practice 3', 'Sprint', 'Qualifying', 'Race'``;
+      'Practice 3', 'Sprint', 'Sprint Shootout', 'Qualifying', 'Race'``;
       provided names will be normalized, so that the name is
       case-insensitive
     - number of the session: ``1, 2, 3, 4, 5``
@@ -190,6 +190,7 @@ _SESSION_TYPE_ABBREVIATIONS = {
     'Q': 'Qualifying',
     'S': 'Sprint',
     'SQ': 'Sprint Qualifying',
+    'SS': 'Sprint Shootout',
     'FP1': 'Practice 1',
     'FP2': 'Practice 2',
     'FP3': 'Practice 3'
@@ -1072,6 +1073,10 @@ class Event(pd.Series):
     def get_sprint(self) -> "Session":
         """Return the sprint session."""
         return self.get_session('Sprint')
+
+    def get_sprint_shootout(self) -> "Session":
+        """Return the sprint shootout session."""
+        return self.get_session('Sprint Shootout')
 
     def get_practice(self, number: int) -> "Session":
         """Return the specified practice session.
