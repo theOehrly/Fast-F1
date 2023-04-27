@@ -2108,8 +2108,8 @@ class Laps(pd.DataFrame):
         - **LapTime** (pandas.Timedelta): Recorded lap time.
           Officially deleted lap times will *not* be deleted here.
           Deleting laps is currently not supported.
-        - **LapNumber** (int): Recorded lap number
-        - **Stint** (int): Stint number
+        - **LapNumber** (float): Recorded lap number
+        - **Stint** (float): Stint number
         - **PitOutTime** (pandas.Timedelta): Session time when car exited
           the pit
         - **PitInTime** (pandas.Timedelta): Session time when car entered
@@ -2192,8 +2192,8 @@ class Laps(pd.DataFrame):
         'Driver': str,
         'DriverNumber': str,
         'LapTime': 'timedelta64[ns]',
-        'LapNumber': 'int64',
-        'Stint': 'int64',
+        'LapNumber': 'float64',
+        'Stint': 'float64',
         'PitOutTime': 'timedelta64[ns]',
         'PitInTime': 'timedelta64[ns]',
         'Sector1Time': 'timedelta64[ns]',

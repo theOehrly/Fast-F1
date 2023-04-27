@@ -115,6 +115,13 @@ New Features
   a driver retired, was disqualified or similar. (#294)
 
 
+Other Changes
+^^^^^^^^^^^^^
+
+- All columns in :class:`fastf1.core.Laps` that were previously of type ``int``
+  are now ``float`` to support ``NaN`` values.
+
+
 Bug Fixes
 ^^^^^^^^^
 
