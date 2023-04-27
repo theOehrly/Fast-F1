@@ -216,27 +216,37 @@ def _align_laps(laps_data, stream_data):
         leader = None
         max_delta = None
 
-        # find the leader after the first lap and get the expected gaps to the
-        # leader for all other drivers
-        for drv in laps_data['Driver'].unique():
-            try:
-                gap_str = _get_gap_str_for_drv(drv, 0, laps_data, stream_data)
-                if 'LAP' in gap_str:
-                    leader = drv
-                else:
-                    expected_gap[drv] = to_timedelta(gap_str)
-            except IndexError:
-                expected_gap[drv] = None
+        # try to align on the first lap where useable data is available
+        # ideally, this is the end of the first lap
+        offset = -1  # start at -1 so that value it is zero on first iteration
+
+        while leader is None:
+            offset += 1
+            # find the leader after the first useable lap and get the expected
+            # gaps to the leader for all other drivers
+            for drv in laps_data['Driver'].unique():
+                try:
+                    gap_str = _get_gap_str_for_drv(drv, offset, laps_data,
+                                                   stream_data)
+                    if 'LAP' in gap_str:
+                        leader = drv
+                    else:
+                        expected_gap[drv] = to_timedelta(gap_str)
+                except IndexError:
+                    expected_gap[drv] = None
 
         # find the greatest delta between actual gap and currently calculated
         # gap
-        leader_time = laps_data[laps_data['Driver'] == leader].iloc[0]['Time']
+        leader_time \
+            = laps_data[laps_data['Driver'] == leader].iloc[offset]['Time']
+
         for drv in expected_gap.keys():
             if expected_gap[drv] is None:
                 delta[drv] = None
                 continue
 
-            other_time = laps_data[laps_data['Driver'] == drv].iloc[0]['Time']
+            other_time \
+                = laps_data[laps_data['Driver'] == drv].iloc[offset]['Time']
             is_gap = other_time - leader_time
             delta[drv] = expected_gap[drv] - is_gap
             if (max_delta is None) or (delta[drv] > max_delta):
@@ -1292,7 +1302,7 @@ def lap_count(path, response=None, livedata=None):
     if livedata is not None and livedata.has('LapCount'):
         # does not need any further processing
         _logger.info("Loading lap count data")
-        return livedata.get('LapCount')
+        response = livedata.get('LapCount')
     elif response is None:
         _logger.info("Fetching lap count data...")
         response = fetch_page(path, 'lap_count')
