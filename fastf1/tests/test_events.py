@@ -166,13 +166,15 @@ def test_event_get_session_name():
     # sprint qualifying name peculiarities
     event = fastf1.get_event(2021, 14)
     assert event.year == 2021
-    assert event.get_session_name('SQ') == 'Sprint Qualifying'
-    assert event.get_session_name('S') == 'Sprint Qualifying'
-    assert event.get_session_name('Sprint') == 'Sprint Qualifying'
-    assert event.get_session_name('Sprint Qualifying') == 'Sprint Qualifying'
+    assert event.EventFormat == 'sprint'
+    assert event.get_session_name('SQ') == 'Sprint'
+    assert event.get_session_name('S') == 'Sprint'
+    assert event.get_session_name('Sprint') == 'Sprint'
+    assert event.get_session_name('Sprint Qualifying') == 'Sprint'
 
     event = fastf1.get_event(2022, 4)
     assert event.year == 2022
+    assert event.EventFormat == 'sprint'
     assert event.get_session_name('SQ') == 'Sprint'
     assert event.get_session_name('S') == 'Sprint'
     assert event.get_session_name('Sprint') == 'Sprint'
@@ -194,7 +196,7 @@ def test_event_get_session_date():
         ['get_session', [1], 'Practice 1'],
         ['get_race', [], 'Race'],
         ['get_qualifying', [], 'Qualifying'],
-        ['get_sprint', [], 'Sprint Qualifying'],
+        ['get_sprint', [], 'Sprint'],
         ['get_practice', [1], 'Practice 1'],
         ['get_practice', [2], 'Practice 2'],
     ]

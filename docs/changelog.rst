@@ -2,6 +2,11 @@
 Changelog
 =========
 
+v2.3.3
+======
+
+Maintenance release to support new Sprint Shootout sessions.
+
 
 v2.3.2
 ======

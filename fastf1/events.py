@@ -45,7 +45,7 @@ DataFrame columns or Series values:
 
   - ``Session*`` | :class:`str` |
     The name of the session. One of 'Practice 1', 'Practice 2', 'Practice 3',
-    'Qualifying', 'Sprint Qualifying' or 'Race'.
+    'Qualifying', 'Sprint Qualifying', 'Sprint Shootout' or 'Race'.
     Testing sessions are considered practice.
     ``*`` denotes the number of
     the session (1, 2, 3, 4, 5).
@@ -101,11 +101,11 @@ identifier to differentiate between the various sessions of one event.
 This identifier can currently be one of the following:
 
     - session name abbreviation: ``'FP1', 'FP2', 'FP3', 'Q', 'S',
-      'SQ', 'R'``
+      'SQ', 'SS', 'R'``
     - full session name: ``'Practice 1', 'Practice 2',
-      'Practice 3', 'Sprint Qualifying', 'Sprint', 'Qualifying', 'Race'``;
-      provided names will be normalized, so that the name is
-      case-insensitive
+      'Practice 3', 'Sprint Qualifying', 'Sprint', 'Sprint Shootout',
+      'Qualifying', 'Race'``;
+      provided names will be normalized, so that the name is case-insensitive
     - number of the session: ``1, 2, 3, 4, 5``
 
 Note that 'Sprint' is called 'Sprint Qualifying' only in the 2021 season.
@@ -179,6 +179,7 @@ _SESSION_TYPE_ABBREVIATIONS = {
     'Q': 'Qualifying',
     'S': 'Sprint',
     'SQ': 'Sprint Qualifying',
+    'SS': 'Sprint Shootout',
     'FP1': 'Practice 1',
     'FP2': 'Practice 2',
     'FP3': 'Practice 3'
@@ -766,9 +767,7 @@ class Event(pd.Series):
                     raise ValueError(f"Invalid session type '{identifier}'")
 
             # 'Sprint' is called 'Sprint Qualifying' only in 2021
-            if (self.year == 2021) and (session_name == 'Sprint'):
-                session_name = 'Sprint Qualifying'
-            elif (self.year > 2021) and (session_name == 'Sprint Qualifying'):
+            if session_name == 'Sprint Qualifying':
                 session_name = 'Sprint'
 
             if session_name not in self.values:
@@ -873,7 +872,11 @@ class Event(pd.Series):
         """
         return self.get_session('Sprint')
 
-    def get_practice(self, number):
+    def get_sprint_shootout(self) -> "Session":
+        """Return the sprint shootout session."""
+        return self.get_session('Sprint Shootout')
+
+    def get_practice(self, number: int) -> "Session":
         """Return the specified practice session.
         Args:
             number: 1, 2 or 3 - Free practice session number
