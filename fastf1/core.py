@@ -1459,6 +1459,12 @@ class Session:
                 # last lap was an inlap
                 continue
 
+            if ((total_laps := getattr(self, '_total_laps', None)) is not None
+                    and (drv_laps.shape[0] >= total_laps)):
+                # driver has already completed full race distance
+                # can happen because rc message timestamp is slightly off
+                continue
+
             if ((len(drv_laps) >= 2)
                     and (not pd.isna(drv_laps['PitInTime'].iloc[-2]))
                     and pd.isna(drv_laps['PitOutTime'].iloc[-1])):

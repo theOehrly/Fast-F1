@@ -139,6 +139,21 @@ def test_partial_lap_retired_added():
 
 
 @pytest.mark.f1telapi
+def test_partial_lap_retired_not_added_after_finished():
+    # in some cases, the code that generates a partial last lap when a driver
+    # retires on track would add a nonexistent last lap after the race has
+    # fished for the first (few) driver(s) that cross the finish line
+    # this is because the session status timestamps are slightly off and
+    # generally delayed by a few hundred milliseconds
+    # ensure that no lap is added if a driver has completed the race distance
+    session = fastf1.get_session(2021, 21, 'R')
+    session.load()
+
+    assert (session.laps.pick_driver('HAM')['LapNumber'].max()
+            == session.total_laps)
+
+
+@pytest.mark.f1telapi
 def test_first_lap_time_added_from_ergast_in_race():
     session = fastf1.get_session(2022, 1, 'R')
     session.load(telemetry=False)
