@@ -134,7 +134,7 @@ you are looking for.
 
 But be aware that this does not always work. Sometimes another name just
 matches the provided string better. For example, what we actually want is the
-'Emiligia Romagna Grand Prix' but we get the 'Belgian Grand Prix' if we don't
+'Emilia Romagna Grand Prix' but we get the 'Belgian Grand Prix' if we don't
 specify the name fully and/or correct enough. Why? Because FastF1 is not a
 proper intelligent search engine. So check your results.
 
@@ -220,7 +220,6 @@ session from various APIs. Downloading and processing of the data may take a
 few seconds. It is highly recommended to utilize FastF1's builtin caching
 functionality to speed up data loading and to prevent excessive API requests.
 
-  >>> fastf1.Cache.enable_cache("path/to/empty/folder")  # doctest: +SKIP
   >>> session = fastf1.get_session(2021, 'French Grand Prix', 'Q')
   >>> session.load()
   >>> session.results
@@ -286,7 +285,6 @@ as :class:`~fastf1.core.Laps` object which again is a subclass of a
 :class:`pandas.DataFrame`.
 
   >>> session = fastf1.get_session(2021, 'French Grand Prix', 'Q')
-  >>> fastf1.Cache.enable_cache("path/to/empty/folder")  # doctest: +SKIP
   >>> session.load()
   >>> session.laps
                         Time Driver  ... FastF1Generated IsAccurate

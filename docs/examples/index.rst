@@ -24,7 +24,6 @@ Let's get started with a very simple script:
 .. doctest::
 
     >>> import fastf1
-    >>> fastf1.Cache.enable_cache('path/to/folder/for/cache')  # doctest: +SKIP
     >>> session = fastf1.get_session(2019, 'Monza', 'Q')
     >>> session.load(telemetry=False, laps=False, weather=False)
     >>> vettel = session.get_driver('VET')
@@ -58,7 +57,3 @@ For some more advanced stuff, it's just a few more steps.
     ax.set_title('Leclerc is')
     ax.legend()
     plt.show()
-
-
-It is not necessary to enable the usage of the cache but it is highly recommended. Simply provide
-the path to some empty folder on your system. Using the cache will greatly speed up loading of the data.

@@ -23,7 +23,6 @@ versions can be used.
     import matplotlib.pyplot as plt
 
     fastf1.plotting.setup_mpl()
-    # fastf1.Cache.enable_cache("path/to/cache")
 
     session = fastf1.get_session(2020, 'Italy', 'R')
     session.load()

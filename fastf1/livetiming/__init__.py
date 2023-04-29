@@ -34,8 +34,6 @@ Usage Example
     import fastf1
     from fastf1.livetiming.data import LiveTimingData
 
-    fastf1.Cache.enable_cache('cache_directory')
-
     livedata = LiveTimingData('saved_data.txt')
     session = fastf1.get_testing_session(2021, 1, 1)
     session.load(livedata=livedata)
@@ -67,6 +65,10 @@ Important Notes
   saved live timing data and api data **for the same session**!
   The cache cannot tell the data sources apart. If cached data from one source
   already exists it will not be reloaded automatically from a different source.
+  See :class:`fastf1.req.Cache` for details on how to configure a custom
+  cache directory. One simple way is to add the following line to your code::
+
+    fastf1.Cache.enable_cache('path/to/cache/directory')
 
 - You need to force a cache update if you modify the :class:`LiveTimingData`
   (e.g. by adding a second file). The cache cannot tell that the input source
@@ -74,7 +76,7 @@ Important Notes
 
   You can force-refresh the cache::
 
-    fastf1.Cache.enable_cache('cache_directory', force_renew=True)
+    fastf1.Cache.enable_cache('path/to/cache/directory', force_renew=True)
 
   You only need to use ``forece_renew=True`` once after modifying the
   input data.
