@@ -11,8 +11,6 @@ from matplotlib import pyplot as plt
 from matplotlib.collections import LineCollection
 
 
-ff1.Cache.enable_cache('../doc_cache')  # replace with your cache directory
-
 ##############################################################################
 # First, we define some variables that allow us to conveniently control what
 # we want to plot.

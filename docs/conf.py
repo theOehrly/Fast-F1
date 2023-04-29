@@ -15,10 +15,13 @@ import warnings
 import plotly.io as pio
 from plotly.io._sg_scraper import plotly_sg_scraper
 
-
+# -- FastF1 specific config --------------------------------------------------
 # ignore warning on import of fastf1.api
 warnings.filterwarnings(action='ignore',
                         message=r'`fastf1.api` will be considered private .*')
+
+doc_cache = os.path.abspath('../doc_cache')
+
 
 # -- Project information -----------------------------------------------------
 
@@ -88,40 +91,53 @@ html_static_path = ['_static']
 html_css_files = [
     'css/custom.css',
 ]
-doc_cache = os.path.abspath('../doc_cache')
 
-# Plotly configuration: use sphinx to render plotly
+# -- Plotly configuration ----------------------------------------------------
+# use sphinx to render plotly
 pio.renderers.default = 'sphinx_gallery_png'
 
-# matplotlib plot directive options
+
+# -- matplotlib plot directive options ---------------------------------------
 plot_pre_code = f"import numpy as np;" \
                 f"from matplotlib import pyplot as plt;" \
                 f"plt.rcParams['figure.figsize'] = [8.0, 4.5];" \
                 f"import fastf1;" \
+                f"import fastf1.logger;" \
                 f"fastf1.Cache.enable_cache('{doc_cache}');" \
-                f"import logging;" \
-                f"logging.getLogger().setLevel(logging.WARNING);"
+                f"fastf1.logger.set_log_level('WARNING');"
 
 plot_include_source = True
 plot_html_show_source_link = False
 
-# doctest directive options
+
+# -- doctest directive options -----------------------------------------------
 doctest_global_setup = f"import fastf1;" \
+                       f"import fastf1.logger;" \
                        f"fastf1.Cache.enable_cache('{doc_cache}');" \
-                       f"import logging;" \
-                       f"logging.getLogger().setLevel(logging.WARNING);"
+                       f"fastf1.logger.set_log_level('WARNING');"
 
 
-# sphinx gallery configuration
+# -- sphinx gallery configuration --------------------------------------------
+def sphinx_gallery_setup(gallery_conf, fname):
+    import fastf1
+    import fastf1.logger
+    fastf1.Cache.enable_cache(doc_cache)
+    fastf1.logger.set_log_level('WARNING')
+
+
 sphinx_gallery_conf = {
     'examples_dirs': '../examples',
     'gallery_dirs': 'examples_gallery',
     'download_all_examples': False,
     'remove_config_comments': True,
-    'image_scrapers': ('matplotlib', plotly_sg_scraper)  # For plotly thumbnail
+    'image_scrapers': ('matplotlib',  # default
+                       plotly_sg_scraper),  # for plotly thumbnail
+    'reset_modules': ('matplotlib', 'seaborn',  # defaults
+                      sphinx_gallery_setup),  # custom setup
 }
 
-# options for latexpdf build
+
+# -- options for latexpdf build ----------------------------------------------
 latex_elements = {
     'preamble': r'\usepackage{enumitem}\setlistdepth{99}',
 }

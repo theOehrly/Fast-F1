@@ -12,8 +12,6 @@ its result.
 import fastf1
 from fastf1.ergast import Ergast
 
-fastf1.Cache.enable_cache("../doc_cache")  # replace with your cache directory
-
 
 ##############################################################################
 # Get the current driver standings from Ergast.

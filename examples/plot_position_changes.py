@@ -9,7 +9,6 @@ import fastf1.plotting
 import matplotlib.pyplot as plt
 
 
-fastf1.Cache.enable_cache('../doc_cache')  # replace with your cache directory
 fastf1.plotting.setup_mpl(misc_mpl_mods=False)
 
 ##############################################################################
