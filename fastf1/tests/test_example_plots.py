@@ -34,7 +34,6 @@ def test_readme_example():
 @pytest.mark.f1telapi
 @pytest.mark.mpl_image_compare(style='default')
 def test_doc_example_fast_lec():
-    fastf1.Cache.enable_cache("test_cache/")
     session = fastf1.get_session(2020, 'Belgian', 'R')
 
     session.load()
@@ -55,7 +54,6 @@ def test_doc_example_fast_lec():
 @pytest.mark.f1telapi
 @pytest.mark.mpl_image_compare(style='default')
 def test_doc_example_delta_time():
-    fastf1.Cache.enable_cache("test_cache/")
     session = fastf1.get_session(2020, 'Belgian', 'R')
     session.load()
     lec = session.laps.pick_driver('LEC').pick_fastest()
@@ -78,7 +76,6 @@ def test_doc_example_delta_time():
 @pytest.mark.f1telapi
 @pytest.mark.mpl_image_compare(style='default')
 def test_speed_trace():
-    fastf1.Cache.enable_cache("test_cache/")
     session = fastf1.get_session(2020, 'Belgian', 'R')
     session.load()
 

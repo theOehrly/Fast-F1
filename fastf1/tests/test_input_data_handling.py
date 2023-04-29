@@ -14,16 +14,17 @@ from fastf1.testing.reference_values import LAP_DTYPES
 
 @pytest.mark.f1telapi
 def test_ergast_lookup_fail():
-    fastf1.testing.run_in_subprocess(_test_ergast_lookup_fail)
+    cache_dir = fastf1.Cache._CACHE_DIR
+    fastf1.testing.run_in_subprocess(_test_ergast_lookup_fail, cache_dir)
 
 
-def _test_ergast_lookup_fail():
+def _test_ergast_lookup_fail(cache_dir):
     from fastf1.logger import LoggingManager
     LoggingManager.debug = False
     # special, relevant on Linux only.
     # debug=True does not propagate to subprocess on windows
 
-    fastf1.Cache.enable_cache('test_cache')
+    fastf1.Cache.enable_cache(cache_dir)
     log_handle = fastf1.testing.capture_log()
 
     # ergast lookup fails if data is requested to soon after a session ends
