@@ -34,6 +34,7 @@ Functions for direct access
 
 .. automethod:: fastf1.logger.set_log_level
 .. automethod:: fastf1.logger.get_logger
+.. automethod:: fastf1.logger.soft_exceptions
 
 """
 

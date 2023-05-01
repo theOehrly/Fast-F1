@@ -224,6 +224,28 @@ sections and explanatory text for your example.
 Coding guidelines
 =================
 
+Supported versions of Python and dependencies
+---------------------------------------------
+
+This project supports:
+
+- All minor versions of Python released 42 months prior to the project, and at
+  minimum the two latest minor versions.
+
+- All minor versions of Numpy, Pandas and Matplotlib released in the 24 months
+  prior to the project, and at minimum the last three minor versions.
+
+- For other dependencies: As a guideline, this project will try to support all
+  minor versions initially released in the 12 months prior to our planned
+  release date or the oldest that supports our minimum Python. We will only
+  bump these dependencies as we need new features or the old versions are no
+  longer compatible with other minimum version requirements of this project.
+
+These guidelines are based on `NEP 29`__ .
+
+__ https://numpy.org/neps/nep-0029-deprecation_policy.html
+
+
 API changes
 -----------
 
@@ -269,8 +291,8 @@ Introducing
 Expiring
 ~~~~~~~~
 
-1. Announce the API changes in a new file
-   :file:`docs/README.rst`  (reference your pull request as well).
+1. Announce the deprecation in the changelog
+   :file:`docs/changelog.rst` (reference your pull request as well)
    For the content, you can usually copy the deprecation notice
    and adapt it slightly.
 2. Change the code functionality and remove any related deprecation warnings.
@@ -307,41 +329,95 @@ New modules and files: installation
 Using logging for debug messages
 --------------------------------
 
-FastF1 uses the standard Python `logging` library to write verbose
-warnings, information, and debug messages. Please use it! In all those places
-you write `print` calls to do your debugging, try using `logging.debug`
-instead!
+FastF1 uses a logging system that is based on the standard Python `logging`
+library to write verbose warnings, information, and debug messages.
+Please use it! In all those places you write `print` calls to do your
+debugging, try using `logger.debug` instead!
 
+FastF1 creates one main logger and then uses child loggers for each module.
 
-To include `logging` in your module, at the top of the module, you need to
-``import logging``.  Then calls in your code like::
+To include logging in your module, at the top of the module, you need to add
+``from fastf1.logger import get_logger``.  Then calls in your code like::
+
+  # set up the logger once (!)
+  logger = get_logger(__name__)
 
   # code
+  logger.info('Here is some information')
+  logger.debug('Here is some more detailed information')
   # more code
-  logging.info('Here is some information')
-  logging.debug('Here is some more detailed information')
 
 will log to a logger named ``fastf1.yourmodulename``.
 
 
 Which logging level to use?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+logger
 There are five levels at which you can emit messages.
 
-- `logging.critical` and `logging.error` are really only there for errors that
+- `logger.critical` and `logger.error` are really only there for errors that
   will end the use of the library but not kill the interpreter.
-- `logging.warning` and `._api.warn_external` are used to warn the user,
-  see below.
-- `logging.info` is for information that the user may want to know if the
+- `logger.warning` are used to warn the user, see below.
+- `logger.info` is for information that the user may want to know if the
   program behaves oddly. For instance, if a driver did not participate in a
-  session, some data can be loaded for this specific driver. But FastF1 can
+  session, some data cannot be loaded for this specific driver. But FastF1 can
   still be used normally with data of all other drivers in this session.
-- `logging.debug` is the least likely to be displayed, and hence can be the
+- `logger.debug` is the least likely to be displayed, and hence can be the
   most verbose. Information that is usually only required for development
   and debugging of FastF1 should be logged here.
 
-By default, in FastF1, `logging` displays all log messages at levels higher than
+By default, in FastF1, logging displays all log messages at levels higher than
 ``logging.INFO`` to `sys.stderr`.
 
 .. _logging tutorial: https://docs.python.org/3/howto/logging.html#logging-basic-tutorial
+
+
+Allowing optional functions to fail gracefully
+----------------------------------------------
+
+FastF1 processes lots of data that may change unexpectedly, contain unknown
+values or that is not always available. Of course, the best way to deal with
+this is to write code that is as robust as possible. But of course, it is not
+always possible to foresee what unexpected data your code might need to deal
+with. In some cases, FastF1 cannot work without some specific data being
+processed correctly. But in other cases, FastF1 can still be used with limited
+functionality if we prevent it from crashing when such an error is encountered.
+Examples for such cases are:
+
+- loading optional data: weather data, telemetry, ...
+- doing additional (cross) validation of data
+- applying corrections to improve the accuracy of data
+- ...
+
+If such a task fails, we want FastF1 to show a warning to the user. But
+especially if such an error is encountered during data loading, it should not
+crash FastF1 and make the whole session unavailable to the user. Loading
+incomplete data is always preferred over loading no data at all.
+
+To deal with this, FastF1 provides a special function decorator called
+:func:`fastf1.logger.soft_exceptions` that can be used as follows::
+
+  from fastf1.logger import soft_exceptions
+
+
+  @soft_exceptions(descr_name="optional data processing",
+                   msg="Failed to do some optional data processing",
+                   logger=logger)
+  def _optional_data_loading():
+      ...
+      return
+
+The basic functionality of this decorator is to wrap a one big
+`try: ... except Exception: ...` clause around the function call.
+But additionally, if the function call fails, the `msg` is shown to the user,
+using the logging level `WARNING`. The traceback is logged with the logging
+level `DEBUG` and prefaced with the line `"Traceback for failure in
+{descr_name}"`.
+You need to pass the `logger` for the current module as a third argument to the
+decorator.
+
+This catch-all exception handling makes development more difficult, because for
+example a debugger won't be able to stop on an unhandled exception. Therefore,
+it is possible to easily disable the exception handling for all functions that
+are decorated in this way. This is described in detail here:
+:ref:`logging`.
