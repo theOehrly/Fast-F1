@@ -19,6 +19,9 @@ from plotly.io._sg_scraper import plotly_sg_scraper
 # ignore warning on import of fastf1.api
 warnings.filterwarnings(action='ignore',
                         message=r'`fastf1.api` will be considered private .*')
+warnings.filterwarnings(action='ignore',
+                        message=r'`utils.delta_time` is considered '
+                                r'deprecated.*')
 
 doc_cache = os.path.abspath('../doc_cache')
 

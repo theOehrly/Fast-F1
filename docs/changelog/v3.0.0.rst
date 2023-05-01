@@ -235,3 +235,6 @@ Deprecations
   If you currently require functionality from there, please open an issue
   on Github with details about what you require and why.
 
+- :mod:`utils.delta_time` is considered deprecated and will be modified or
+  removed in a future release because it has a tendency to give inaccurate
+  results.

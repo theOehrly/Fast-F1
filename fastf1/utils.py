@@ -2,6 +2,7 @@
 import datetime
 from functools import reduce
 from typing import Dict, Tuple, Optional
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -13,9 +14,14 @@ _logger = get_logger(__name__)
 
 
 def delta_time(reference_lap: pd.Series, compare_lap: pd.Series) -> Tuple:
-    # TODO move somewhere else
     """Calculates the delta time of a given lap, along the 'Distance' axis
     of the reference lap.
+
+    .. deprecated:: 3.0.0
+
+    .. warning:: This function should no longer be considered as a stable part
+        of the API. Due to the reasons given below, this function will be
+        modified or removed at a future point.
 
     .. warning:: This is a nice gimmick but not actually very accurate which
         is an inherent problem from the way this is calculated currently (There
@@ -72,6 +78,11 @@ def delta_time(reference_lap: pd.Series, compare_lap: pd.Series) -> Tuple:
           telemetry data that was created with the same interpolation and
           resampling options!
     """
+    warnings.warn("`utils.delta_time` is considered deprecated and will"
+                  "be modified or removed in a future release because it has"
+                  "a tendency to give inaccurate results.",
+                  FutureWarning)
+
     ref = reference_lap.get_car_data(interpolate_edges=True).add_distance()
     comp = compare_lap.get_car_data(interpolate_edges=True).add_distance()
 
