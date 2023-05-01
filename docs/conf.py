@@ -34,13 +34,13 @@ with open('../fastf1/version.py') as vfobj:
     version = re.search(r"(\d+.\d+.\d+[-\w]*)", vstring)[0]
 
 
-# project = 'Fast F1'
+project = 'FastF1'
 # copyright = 'MIT'
 # author = 'Oehrly'
 version = version
 release = version
 copyright = f'{datetime.now().year}, theOehrly'
-
+html_title = f"{project} <small>{release}</small>"
 
 # -- General configuration ---------------------------------------------------
 

@@ -1,22 +1,8 @@
-####################
-FastF1 documentation
-####################
+######
+FastF1
+######
 
 For the passionate F1 nerds.
-
-
-To get a quick overview over how to use FastF1, check out
-:doc:`examples/index` or the :doc:`examples_gallery/index`.
-
-
-Furthermore, there are some great articles and examples written by other people. They
-provide a nice overview about what you can do with FastF1 and might help you
-to get started.
-
-  - `Accessing Formula-1 Race's historical data using Python (medium.com) <https://pandeyparul.medium.com/accessing-formula-1-races-historical-data-using-python-b7c80e544f50>`_
-  - `Formula 1 Data Analysis Tutorial - 2021 Russian GP: "To Box, or Not to Box?" (medium.com) <https://medium.com/@jaspervhat/formula-1-data-analysis-tutorial-2021-russian-gp-to-box-or-not-to-box-da6399bd4a39>`_
-  - `How I Analyze Formula 1 Data With Python: 2021 Italian GP (medium.com) <https://medium.com/@jaspervhat/how-i-analyze-formula-1-data-with-python-2021-italian-gp-dfb11db4b73>`_
-
 
 ============
 Introduction
@@ -25,20 +11,26 @@ Introduction
 FastF1 gives you access to F1 lap timing, car telemetry and position,
 tyre data, weather data, the event schedule and session results.
 
-The module is designed around Pandas, Numpy and Matplotlib. This makes it easy
-to use while offering lots of possibilities for data analysis and
-visualization.
+**Main features**:
 
-FastF1 handles big chunks of data (~50-100mb per session). To improve performance
-data is per default cached locally as requests (be aware). The default placement
-of the cache is operating system specific. A custom location can be set if desired.
-For more information see :class:`~fastf1.api.Cache`.
+- Access to F1 timing data, telemetry, sessions results and more
+- Full support for `Ergast <http://ergast.com/mrd/>`_ to access current and
+  historical F1 data
+- All data is provided in the form of extended Pandas DataFrames to make
+  working with the data easy while having powerful tools available
+- Adds custom functions to the Pandas objects specifically to make working
+  with F1 data quick and simple
+- Integration with Matplotlib to facilitate data visualization
+- Implements caching for all API requests to speed up your scripts
 
-All data is downloaded from two sources:
 
-    - The official f1 data stream ->
-      `f1-live <https://www.formula1.com/en/f1-live.html>`_
-    - Ergast web api -> `ergast.com <http://ergast.com/mrd/>`_
+To get a quick overview over how to use FastF1, check out
+:doc:`examples/index` or the :doc:`examples_gallery/index`.
+
+Note that FastF1 handles big chunks of data (~50-100mb per session). To improve
+performance, data is per default cached locally. The default placement
+of the cache is operating system specific. A custom location can be set if
+desired. For more information see :class:`~fastf1.req.Cache`.
 
 Have fun!
 
@@ -53,8 +45,6 @@ It is recommended to install FastF1 using `pip`:
    pip install fastf1
 
 Note that Python 3.8 or higher is required.
-(The live timing client does not support Python 3.10, therefore full
-functionality is only available with Python 3.8 and 3.9)
 
 Alternatively, a wheel or a source distribution can be downloaded from Pypi.
 
@@ -64,6 +54,34 @@ You can also install using `conda`:
 
   conda install -c conda-forge fastf1
 
+
+==============
+Available Data
+==============
+
+The following is a short overview over the available data with some references
+to functions and objects used to work with this data.
+
+In most cases, the default workflow with FastF1 is to create a
+:class:`~fastf1.core.Session` object using :func:`~fastf1.get_session`. You,
+will then access all data through the session object. One notable exception to
+this pattern is the wrapper for Ergast.
+
+.. table:: Overview over the available data
+   :widths: auto
+
+   =====================  ==============================================================================================================================  ==================================================================================================
+   Topic                  Data                                                                                                                            References
+   =====================  ==============================================================================================================================  ==================================================================================================
+   Event Schedule         event names, countries, locations, dates, scheduled starting times,... (previous and current season including upcoming events)  :func:`~fastf1.get_event_schedule` :func:`~fastf1.get_event` :class:`~fastf1.events.EventSchedule`
+   Results                driver names, team names, finishing and grid positions, points, finishing status,...                                            :class:`~fastf1.core.SessionResults`, :class:`~fastf1.core.DriverResult`
+   Timing Data            sector times, lap times, pit stops, tyre data and much more                                                                     :attr:`~fastf1.core.Session.laps` :class:`~fastf1.core.Laps`
+   Track Status           flags, safety car                                                                                                               :attr:`~fastf1.core.Session.track_status`
+   Session Status         started, finished, finalized                                                                                                    :attr:`~fastf1.core.Session.session_status`
+   Race Control Messages  investigations, penalties, restart announcements,...                                                                            :attr:`~fastf1.core.Session.race_control_messages`
+   Telemetry              speed, rpm, gear, normalized track position, ...                                                                                :class:`~fastf1.core.Telemetry` :func:`~fastf1.core.Lap.get_car_data`
+   Ergast API             all endpoints that are provided by Ergast                                                                                       :ref:`ergast`
+   =====================  ==============================================================================================================================  ==================================================================================================
 
 .. toctree::
    ← Back to Github <https://github.com/theOehrly/Fast-F1>
@@ -97,31 +115,25 @@ You can also install using `conda`:
    changelog/index
 
 
-==============
-Available Data
-==============
+========================================================
+Questions, Contacting the Maintainer and Code of Conduct
+========================================================
 
-The following is a short overview over the available data with some references
-to functions and objects used to work with this data.
+For questions that may be of interest to the whole community, please use the
+Github `Discussions <https://github.com/theOehrly/Fast-F1/discussions>`_
+section to ask for help.
 
-- The event schedule for past seasons and the current season, including
-  upcoming events. The schedule provides event names, countries, locations,
-  dates, scheduled starting times and more.
-  See :func:`fastf1.get_event_schedule`, :class:`~fastf1.events.EventSchedule`
+In case of questions that you prefer to discuss privately, feel free to contact
+me via email at oehrly@mailbox.org. Any requests to this address will be
+treated with confidentiality, if desired.
 
-  This data is also available for individual events.
-  See :func:`fastf1.get_event`, :class:`~fastf1.events.Event`
-
-- Driver information and session results, including driver names, team names,
-  finishing and grid positions, points, and more.
-  See :class:`~fastf1.core.SessionResults`, :class:`~fastf1.core.DriverResult`
-
-- Lap timing data including sector times, lap times, pit stops, tyre data and
-  more.
-  See :class:`~fastf1.core.Laps`
-
-- Telemetry data including speed, rpm, gear and more.
-  See :class:`~fastf1.core.Telemetry`
+FastF1 has a `Code of Conduct <https://github.com/theOehrly/Fast-F1/blob/master/CODE_OF_CONDUCT.md>`_.
+Complaints about a perceived breach of this code of conduct should be sent to
+oehrly@mailbox.org, in almost all cases. Please refer to the Code of Conduct,
+available through the main page of the GitHub repository (or click
+`here <https://github.com/theOehrly/Fast-F1/blob/master/CODE_OF_CONDUCT.md>`_),
+for information on how breaches are reported, how the
+Code of Conduct is enforced and what values FastF1 encourages.
 
 
 ==================
@@ -133,26 +145,9 @@ Indices and tables
 * :ref:`search`
 
 
-========================================================
-Questions, Contacting the Maintainer and Code of Conduct
-========================================================
-
-For questions that may be of interest to the whole community, please use the
-Github Discussions section to ask for help.
-
-In case of questions that you prefer to discuss privately, feel free to contact
-me via email at oehrly@mailbox.org. Any requests to this address will be
-treated with confidentiality if desired.
-
-FastF1 has a Code of Conduct. Complaints about a perceived breach of this code
-of conduct should be sent to the above email address as well, in almost all
-cases. Please refer to the Code of Conduct, available through the main page of
-the GitHub repository, for information on how breaches are reported, how the
-Code of Conduct is enforced and what values FastF1 encourages.
-
-
+======
 Notice
-------
+======
 
 FastF1 and this website are unofficial and are not associated in any way with
 the Formula 1 companies. F1, FORMULA ONE, FORMULA 1, FIA FORMULA ONE WORLD
