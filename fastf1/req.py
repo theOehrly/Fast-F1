@@ -156,6 +156,7 @@ class Cache:
         fastf1.Cache.disabled
         fastf1.Cache.set_disabled
         fastf1.Cache.set_enabled
+        fastf1.Cache.offline_mode
 
     The parsed API data will be saved as a pickled object.
     Raw GET and POST requests are cached in a sqlite db using the
@@ -580,6 +581,10 @@ class Cache:
         In this mode, no actual requests will be sent and only cached data is
         returned. This can be useful for freezing the state of the cache or
         working with an unstable internet connection.
+
+        Args:
+            enabled: sets the state of offline mode to 'enabled' (``True``)
+                or 'disabled' (``False``)
         """
         if cls._requests_session_cached is None:
             cls._enable_default_cache()

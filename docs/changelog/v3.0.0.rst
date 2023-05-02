@@ -1,6 +1,8 @@
 What's new in v3.0.0
 --------------------
 
+(released 02/05/2023)
+
 New Features
 ^^^^^^^^^^^^
 
@@ -61,12 +63,6 @@ New Features
   session there now exists a non-timezone aware UTC timestamp in
   ``Session*DateUtc`` (#253). Timezone information and UTC timestamps are only
   available when using one of ``'fastf1'`` or ``'f1timing'`` as backend.
-
-  ``Session*Date`` is now a timezone aware timestamp for the session start time
-  as local time (was not timezone aware previously). ``Session*DateUtc`` was
-  added and provides a non-timezone-aware Utc timestamp for the session start
-  time. Timezone aware local timestamps are only available when the primary
-  schedule backend is used.
 
 - Added ``strict_search`` parameter to :func:`fastf1.get_event` that disables
   fuzzy matching for exact matching of session names. (by @Neron-png)
@@ -235,6 +231,6 @@ Deprecations
   If you currently require functionality from there, please open an issue
   on Github with details about what you require and why.
 
-- :mod:`utils.delta_time` is considered deprecated and will be modified or
+- :mod:`fastf1.utils.delta_time` is considered deprecated and will be modified or
   removed in a future release because it has a tendency to give inaccurate
   results.
