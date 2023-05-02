@@ -83,6 +83,29 @@ this pattern is the wrapper for Ergast.
    Ergast API             all endpoints that are provided by Ergast                                                                                       :ref:`ergast`
    =====================  ==============================================================================================================================  ==================================================================================================
 
+
+Compatibility and Availability
+------------------------------
+
+Timing data, session information, car telemetry and position data are available
+from 2018 onwards. (This data is usually available within 30-120 minutes after
+the end of a session.)
+It is also possible to obtain this data by recording the data live stream,
+using the live timing recorder that is built into FastF1. Usually this is not
+necessary but there have been server issues in the past which caused the
+data to be not available for download. Recording of the data live stream is
+therefore mostly a solution for redundancy.
+
+Schedule information and session results are available for older seasons as
+well, going back as far as 1950 (limited to data that is available through
+`Ergast <http://ergast.com/mrd/>`_).
+
+
+========
+Contents
+========
+
+
 .. toctree::
    ← Back to Github <https://github.com/theOehrly/Fast-F1>
 
