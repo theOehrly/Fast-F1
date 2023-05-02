@@ -50,6 +50,17 @@ The official documentation can be found here:
 `https://theoehrly.github.io/Fast-F1/ <https://theoehrly.github.io/Fast-F1/>`_
 
 
+Supporting the Project
+======================
+
+If you want to support the continuous development of FastF1, you can buy me
+a coffee.
+
+.. raw:: html
+
+    <a href="https://www.buymeacoffee.com/fastf1" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
+
+
 Notice
 ======
 
