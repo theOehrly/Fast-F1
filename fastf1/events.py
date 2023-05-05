@@ -95,6 +95,7 @@ Event Schedule
 
 - 'conventional': Practice 1, Practice 2, Practice 3, Qualifying, Race
 - 'sprint': Practice 1, Qualifying, Practice 2, Sprint, Race
+- 'sprint_shootout': Practice 1, Qualifying, Sprint Shootout, Sprint, Race
 - 'testing': no fixed session order; usually three practice sessions on
   three separate days
 
@@ -616,7 +617,10 @@ def _get_schedule_from_f1_timing(year):
             if event['Sessions'][3]['Name'] == 'Sprint Qualifying':
                 # fix for 2021 where Sprint was called Sprint Qualifying
                 event['Sessions'][3]['Name'] = 'Sprint'
-            data['EventFormat'].append('sprint')
+            if event['Sessions'][2]['Name'] == 'Sprint Shootout':
+                data['EventFormat'].append('sprint_shootout')
+            else:
+                data['EventFormat'].append('sprint')
             data['RoundNumber'].append(event['Number'])
         elif 'test' in event['Name'].lower():
             data['EventFormat'].append('testing')
@@ -682,14 +686,17 @@ def _get_schedule_from_ergast(year) -> "EventSchedule":
         data['EventDate'].append(date)
 
         if 'Sprint' in rnd:
-            data['EventFormat'].append("sprint")
+            # Ergast doesn't support sprint shootout format yet
+            data['EventFormat'].append(
+                "sprint_shootout" if year == 2023 else "sprint")
             data['Session1'].append('Practice 1')
             data['Session1DateUtc'].append(
                 date.floor('D') - pd.Timedelta(days=2))
             data['Session2'].append('Qualifying')
             data['Session2DateUtc'].append(
                 date.floor('D') - pd.Timedelta(days=2))
-            data['Session3'].append('Practice 2')
+            data['Session3'].append(
+                'Sprint Shootout' if year == 2023 else 'Practice 2')
             data['Session3DateUtc'].append(
                 date.floor('D') - pd.Timedelta(days=1))
             data['Session4'].append('Sprint')

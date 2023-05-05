@@ -69,6 +69,9 @@ D_LOOKUP: List[List] = \
      [7, 'RAI', 'Alfa Romeo'], [99, 'GIO', 'Alfa Romeo'],
      [6, 'LAT', 'Williams'], [63, 'RUS', 'Williams']]
 
+RACE_LIKE_SESSIONS = ('Race', 'Sprint', 'Sprint Qualifying')
+QUALI_LIKE_SESSIONS = ('Qualifying', 'Sprint Shootout')
+
 
 class Telemetry(pd.DataFrame):
     """Multi-channel time series telemetry data
@@ -1237,6 +1240,7 @@ class Session:
 
         self._fix_missing_laps_retired_on_track()
         self._set_laps_deleted_from_rcm()
+        self._calculate_quali_like_session_results()
 
         _logger.info(f"Finished loading data for {len(self.drivers)} "
                      f"drivers: {self.drivers}")
@@ -1281,8 +1285,7 @@ class Session:
 
             is_generated = False
             if not len(d1):
-                if ((self.name in ('Race', 'Sprint', 'Sprint Qualifying'))
-                        and len(d2)):
+                if self.name in RACE_LIKE_SESSIONS and len(d2):
                     # add data for drivers who crashed on the very first lap
                     # as a downside, this potentially adds a nonexistent lap
                     # for drivers who could not start the race
@@ -1319,7 +1322,7 @@ class Session:
             # calculate lap start time by setting it to the 'Time' of the
             # previous lap
             laps_start_time = list(result['Time'])[:-1]
-            if self.name in ('Race', 'Sprint', 'Sprint Qualifying'):
+            if self.name in RACE_LIKE_SESSIONS:
                 # assumption that the first lap started when the session was
                 # started can only be made for the race
                 laps_start_time.insert(0, self.session_start_time)
@@ -1345,8 +1348,7 @@ class Session:
                             ].index[0]
                         except IndexError:
                             continue  # no pit out, car did not restart
-                        if self.name in ('Sprint Qualifying', 'Sprint',
-                                         'Race'):
+                        if self.name in RACE_LIKE_SESSIONS:
                             # if this is a race-like session, we can assume the
                             # session restart time as lap start time
                             laps_start_time[restart_index] = row['Time']
@@ -1395,7 +1397,7 @@ class Session:
 
         # add Position based on lap timing
         laps['Position'] = np.NaN  # create empty column
-        if self.name in ('Race', 'Sprint', 'Sprint Qualifying'):
+        if self.name in RACE_LIKE_SESSIONS:
             for lap_n in laps['LapNumber'].unique():
                 # get each drivers lap for the current lap number, sorted by
                 # the time when each lap was set
@@ -1559,6 +1561,51 @@ class Session:
                     ('Deleted', 'IsPersonalBest', 'DeletedReason')
                 ] = (True, False, reason)
 
+    def _calculate_quali_like_session_results(self, force=False):
+        """Try to calculate quali results from lap times if no results are
+        available
+
+        Args:
+            force (bool): Force calculation of quali results even if
+            results are already available, (default: False)"""
+
+        if self.name not in QUALI_LIKE_SESSIONS:
+            return
+
+        if not hasattr(self, '_laps'):
+            return
+
+        if not self.results['Position'].isna().all() and not force:
+            # Don't do anything if results are already available
+            # unless force is True
+            return
+
+        quali_results = (self._laps.loc[:, ['DriverNumber']].copy()
+                         .drop_duplicates()
+                         .reset_index(drop=True))
+        sessions = self._laps.pick_quicklaps().split_qualifying_sessions()
+
+        for i, session in enumerate(sessions):
+            session_name = f'Q{i + 1}'
+            laps = (
+                session[~session['LapTime'].isna() & ~session['Deleted']]
+                .copy()
+                .groupby(['DriverNumber'])
+                .agg({'LapTime': 'min'})
+                .rename(columns={'LapTime': session_name})
+            )
+
+            quali_results = (quali_results
+                             .merge(laps, on='DriverNumber', how='left'))
+
+        quali_results = (quali_results.sort_values(by=['Q3', 'Q2', 'Q1'])
+                         .reset_index())
+        quali_results['Position'] = quali_results.index + 1
+        quali_results = quali_results.set_index('DriverNumber', drop=True)
+
+        self.results.update(quali_results, overwrite=force)
+        self.results.sort_values(by=['Position'], inplace=True)
+
     def _add_track_status_to_laps(self, laps):
         # add track status information to each lap
 
@@ -1672,7 +1719,7 @@ class Session:
     def _load_total_lap_count(self, livedata=None):
         # Get the number of originally scheduled laps
         # Lap count data only exists for race-like sessions.
-        if self.name in ('Race', 'Sprint', 'Sprint Qualifying'):
+        if self.name in RACE_LIKE_SESSIONS:
             try:
                 lap_count = api.lap_count(self.api_path, livedata=livedata)
                 # A race-like session can have multiple intended total laps,
@@ -1875,7 +1922,7 @@ class Session:
     def _drivers_results_from_ergast(
             self, *, load_drivers=False, load_results=False
     ) -> Optional[pd.DataFrame]:
-        if self.name in ('Qualifying', 'Sprint Qualifying', 'Sprint', 'Race'):
+        if self.name in RACE_LIKE_SESSIONS + QUALI_LIKE_SESSIONS:
             session_name = self.name
         else:
             # this is a practice session, use drivers from race session but
@@ -1896,10 +1943,16 @@ class Session:
                 return self._ergast.get_qualifying_results(
                     self.event.year, self.event.RoundNumber
                 ).content[0]
-            else:
+            elif session_name in ('Sprint', 'Sprint Qualifying'):
                 return self._ergast.get_sprint_results(
                     self.event.year, self.event.RoundNumber
                 ).content[0]
+            else:
+                # TODO: Use Ergast when/if it supports sprint shootout sessions
+                # return self._ergast.get_sprint_shootout_results(
+                #     self.event.year, self.event.RoundNumber
+                # ).content[0]
+                return None
 
         data = _get_data()
 
@@ -1925,7 +1978,7 @@ class Session:
                 'position': 'Position',
             })
 
-            if session_name in ('Sprint Qualifying', 'Sprint', 'Race'):
+            if session_name in RACE_LIKE_SESSIONS:
                 rename_return.update({
                     'positionText': 'ClassifiedPosition',
                     'grid': 'GridPosition',
@@ -1934,7 +1987,7 @@ class Session:
                     'totalRaceTime': 'Time'
                 })
 
-            if session_name == 'Qualifying':
+            if session_name in QUALI_LIKE_SESSIONS:
                 rename_return.update({
                     'Q1': 'Q1',
                     'Q2': 'Q2',
@@ -2157,8 +2210,8 @@ class Laps(pd.DataFrame):
           For filtering laps by track status, you may want to use
           :func:`Laps.pick_track_status`.
         - **Position** (float): Position of the driver at the end of each lap.
-          This value is NaN for FP1, FP2, FP3 and Qualifying as well as for
-          crash laps.
+          This value is NaN for FP1, FP2, FP3, Sprint Shootout, and Qualifying
+          as well as for crash laps.
         - **Deleted** (Optional[bool]): Indicates that a lap was deleted by
           the stewards, for example because of a track limits violation.
           This data is only available when race control messages are loaded.
@@ -2675,13 +2728,13 @@ class Laps(pd.DataFrame):
             each. If any of these sessions was cancelled, ``None`` will be
             returned instead of :class:`Laps`.
         """
-        if self.session.name != "Qualifying":
+        if self.session.name not in QUALI_LIKE_SESSIONS:
             raise ValueError("Session is not a qualifying session!")
         elif self.session.session_status is None:
             raise ValueError("Session status data is unavailable!")
 
         # get the timestamps for 'Started' from the session status data
-        # note that after a red flag, a session is 'Started' as well.
+        # note that after a red flag, a session can be 'Started' as well.
         # Therefore, it is necessary to check for red flags and ignore
         # the first 'Started' entry after a red flag.
         split_times = list()
@@ -2694,8 +2747,10 @@ class Laps(pd.DataFrame):
                     session_suspended = False
             elif row['Status'] == 'Aborted':
                 session_suspended = True
+            elif row['Status'] == 'Finished':
+                session_suspended = False
 
-        # at the very last timestamp, to get an end for the last interval
+        # add the very last timestamp, to get an end for the last interval
         split_times.append(self.session.session_status['Time'].iloc[-1])
 
         laps = [None, None, None]
@@ -2939,7 +2994,8 @@ class SessionResults(pd.DataFrame):
 
         - ``Position`` | :class:`float` |
           The drivers finishing position (values only given if session is
-          'Race', 'Qualifying' or 'Sprint Qualifying').
+          'Race', 'Qualifying', 'Sprint Shootout', 'Sprint', or
+          'Sprint Qualifying').
 
         - ``ClassifiedPosition`` | :class:`str` |
           The official classification result for each driver.
@@ -2950,30 +3006,31 @@ class SessionResults(pd.DataFrame):
 
         - ``GridPosition`` | :class:`float` |
           The drivers starting position (values only given if session is
-          'Race' or 'Sprint Qualifying')
+          'Race', 'Sprint', or 'Sprint Qualifying')
 
         - ``Q1`` | :class:`pd.Timedelta` |
           The drivers best Q1 time (values only given if session is
-          'Qualifying')
+          'Qualifying' or 'Sprint Shootout')
 
         - ``Q2`` | :class:`pd.Timedelta` |
           The drivers best Q2 time (values only given if session is
-          'Qualifying')
+          'Qualifying' or 'Sprint Shootout')
 
         - ``Q3`` | :class:`pd.Timedelta` |
           The drivers best Q3 time (values only given if session is
-          'Qualifying')
+          'Qualifying' or 'Sprint Shootout')
 
         - ``Time`` | :class:`pd.Timedelta` |
           The drivers total race time (values only given if session is
-          'Race' or 'Sprint Qualifying' and the driver was not more than one
-          lap behind the leader)
+          'Race', 'Sprint', or 'Sprint Qualifying' and the driver was not
+          more than one lap behind the leader)
 
         - ``Status`` | :class:`str` |
           A status message to indicate if and how the driver finished the race
           or to indicate the cause of a DNF. Possible values include but are
           not limited to 'Finished', '+ 1 Lap', 'Crash', 'Gearbox', ...
-          (values only given if session is 'Race' or 'Sprint Qualifying')
+          (values only given if session is 'Race', 'Sprint', or
+          'Sprint Qualifying')
 
         - ``Points`` | :class:`float` |
           The number of points received by each driver for their finishing
