@@ -6,7 +6,7 @@ pytestmark = pytest.mark.prjdoc
 
 def test_readme_renders():
     # verify that the readme file renders without errors for pypi too
-    ret = subprocess.call('python -m readme_renderer README.rst', shell=True,
+    ret = subprocess.call('python -m readme_renderer README.md', shell=True,
                           stdout=subprocess.DEVNULL,
                           stderr=subprocess.DEVNULL)
 
