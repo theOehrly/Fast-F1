@@ -92,8 +92,7 @@ def _test_no_timing_app_data():
     fastf1._api.timing_app_data = _mock
 
     session = fastf1.get_session(2020, 'Italy', 'R')
-    with fastf1.Cache.disabled():
-        session.load(telemetry=False, weather=False)
+    session.load(telemetry=False, weather=False)
 
     assert 'Failed to load lap data!' not in log_handle.text
     assert 'No tyre data for driver' in log_handle.text
@@ -105,9 +104,7 @@ def _test_no_timing_app_data():
 @pytest.mark.f1telapi
 def test_inlap_added():
     session = fastf1.get_session(2021, 'Mexico City', 'Q')
-
-    with fastf1.Cache.disabled():
-        session.load(telemetry=False)
+    session.load(telemetry=False)
 
     last = session.laps.pick_driver('PER').iloc[-1]
     assert not pd.isnull(last['PitInTime'])
