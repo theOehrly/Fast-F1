@@ -176,3 +176,57 @@ def test_split_quali_laps():
     assert len(q1['DriverNumber'].unique()) == 20
     assert len(q2['DriverNumber'].unique()) == 15
     assert len(q3['DriverNumber'].unique()) == 10
+
+
+@pytest.mark.f1telapi
+def test_split_sprint_shootout_laps():
+    session = fastf1.get_session(2023, 4, 'SS')
+    session.load(telemetry=False, weather=False)
+
+    q1, q2, q3 = session.laps.split_qualifying_sessions()
+
+    assert len(q1['DriverNumber'].unique()) == 20
+
+    # Logan Sargeant was 15th in Q1 but crashed and couldn't participate in Q2
+    assert len(q2['DriverNumber'].unique()) == 14
+    assert len(q3['DriverNumber'].unique()) == 9
+
+
+@pytest.mark.f1telapi
+def test_calculated_quali_results():
+    session = fastf1.get_session(2023, 2, 'Q')
+    session.load(telemetry=False, weather=False)
+
+    ergast_results = session.results.copy()
+    session._calculate_quali_like_session_results(force=True)
+
+    pd.testing.assert_frame_equal(ergast_results, session.results)
+
+
+@pytest.mark.f1telapi
+def test_quali_q3_cancelled():
+    session = fastf1.get_session(2023, 2, 'Q')
+    session.load(telemetry=False, weather=False)
+
+    # Remove Q3 to simulate cancelled Q3. If a future race has a cancelled Q3,
+    # that would be a better test case. The last one was the US GP in 2015, so
+    # no lap data is available.
+    session.session_status.drop([7, 8, 9, 10], inplace=True)
+    session.results['Q3'] = pd.NaT
+
+    # Test split_qualifying_sessions()
+    q1, q2, q3 = session.laps.split_qualifying_sessions()
+
+    assert len(q1['DriverNumber'].unique()) == 20
+    assert len(q2['DriverNumber'].unique()) == 15
+    assert q3 is None
+
+    # Test _calculate_quali_like_session_results()
+    orig_results = session.results.copy()
+    session._calculate_quali_like_session_results(force=True)
+
+    pd.testing.assert_series_equal(
+        session.results['Q1'].sort_values(), orig_results['Q1'].sort_values())
+    pd.testing.assert_series_equal(
+        session.results['Q2'].sort_values(), orig_results['Q2'].sort_values())
+    assert session.results['Q3'].isna().all()

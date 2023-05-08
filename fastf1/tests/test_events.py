@@ -94,10 +94,11 @@ def test_event_schedule_constructor_sliced():
 
 
 def test_event_schedule_is_testing():
-    schedule = fastf1.events.EventSchedule(
-        {'EventFormat': ['conventional', 'testing']}
-    )
-    assert (schedule.is_testing() == [False, True]).all()
+    schedule = fastf1.events.EventSchedule({'EventFormat': [
+        'conventional', 'sprint', 'sprint_shootout', 'testing'
+    ]})
+
+    assert (schedule.is_testing() == [False, False, False, True]).all()
 
 
 def test_event_schedule_get_event_by_round_number():
@@ -168,6 +169,18 @@ def test_event_get_session_name(backend):
     assert event.get_session_name('Sprint') == 'Sprint'
     assert event.get_session_name('Sprint Qualifying') == 'Sprint'
 
+    # Sprint Shootout format introduced for 2023
+    event = fastf1.get_event(2023, 4, backend=backend)
+    print(event)
+    assert event.year == 2023
+    assert event.EventFormat == 'sprint_shootout'
+    assert event.get_session_name('SS') == 'Sprint Shootout'
+    assert event.get_session_name('SQ') == 'Sprint'
+    assert event.get_session_name('S') == 'Sprint'
+    assert event.get_session_name('Sprint Shootout') == 'Sprint Shootout'
+    assert event.get_session_name('Sprint') == 'Sprint'
+    assert event.get_session_name('Sprint Qualifying') == 'Sprint'
+
 
 @pytest.mark.parametrize(
     'backend, tz_support',
@@ -193,20 +206,25 @@ def test_event_get_session_date(backend, tz_support):
 
 
 @pytest.mark.parametrize(
-    "meth_name,args,expected_name",
+    "event_year,event_round,meth_name,args,expected_name",
     [
-        ['get_session', ['qualifying'], 'Qualifying'],
-        ['get_session', ['R'], 'Race'],
-        ['get_session', [1], 'Practice 1'],
-        ['get_race', [], 'Race'],
-        ['get_qualifying', [], 'Qualifying'],
-        ['get_sprint', [], 'Sprint'],
-        ['get_practice', [1], 'Practice 1'],
-        ['get_practice', [2], 'Practice 2'],
+        [2021, 14, 'get_session', ['qualifying'], 'Qualifying'],
+        [2021, 14, 'get_session', ['R'], 'Race'],
+        [2021, 14, 'get_session', [1], 'Practice 1'],
+        [2021, 14, 'get_session', ['sprint'], 'Sprint'],
+        [2021, 14, 'get_race', [], 'Race'],
+        [2021, 14, 'get_qualifying', [], 'Qualifying'],
+        [2021, 14, 'get_sprint', [], 'Sprint'],
+        [2021, 14, 'get_practice', [1], 'Practice 1'],
+        [2021, 14, 'get_practice', [2], 'Practice 2'],
+        [2023, 4, 'get_session', ['sprint shootout'], 'Sprint Shootout'],
+        [2023, 4, 'get_session', ['ss'], 'Sprint Shootout'],
+        [2023, 4, 'get_sprint_shootout', [], 'Sprint Shootout'],
     ]
 )
-def test_event_get_session(meth_name, args, expected_name):
-    event = fastf1.get_event(2021, 14)
+def test_event_get_session(
+        event_year, event_round, meth_name, args, expected_name):
+    event = fastf1.get_event(event_year, event_round)
     session = getattr(event, meth_name)(*args)
     assert session.name == expected_name
 
