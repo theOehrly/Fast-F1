@@ -48,9 +48,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ./doc_cache
-          key: fastf1-${{ secrets.CACHE_VERSION }}-doc-cache-${{ hashFiles('*.*') }}
+          key: fastf1-${{ vars.CACHE_VERSION }}-doc-cache-${{ hashFiles('*.*') }}
           restore-keys: |
-            fastf1-${{ secrets.CACHE_VERSION }}-doc-cache
+            fastf1-${{ vars.CACHE_VERSION }}-doc-cache
 
       - name: Install Fast-F1 from sources
         run: |

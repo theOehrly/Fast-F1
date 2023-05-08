@@ -10,4 +10,4 @@ jobs:
     with:
       publish: true
     secrets:
-      CACHE_VERSION: ${{ secrets.CACHE_VERSION }}
+      CACHE_VERSION: ${{ vars.CACHE_VERSION }}
