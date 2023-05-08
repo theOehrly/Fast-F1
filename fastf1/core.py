@@ -69,8 +69,8 @@ D_LOOKUP: List[List] = \
      [7, 'RAI', 'Alfa Romeo'], [99, 'GIO', 'Alfa Romeo'],
      [6, 'LAT', 'Williams'], [63, 'RUS', 'Williams']]
 
-RACE_LIKE_SESSIONS = ('Race', 'Sprint', 'Sprint Qualifying')
-QUALI_LIKE_SESSIONS = ('Qualifying', 'Sprint Shootout')
+_RACE_LIKE_SESSIONS = ('Race', 'Sprint', 'Sprint Qualifying')
+_QUALI_LIKE_SESSIONS = ('Qualifying', 'Sprint Shootout')
 
 
 class Telemetry(pd.DataFrame):
@@ -1285,7 +1285,7 @@ class Session:
 
             is_generated = False
             if not len(d1):
-                if self.name in RACE_LIKE_SESSIONS and len(d2):
+                if self.name in _RACE_LIKE_SESSIONS and len(d2):
                     # add data for drivers who crashed on the very first lap
                     # as a downside, this potentially adds a nonexistent lap
                     # for drivers who could not start the race
@@ -1322,7 +1322,7 @@ class Session:
             # calculate lap start time by setting it to the 'Time' of the
             # previous lap
             laps_start_time = list(result['Time'])[:-1]
-            if self.name in RACE_LIKE_SESSIONS:
+            if self.name in _RACE_LIKE_SESSIONS:
                 # assumption that the first lap started when the session was
                 # started can only be made for the race
                 laps_start_time.insert(0, self.session_start_time)
@@ -1348,7 +1348,7 @@ class Session:
                             ].index[0]
                         except IndexError:
                             continue  # no pit out, car did not restart
-                        if self.name in RACE_LIKE_SESSIONS:
+                        if self.name in _RACE_LIKE_SESSIONS:
                             # if this is a race-like session, we can assume the
                             # session restart time as lap start time
                             laps_start_time[restart_index] = row['Time']
@@ -1397,7 +1397,7 @@ class Session:
 
         # add Position based on lap timing
         laps['Position'] = np.NaN  # create empty column
-        if self.name in RACE_LIKE_SESSIONS:
+        if self.name in _RACE_LIKE_SESSIONS:
             for lap_n in laps['LapNumber'].unique():
                 # get each drivers lap for the current lap number, sorted by
                 # the time when each lap was set
@@ -1561,6 +1561,9 @@ class Session:
                     ('Deleted', 'IsPersonalBest', 'DeletedReason')
                 ] = (True, False, reason)
 
+    @soft_exceptions("quali results",
+                     "Failed to calculate quali results from lap times!",
+                     _logger)
     def _calculate_quali_like_session_results(self, force=False):
         """Try to calculate quali results from lap times if no results are
         available
@@ -1569,7 +1572,7 @@ class Session:
             force (bool): Force calculation of quali results even if
             results are already available, (default: False)"""
 
-        if self.name not in QUALI_LIKE_SESSIONS:
+        if self.name not in _QUALI_LIKE_SESSIONS:
             return
 
         if not hasattr(self, '_laps'):
@@ -1587,16 +1590,19 @@ class Session:
 
         for i, session in enumerate(sessions):
             session_name = f'Q{i + 1}'
-            laps = (
-                session[~session['LapTime'].isna() & ~session['Deleted']]
-                .copy()
-                .groupby(['DriverNumber'])
-                .agg({'LapTime': 'min'})
-                .rename(columns={'LapTime': session_name})
-            )
+            if session is not None:
+                laps = (
+                    session[~session['LapTime'].isna() & ~session['Deleted']]
+                    .copy()
+                    .groupby(['DriverNumber'])
+                    .agg({'LapTime': 'min'})
+                    .rename(columns={'LapTime': session_name})
+                )
 
-            quali_results = (quali_results
-                             .merge(laps, on='DriverNumber', how='left'))
+                quali_results = (quali_results
+                                 .merge(laps, on='DriverNumber', how='left'))
+            else:
+                quali_results[session_name] = pd.NaT
 
         quali_results = (quali_results.sort_values(by=['Q3', 'Q2', 'Q1'])
                          .reset_index())
@@ -1719,7 +1725,7 @@ class Session:
     def _load_total_lap_count(self, livedata=None):
         # Get the number of originally scheduled laps
         # Lap count data only exists for race-like sessions.
-        if self.name in RACE_LIKE_SESSIONS:
+        if self.name in _RACE_LIKE_SESSIONS:
             try:
                 lap_count = api.lap_count(self.api_path, livedata=livedata)
                 # A race-like session can have multiple intended total laps,
@@ -1922,7 +1928,7 @@ class Session:
     def _drivers_results_from_ergast(
             self, *, load_drivers=False, load_results=False
     ) -> Optional[pd.DataFrame]:
-        if self.name in RACE_LIKE_SESSIONS + QUALI_LIKE_SESSIONS:
+        if self.name in _RACE_LIKE_SESSIONS + _QUALI_LIKE_SESSIONS:
             session_name = self.name
         else:
             # this is a practice session, use drivers from race session but
@@ -1978,7 +1984,7 @@ class Session:
                 'position': 'Position',
             })
 
-            if session_name in RACE_LIKE_SESSIONS:
+            if session_name in _RACE_LIKE_SESSIONS:
                 rename_return.update({
                     'positionText': 'ClassifiedPosition',
                     'grid': 'GridPosition',
@@ -1987,7 +1993,7 @@ class Session:
                     'totalRaceTime': 'Time'
                 })
 
-            if session_name in QUALI_LIKE_SESSIONS:
+            if session_name in _QUALI_LIKE_SESSIONS:
                 rename_return.update({
                     'Q1': 'Q1',
                     'Q2': 'Q2',
@@ -2728,7 +2734,7 @@ class Laps(pd.DataFrame):
             each. If any of these sessions was cancelled, ``None`` will be
             returned instead of :class:`Laps`.
         """
-        if self.session.name not in QUALI_LIKE_SESSIONS:
+        if self.session.name not in _QUALI_LIKE_SESSIONS:
             raise ValueError("Session is not a qualifying session!")
         elif self.session.session_status is None:
             raise ValueError("Session status data is unavailable!")
@@ -2748,6 +2754,8 @@ class Laps(pd.DataFrame):
             elif row['Status'] == 'Aborted':
                 session_suspended = True
             elif row['Status'] == 'Finished':
+                # This handles the case when a qualifying session isn't
+                # restarted after a red flag.
                 session_suspended = False
 
         # add the very last timestamp, to get an end for the last interval
