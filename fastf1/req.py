@@ -208,6 +208,8 @@ class Cache:
     _tmp_disabled = False
     _ci_mode = False
 
+    _request_counter = 0  # count uncached requests for debugging purposes
+
     @classmethod
     def enable_cache(
             cls, cache_dir: str, ignore_version: bool = False,
@@ -262,6 +264,7 @@ class Cache:
         """
         cls._enable_default_cache()
         if (cls._requests_session_cached is None) or cls._tmp_disabled:
+            cls._request_counter += 1
             return cls._requests_session.get(*args, **kwargs)
 
         if cls._ci_mode:
@@ -272,6 +275,7 @@ class Cache:
             if resp.status_code != 504:
                 return resp
 
+        cls._request_counter += 1
         return cls._requests_session_cached.get(*args, **kwargs)
 
     @classmethod
@@ -285,6 +289,7 @@ class Cache:
         """
         cls._enable_default_cache()
         if (cls._requests_session_cached is None) or cls._tmp_disabled:
+            cls._request_counter += 1
             return cls._requests_session.post(*args, **kwargs)
 
         if cls._ci_mode:
@@ -295,6 +300,7 @@ class Cache:
             if resp.status_code != 504:
                 return resp
 
+        cls._request_counter += 1
         return cls._requests_session_cached.post(*args, **kwargs)
 
     @classmethod

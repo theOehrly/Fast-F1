@@ -1,5 +1,7 @@
 import pytest
 
+import os
+
 
 def pytest_addoption(parser):
     parser.addoption(
@@ -70,6 +72,34 @@ def pytest_collection_modifyitems(config, items):
         for item in items:
             if "prjdoc" in item.keywords:
                 item.add_marker(skip_prj)
+
+# ########## request counter ############
+
+
+def pytest_report_teststatus(report, config):
+    from fastf1 import Cache
+
+    if (report.when == 'teardown') and (Cache._request_counter > 0):
+        name = report.location[0] + '::' + report.location[2]
+        line = f"{name} - uncached requests:\t" \
+               f"{Cache._request_counter}"
+        report.sections.append(('Request Count', line))
+        Cache._request_counter = 0
+
+
+def pytest_terminal_summary(terminalreporter, exitstatus, config):
+    reports = terminalreporter.getreports('')
+    content = os.linesep.join(
+        text for report in reports for secname, text in report.sections
+        if secname == 'Request Count'
+    )
+    if content:
+        terminalreporter.ensure_newline()
+        terminalreporter.section('Request count', sep='-', blue=True,
+                                 bold=True)
+        terminalreporter.line(content)
+
+# ########## request counter end #########
 
 
 @pytest.fixture
