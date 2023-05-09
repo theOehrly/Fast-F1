@@ -1,0 +1,12 @@
+What's new in v3.0.2
+--------------------
+
+(released 09/05/2023)
+
+Bug Fixes and Improvements
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Improved support for Sprint Shootout sessions and added session results for
+  these. (by @mdsakalu)
+
+- Improved exception handling on various internal functions
