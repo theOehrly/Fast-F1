@@ -1415,6 +1415,10 @@ class Session:
         self._laps = Laps(laps, session=self, force_default_cols=True)
         self._check_lap_accuracy()
 
+    @soft_exceptions("generate retired laps",
+                     "Failed to generate last laps for drivers that retired"
+                     "on track!",
+                     _logger)
     def _fix_missing_laps_retired_on_track(self):
         # generate a last lap entry with assumed end time for cars that
         # retired on track
@@ -1531,6 +1535,9 @@ class Session:
                 .sort_values(by=['DriverNumber', 'LapNumber']) \
                 .reset_index(drop=True)
 
+    @soft_exceptions("mark deleted laps from RCM",
+                     "Failed to find deleted laps from race control messages!",
+                     _logger)
     def _set_laps_deleted_from_rcm(self):
         # parse race control messages to find deleted lap times and
         # set the 'Deleted' flag in self._laps
@@ -1612,6 +1619,9 @@ class Session:
         self.results.update(quali_results, overwrite=force)
         self.results.sort_values(by=['Position'], inplace=True)
 
+    @soft_exceptions("add track status to laps",
+                     "Failed to add track status to Laps!",
+                     _logger)
     def _add_track_status_to_laps(self, laps):
         # add track status information to each lap
 
@@ -1790,6 +1800,9 @@ class Session:
 
         return corrected
 
+    @soft_exceptions("lap accuracy check",
+                     "Failed to perform lap accuracy check!",
+                     _logger)
     def _check_lap_accuracy(self):
         """Accuracy validation; simples yes/no validation
         Currently only relies on provided information which can't catch all problems"""
@@ -1937,33 +1950,36 @@ class Session:
             load_results = False
 
         @soft_exceptions("ergast result data",
-                         "Failed to load result data from Ergast! (This is "
-                         "expected for recent sessions)",
+                         "Failed to load result data from Ergast!",
                          _logger)
         def _get_data():
             if session_name == 'Race':
                 return self._ergast.get_race_results(
                     self.event.year, self.event.RoundNumber
-                ).content[0]
+                )
             elif session_name == 'Qualifying':
                 return self._ergast.get_qualifying_results(
                     self.event.year, self.event.RoundNumber
-                ).content[0]
+                )
             elif session_name in ('Sprint', 'Sprint Qualifying'):
                 return self._ergast.get_sprint_results(
                     self.event.year, self.event.RoundNumber
-                ).content[0]
+                )
             else:
                 # TODO: Use Ergast when/if it supports sprint shootout sessions
                 # return self._ergast.get_sprint_shootout_results(
                 #     self.event.year, self.event.RoundNumber
-                # ).content[0]
+                # )
                 return None
 
-        data = _get_data()
+        response = _get_data()
 
-        if data is None:
+        if not response or not response.content:
+            _logger.warning("No result data for this session available on "
+                            "Ergast! (This is expected for recent sessions)")
             return None
+
+        data = response.content[0]
 
         rename_return = {
             'number': 'DriverNumber',
