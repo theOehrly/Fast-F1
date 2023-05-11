@@ -144,12 +144,12 @@ DRIVER_TRANSLATE: Dict[str, str] = {
 """Mapping of driver names to theirs respective abbreviations."""
 
 COMPOUND_COLORS: Dict[str, str] = {
-    "SOFT": "da291c",
-    "MEDIUM": "ffd12e",
-    "HARD": "f0f0ec",
-    "INTERMEDIATE": "43b02a",
-    "WET": "0067ad",
-    "UNKNOWN": "00ffff",
+    "SOFT": "#da291c",
+    "MEDIUM": "#ffd12e",
+    "HARD": "#f0f0ec",
+    "INTERMEDIATE": "#43b02a",
+    "WET": "#0067ad",
+    "UNKNOWN": "#00ffff",
 }
 """Mapping of tyre compound names to compound colors (hex color codes).
 (current season only)"""
