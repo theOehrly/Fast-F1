@@ -144,11 +144,12 @@ Questions, Contacting the Maintainer and Code of Conduct
 
 For questions that may be of interest to the whole community, please use the
 Github `Discussions <https://github.com/theOehrly/Fast-F1/discussions>`_
-section to ask for help.
+section to ask for help. This includes general support questions.
 
 In case of questions that you prefer to discuss privately, feel free to contact
 me via email at oehrly@mailbox.org. Any requests to this address will be
-treated with confidentiality, if desired.
+treated with confidentiality, if desired. **Do not use this email address for
+general support requests! Such requests will likely be ignored.**
 
 FastF1 has a `Code of Conduct <https://github.com/theOehrly/Fast-F1/blob/master/CODE_OF_CONDUCT.md>`_.
 Complaints about a perceived breach of this code of conduct should be sent to
