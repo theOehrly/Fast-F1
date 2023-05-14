@@ -7,9 +7,6 @@ on:
       publish:
         required: true
         type: boolean
-    secrets:
-      CACHE_VERSION:
-        required: true
   release:
     types: [ released ]
 
@@ -48,9 +45,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ./doc_cache
-          key: fastf1-${{ vars.CACHE_VERSION }}-doc-cache-${{ hashFiles('*.*') }}
+          key: fastf1-doc-cache-${{ hashFiles('*.*') }}
           restore-keys: |
-            fastf1-${{ vars.CACHE_VERSION }}-doc-cache
+            fastf1-doc-cache
 
       - name: Install Fast-F1 from sources
         run: |

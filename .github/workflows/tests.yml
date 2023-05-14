@@ -49,9 +49,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ./test_cache
-          key: fastf1-${{ vars.CACHE_VERSION }}-${{ matrix.python-version }}-${{ hashFiles('*.*') }}
+          key: fastf1-${{ matrix.python-version }}-${{ hashFiles('*.*') }}
           restore-keys: |
-            fastf1-${{ vars.CACHE_VERSION }}-${{ matrix.python-version }}
+            fastf1-${{ matrix.python-version }}
 
       - name: Run tests
         run: |
@@ -149,5 +149,3 @@ jobs:
     uses: ./.github/workflows/docs.yml
     with:
       publish: false
-    secrets:
-      CACHE_VERSION: ${{ vars.CACHE_VERSION }}

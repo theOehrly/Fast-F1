@@ -9,5 +9,3 @@ jobs:
     uses: ./.github/workflows/docs.yml
     with:
       publish: true
-    secrets:
-      CACHE_VERSION: ${{ vars.CACHE_VERSION }}
