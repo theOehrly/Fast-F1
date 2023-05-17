@@ -1611,12 +1611,14 @@ class Session:
             else:
                 quali_results[session_name] = pd.NaT
 
-        quali_results = (quali_results.sort_values(by=['Q3', 'Q2', 'Q1'])
-                         .reset_index())
+        quali_results = quali_results \
+            .sort_values(by=['Q3', 'Q2', 'Q1']) \
+            .reset_index(drop=True)
         quali_results['Position'] = quali_results.index + 1
         quali_results = quali_results.set_index('DriverNumber', drop=True)
 
-        self.results.update(quali_results, overwrite=force)
+        self.results.loc[:, quali_results.columns] \
+            .update(quali_results, overwrite=force)
         self.results.sort_values(by=['Position'], inplace=True)
 
     @soft_exceptions("add track status to laps",
