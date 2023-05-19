@@ -3,5 +3,5 @@ Release Notes
 
 Looking for :ref:`previous-release-notes`?
 
-.. include:: v3.0.2.rst
+.. include:: v3.0.3.rst
 

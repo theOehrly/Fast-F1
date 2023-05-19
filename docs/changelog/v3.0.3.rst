@@ -1,0 +1,14 @@
+What's new in v3.0.3
+--------------------
+
+(released 19/05/2023)
+
+Bug Fixes and Improvements
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Fixed incorrectly formatted color codes for tyre compound colors.
+  (by @Casper-Guo)
+
+- Fixed a bug that prevented the calculation of results for Qualifying-like
+  sessions (for example Sprint Shootout) that only occurred on Pandas v1.5.3
+  and older.
