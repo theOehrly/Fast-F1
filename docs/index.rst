@@ -55,6 +55,21 @@ You can also install using `conda`:
   conda install -c conda-forge fastf1
 
 
+======================
+Supporting the Project
+======================
+
+If you want to support the continuous development of FastF1, you can sponsor me
+on GitHub or buy me a coffee.
+
+
+.. raw:: html
+
+  <iframe src="https://github.com/sponsors/theOehrly/button" title="Sponsor theOehrly" height="32" width="114" style="border: 0; border-radius: 6px; margin: 0 30px 0 0; padding: 0px;"></iframe>
+
+  <a href="https://www.buymeacoffee.com/fastf1" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="31"  width="134"></a>
+
+
 ==============
 Available Data
 ==============

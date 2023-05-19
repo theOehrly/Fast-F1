@@ -45,8 +45,10 @@ The official documentation can be found here:
 
 ## Supporting the Project
 
-If you want to support the continuous development of FastF1, you can buy me
-a coffee.
+If you want to support the continuous development of FastF1, you can sponsor me
+on GitHub or buy me a coffee.
+
+https://github.com/sponsors/theOehrly
 
 <a href="https://www.buymeacoffee.com/fastf1" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 
