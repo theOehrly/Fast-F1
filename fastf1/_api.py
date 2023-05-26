@@ -2,11 +2,12 @@ import base64
 import datetime
 import json
 import zlib
-from typing import Dict
+from typing import Dict, Union
 
 import numpy as np
 import pandas as pd
 
+from fastf1.internals.pandas_extensions import create_df_fast
 from fastf1.logger import get_logger, soft_exceptions
 from fastf1.req import Cache
 from fastf1.utils import recursive_dict_get, to_timedelta, to_datetime
@@ -833,10 +834,11 @@ def car_data(path, response=None, livedata=None):
 
     _logger.info("Parsing car data...")
 
-    channels = {'0': 'RPM', '2': 'Speed', '3': 'nGear', '4': 'Throttle', '5': 'Brake', '45': 'DRS'}
-    num_channels = ['RPM', 'Speed', 'nGear', 'Throttle', 'DRS']
+    numeric_channels = ['RPM', 'Speed', 'nGear', 'Throttle', 'DRS']
     bool_channels = ['Brake']
-    columns = ['Time', 'Date', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake', 'DRS', 'Source']
+    columns = ['Time', 'Date', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake',
+               'DRS', 'Source']  # correct order required!
+
     ts_length = 12  # length of timestamp: len('00:00:00:000')
 
     data = dict()
@@ -846,29 +848,36 @@ def car_data(path, response=None, livedata=None):
         try:
             if is_livedata:
                 time = to_timedelta(record[0])
-                jrecord = parse(record[1], zipped=True)
+                jrecord: dict = parse(record[1], zipped=True)
             else:
                 time = to_timedelta(record[:ts_length])
-                jrecord = parse(record[ts_length:], zipped=True)
+                jrecord: dict = parse(record[ts_length:], zipped=True)
 
             for entry in jrecord['Entries']:
-                # date format is '2020-08-08T09:45:03.0619797Z' with a varying number of millisecond decimal points
-                # always remove last char ('z'), max len 26, right pad to len 26 with zeroes if shorter
+                # date format is '2020-08-08T09:45:03.0619797Z' with a varying
+                # number of millisecond decimal points
+                # always remove last char ('z'), max len 26, right pad to len
+                # 26 with zeroes if shorter
                 date = to_datetime(entry['Utc'])
 
-                for driver in entry['Cars']:
-                    if driver not in data:
-                        data[driver] = {col: list() for col in columns}
+                for drv in entry['Cars']:
+                    if drv not in data:
+                        # initialize dict entry for this driver
+                        data[drv] = list()
 
-                    data[driver]['Time'].append(time)
-                    data[driver]['Date'].append(date)
+                    try:
+                        rpm = entry['Cars'][drv]['Channels']['0']
+                        speed = entry['Cars'][drv]['Channels']['2']
+                        ngear = entry['Cars'][drv]['Channels']['3']
+                        throttle = entry['Cars'][drv]['Channels']['4']
+                        brake = entry['Cars'][drv]['Channels']['5']
+                        drs = entry['Cars'][drv]['Channels']['45']
 
-                    for n in channels:
-                        try:
-                            val = entry['Cars'][driver]['Channels'][n]
-                        except (KeyError, IndexError):
-                            val = 0
-                        data[driver][channels[n]].append(int(val))
+                    except KeyError:
+                        continue
+
+                    data[drv].append((time, date, rpm, speed, ngear, throttle,
+                                      brake, drs, 'car'))
 
         except Exception:
             # too risky to specify an exception: unexpected invalid data!
@@ -881,45 +890,59 @@ def car_data(path, response=None, livedata=None):
 
     # create one dataframe per driver and check for the longest dataframe
     most_complete_ref = None
-    for driver in data:
-        # add source reference for each sample
-        data[driver]['Source'] = ['car', ] * len(data[driver]['Date'])
-        data[driver] = pd.DataFrame(data[driver])  # convert dict to dataframe
-        # check length of dataframe; sometimes there can be missing data
-        if most_complete_ref is None or len(data[driver]['Date']) > len(most_complete_ref):
-            most_complete_ref = data[driver]['Date']
+    for drv in data:
+        arr_all = np.array(data[drv])
+        time = arr_all[:, 0].astype('timedelta64[ns]')
+        date = arr_all[:, 1].astype('datetime64[ns]')
+        rpm = arr_all[:, 2].astype('int64')
+        speed = arr_all[:, 3].astype('int64')
+        ngear = arr_all[:, 4].astype('int64')
+        throttle = arr_all[:, 5].astype('int64')
+        brake = arr_all[:, 6].astype('int64')  # converted to bool later
+        drs = arr_all[:, 7].astype('int64')
+        source = arr_all[:, 8].astype('object')
 
-    for driver in data:
+        data[drv] = create_df_fast(
+            arrays=[time, date,
+                    rpm, speed, ngear, throttle, brake, drs, source],
+            columns=columns
+        )
+
+        if (most_complete_ref is None) \
+                or (len(data[drv]['Date']) > len(most_complete_ref)):
+            most_complete_ref = data[drv]['Date']
+
+    for drv in data:
         # if everything is well, all dataframes should have the same length
         # and no postprocessing is necessary
-        if len(data[driver]['Date']) < len(most_complete_ref):
+        if len(data[drv]['Date']) < len(most_complete_ref):
             # there is missing data for this driver
             # extend the Date column and fill up missing telemetry values with
             # zero, except Time which is left as NaT and will be calculated
-            # correctly based on Session.t0_date anyways when creating Telemetry
+            # correctly based on Session.t0_date anyway when creating Telemetry
             # instances in Session.load_telemetry
-            data[driver] = data[driver] \
+            data[drv] = data[drv] \
                 .merge(most_complete_ref, how='outer') \
                 .sort_values(by='Date') \
                 .reset_index(drop=True)
 
-            _logger.warning(f"Driver {driver: >2}: Car data is incomplete!")
+            _logger.warning(f"Driver {drv: >2}: Car data is incomplete!")
 
         # ensure that brake data is 'boolean-compatible' in case that this is
         # ever changed
-        _unique_brake_values = data[driver].loc[:, 'Brake'].unique()
+        _unique_brake_values = data[drv].loc[:, 'Brake'].unique()
         if ((_unique_brake_values > 0) & (_unique_brake_values < 100)).any():
-            _logger.warning(f"Driver {driver: >2}: Raw brake data contains "
+            _logger.warning(f"Driver {drv: >2}: Raw brake data contains "
                             f"non-boolean values!")
 
         # convert to correct datatypes
-        data[driver][num_channels] = \
-            data[driver].loc[:, num_channels] \
+        data[drv][numeric_channels] = \
+            data[drv].loc[:, numeric_channels] \
             .fillna(value=0, inplace=False) \
             .astype('int64')
 
-        data[driver][bool_channels] = \
-            data[driver].loc[:, bool_channels] \
+        data[drv][bool_channels] = \
+            data[drv].loc[:, bool_channels] \
             .fillna(value=False, inplace=False) \
             .astype('bool')
 
@@ -979,7 +1002,8 @@ def position_data(path, response=None, livedata=None):
         return {}
 
     ts_length = 12  # length of timestamp: len('00:00:00:000')
-    columns = ['Time', 'Date', 'Status', 'X', 'Y', 'Z', 'Source']
+    columns = ['Time', 'Date', 'Status', 'X', 'Y', 'Z',
+               'Source']  # correct order required!
 
     data = dict()
     decode_error_count = 0
@@ -988,34 +1012,39 @@ def position_data(path, response=None, livedata=None):
         try:
             if is_livedata:
                 time = record[0]
-                jrecord = parse(record[1], zipped=True)
+                jrecord: dict = parse(record[1], zipped=True)
             else:
                 time = to_timedelta(record[:ts_length])
-                jrecord = parse(record[ts_length:], zipped=True)
+                jrecord: dict = parse(record[ts_length:], zipped=True)
 
             for sample in jrecord['Position']:
-                # date format is '2020-08-08T09:45:03.0619797Z' with a varying number of millisecond decimal points
-                # always remove last char ('z'), max len 26, right pad to len 26 with zeroes if shorter
+                # date format is '2020-08-08T09:45:03.0619797Z' with a varying
+                # number of millisecond decimal points
+                # always remove last char ('z'), max len 26, right pad to len
+                # 26 with zeroes if shorter
                 date = to_datetime(sample['Timestamp'])
 
-                for driver in sample['Entries']:
-                    if driver not in data:
-                        data[driver] = {col: list() for col in columns}
-
-                    data[driver]['Time'].append(time)
-                    data[driver]['Date'].append(date)
-
-                    for coord in ['X', 'Y', 'Z']:
-                        data[driver][coord].append(recursive_dict_get(sample, 'Entries', driver, coord))
+                for drv in sample['Entries']:
+                    if drv not in data:
+                        # initialize dict entry for this driver
+                        data[drv] = list()
 
                     try:
-                        status = sample['Entries'][driver]['Status']
+                        x = sample['Entries'][drv]['X']
+                        y = sample['Entries'][drv]['Y']
+                        z = sample['Entries'][drv]['Z']
+                    except KeyError:
+                        continue
+
+                    try:
+                        status = sample['Entries'][drv]['Status']
                     except KeyError:
                         status = None
                     if str(status).isdigit():
                         # Fallback on older api status mapping and convert
                         status = 'OffTrack' if int(status) else 'OnTrack'
-                    data[driver]['Status'].append(status)
+
+                    data[drv].append((time, date, status, x, y, z, 'pos'))
 
         except Exception:
             # too risky to specify an exception: unexpected invalid data!
@@ -1029,32 +1058,46 @@ def position_data(path, response=None, livedata=None):
 
     # create one dataframe per driver and check for the longest dataframe
     most_complete_ref = None
-    for driver in data:
-        data[driver]['Source'] = ['pos', ] * len(data[driver]['Date'])  # add source reference for each sample
-        data[driver] = pd.DataFrame(data[driver])  # convert dict to dataframe
-        # check length of dataframe; sometimes there can be missing data
-        if most_complete_ref is None or len(data[driver]['Date']) > len(most_complete_ref):
-            most_complete_ref = data[driver]['Date']
+    for drv in data:
+        arr_all = np.array(data[drv])
+        time = arr_all[:, 0].astype('timedelta64[ns]')
+        date = arr_all[:, 1].astype('datetime64[ns]')
+        status = arr_all[:, 2].astype('object')
+        x = arr_all[:, 3].astype('int64')
+        y = arr_all[:, 4].astype('int64')
+        z = arr_all[:, 5].astype('int64')
+        source = arr_all[:, 6].astype('object')
 
-    # if everything is well, all dataframes should have the same length and no postprocessing is necessary
-    for driver in data:
-        if len(data[driver]['Date']) < len(most_complete_ref):
+        data[drv] = create_df_fast(
+            arrays=[time, date, status, x, y, z, source],
+            columns=columns
+        )
+
+        # check length of dataframe; sometimes there can be missing data
+        if (most_complete_ref is None) \
+                or (len(data[drv]['Date']) > len(most_complete_ref)):
+            most_complete_ref = data[drv]['Date']
+
+    # if everything is well, all dataframes should have the same length and no
+    # postprocessing is necessary
+    for drv in data:
+        if len(data[drv]['Date']) < len(most_complete_ref):
             # there is missing data for this driver
             # extend the Date column and fill up missing telemetry values with
             # zero, except Time which is left as NaT and will be calculated
-            # correctly based on Session.t0_date anyways when creating Telemetry
+            # correctly based on Session.t0_date anyway when creating Telemetry
             # instances in Session.load_telemetry
             # and except Status which should be 'OffTrack' for missing data
-            data[driver] = data[driver] \
+            data[drv] = data[drv] \
                 .merge(most_complete_ref, how='outer') \
                 .sort_values(by='Date') \
                 .reset_index(drop=True)
-            data[driver]['Status'].fillna(value='OffTrack', inplace=True)
-            data[driver].loc[:, ['X', 'Y', 'Z']] = \
-                data[driver].loc[:, ['X', 'Y', 'Z']]\
+            data[drv]['Status'].fillna(value='OffTrack', inplace=True)
+            data[drv].loc[:, ['X', 'Y', 'Z']] = \
+                data[drv].loc[:, ['X', 'Y', 'Z']]\
                 .fillna(value=0, inplace=False)
 
-            _logger.warning(f"Driver {driver: >2}: Position data is "
+            _logger.warning(f"Driver {drv: >2}: Position data is "
                             f"incomplete!")
 
     return data
@@ -1564,7 +1607,7 @@ def fetch_page(path, name):
         return None
 
 
-def parse(text, zipped=False):
+def parse(text, zipped=False) -> Union[str, dict]:
     """
     .. warning::
         :mod:`fastf1.api` will be considered private in future releases and
