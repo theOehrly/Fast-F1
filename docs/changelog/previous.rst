@@ -8,11 +8,6 @@ Release Notes for Older Versions
 .. toctree::
   :maxdepth: 1
 
-  v3.0.3
-  v3.0.2
-  v3.0.1
-  v3.0.0
-
   v2.3.2
   v2.3.1
   v2.3.0

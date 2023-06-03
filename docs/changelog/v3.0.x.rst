@@ -1,3 +1,62 @@
+What's new in v3.0.4
+--------------------
+
+(released 03/06/2023)
+
+Bug Fixes and Improvements
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Added missing color for compound "TEST-UNKNOWN" (by @Casper-Guo)
+
+- Bumped minimum version requirement for dependency 'timple'
+
+
+
+What's new in v3.0.3
+--------------------
+
+(released 19/05/2023)
+
+Bug Fixes and Improvements
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Fixed incorrectly formatted color codes for tyre compound colors.
+  (by @Casper-Guo)
+
+- Fixed a bug that prevented the calculation of results for Qualifying-like
+  sessions (for example Sprint Shootout) that only occurred on Pandas v1.5.3
+  and older.
+
+
+
+What's new in v3.0.2
+--------------------
+
+(released 09/05/2023)
+
+Bug Fixes and Improvements
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Improved support for Sprint Shootout sessions and added session results for
+  these. (by @mdsakalu)
+
+- Improved exception handling on various internal functions
+
+
+
+What's new in v3.0.1
+--------------------
+
+(released 07/05/2023)
+
+Bug Fixes
+^^^^^^^^^
+
+- fixed a bug that prevented the use of the livetiming client from the
+  commandline
+
+
+
 What's new in v3.0.0
 --------------------
 
