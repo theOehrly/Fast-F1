@@ -150,6 +150,7 @@ COMPOUND_COLORS: Dict[str, str] = {
     "INTERMEDIATE": "#43b02a",
     "WET": "#0067ad",
     "UNKNOWN": "#00ffff",
+    "TEST-UNKNOWN": "#434649"
 }
 """Mapping of tyre compound names to compound colors (hex color codes).
 (current season only)"""
