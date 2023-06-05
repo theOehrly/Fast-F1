@@ -1444,10 +1444,10 @@ class Session:
             # after comparison
             next_statuses = self.session_status[
                 self.session_status['Time'] > ref_time
-                ]
+            ]
             prev_statuses = self.session_status[
                 self.session_status['Time'] <= ref_time
-                ]
+            ]
 
             if ((not prev_statuses.empty)
                     and (prev_statuses['Status'] == 'Finished').any()):
@@ -2548,10 +2548,14 @@ class Laps(pd.DataFrame):
             return pd.DataFrame(columns=self.session.weather_data.columns)
 
     def pick_lap(self, lap_number: int) -> "Laps":
-        """Return all laps of a specific LapNumber in self based on LapNumber
+        """Return all laps of a specific LapNumber in self based on LapNumber.
 
-            lap_1 = ff1.pick_lap(1)
-            lap_25 = ff1.pick_lap(25)
+        .. deprecated:: 3.1.0
+            pick_lap is deprecated and will be removed in a
+            future release. Use :func:`pick_laps` instead.
+
+            lap_1 = session_laps.pick_lap(1)
+            lap_25 = session_laps.pick_lap(25)
 
         Args:
             lap_number (int): Lap number
@@ -2559,15 +2563,45 @@ class Laps(pd.DataFrame):
         Returns:
             instance of :class:`Laps`
         """
+        warnings.warn(("pick_lap is deprecated and will be removed in a "
+                       "future release. Use pick_laps instead."),
+                      DeprecationWarning)
         return self[self['LapNumber'] == lap_number]
+
+    def pick_laps(self, lap_numbers: Union[int, Iterable[int]]) -> "Laps":
+        """Return all laps of a specific LapNumber or a list of LapNumbers
+        in self. ::
+
+            lap_1 = session_laps.pick_laps(1)
+            lap_10_to_20 = session_laps.pick_lap(range(10, 21))
+
+        Args:
+            lap_number: int for matching a single lap,
+            a iterable of ints for matching multiple laps
+
+        Returns:
+            instance of :class:`Laps`
+        """
+        if isinstance(lap_numbers, (int, float)):
+            lap_numbers = [lap_numbers, ]
+
+        for i in lap_numbers:
+            if isinstance(i, float) and not i.is_integer():
+                raise ValueError(f"Invalid value {i} in `lap_numbers`")
+
+        return self[self["LapNumber"].isin(lap_numbers)]
 
     def pick_driver(self, identifier: Union[int, str]) -> "Laps":
         """Return all laps of a specific driver in self based on the driver's
-        three letters identifier or based on the driver number ::
+        three letters identifier or based on the driver number.
 
-            perez_laps = ff1.pick_driver('PER')
-            bottas_laps = ff1.pick_driver(77)
-            kimi_laps = ff1.pick_driver('RAI')
+        .. deprecated:: 3.1.0
+            pick_driver is deprecated and will be removed in a future release.
+            Use :func:`pick_drivers` instead.
+
+            perez_laps = session_laps.pick_driver('PER')
+            bottas_laps = session_laps.pick_driver(77)
+            kimi_laps = session_laps.pick_driver('RAI')
 
         Args:
             identifier (str or int): Driver abbreviation or number
@@ -2575,27 +2609,35 @@ class Laps(pd.DataFrame):
         Returns:
             instance of :class:`Laps`
         """
+        warnings.warn(("pick_driver is deprecated and will be removed"
+                       " in a future release. Use pick_drivers instead."),
+                      DeprecationWarning)
         identifier = str(identifier)
         if identifier.isdigit():
             return self[self['DriverNumber'] == identifier]
         else:
             return self[self['Driver'] == identifier]
 
-    def pick_drivers(self, identifiers: Iterable[Union[int, str]]) -> "Laps":
-        """Return all laps of the specified drivers in self based on the
-        drivers' three letters identifier or based on the driver number. This
-        is the same as :meth:`Laps.pick_driver` but for multiple drivers
-        at once. ::
+    def pick_drivers(self,
+                     identifiers: Union[int, str, Iterable[Union[int, str]]]
+                     ) -> "Laps":
+        """Return all laps of the specified driver or drivers in self based
+        on the drivers' three letters identifier or the driver number. ::
 
-            some_drivers_laps = ff1.pick_drivers([5, 'BOT', 7])
+            ver_laps = session_laps.pick_drivers("VER")
+            some_drivers_laps = session_laps.pick_drivers([5, 'BOT', 7])
 
         Args:
-            identifiers (iterable): Multiple driver abbreviations or driver numbers (can be mixed)
+            identifiers: Multiple driver abbreviations or driver numbers
+            (can be mixed)
 
         Returns:
             instance of :class:`Laps`
         """
-        names = [n for n in identifiers if not str(n).isdigit()]
+        if isinstance(identifiers, (int, str)):
+            identifiers = [identifiers, ]
+
+        names = [n.upper() for n in identifiers if not str(n).isdigit()]
         numbers = [str(n) for n in identifiers if str(n).isdigit()]
         drv, num = self['Driver'], self['DriverNumber']
 
@@ -2603,10 +2645,14 @@ class Laps(pd.DataFrame):
 
     def pick_team(self, name: str) -> "Laps":
         """Return all laps of a specific team in self based on the
-        team's name ::
+        team's name.
 
-            mercedes = ff1.pick_team('Mercedes')
-            alfa_romeo = ff1.pick_team('Alfa Romeo')
+        .. deprecated:: 3.1.0
+            pick_team is deprecated and will be removed in a future release.
+            Use :func:`pick_teams` instead.
+
+            mercedes = session_laps.pick_team('Mercedes')
+            alfa_romeo = session_laps.pick_team('Alfa Romeo')
 
         Have a look to :attr:`fastf1.plotting.TEAM_COLORS` for a quick reference on team names.
 
@@ -2616,21 +2662,27 @@ class Laps(pd.DataFrame):
         Returns:
             instance of :class:`Laps`
         """
+        warnings.warn(("pick_team is deprecated and will be removed"
+                       " in a future release. Use pick_teams instead."),
+                      DeprecationWarning)
         return self[self['Team'] == name]
 
-    def pick_teams(self, names: Iterable[str]) -> "Laps":
-        """Return all laps of the specified teams in self based on the teams'
-        name. This is the same as :meth:`Laps.pick_team` but for multiple
-        teams at once. ::
+    def pick_teams(self, names: Union[str, Iterable[str]]) -> "Laps":
+        """Return all laps of the specified team or teams in self based
+        on the team names. ::
 
-            some_drivers_laps = ff1.pick_teams(['Mercedes', 'Williams'])
+            rbr_laps = session_laps.pick_teams("Red Bull")
+            some_drivers_laps = session_laps.pick_teams(['Haas', 'Alpine'])
 
         Args:
-            names (iterable): Multiple team names
+            names: A single team name or team names
 
         Returns:
             instance of :class:`Laps`
         """
+        if isinstance(names, str):
+            return self[self['Team'] == names]
+
         return self[self['Team'].isin(names)]
 
     def pick_fastest(self, only_by_time: bool = False) -> "Lap":
@@ -2694,22 +2746,52 @@ class Laps(pd.DataFrame):
     def pick_tyre(self, compound: str) -> "Laps":
         """Return all laps in self which were done on a specific compound.
 
+        .. deprecated:: 3.1.0
+            pick_tyre is deprecated and will be removed in a future release.
+            Use :func:`pick_compounds` instead.
+
         Args:
-            compound (string): may be "SOFT", "MEDIUM", "HARD", "INTERMEDIATE" or "WET"
+            compound (string): may be "SOFT", "MEDIUM", "HARD",
+            "INTERMEDIATE" or "WET"
 
         Returns:
             instance of :class:`Laps`
         """
-        return self[self['Compound'] == compound]
+        warnings.warn(("pick_tyre is deprecated and will be removed"
+                       " in a future release. Use pick_compound instead."),
+                      DeprecationWarning)
+        return self[self['Compound'] == compound.upper()]
+
+    def pick_compounds(self, compounds: Union[str, Iterable[str]]) -> "Laps":
+        """Return all laps in self which were done on some specific compounds.
+        ::
+
+            soft_laps = session_laps.pick_compounds("SOFT")
+            slick_laps = session_laps.pick_compounds(['SOFT', 'MEDIUM', "HARD])
+
+        Args:
+            compounds: may be "SOFT", "MEDIUM", "HARD", "INTERMEDIATE" or "WET"
+
+        Returns:
+            instance of :class:`Laps`
+        """
+        if isinstance(compounds, str):
+            return self[self['Compound'] == compounds.upper()]
+
+        return self[self['Compound'].isin([i.upper() for i in compounds])]
 
     def pick_track_status(self, status: str, how: str = 'equals') -> "Laps":
         """Return all laps set under a specific track status.
 
         Args:
             status (str): The track status as a string, e.g. '1'
-            how (str): one of 'equals'/'contains'
+            how (str): one of 'equals'/'contains'/'excludes'/'any'/'none'
                 For example, if how='equals', status='2' will only match '2'.
                 If how='contains', status='2' will also match '267' and similar
+                If how='excludes', status='26' will not match '267'
+                but will match '27'
+                If how='any', status='26' will match both '2' and '6'
+                If how='none', status='26' will not match either '12' or '16'
         Returns:
             instance of :class:`Laps`
         """
@@ -2717,6 +2799,14 @@ class Laps(pd.DataFrame):
             return self[self['TrackStatus'] == status]
         elif how == 'contains':
             return self[self['TrackStatus'].str.contains(status, regex=False)]
+        elif how == 'excludes':
+            return self[~self['TrackStatus'].str.contains(status, regex=False)]
+        elif how == 'any':
+            return self[self['TrackStatus'].str.contains('|'.join(status),
+                                                         regex=True)]
+        elif how == 'none':
+            return self[~self['TrackStatus'].str.contains('|'.join(status),
+                                                          regex=True)]
         else:
             raise ValueError(f"Invalid value '{how}' for kwarg 'how'")
 
@@ -2727,6 +2817,19 @@ class Laps(pd.DataFrame):
             instance of :class:`Laps`
         """
         return self[pd.isnull(self['PitInTime']) & pd.isnull(self['PitOutTime'])]
+
+    def pick_not_deleted(self) -> "Laps":
+        """Return all laps whose lap times are NOT deleted.
+
+        Returns:
+            instance of :class:`Laps`
+        """
+        if 'Deleted' in self.columns:
+            return self[~self['Deleted']]
+        else:
+            raise DataNotLoadedError("The Deleted column is only available "
+                                     "when race control messages are loaded. "
+                                     "See `Session.load`")
 
     def pick_accurate(self) -> "Laps":
         """Return all laps which pass the accuracy validation check

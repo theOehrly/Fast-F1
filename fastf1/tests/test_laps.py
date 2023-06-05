@@ -167,6 +167,105 @@ def test_lap_get_weather_data(reference_laps_data):
 
 
 @pytest.mark.f1telapi
+def test_laps_pick_laps(reference_laps_data):
+    session, laps = reference_laps_data
+
+    # one lap
+    one_lap = laps.pick_laps(10)
+    assert one_lap.shape == (19, 31)
+    ensure_data_type(LAP_DTYPES, one_lap)
+
+    # multiple laps
+    mul_laps = laps.pick_laps([10, 20, 30])
+    assert mul_laps.shape == (54, 31)
+    ensure_data_type(LAP_DTYPES, mul_laps)
+
+    # invalid input
+    try:
+        _ = laps.pick_laps(2.5)
+    except ValueError as e:
+        assert str(e) == "Invalid value 2.5 in `lap_numbers`"
+
+
+@pytest.mark.f1telapi
+def test_laps_pick_drivers(reference_laps_data):
+    session, laps = reference_laps_data
+
+    # one driver
+    one_driver_abv = laps.pick_drivers("HAM")
+    one_driver_number = laps.pick_drivers(44)
+    assert one_driver_abv.shape == (53, 31)
+    ensure_data_type(LAP_DTYPES, one_driver_abv)
+    pd.testing.assert_frame_equal(one_driver_abv, one_driver_number)
+
+    # multiple drivers
+    mul_driver_mixed = laps.pick_drivers([5, "BOT", 7])
+    assert mul_driver_mixed.shape == (112, 31)
+    ensure_data_type(LAP_DTYPES, mul_driver_mixed)
+
+
+@pytest.mark.f1telapi
+def test_laps_pick_teams(reference_laps_data):
+    session, laps = reference_laps_data
+
+    # one team
+    one_lap = laps.pick_teams("Mercedes")
+    assert one_lap.shape == (106, 31)
+    ensure_data_type(LAP_DTYPES, one_lap)
+
+    # multiple teams
+    mul_teams = laps.pick_teams(["Mercedes", "Ferrari"])
+    # both Ferraris DNF
+    assert mul_teams.shape == (136, 31)
+    ensure_data_type(LAP_DTYPES, mul_teams)
+
+
+@pytest.mark.f1telapi
+def test_laps_pick_compounds(reference_laps_data):
+    session, laps = reference_laps_data
+
+    # one team
+    one_compound = laps.pick_compounds("HARD")
+    assert one_compound.shape == (172, 31)
+    ensure_data_type(LAP_DTYPES, one_compound)
+
+    # multiple compounds
+    mul_compounds = laps.pick_compounds(["SOFT", "MEDIUM"])
+    assert mul_compounds.shape == (754, 31)
+    ensure_data_type(LAP_DTYPES, mul_compounds)
+
+
+@pytest.mark.f1telapi
+def test_laps_pick_track_status(reference_laps_data):
+    session, laps = reference_laps_data
+
+    # equals
+    equals = laps.pick_track_status('2', how="equals")
+    assert equals.shape == (48, 31)
+    ensure_data_type(LAP_DTYPES, equals)
+
+    # contains
+    contains = laps.pick_track_status('4', how="contains")
+    assert contains.shape == (115, 31)
+    ensure_data_type(LAP_DTYPES, contains)
+
+    # excludes
+    excludes = laps.pick_track_status('4', how="excludes")
+    assert excludes.shape == (811, 31)
+    ensure_data_type(LAP_DTYPES, excludes)
+
+    # any
+    any_ = laps.pick_track_status('12', how="any")
+    assert any_.shape == (848, 31)
+    ensure_data_type(LAP_DTYPES, any_)
+
+    # none
+    none = laps.pick_track_status('46', how="none")
+    assert none.shape == (811, 31)
+    ensure_data_type(LAP_DTYPES, none)
+
+
+@pytest.mark.f1telapi
 def test_split_quali_laps():
     session = fastf1.get_session(2023, 2, 'Q')
     session.load(telemetry=False, weather=False)

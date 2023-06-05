@@ -10,6 +10,7 @@ def ensure_data_type(column_dtypes, df):
 
 
 LAP_DTYPES = {'Time': '<m8[ns]',
+              'Driver': 'O',
               'DriverNumber': 'O',
               'LapTime': '<m8[ns]',
               'LapNumber': 'float64',
@@ -26,14 +27,21 @@ LAP_DTYPES = {'Time': '<m8[ns]',
               'SpeedI2': 'float64',
               'SpeedFL': 'float64',
               'SpeedST': 'float64',
+              'IsPersonalBest': 'bool',
               'Compound': 'O',
               'TyreLife': 'float64',
               'FreshTyre': 'bool',
-              'LapStartTime': '<m8[ns]',
               'Team': 'O',
-              'Driver': 'O',
+              'LapStartTime': '<m8[ns]',
+              'LapStartDate': '<M8[ns]',
               'TrackStatus': 'O',
-              'IsAccurate': 'bool'}
+              'Position': 'float64',
+              # TODO: fix test
+              # 'Deleted': 'O',
+              'DeletedReason': 'O',
+              'FastF1Generated': 'bool',
+              'IsAccurate': 'bool',
+              }
 
 CAR_DATA_DTYPES = {'Brake': 'bool',
                    'nGear': 'int64',
