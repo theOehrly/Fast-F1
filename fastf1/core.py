@@ -2550,7 +2550,7 @@ class Laps(pd.DataFrame):
     def pick_lap(self, lap_number: int) -> "Laps":
         """Return all laps of a specific LapNumber in self based on LapNumber.
 
-        .. deprecated:: 3.0.4
+        .. deprecated:: 3.1.0
             pick_lap is deprecated and will be removed in a
             future release. Use :func:`pick_laps` instead.
 
@@ -2595,7 +2595,7 @@ class Laps(pd.DataFrame):
         """Return all laps of a specific driver in self based on the driver's
         three letters identifier or based on the driver number.
 
-        .. deprecated:: 3.0.4
+        .. deprecated:: 3.1.0
             pick_driver is deprecated and will be removed in a future release.
             Use :func:`pick_drivers` instead.
 
@@ -2647,7 +2647,7 @@ class Laps(pd.DataFrame):
         """Return all laps of a specific team in self based on the
         team's name.
 
-        .. deprecated:: 3.0.4
+        .. deprecated:: 3.1.0
             pick_team is deprecated and will be removed in a future release.
             Use :func:`pick_teams` instead.
 
@@ -2746,7 +2746,7 @@ class Laps(pd.DataFrame):
     def pick_tyre(self, compound: str) -> "Laps":
         """Return all laps in self which were done on a specific compound.
 
-        .. deprecated:: 3.0.4
+        .. deprecated:: 3.1.0
             pick_tyre is deprecated and will be removed in a future release.
             Use :func:`pick_compounds` instead.
 
