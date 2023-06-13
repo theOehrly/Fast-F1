@@ -129,6 +129,8 @@ itself officially starts at some later point in time. This value is also availab
 Lap timing
 ----------
 
+.. currentmodule:: fastf1.core
+
 Lap timing data is available in an instance of :class:`Laps` in :attr:`Session.laps`.
 For each lap, the usual official timing information is available. It consists of the lap time and the sector times.
 The columns for this data in :class:`Laps` are called 'LapTime', 'Sector1Time', 'Sector2Time' and 'Sector3Time'.

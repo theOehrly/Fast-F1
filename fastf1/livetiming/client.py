@@ -4,20 +4,21 @@ import json
 import logging
 import requests
 import time
+from typing import Iterable, Optional
 
 from fastf1.signalr_aio import Connection
 
 import fastf1
 
 
-def messages_from_raw(r):
+def messages_from_raw(r: Iterable):
     """Extract data messages from raw recorded SignalR data.
 
     This function can be used to extract message data from raw SignalR data
     which was saved using :class:`SignalRClient` in debug mode.
 
     Args:
-        r (iterable) : Iterable containing raw SignalR responses.
+        r: Iterable containing raw SignalR responses.
     """
     ret = list()
     errorcount = 0
@@ -56,24 +57,24 @@ class SignalRClient:
     :mod:`fastf1.core`
 
     Args:
-        filename (str) : filename (opt. with path) for the output file
-        filemode (str, optional) : one of 'w' or 'a'; append to or overwrite
+        filename: filename (opt. with path) for the output file
+        filemode: one of 'w' or 'a'; append to or overwrite
             file content it the file already exists. Append-mode may be useful
             if the client is restarted during a session.
-        debug (bool, optional) : When set to true, the complete SignalR
+        debug: When set to true, the complete SignalR
             message is saved. By default, only the actual data from a
             message is saved.
-        timeout (int, optional) : Number of seconds after which the client
+        timeout: Number of seconds after which the client
             will automatically exit when no message data is received.
             Set to zero to disable.
-        logger (Logger or None) : By default, errors are logged to the
-            console. If you wish to customize logging, you can pass an
-            instance of :class:`logging.Logger` (see: :mod:`logging`).
+        logger: By default, errors are logged to the console. If you wish to
+            customize logging, you can pass an instance of
+            :class:`logging.Logger` (see: :mod:`logging`).
     """
     _connection_url = 'https://livetiming.formula1.com/signalr'
 
-    def __init__(self, filename, filemode='w', debug=False,
-                 timeout=60, logger=None):
+    def __init__(self, filename: str, filemode: str = 'w', debug: bool = False,
+                 timeout: int = 60, logger: Optional = None):
 
         self.headers = {'User-agent': 'BestHTTP',
                         'Accept-Encoding': 'gzip, identity',

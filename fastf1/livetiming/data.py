@@ -27,7 +27,7 @@ class LiveTimingData:
     """Live timing data object for using saved livetiming data as data source.
 
     This object is created from data that was recorded using
-    :class:`fastf1.livetiming.SignalRClient`. It can be passed to
+    :class:`~fastf1.livetiming.client.SignalRClient`. It can be passed to
     various api calling functions using the ``livedata`` keyword.
 
     Usually you will only instantiate this function and pass it to

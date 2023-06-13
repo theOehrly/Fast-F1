@@ -1,7 +1,7 @@
 .. _ergast:
 
-Ergast API Interface - :mod:`fastf1.ergast`
-===========================================
+Ergast API Interface
+====================
 
 .. currentmodule::
   fastf1.ergast
@@ -88,8 +88,9 @@ users.
   - Only some combinations of filter parameters are possible and those vary for
     each API endpoint. FastF1 does not impose restrictions on these
     combinations as the relationships are fairly complex. Instead, an
-    :class:`~fastf1.ergast.interface.InvalidRequestError` will be returned in
-    such a case. The exception will contain the error response of the server.
+    :class:`~fastf1.ergast.interface.ErgastInvalidRequestError` will
+    be returned in such a case. The exception will contain the error response
+    of the server.
 
 
 Examples
@@ -247,7 +248,7 @@ Pagination
 ::::::::::
 
 All Ergast response objects inherit from
-:class:`~fastf1.ergast.interface.ErgastResultMixin`. This object provides
+:class:`~fastf1.ergast.interface.ErgastResponseMixin`. This object provides
 support for pagination on all response objects. Ergast uses pagination
 to serve results for specific requests on multiple 'pages' when the response
 exceeds the limit for the maximum number of results.

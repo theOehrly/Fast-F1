@@ -7,13 +7,18 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('../'))
-import os.path
+
 from datetime import datetime
+import os.path
 import re
+import sys
 import warnings
 
 import plotly.io as pio
 from plotly.io._sg_scraper import plotly_sg_scraper
+
+sys.path.append(os.path.abspath('extensions'))
+
 
 # -- FastF1 specific config --------------------------------------------------
 # ignore warning on import of fastf1.api
@@ -59,6 +64,7 @@ extensions = [
     'sphinx_gallery.gen_gallery',
     'autodocsumm',
     'fastf1.ergast.sphinx',
+    'nitpick_ignore_files'
 ]
 
 todo_include_todos = True
@@ -73,6 +79,23 @@ templates_path = ['_templates']
 exclude_patterns = [
     '../fastf1/signalr_aio'
 ]
+
+nitpick_ignore_regex = [
+    (r'py:data', r'typing\..*'),
+    (r'py:.*', r'datetime\..*'),
+    (r'py:.*', r'pandas\..*'),
+    (r'py:.*', r'pd\..*'),
+    (r'py:.*', r'numpy\..*'),
+    (r'py:mod', r'logging'),
+    (r'py:class', r'logging.Logger'),
+]
+
+nitpick_ignore_files = [
+    # exclude changelog from nitpick, old entries might reference removed
+    # functionality
+    r'changelog/.*',
+]
+# nitpick_ignore_files is a custom extension (docs/extensions)
 
 
 # -- Options for HTML output -------------------------------------------------

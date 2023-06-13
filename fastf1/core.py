@@ -147,11 +147,13 @@ class Telemetry(pd.DataFrame):
     :class:`pandas.Series`.
 
     Args:
-        *args (any): passed through to `pandas.DataFrame` superclass
-        session (:class:`Session`): Instance of associated session object.
+        *args: passed through to `pandas.DataFrame` superclass
+        session: Instance of associated session object.
             Required for full functionality!
-        driver (str): Driver number as string. Required for full functionality!
-        **kwargs (any): passed through to `pandas.DataFrame` superclass
+        driver: Driver number as string. Required for full functionality!
+        drop_unknown_channels: Remove all unknown data channels (i.e. columns)
+            on initialization.
+        **kwargs: passed through to `pandas.DataFrame` superclass
     """
 
     TELEMETRY_FREQUENCY = 'original'
@@ -185,8 +187,12 @@ class Telemetry(pd.DataFrame):
     _internal_names = pd.DataFrame._internal_names + ['base_class_view']
     _internal_names_set = set(_internal_names)
 
-    def __init__(self, *args, session=None, driver=None,
-                 drop_unknown_channels=False, **kwargs):
+    def __init__(self,
+                 *args,
+                 session: "Session" = None,
+                 driver: str = None,
+                 drop_unknown_channels: bool = False,
+                 **kwargs):
         super().__init__(*args, **kwargs)
         self.session: Optional[Session] = session
         self.driver = driver
@@ -214,9 +220,10 @@ class Telemetry(pd.DataFrame):
         return pd.DataFrame(self)
 
     def join(self, *args, **kwargs):
-        """Wraps :mod:`pandas.DataFrame.join` and adds metadata propagation.
+        """Wraps :meth:`pandas.DataFrame.join` and adds metadata propagation.
 
-        When calling `self.join` metadata will be propagated from self to the joined dataframe.
+        When calling ``self.join`` metadata will be propagated from self to the
+        joined dataframe.
         """
         meta = dict()
         for var in self._metadata:
@@ -227,9 +234,10 @@ class Telemetry(pd.DataFrame):
         return ret
 
     def merge(self, *args, **kwargs):
-        """Wraps :mod:`pandas.DataFrame.merge` and adds metadata propagation.
+        """Wraps :meth:`pandas.DataFrame.merge` and adds metadata propagation.
 
-        When calling `self.merge` metadata will be propagated from self to the merged dataframe.
+        When calling ``self.merge`` metadata will be propagated from self to
+        the merged dataframe.
         """
         meta = dict()
         for var in self._metadata:
@@ -239,13 +247,19 @@ class Telemetry(pd.DataFrame):
             setattr(ret, var, val)
         return ret
 
-    def slice_by_mask(self, mask, pad=0, pad_side='both') -> "Telemetry":
+    def slice_by_mask(
+            self,
+            mask: Union[list, pd.Series, np.ndarray],
+            pad: int = 0,
+            pad_side: str = 'both'
+    ) -> "Telemetry":
         """Slice self using a boolean array as a mask.
 
         Args:
-            mask (array-like): Array of boolean values with the same length as self
-            pad (int): Number of samples used for padding the sliced data
-            pad_side (str): Where to pad the data; possible options: 'both', 'before', 'after'
+            mask: Array of boolean values with the same length as self
+            pad: Number of samples used for padding the sliced data
+            pad_side: Where to pad the data; possible options: 'both',
+            'before', 'after'
         """
         if pad:
             if pad_side in ('both', 'before'):
@@ -269,7 +283,7 @@ class Telemetry(pd.DataFrame):
             pad: int = 0,
             pad_side: str = 'both',
             interpolate_edges: bool = False
-    ):
+    ) -> "Telemetry":
         """Slice self to only include data from the provided lap or laps.
 
         .. note:: Self needs to contain a 'SessionTime' column.
@@ -310,8 +324,8 @@ class Telemetry(pd.DataFrame):
 
     def slice_by_time(
             self,
-            start_time,
-            end_time,
+            start_time: pd.Timedelta,
+            end_time: pd.Timedelta,
             pad: int = 0,
             pad_side: str = 'both',
             interpolate_edges: bool = False
@@ -321,8 +335,8 @@ class Telemetry(pd.DataFrame):
         .. note:: Self needs to contain a 'SessionTime' column. Slicing by time use the 'SessionTime' as its reference.
 
         Args:
-            start_time (Timedelta): Start of the section
-            end_time (Timedelta): End of the section
+            start_time: Start of the section
+            end_time: End of the section
             pad: Number of samples used for padding the sliced data
             pad_side: Where to pad the data; possible options:
                 'both', 'before', 'after
@@ -2155,14 +2169,14 @@ class Laps(pd.DataFrame):
     """Object for accessing lap (timing) data of multiple laps.
 
     Args:
-        *args (any): passed through to :class:`pandas.DataFrame` super class
-        session (:class:`Session`): instance of session class; required for
+        *args: passed through to :class:`pandas.DataFrame` super class
+        session: instance of session class; required for
           full functionality
-        **kwargs (any): passed through to :class:`pandas.DataFrame`
+        **kwargs: passed through to :class:`pandas.DataFrame`
           super class
 
     This class allows for easily picking specific laps from all laps in a
-    session. It implements some additional functionality on top off the usual
+    session. It implements some additional functionality on top of the usual
     `pandas.DataFrame` functionality. Among others, the laps' associated
     telemetry data can be accessed.
 
@@ -2399,7 +2413,8 @@ class Laps(pd.DataFrame):
         It is recommended to use :meth:`get_car_data` or :meth:`get_pos_data` when possible. This is also faster if
         merging of car and position data is not necessary and if not all computed channels are needed.
 
-        Resampling during merging is done according to the frequency set by :attr:`TELEMETRY_FREQUENCY`.
+        Resampling during merging is done according to the frequency set by
+        :attr:`~Telemetry.TELEMETRY_FREQUENCY`.
 
         .. note:: Telemetry can only be returned if `self` contains laps of one driver only.
 
@@ -2576,8 +2591,8 @@ class Laps(pd.DataFrame):
             lap_10_to_20 = session_laps.pick_lap(range(10, 21))
 
         Args:
-            lap_number: int for matching a single lap,
-            a iterable of ints for matching multiple laps
+            lap_numbers: int for matching a single lap,
+                an iterable of ints for matching multiple laps
 
         Returns:
             instance of :class:`Laps`
@@ -2629,7 +2644,7 @@ class Laps(pd.DataFrame):
 
         Args:
             identifiers: Multiple driver abbreviations or driver numbers
-            (can be mixed)
+                (can be mixed)
 
         Returns:
             instance of :class:`Laps`
@@ -2727,11 +2742,11 @@ class Laps(pd.DataFrame):
 
     def pick_quicklaps(self, threshold: Optional[float] = None) -> "Laps":
         """Return all laps with `LapTime` faster than a certain limit. By
-        default the threshold is 107% of the best `LapTime` of all laps
+        default, the threshold is 107% of the best `LapTime` of all laps
         in self.
 
         Args:
-            threshold (optional, float): custom threshold coefficent
+            threshold: custom threshold coefficient
                 (e.g. 1.05 for 105%)
 
         Returns:
@@ -2751,8 +2766,8 @@ class Laps(pd.DataFrame):
             Use :func:`pick_compounds` instead.
 
         Args:
-            compound (string): may be "SOFT", "MEDIUM", "HARD",
-            "INTERMEDIATE" or "WET"
+            compound: may be "SOFT", "MEDIUM", "HARD",
+                "INTERMEDIATE" or "WET"
 
         Returns:
             instance of :class:`Laps`
@@ -2896,12 +2911,13 @@ class Laps(pd.DataFrame):
         It additionally provides the `require` keyword argument.
 
         Args:
-             require (optional, iterable): Require is a list of column/telemetry channel names. All names listed in
-               `require` must exist in the data and have a non-null value (tested with :func:`pandas.is_null`). The
-               iterator only yields laps for which this is true. If require is left empty, the iterator will yield
-               all laps.
+            require: Require is a list of column/telemetry channel names. All
+                names listed in `require` must exist in the data and have a
+                non-null value (tested with :func:`pandas.is_null`). The
+                iterator only yields laps for which this is true. If require is
+                left empty, the iterator will yield all laps.
         Yields:
-            (index, instance of :class:`Lap`)
+            (index, lap): label and an instance of :class:`Lap`
         """
         for index, lap in self.iterrows():
             if require:
@@ -2961,7 +2977,8 @@ class Lap(pd.Series):
         It is recommended to use :meth:`get_car_data` or :meth:`get_pos_data` when possible. This is also faster if
         merging of car and position data is not necessary and if not all computed channels are needed.
 
-        Resampling during merging is done according to the frequency set by :attr:`TELEMETRY_FREQUENCY`.
+        Resampling during merging is done according to the frequency set by
+        :attr:`~Telemetry.TELEMETRY_FREQUENCY`.
 
         Returns:
             instance of :class:`Telemetry`
@@ -3263,7 +3280,7 @@ class DriverResult(pd.Series):
     This class subclasses a :class:`pandas.Series` and the usual methods
     provided by pandas can be used to work with the data.
 
-    For information on which data is available, see :class:`SessionResult`.
+    For information on which data is available, see :class:`SessionResults`.
 
     .. note:: This class is usually not instantiated directly. You should
         create a session and access the driver result through

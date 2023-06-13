@@ -1,19 +1,23 @@
 """This is a collection of various functions."""
 import datetime
 from functools import reduce
-from typing import Dict, Tuple, Optional
+from typing import Dict, Tuple, Optional, Union
 import warnings
 
 import numpy as np
 import pandas as pd
 
+import fastf1
 from fastf1.logger import get_logger
 
 
 _logger = get_logger(__name__)
 
 
-def delta_time(reference_lap: pd.Series, compare_lap: pd.Series) -> Tuple:
+def delta_time(
+        reference_lap: "fastf1.core.Lap",
+        compare_lap: "fastf1.core.Lap"
+) -> Tuple[pd.Series, "fastf1.core.Telemetry", "fastf1.core.Telemetry"]:
     """Calculates the delta time of a given lap, along the 'Distance' axis
     of the reference lap.
 
@@ -65,18 +69,19 @@ def delta_time(reference_lap: pd.Series, compare_lap: pd.Series) -> Tuple:
         plt.show()
 
     Args:
-        reference_lap (pd.Series): The lap taken as reference
-        compare_lap (pd.Series): The lap to compare
+        reference_lap: The lap taken as reference
+        compare_lap: The lap to compare
 
     Returns:
-        tuple: (delta, reference, comparison)
-          - pd.Series of type `float64` with the delta in seconds.
-          - :class:`Telemetry` for the reference lap
-          - :class:`Telemetry` for the comparison lap
+        A tuple containing
 
-          Use the return telemetry for plotting to make sure you have
-          telemetry data that was created with the same interpolation and
-          resampling options!
+        - pd.Series of type `float64` with the delta in seconds.
+        - :class:`~fastf1.core.Telemetry` for the reference lap
+        - :class:`~fastf1.core.Telemetry` for the comparison lap
+
+        Use the return telemetry for plotting to make sure you have
+        telemetry data that was created with the same interpolation and
+        resampling options!
     """
     warnings.warn("`utils.delta_time` is considered deprecated and will"
                   "be modified or removed in a future release because it has"
@@ -112,7 +117,8 @@ def recursive_dict_get(d: Dict, *keys: str, default_none: bool = False):
         return ret
 
 
-def to_timedelta(x: str) -> Optional[datetime.timedelta]:
+def to_timedelta(x: Union[str, datetime.timedelta]) \
+        -> Optional[datetime.timedelta]:
     """Fast timedelta object creation from a time string
 
     Permissible string formats:
@@ -130,9 +136,7 @@ def to_timedelta(x: str) -> Optional[datetime.timedelta]:
             - `8:45:46` (hours, minutes, seconds)
 
     Args:
-        x (str or timedelta):
-    Returns:
-        datetime.timedelta
+        x: timestamp
     """
     # this is faster than using pd.timedelta on a string
     if isinstance(x, str) and len(x):
@@ -171,7 +175,8 @@ def to_timedelta(x: str) -> Optional[datetime.timedelta]:
         return None
 
 
-def to_datetime(x) -> Optional[datetime.datetime]:
+def to_datetime(x: Union[str, datetime.datetime]) \
+        -> Optional[datetime.datetime]:
     """Fast datetime object creation from a date string.
 
     Permissible string formats:
@@ -189,9 +194,7 @@ def to_datetime(x) -> Optional[datetime.datetime]:
             - `2020-12-13T13:27:15`
 
     Args:
-        x (str or datetime)
-    Returns:
-        datetime.datetime
+        x: timestamp
     """
     if isinstance(x, str):
         try:

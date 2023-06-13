@@ -132,7 +132,8 @@ def soft_exceptions(descr_name: str, msg: str, logger: logging.Logger):
         descr_name: descriptive name for the type of data that should have
             been loaded by the wrapped function
         msg: Short message that is shown as error message to users
-        logger: the logger that should be used to log errors
+        logger: the logger that should be used to log errors (a logger instance
+            as returned by :func:`get_logger`, for example).
     """
     # This function is used to wrap individual data loading functions that are
     # called by `Session.load`. With the default configuration, this wrapper

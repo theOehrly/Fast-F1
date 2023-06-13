@@ -110,7 +110,7 @@ class ErgastResultFrame(pd.DataFrame):
     Args:
         data: Passed through to the DataFrame constructor (must be None if
             `response` is provided)
-        category: Reference to a category from :mod:`fastf1.ergast.structure`
+        category: Reference to a category from ``fastf1.ergast.structure``
             that describes the result data
         response: JSON-like response data from Ergast; used to generate `data`
             from an Ergast response (must be None if `data` is provided)
@@ -223,7 +223,7 @@ class ErgastRawResponse(ErgastResponseMixin, list):
     :class:`ErgastResponseMixin`.
 
     Args:
-        category: Reference to a category from :mod:`fastf1.ergast.structure`
+        category: Reference to a category from ``fastf1.ergast.structure``
             that describes the result data
         auto_cast: Determines if values are automatically cast to the most
             appropriate data type from their original string representation
@@ -344,9 +344,9 @@ class ErgastMultiResponse(ErgastResponseMixin):
             information (only data that is available in :attr:`.description`)
         response_data: A list of the "content" data that has been split from
             the Ergast response (data that is available in :attr:`.content`)
-        category: A category object from :mod:`fastf1.ergast.structure`
+        category: A category object from ``fastf1.ergast.structure``
             that defines the main category.
-        subcategory: A category object from :mod:`fastf1.ergast.structure`
+        subcategory: A category object from ``fastf1.ergast.structure``
             that defines the subcategory which is the content data.
         auto_cast: Flag that enables or disables automatic casting from the
             original string representation to the most suitable data type.
@@ -393,8 +393,7 @@ class Ergast:
     The main object that acts as an interface to the Ergast API.
 
     For each API endpoint, there is a separate method implemented to
-    request data. All methods have in common, that they can be preceded by a
-    call to :func:`.select` to filter the results.
+    request data.
 
     Args:
         result_type: Determines the default type of the returned result object

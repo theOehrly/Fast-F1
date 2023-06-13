@@ -36,7 +36,7 @@ DataFrame columns or Series values:
     A shorter event name usually containing the country or location but no
     no sponsor names. This name is required internally for proper api access.
 
-  - ``EventDate`` | :class:`datetime` |
+  - ``EventDate`` | :class:`pd.Timestamp` |
     The events reference date and time. This is used mainly internally.
     Usually, this is the same as the date of the last session.
 
@@ -246,9 +246,6 @@ def get_session(
 
             Some examples that will be correctly interpreted: 'bahrain',
             'australia', 'abudabi', 'monza'.
-
-            See :func:`get_event_by_name` for some further remarks on the
-            fuzzy matching.
 
         identifier: see :ref:`SessionIdentifier`
 
@@ -733,13 +730,13 @@ class EventSchedule(pd.DataFrame):
     """This class implements a per-season event schedule.
 
     This class is usually not instantiated directly. You should use
-    :func:`get_event_schedule` to get an event schedule for a specific
+    :func:`fastf1.get_event_schedule` to get an event schedule for a specific
     season.
 
     Args:
         *args: passed on to :class:`pandas.DataFrame` superclass
-        year (int): Championship year
-        force_default_cols (bool): Enforce that all default columns and only
+        year: Championship year
+        force_default_cols: Enforce that all default columns and only
             the default columns exist
         **kwargs: passed on to :class:`pandas.DataFrame` superclass
             (except 'columns' which is unsupported for the event schedule)
@@ -931,10 +928,10 @@ class Event(pd.Series):
     of event and depending on the event format.
 
     This class is usually not instantiated directly. You should use
-    :func:`get_event` or similar to get a specific event.
+    :func:`fastf1.get_event` or similar to get a specific event.
 
     Args:
-          year (int): Championship year
+          year: Championship year
     """
     _metadata = ['year']
 

@@ -2,7 +2,7 @@ import base64
 import datetime
 import json
 import zlib
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -84,7 +84,10 @@ EMPTY_STREAM = {'Time': pd.NaT, 'Driver': str(), 'Position': np.NaN,
 
 
 @Cache.api_request_wrapper
-def timing_data(path, response=None, livedata=None):
+def timing_data(path: str,
+                response: Optional[str] = None,
+                livedata=None
+                ) -> (pd.DataFrame, pd.DataFrame):
     """
     .. warning::
         :mod:`fastf1.api` will be considered private in future releases and
@@ -113,39 +116,40 @@ def timing_data(path, response=None, livedata=None):
 
     Args:
         path: api path base string (usually ``Session.api_path``)
-        response (optional): api response can be passed if data was already downloaded
+        response: api response can be passed if data was already downloaded
         livedata: An instance of :class:`fastf1.livetiming.data.LiveTimingData`
             to use as a source instead of the api
 
     Returns:
-        (DataFrame, DataFrame):
 
-            - laps_data (DataFrame):
-                contains the following columns of data (one row per driver and lap)
+        **laps_data and stream_data**
 
-                    - Time (pandas.Timedelta): Session time at which the lap was set (i.e. finished)
-                    - LapTime (pandas.Timedelta): Lap time of the last finished lap (the lap in this row)
-                    - Driver (str): Driver number
-                    - NumberOfLaps (int): Number of laps driven by this driver including the lap in this row
-                    - NumberOfPitStops (int): Number of pit stops of this driver
-                    - PitInTime (pandas.Timedelta): Session time at which the driver entered the pits. Consequentially,
-                      if this value is not NaT the lap in this row is an inlap.
-                    - PitOutTime (pandas.Timedelta): Session time at which the driver exited the pits. Consequentially,
-                      if this value is not NaT  the lap in this row is an outlap.
-                    - Sector1/2/3Time (pandas.Timedelta): Sector times (one column for each sector time)
-                    - Sector1/2/3SessionTime (pandas.Timedelta): Session time at which the corresponding sector time
-                      was set (one column for each sector's session time)
-                    - SpeedI1/I2/FL/ST: Speed trap speeds; FL is speed at the finish line; I1 and I2 are speed traps in
-                      sector 1 and 2 respectively; ST maybe a speed trap on the longest straight (?)
+        - laps_data (DataFrame):
+            contains the following columns of data (one row per driver and lap)
 
-            - stream_data (DataFrame):
-                contains the following columns of data
+                - Time (pandas.Timedelta): Session time at which the lap was set (i.e. finished)
+                - LapTime (pandas.Timedelta): Lap time of the last finished lap (the lap in this row)
+                - Driver (str): Driver number
+                - NumberOfLaps (int): Number of laps driven by this driver including the lap in this row
+                - NumberOfPitStops (int): Number of pit stops of this driver
+                - PitInTime (pandas.Timedelta): Session time at which the driver entered the pits. Consequentially,
+                  if this value is not NaT the lap in this row is an inlap.
+                - PitOutTime (pandas.Timedelta): Session time at which the driver exited the pits. Consequentially,
+                  if this value is not NaT  the lap in this row is an outlap.
+                - Sector1/2/3Time (pandas.Timedelta): Sector times (one column for each sector time)
+                - Sector1/2/3SessionTime (pandas.Timedelta): Session time at which the corresponding sector time
+                  was set (one column for each sector's session time)
+                - SpeedI1/I2/FL/ST: Speed trap speeds; FL is speed at the finish line; I1 and I2 are speed traps in
+                  sector 1 and 2 respectively; ST maybe a speed trap on the longest straight (?)
 
-                    - Time (pandas.Timedelta): Session time at which this sample was created
-                    - Driver (str): Driver number
-                    - Position (int): Position in the field
-                    - GapToLeader (pandas.Timedelta): Time gap to leader in seconds
-                    - IntervalToPositionAhead (pandas.Timedelta): Time gap to car ahead
+        - stream_data (DataFrame):
+            contains the following columns of data
+
+                - Time (pandas.Timedelta): Session time at which this sample was created
+                - Driver (str): Driver number
+                - Position (int): Position in the field
+                - GapToLeader (pandas.Timedelta): Time gap to leader in seconds
+                - IntervalToPositionAhead (pandas.Timedelta): Time gap to car ahead
 
     Raises:
         SessionNotAvailableError: in case the F1 livetiming api returns no data
@@ -1566,7 +1570,7 @@ def fetch_page(path, name):
 
     Args:
         path (str): api path base string (usually ``Session.api_path``)
-        name (str): page name (see :attr:`pages` for all known pages)
+        name (str): page name (see ``api.pages`` for all known pages)
 
     Returns:
         - dictionary if content was json
@@ -1607,7 +1611,7 @@ def fetch_page(path, name):
         return None
 
 
-def parse(text, zipped=False) -> Union[str, dict]:
+def parse(text: str, zipped: bool = False) -> Union[str, dict]:
     """
     .. warning::
         :mod:`fastf1.api` will be considered private in future releases and
@@ -1619,11 +1623,12 @@ def parse(text, zipped=False) -> Union[str, dict]:
     Timestamps and data need to be separated before and only the data must be passed as a string to be parsed.
 
     Args:
-        text (str): The string which should be parsed
-        zipped (bool): Whether or not the text is compressed. This is the case for '.z' data (e.g. position data=)
+        text: The string which should be parsed
+        zipped: Whether the text is compressed. This is the case for  '.z'
+            data (e.g. position data)
 
     Returns:
-        Depending on data of which page is parsed:
+        Depending on data of which page is parsed
             - a dictionary created as a result of loading json data
             - a string
     """

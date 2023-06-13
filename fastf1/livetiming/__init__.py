@@ -70,9 +70,10 @@ Important Notes
 
     fastf1.Cache.enable_cache('path/to/cache/directory')
 
-- You need to force a cache update if you modify the :class:`LiveTimingData`
-  (e.g. by adding a second file). The cache cannot tell that the input source
-  was modified and will still use the old cached data.
+- You need to force a cache update if you modify the
+  :class:`~fastf1.livetiming.data.LiveTimingData` (e.g. by adding a second
+  file). The cache cannot tell that the input source was modified and will
+  still use the old cached data.
 
   You can force-refresh the cache::
 

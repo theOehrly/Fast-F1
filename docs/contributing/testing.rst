@@ -7,7 +7,7 @@ Testing
 FastF1 uses the pytest_ framework.
 
 The tests are in :file:`fastf1/tests`, and customizations to the pytest
-testing infrastructure are in :mod:`fastf1.testing`.
+testing infrastructure are in ``fastf1.testing``.
 
 .. _pytest: http://doc.pytest.org/en/latest/
 .. _pytest-xdist: https://pypi.org/project/pytest-xdist/

@@ -210,6 +210,9 @@ class Cache:
 
     _request_counter = 0  # count uncached requests for debugging purposes
 
+    def __repr__(self):
+        return "ahaha"
+
     @classmethod
     def enable_cache(
             cls, cache_dir: str, ignore_version: bool = False,

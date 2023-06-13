@@ -55,6 +55,9 @@ Cache API
     :autosummary:
 
 
+.. autoclass:: RateLimitExceededError
+
+
 Configure Logging Verbosity
 ...........................
 

@@ -347,7 +347,7 @@ def lapnumber_axis(ax, axis='xaxis'):
 
     Args:
         ax: matplotlib axis
-        axis (='xaxis', optional): can be 'xaxis' or 'yaxis'
+        axis: can be 'xaxis' or 'yaxis'
 
     Returns:
         the modified axis instance
