@@ -352,6 +352,9 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
 
     personal_best_lap_times = list()
 
+    session_split_times = [datetime.timedelta(0)]
+    # start times of (sub)sessions (Q1, Q2, Q3)
+
     pitstops = -1  # start with -1 because first is out lap, needs to be zero after that
 
     # iterate through the data; new lap triggers next row in data
@@ -423,8 +426,26 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
                 drv_data['PitOutTime'][lapcnt] = to_timedelta(time)  # add to current lap
                 pitstops += 1
 
+        # Get save information about personal best lap times at the timestamp
+        # at which this information was received.
+        # Whenever a lap is deleted (if that happens quickly after it was set),
+        # the previous 'BestLapTime' value is sent again. There is some extra
+        # logic at then end that correctly marks personal best laps based on
+        # the data that is saved here.
         if val := recursive_dict_get(resp, 'BestLapTime', 'Value'):
-            personal_best_lap_times.append(to_timedelta(val))
+            personal_best_lap_times.append(
+                (to_timedelta(time), to_timedelta(val))
+            )
+
+        # Create approximate (sub)session (i.e. quali) split times by
+        # (mis)using the session number counter from 'BestLapTimes'.
+        # (Note: those lap times cannot be used for correct personal best
+        #  detection, because the previous value is not resent here when a lap
+        #  is deleted.)
+        if val := recursive_dict_get(resp, 'BestLapTimes'):
+            session_n = int(list(val.keys())[0])
+            if (session_n + 1) > len(session_split_times):
+                session_split_times.append(to_timedelta(time))
 
         # new lap; create next row
         if 'NumberOfLaps' in resp and resp['NumberOfLaps'] > api_lapcnt:
@@ -589,14 +610,25 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
                 < drv_data['Sector3SessionTime'][i+1]:
             drv_data['Sector3SessionTime'][i+1] = new_s3_time
 
-    # iterate over list of personal lap times set 'IsPersonalBest'
-    # when a lap is deleted, the API resends the previous personal best.
+    # Iterate over list of personal lap times set 'IsPersonalBest'.
+    # When a lap is deleted, the API resends the previous personal best.
     # Therefore, by iterating in reverse, if any lap is encountered that is
     # quicker than already processed personal best lap times, it must have
     # been deleted.
+    # This is just best effort but not exhaustive as it can only handle lap
+    # times that were deleted quickly (before the next personal best was set).
     _corrected_personal_best_lap_times = list()
     # list is only used for backreference within the loop
-    for pb_lap_time in reversed(personal_best_lap_times):
+    cur_sn = len(session_split_times) - 1
+    # current (sub)session number, personal best lap times need to be
+    # considered for each (sub)session individually
+    for time, pb_lap_time in reversed(personal_best_lap_times):
+        if time < session_split_times[cur_sn]:
+            # transitioned into the previous (sub)session (reverse iteration!)
+            # reset the reference list, so time are considered individually
+            cur_sn -= 1
+            _corrected_personal_best_lap_times = list()
+
         if _corrected_personal_best_lap_times:
             if pb_lap_time in _corrected_personal_best_lap_times:
                 continue
