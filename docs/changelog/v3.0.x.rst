@@ -1,7 +1,7 @@
 What's new in v3.0.5
 --------------------
 
-(released dd/mm/yyyy)
+(released 21/06/2023)
 
 Bug Fixes and Improvements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
