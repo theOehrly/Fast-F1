@@ -4,7 +4,7 @@ Getting started with the basics
 
 FastF1 is built mainly around Pandas DataFrame and Series objects.
 If you are familiar with Pandas you'll immediately recognize this and working
-with the data will be fairly straight forward. (If you're
+with the data will be fairly straightforward. (If you're
 not familiar with Pandas at all, it might be helpful to check out a short
 tutorial.)
 
@@ -13,8 +13,8 @@ Loading a session or an event
 ------------------------------
 
 The :class:`fastf1.core.Session` object is an important starting point for
-everything you do with FastF1. Usually the first thing you want to do
-is loading a session. For this, you should use
+everything you do with FastF1. Usually, the first thing you want to do
+is load a session. For this, you should use
 :func:`fastf1.get_session`.
 
 For example, let's load the Qualifying of the 7th race of the 2021 season:
@@ -111,7 +111,7 @@ provides methods for accessing the individual associated sessions.
   'Race'
 
 
-Loading a session or and event by name
+Loading a session or an event by name
 --------------------------------------
 
 As an alternative to specifying an event number you can also load
@@ -215,12 +215,12 @@ Displaying driver info and session results
 ------------------------------------------
 
 We have created a session now but everything has been rather boring so far.
-So lets make it a bit more interesting by taking a look at the results of
+So let's make it a bit more interesting by taking a look at the results of
 this session. For this, it is first necessary to call
 :func:`Session.load <fastf1.core.Session.load>`. This will load all available data for the
 session from various APIs. Downloading and processing of the data may take a
-few seconds. It is highly recommended to utilize FastF1's builtin caching
-functionality to speed up data loading and to prevent excessive API requests.
+few seconds. It is highly recommended to utilize FastF1's built-in caching
+functionality to speed up data loading and prevent excessive API requests.
 
   >>> session = fastf1.get_session(2021, 'French Grand Prix', 'Q')
   >>> session.load()
@@ -260,7 +260,7 @@ there are:
          'GridPosition', 'Q1', 'Q2', 'Q3', 'Time', 'Status', 'Points'],
         dtype='object')
 
-As an example, lets display the top ten drivers and their
+As an example, let's display the top ten drivers and their
 respective Q3 times. The results are sorted by finishing position, therefore,
 this is easy.
 
@@ -282,7 +282,7 @@ Working with laps and lap times
 -------------------------------
 
 All individual laps of a session can be accessed through the property
-:attr:`Session.laps <fastf1.core.Session.laps>`. The laps are represented in
+:attr:`Session.laps <fastf1.core.Session.laps>`. The laps are represented 
 as :class:`~fastf1.core.Laps` object which again is a subclass of a
 :class:`pandas.DataFrame`.
 
@@ -318,15 +318,15 @@ The following data columns are available:
          'FastF1Generated', 'IsAccurate'],
         dtype='object')
 
-The detailed explanation for all these columns can be found in the
+A detailed explanation for all these columns can be found in the
 documentation of the :class:`~fastf1.core.Laps` class.
 
 The :class:`~fastf1.core.Laps` object is not a simple DataFrame though.
-Like FastF1's other data objects it provides some more features specifically
+Like FastF1's other data objects, it provides some more features specifically
 for working with Formula 1 data.
 
 One of these additional features are methods for selecting specific laps.
-So let's see what the fastest laptime was and who is on pole.
+So let's see what the fastest lap time was and who is on pole.
 
   >>> fastest_lap = session.laps.pick_fastest()
   >>> fastest_lap['LapTime']
