@@ -1,3 +1,15 @@
+What's new in v3.0.5
+--------------------
+
+(released dd/mm/yyyy)
+
+Bug Fixes and Improvements
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Fixed error when loading historic sessions (#400)
+
+
+
 What's new in v3.0.4
 --------------------
 

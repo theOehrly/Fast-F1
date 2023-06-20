@@ -2018,7 +2018,12 @@ class Session:
                     'Q3': 'Q3',
                 })
 
-        d = data.loc[:, list(rename_return.keys())] \
+        # ergast does not provide all data for old sessions
+        # (example: 'driverCode'), select only existing columns
+        existing_keys = set(rename_return.keys())\
+            .intersection(data.columns)
+
+        d = data.loc[:, list(existing_keys)] \
             .rename(columns=rename_return) \
             .astype({'DriverNumber': 'str'})
 
