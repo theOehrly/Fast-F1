@@ -1,3 +1,12 @@
+What's new in v3.0.6
+--------------------
+
+(released 21/06/2023)
+
+Release forces a cache update after updating from v3.0.4 and lower. Else, the
+changes from v3.0.5 are not applied if the data is cached already.
+
+
 What's new in v3.0.5
 --------------------
 
