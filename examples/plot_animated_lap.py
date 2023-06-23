@@ -100,9 +100,8 @@ ax5.tick_params(labelleft=True, left=False)
 ax5.set_yticklabels([])
 ax5.set_ylabel('Throttle')
 
+
 ##############################################################################
-
-
 # update function for the animation
 def update(num):
     if num == tel['Time'][0]:
