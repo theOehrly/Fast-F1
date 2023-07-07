@@ -2073,37 +2073,45 @@ class Session:
                 instead of requesting the data from the api, locally saved
                 livetiming data can be used as a data source
         """
-        car_data = api.car_data(self.api_path, livedata=livedata)
-        pos_data = api.position_data(self.api_path, livedata=livedata)
+        try:
+            car_data = api.car_data(self.api_path, livedata=livedata)
+        except api.SessionNotAvailableError:
+            _logger.warning("Car telemetry data is unavailable!")
+            car_data = {}
+
+        try:
+            pos_data = api.position_data(self.api_path, livedata=livedata)
+        except api.SessionNotAvailableError:
+            _logger.warning("Car position data is unavailable!")
+            pos_data = {}
 
         self._calculate_t0_date(car_data, pos_data)
 
         self._car_data = dict()
         self._pos_data = dict()
 
-        for drv in self.drivers:
-            try:
-                # drop and recalculate time stamps based on 'Date', because 'Date' has a higher resolution
-                drv_car = Telemetry(car_data[drv].drop(labels='Time', axis=1),
-                                    session=self, driver=drv,
-                                    drop_unknown_channels=True)
-                drv_pos = Telemetry(pos_data[drv].drop(labels='Time', axis=1),
-                                    session=self, driver=drv,
-                                    drop_unknown_channels=True)
-            except KeyError:
-                # not pos data or car data exists for this driver
+        for (src, processed) in ((car_data, self._car_data),
+                                 (pos_data, self._pos_data)):
+            if not src:
                 continue
 
-            drv_car['Date'] = drv_car['Date'].round('ms')
-            drv_pos['Date'] = drv_pos['Date'].round('ms')
+            for drv in self.drivers:
+                # drop and recalculate timestamps based on 'Date', because
+                # 'Date' has a higher resolution
+                try:
+                    drv_car = Telemetry(src[drv].drop(labels='Time', axis=1),
+                                        session=self, driver=drv,
+                                        drop_unknown_channels=True)
+                except KeyError:
+                    # not pos data or car data exists for this driver
+                    continue
 
-            drv_car['Time'] = drv_car['Date'] - self.t0_date  # create proper continuous timestamps
-            drv_pos['Time'] = drv_pos['Date'] - self.t0_date
-            drv_car['SessionTime'] = drv_car['Time']
-            drv_pos['SessionTime'] = drv_pos['Time']
+                drv_car['Date'] = drv_car['Date'].round('ms')
 
-            self._car_data[drv] = drv_car
-            self._pos_data[drv] = drv_pos
+                drv_car['Time'] = drv_car['Date'] - self.t0_date
+                drv_car['SessionTime'] = drv_car['Time']
+
+                processed[drv] = drv_car
 
         if hasattr(self, '_laps'):
             self._laps['LapStartDate'] \
@@ -2126,7 +2134,7 @@ class Session:
             raise ValueError(f"Invalid driver identifier '{identifier}'")
         return self.results[mask].iloc[0]
 
-    def _calculate_t0_date(self, car_data, pos_data):
+    def _calculate_t0_date(self, *tel_data_sets: dict):
         """Calculate the date timestamp at which data for this session is starting.
 
         This does not mark the start of a race (or other sessions). This marks the start of the data which is sometimes
@@ -2138,16 +2146,19 @@ class Session:
         the least delay.)
 
         Args:
-            car_data: Car telemetry; should contain all samples and only original ones
-            pos_data: Car position data; should contain all samples and only original ones
+            tel_data_sets: Dictionaries containing car telemetry data or
+                position data
         """
         date_offset = None
 
-        for data in (car_data, pos_data):
-            for drv in data.keys():
-                new_offset = max(data[drv]['Date'] - data[drv]['Time'])
-                if date_offset is None or new_offset > date_offset:
-                    date_offset = new_offset
+        data = list()
+        for tds in tel_data_sets:
+            data.extend(list(tds.values()))
+
+        for d in data:
+            new_offset = max(d['Date'] - d['Time'])
+            if date_offset is None or new_offset > date_offset:
+                date_offset = new_offset
 
         if date_offset is None:
             self._t0_date = None
