@@ -194,24 +194,31 @@ def test_split_sprint_shootout_laps():
 
 @pytest.mark.f1telapi
 def test_calculated_quali_results():
-    session = fastf1.get_session(2023, 2, 'Q')
+    session = fastf1.get_session(2023, 4, 'Q')
     session.load(telemetry=False, weather=False)
 
+    # copy and delete (!) before recalculating
     ergast_results = session.results.copy()
+    session.results.loc[:, ('Q1', 'Q2', 'Q3')] = pd.NaT
     session._calculate_quali_like_session_results(force=True)
 
+    # Note that differences may exist if one or more drivers didn't set a
+    # proper lap time in any of the Quali sessions. In this case, Ergast may
+    # still return a (very slow) lap time, while the calculation will return
+    # NaT. This is acceptable. Testing is done on a session where this is not
+    # an issue.
     pd.testing.assert_frame_equal(ergast_results, session.results)
 
 
 @pytest.mark.f1telapi
 def test_quali_q3_cancelled():
-    session = fastf1.get_session(2023, 2, 'Q')
+    session = fastf1.get_session(2023, 4, 'Q')
     session.load(telemetry=False, weather=False)
 
     # Remove Q3 to simulate cancelled Q3. If a future race has a cancelled Q3,
     # that would be a better test case. The last one was the US GP in 2015, so
     # no lap data is available.
-    session.session_status.drop([7, 8, 9, 10], inplace=True)
+    session.session_status.drop([13, 14, 15, 16], inplace=True)
     session.results['Q3'] = pd.NaT
 
     # Test split_qualifying_sessions()
@@ -222,9 +229,16 @@ def test_quali_q3_cancelled():
     assert q3 is None
 
     # Test _calculate_quali_like_session_results()
+    # copy and delete (!) before recalculating
     orig_results = session.results.copy()
+    session.results.loc[:, ('Q1', 'Q2', 'Q3')] = pd.NaT
     session._calculate_quali_like_session_results(force=True)
 
+    # Note that differences may exist if one or more drivers didn't set a
+    # proper lap time in any of the Quali sessions. In this case, Ergast may
+    # still return a (very slow) lap time, while the calculation will return
+    # NaT. This is acceptable. Testing is done on a session where this is not
+    # an issue.
     pd.testing.assert_series_equal(
         session.results['Q1'].sort_values(), orig_results['Q1'].sort_values())
     pd.testing.assert_series_equal(

@@ -1614,11 +1614,10 @@ class Session:
         quali_results = quali_results \
             .sort_values(by=['Q3', 'Q2', 'Q1']) \
             .reset_index(drop=True)
-        quali_results['Position'] = quali_results.index + 1
+        quali_results['Position'] = (quali_results.index + 1).astype('float64')
         quali_results = quali_results.set_index('DriverNumber', drop=True)
 
-        self.results.loc[:, quali_results.columns] \
-            .update(quali_results, overwrite=force)
+        self.results.loc[:, quali_results.columns] = quali_results
         self.results.sort_values(by=['Position'], inplace=True)
 
     @soft_exceptions("add track status to laps",
