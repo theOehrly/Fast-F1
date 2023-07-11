@@ -1035,6 +1035,8 @@ class Session:
 
         self._ergast = ergast.Ergast()
 
+        self._session_info: dict
+
         self._session_status: pd.DataFrame
         self._race_control_messages: pd.DataFrame
 
@@ -1061,6 +1063,18 @@ class Session:
             raise DataNotLoadedError("The data you are trying to access has not "
                                      "been loaded yet. See `Session.load`")
         return getattr(self, name, None)
+
+    @property
+    def session_info(self) -> dict:
+        """Session information including meeting, session, country and circuit
+        names and id keys.
+
+        The id keys are unique identifiers that are used by the F1 APIs.
+
+        (This property holds the data that is returned by the "SessionInfo"
+        endpoint of the F1 livetiming API.)
+        """
+        return self._get_property_warn_not_loaded('_session_info')
 
     @property
     def drivers(self):
@@ -1225,6 +1239,7 @@ class Session:
                      f"{self.event['EventName']} - {self.name}"
                      f" [v{fastf1.__version__}]")
 
+        self._load_session_info(livedata=livedata)
         self._load_drivers_results(livedata=livedata)
 
         if self.f1_api_support:
@@ -1258,6 +1273,13 @@ class Session:
 
         _logger.info(f"Finished loading data for {len(self.drivers)} "
                      f"drivers: {self.drivers}")
+
+    @soft_exceptions("session info data",
+                     "Failed to load session info data!",
+                     _logger)
+    def _load_session_info(self, livedata=None):
+        self._session_info = api.session_info(self.api_path,
+                                              livedata=livedata)
 
     @soft_exceptions("lap timing data", "Failed to load timing data!", _logger)
     def _load_laps_data(self, livedata=None):

@@ -1,0 +1,17 @@
+What's new in v3.1.0
+--------------------
+
+(released 02/05/2023)
+
+New Features
+^^^^^^^^^^^^
+
+- "SessionInfo" data from the F1 livetiming API is now available through
+  :attr:`fastf1.core.Session.session_info`
+
+Other Changes
+^^^^^^^^^^^^^
+
+
+Bug Fixes
+^^^^^^^^^

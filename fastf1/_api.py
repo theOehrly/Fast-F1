@@ -26,7 +26,7 @@ headers: Dict[str, str] = {
 
 pages: Dict[str, str] = {
     'session_data': 'SessionData.json',  # track + session status + lap count
-    'session_info': 'SessionInfo.json',  # more rnd
+    'session_info': 'SessionInfo.jsonStream',  # more rnd
     'archive_status': 'ArchiveStatus.json',  # rnd=1880327548
     'heartbeat': 'Heartbeat.jsonStream',  # Probably time synchronization?
     'audio_streams': 'AudioStreams.jsonStream',  # Link to audio commentary
@@ -1557,6 +1557,46 @@ def season_schedule(path, response=None):
             )
 
     return response['Meetings']
+
+
+@Cache.api_request_wrapper
+def session_info(path, response=None, livedata=None):
+    """
+    .. warning::
+        :mod:`fastf1.api` will be considered private in future releases and
+        potentially be removed or changed.
+
+    Fetch and parse session info data.
+
+    Returns:
+        A dictionary containing the nested session info data. Timestamps and
+        timedeltas are converted to ``datetime.datetime`` and
+        ``datetime.timedelta`` respectively.
+
+    Raises:
+        SessionNotAvailableError: in case the F1 live timing api
+            returns no data
+    """
+    if livedata is not None and livedata.has('SessionInfo'):
+        # does not need any further processing
+        _logger.info("Loading session info data")
+        response = livedata.get('SessionInfo')
+    elif response is None:
+        _logger.info("Fetching session info data...")
+        response = fetch_page(path, 'session_info')
+        if response is None:  # no response received
+            raise SessionNotAvailableError(
+                "No data for this session! If this session only finished "
+                "recently, please try again in a few minutes."
+            )
+
+    ts, data = response[0]
+
+    data['StartDate'] = to_datetime(data['StartDate'])
+    data['EndDate'] = to_datetime(data['EndDate'])
+    data['GmtOffset'] = to_timedelta(data['GmtOffset'])
+
+    return data
 
 
 def fetch_page(path, name):
