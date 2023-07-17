@@ -1,3 +1,20 @@
+What's new in v3.0.7
+--------------------
+
+(released 17/07/2023)
+
+Bug Fixes and Improvements
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Fixed an issue that prevented telemetry data from being loaded when position
+  data is missing (and vice versa) (#412)
+
+- Fixed loading of Sprint Shootout results
+  (#413, regression introduced in v3.0.3)
+
+- Added driver color for Ricciardo at AlphaTauri (by @pesaventofilippo in #418)
+
+
 What's new in v3.0.6
 --------------------
 
