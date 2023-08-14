@@ -52,6 +52,7 @@ import pandas as pd
 import fastf1
 from fastf1 import _api as api
 from fastf1 import ergast
+from fastf1.mvapi import get_circuit_info, CircuitInfo
 from fastf1.logger import get_logger, soft_exceptions
 from fastf1.utils import to_timedelta
 
@@ -2156,6 +2157,25 @@ class Session:
         if not mask.any():
             raise ValueError(f"Invalid driver identifier '{identifier}'")
         return self.results[mask].iloc[0]
+
+    def get_circuit_info(self) -> Optional[CircuitInfo]:
+        """Returns additional information about the circuit that hosts this
+        event.
+
+        This information includes the location of corners, marshal lights,
+        marshal sectors and the rotation of the track map. Note that the data
+        is manually created and therefore not highly accurate, but it is useful
+        for annotating data visualizations.
+
+        See :class:`~fastf1.mvapi.CircuitInfo` for detailed information.
+        """
+        circuit_key = self.session_info['Meeting']['Circuit']['Key']
+        circuit_info = get_circuit_info(year=self.event.year,
+                                        circuit_key=circuit_key)
+        circuit_info.add_marker_distance(
+            reference_lap=self.laps.pick_fastest()
+        )
+        return circuit_info
 
     def _calculate_t0_date(self, car_data, pos_data):
         """Calculate the date timestamp at which data for this session is starting.

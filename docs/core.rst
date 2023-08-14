@@ -53,6 +53,13 @@
       :show-inheritance:
 
 
+  CircuitInfo
+  +++++++++++
+
+    .. autoclass:: fastf1.mvapi.data.CircuitInfo
+      :members:
+      :autosummary:
+
 
   Exceptions
   **********

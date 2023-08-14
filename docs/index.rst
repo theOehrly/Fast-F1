@@ -135,6 +135,7 @@ Contents
    events
    api
    ergast
+   circuit_info
    utils
    plotting
    livetiming

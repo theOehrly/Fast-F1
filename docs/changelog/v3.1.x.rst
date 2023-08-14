@@ -6,6 +6,14 @@ What's new in v3.1.0
 New Features
 ^^^^^^^^^^^^
 
+- Added additional circuit information that includes the location of corners,
+  marshal lights, marshal sectors and the rotation of the track map. This
+  data is available through :func:`fastf1.core.Session.get_circuit_info`. Also
+  check out the new examples that show how to annotate your plots using this
+  data.
+  A huge thank you to @multiviewer (https://multiviewer.app/) for providing
+  this information through MultiViewer's API.
+
 - "SessionInfo" data from the F1 livetiming API is now available through
   :attr:`fastf1.core.Session.session_info`
 

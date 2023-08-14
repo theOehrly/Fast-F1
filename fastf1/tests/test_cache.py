@@ -70,7 +70,8 @@ def _test_cache_used_and_clear(tmpdir):
         # create mock responses for f1 api requests
         req_pages = ['timing_data', 'timing_app_data', 'track_status',
                      'session_status', 'car_data', 'position',
-                     'weather_data', 'driver_list', 'race_control_messages']
+                     'weather_data', 'driver_list', 'race_control_messages',
+                     'session_info']
         for p in req_pages:
             with open(f'fastf1/testing/reference_data/'
                       f'2020_05_FP2/{p}.raw', 'rb') as fobj:
@@ -101,7 +102,8 @@ def _test_cache_used_and_clear(tmpdir):
                              'timing_app_data.ff1pkl', 'timing_data.ff1pkl',
                              'track_status_data.ff1pkl',
                              'weather_data.ff1pkl',
-                             'race_control_messages.ff1pkl']
+                             'race_control_messages.ff1pkl',
+                             'session_info.ff1pkl']
         # test both ways round
         assert all(elem in expected_dir_list for elem in dir_list)
         assert all(elem in dir_list for elem in expected_dir_list)
