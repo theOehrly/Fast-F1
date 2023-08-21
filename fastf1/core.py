@@ -1593,7 +1593,7 @@ class Session:
         quali_results = (self._laps.loc[:, ['DriverNumber']].copy()
                          .drop_duplicates()
                          .reset_index(drop=True))
-        sessions = self._laps.pick_quicklaps().split_qualifying_sessions()
+        sessions = self._laps.pick_accurate().split_qualifying_sessions()
 
         for i, session in enumerate(sessions):
             session_name = f'Q{i + 1}'
