@@ -2786,7 +2786,7 @@ class Laps(pd.DataFrame):
                     session_suspended = False
             elif row['Status'] == 'Aborted':
                 session_suspended = True
-            elif row['Status'] == 'Finished':
+            elif row['Status'] in ('Finished', 'Inactive'):
                 # This handles the case when a qualifying session isn't
                 # restarted after a red flag.
                 session_suspended = False
