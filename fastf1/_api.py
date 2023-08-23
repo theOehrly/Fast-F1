@@ -82,7 +82,6 @@ EMPTY_STREAM = {'Time': pd.NaT, 'Driver': str(), 'Position': np.NaN,
                 'GapToLeader': np.NaN, 'IntervalToPositionAhead': np.NaN}
 
 
-@Cache.api_request_wrapper
 def timing_data(path, response=None, livedata=None):
     """
     .. warning::
@@ -149,7 +148,17 @@ def timing_data(path, response=None, livedata=None):
     Raises:
         SessionNotAvailableError: in case the F1 livetiming api returns no data
     """
+    # wraps _extended_timing_data to provide compatibility to the old return
+    # values
+    laps_data, stream_data, session_split_times \
+        = _extended_timing_data(path, response=response, livedata=livedata)
+    return laps_data, stream_data
 
+
+@Cache.api_request_wrapper
+def _extended_timing_data(path, response=None, livedata=None):
+    # extended over the documentation of ``timing_data``:
+    #   - returns session_split_times for splitting Q1/Q2/Q3 additionally
     # possible optional sanity checks (TODO, maybe):
     #   - inlap has to be followed by outlap
     #   - pit stops may never be negative (missing outlap)
@@ -181,12 +190,18 @@ def timing_data(path, response=None, livedata=None):
     laps_data = {key: list() for key, val in EMPTY_LAPS.items()}
     stream_data = {key: list() for key, val in EMPTY_STREAM.items()}
 
+    session_split_times = [datetime.timedelta(days=1), ] * 3
+
     for drv in resp_per_driver.keys():
-        drv_laps_data = _laps_data_driver(resp_per_driver[drv], EMPTY_LAPS, drv)
+        drv_laps_data, drv_session_split_times \
+            = _laps_data_driver(resp_per_driver[drv], EMPTY_LAPS, drv)
         drv_stream_data = _stream_data_driver(resp_per_driver[drv], EMPTY_STREAM, drv)
 
         if (drv_laps_data is None) or (drv_stream_data is None):
             continue
+
+        for i, split_time in enumerate(drv_session_split_times):
+            session_split_times[i] = min(drv_session_split_times[i], session_split_times[i])
 
         for key in EMPTY_LAPS.keys():
             laps_data[key].extend(drv_laps_data[key])
@@ -202,7 +217,7 @@ def timing_data(path, response=None, livedata=None):
     # pandas doesn't correctly infer bool dtype columns, set type explicitly
     laps_data[['IsPersonalBest']] = laps_data[['IsPersonalBest']].astype(bool)
 
-    return laps_data, stream_data
+    return laps_data, stream_data, session_split_times
 
 
 @soft_exceptions("lap alignment",
@@ -459,7 +474,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
                 lapcnt += 1
 
     if lapcnt == 0:  # no data at all for this driver
-        return None
+        return None, None
 
     # done reading the data, do postprocessing
 
@@ -490,7 +505,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
 
     if not drv_data['Time']:
         # ensure that there is still data left after potentially removing a lap
-        return drv_data
+        return drv_data, session_split_times
 
     for i in range(len(drv_data['Time'])):
         sector_sum = datetime.timedelta(0)
@@ -573,7 +588,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
 
     if not drv_data['Time']:
         # ensure that there is still data left after potentially removing a lap
-        return drv_data
+        return drv_data, session_split_times
 
     # more lap sync, this time check which lap triggered with the lowest latency
     for i in range(len(drv_data['Time']) - 1, 0, -1):
@@ -655,7 +670,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             f"integrity error(s) near lap(s): {integrity_errors}.\n"
             f"This might be a bug and should be reported.")
 
-    return drv_data
+    return drv_data, session_split_times
 
 
 def _stream_data_driver(driver_raw, empty_vals, drv):

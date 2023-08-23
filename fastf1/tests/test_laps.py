@@ -167,9 +167,14 @@ def test_lap_get_weather_data(reference_laps_data):
 
 
 @pytest.mark.f1telapi
-def test_split_quali_laps():
+@pytest.mark.parametrize("source", ["session_status", "timing_data"])
+def test_split_quali_laps(source):
     session = fastf1.get_session(2023, 2, 'Q')
     session.load(telemetry=False, weather=False)
+
+    if source == "session_status":
+        # delete precalculated split times (from api parser)
+        session._session_split_times = None
 
     q1, q2, q3 = session.laps.split_qualifying_sessions()
 
@@ -179,9 +184,14 @@ def test_split_quali_laps():
 
 
 @pytest.mark.f1telapi
-def test_split_sprint_shootout_laps():
+@pytest.mark.parametrize("source", ["session_status", "timing_data"])
+def test_split_sprint_shootout_laps(source):
     session = fastf1.get_session(2023, 4, 'SS')
     session.load(telemetry=False, weather=False)
+
+    if source == "session_status":
+        # delete precalculated split times (from api parser)
+        session._session_split_times = None
 
     q1, q2, q3 = session.laps.split_qualifying_sessions()
 
@@ -193,13 +203,19 @@ def test_split_sprint_shootout_laps():
 
 
 @pytest.mark.f1telapi
-def test_calculated_quali_results():
+@pytest.mark.parametrize("source", ["session_status", "timing_data"])
+def test_calculated_quali_results(source):
     session = fastf1.get_session(2023, 4, 'Q')
     session.load(telemetry=False, weather=False)
 
     # copy and delete (!) before recalculating
     ergast_results = session.results.copy()
     session.results.loc[:, ('Q1', 'Q2', 'Q3')] = pd.NaT
+
+    if source == "session_status":
+        # delete precalculated split times (from api parser)
+        session._session_split_times = None
+
     session._calculate_quali_like_session_results(force=True)
 
     # Note that differences may exist if one or more drivers didn't set a
@@ -211,7 +227,8 @@ def test_calculated_quali_results():
 
 
 @pytest.mark.f1telapi
-def test_quali_q3_cancelled():
+@pytest.mark.parametrize("source", ["session_status", "timing_data"])
+def test_quali_q3_cancelled(source):
     session = fastf1.get_session(2023, 4, 'Q')
     session.load(telemetry=False, weather=False)
 
@@ -220,6 +237,11 @@ def test_quali_q3_cancelled():
     # no lap data is available.
     session.session_status.drop([13, 14, 15, 16], inplace=True)
     session.results['Q3'] = pd.NaT
+    if source == "session_status":
+        # delete precalculated split times (from api parser)
+        session._session_split_times = None
+    else:
+        session._session_split_times.pop(-1)
 
     # Test split_qualifying_sessions()
     q1, q2, q3 = session.laps.split_qualifying_sessions()
