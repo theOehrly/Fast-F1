@@ -231,7 +231,7 @@ def get_session(
 
             >>> get_session(2020, 'Austria', 'Qualifying')
 
-        Get the 3rd session if the 5th Grand Prix in 2021::
+        Get the 3rd session of the 5th Grand Prix in 2021::
 
             >>> get_session(2021, 5, 3)
 
