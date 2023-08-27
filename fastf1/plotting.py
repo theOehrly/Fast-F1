@@ -102,6 +102,7 @@ DRIVER_COLORS: Dict[str, str] = {
     "nyck de vries": "#1e3d61",
     "yuki tsunoda": "#356cac",
     "daniel ricciardo": "#2b4562",
+    "liam lawson": "#2b4562",
 
     "pierre gasly": "#0090ff",
     "esteban ocon": "#70c2ff",
@@ -112,6 +113,7 @@ DRIVER_COLORS: Dict[str, str] = {
 
     "charles leclerc": "#dc0000",
     "carlos sainz": "#ff8181",
+    "robert shwartzman": "#9c0000",
 
     "kevin magnussen": "#ffffff",
     "nico hulkenberg": "#cacaca",
@@ -132,12 +134,12 @@ DRIVER_COLORS: Dict[str, str] = {
 (current season only)"""
 
 DRIVER_TRANSLATE: Dict[str, str] = {
-    'LEC': 'charles leclerc', 'SAI': 'carlos sainz',
+    'LEC': 'charles leclerc', 'SAI': 'carlos sainz', 'SHW': 'robert shwartzman',
     'VER': 'max verstappen', 'PER': 'sergio perez',
     'PIA': 'oscar piastri', 'NOR': 'lando norris',
     'GAS': 'pierre gasly', 'OCO': 'esteban ocon',
     'BOT': 'valtteri bottas', 'ZHO': 'zhou guanyu',
-    'DEV': 'nyck de vries', 'TSU': 'yuki tsunoda', 'RIC': 'daniel ricciardo',
+    'DEV': 'nyck de vries', 'TSU': 'yuki tsunoda', 'RIC': 'daniel ricciardo', 'LAW': 'liam lawson',
     'MAG': 'kevin magnussen', 'HUL': 'nico hulkenberg',
     'ALO': 'fernando alonso', 'STR': 'lance stroll', 'DRU': 'felipe drugovich',
     'HAM': 'lewis hamilton', 'RUS': 'george russell',
