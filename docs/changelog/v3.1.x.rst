@@ -1,7 +1,7 @@
 What's new in v3.1.0
 --------------------
 
-(released 02/05/2023)
+(released 29/08/2023)
 
 New Features
 ^^^^^^^^^^^^
@@ -17,9 +17,73 @@ New Features
 - "SessionInfo" data from the F1 livetiming API is now available through
   :attr:`fastf1.core.Session.session_info`
 
-Other Changes
-^^^^^^^^^^^^^
+- Added driver colors for Shwartzman and Lawson (by @pesaventofilippo) (#441)
+
+- Various improvement to the ``Laps.pick_*`` methods to make it easier to select
+  specific laps from :class:`~fastf1.core.Laps` (by @Casper-Guo) (#376).
+
+  **New** (no equivalent has existed before)
+
+  - :func:`~fastf1.core.Laps.pick_not_deleted` for selecting all laps that
+    haven't been deleted
+
+  **New** (these methods replace methods that only accepted single values; the
+  new functions accept single values or lists of values)
+
+  - :func:`~fastf1.core.Laps.pick_laps` for selecting one or multiple laps
+    by their lap number; replaces :func:`~fastf1.core.Laps.pick_lap`
+
+  - :func:`~fastf1.core.Laps.pick_drivers` for selecting laps from one or
+    multiple drivers; replaces :func:`~fastf1.core.Laps.pick_driver`
+
+  - :func:`~fastf1.core.Laps.pick_compounds` for selecting laps driven on one or
+    multiple compounds; replaces :func:`~fastf1.core.Laps.pick_tyre`
+
+  **Improved**
+
+  - :func:`~fastf1.core.Laps.pick_track_status` now has additional options for
+    the ``how`` argument to exclude laps with a specific track status or match
+    or exclude laps with one of multiple track status values.
 
 
 Bug Fixes
 ^^^^^^^^^
+
+- Fixed :func:`~fastf1.core.Laps.split_qualifying_sessions` returns
+  incorrect result
+
+- Fixed incorrect calculation of results for Qualifying-like sessions (#429)
+
+- Fixed incorrect alignment of lap start/end times that causes shifted telemetry
+  data when comparing laps and incorrect results for calculated grid positions
+  (#440)
+
+- Fixed an unhandled exception in the lap timing parser that made it impossible
+  to load data for the 2020 Miami Qualifying (#431)
+
+- Fixed incorrectly set lap start times after some red flag restarts
+
+- Fixed a bug that could prevent data loading in case of partially missing data
+
+
+Deprecations
+^^^^^^^^^^^^
+
+- Deprecated :func:`fastf1.core.Laps.pick_lap`
+
+- Deprecated :func:`fastf1.core.Laps.pick_driver`
+
+- Deprecated :func:`fastf1.core.Laps.pick_tyre`
+
+
+Other Changes
+^^^^^^^^^^^^^
+
+- Fixed some errors in the documentation (by @dawiddzhafarov, @RyanHaniff)
+  (#439, #402)
+
+- Fixed some examples to no longer use deprecated arguments (by @wakamex) (#423)
+
+- Fixed an error in the SignalRClient example (by @erdieee) (#421)
+
+- Added a new team pace ranking example (by @Casper-Guo) (#420)
