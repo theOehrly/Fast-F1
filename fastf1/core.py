@@ -1392,9 +1392,16 @@ class Session:
                         except IndexError:
                             continue  # no pit out, car did not restart
                         if self.name in _RACE_LIKE_SESSIONS:
-                            # if this is a race-like session, we can assume the
-                            # session restart time as lap start time
-                            laps_start_time[restart_index] = row['Time']
+                            # If this is a race-like session, we can assume the
+                            # session restart time as lap start time.
+                            # But only set from session status, if it is
+                            # actually missing or incorrect (is correct in
+                            # case backmarkers are allowed to unlap themselves
+                            # at the end of the red flag by completing missing
+                            # laps or if there is a formation lap for standing
+                            # restart). Decide that correct if lap has laptime
+                            if pd.isna(result.iloc[restart_index]['LapTime']):
+                                laps_start_time[restart_index] = row['Time']
                         else:
                             # for other sessions, we cannot make this
                             # assumption set to NaT here, it will be set to
