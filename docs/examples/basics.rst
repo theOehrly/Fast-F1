@@ -75,7 +75,7 @@ is common for pandas objects:
   Timestamp('2021-06-20 00:00:00')
 
 You can also load an event directly, by using the function
-:func:`fastf1.get_session`. The :class:`~fastf1.events.Event` object in turn
+:func:`fastf1.get_event`. The :class:`~fastf1.events.Event` object in turn
 provides methods for accessing the individual associated sessions.
 
 .. doctest::
