@@ -1334,6 +1334,7 @@ class Session:
                     # for drivers who could not start the race
                     is_generated = True
                     result = d1.copy()
+                    result.reset_index(drop=True, inplace=True)
                     result['Driver'] = [driver, ]
                     result['NumberOfLaps'] = 0
                     result['Time'] = data['Time'].min()
@@ -1348,6 +1349,7 @@ class Session:
 
             elif not len(d2):
                 result = d1.copy()
+                result.reset_index(drop=True, inplace=True)
                 result['Compound'] = str()
                 result['TyreLife'] = np.nan
                 result['Stint'] = 0
