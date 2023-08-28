@@ -478,7 +478,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         # (Note: those lap times cannot be used for correct personal best
         #  detection, because the previous value is not resent here when a lap
         #  is deleted.)
-        if val := recursive_dict_get(resp, 'BestLapTimes'):
+        if (val := resp.get('BestLapTimes')) and isinstance(val, dict):
             session_n = int(list(val.keys())[0])
             if (session_n + 1) > len(session_split_times):
                 session_split_times.append(to_timedelta(time))
