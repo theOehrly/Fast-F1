@@ -1,3 +1,5 @@
+import pytest
+
 import datetime
 
 import numpy as np
@@ -244,3 +246,31 @@ def test_driver_list():
     for driver in data.values():
         for col, dtype in zip(driver.values(), dtypes):
             assert isinstance(col, dtype)
+
+
+# ########## special test cases ##########
+
+@pytest.mark.f1telapi
+def test_deleted_laps_not_marked_personal_best():
+    # see issue #165
+    session = fastf1.get_session(2022, 'Spain', 'Q')
+    laps_data, _ = fastf1._api.timing_data(session.api_path)
+    nor = laps_data[laps_data['Driver'] == '4']  # get NOR laps
+
+    # second to last lap was deleted, ensure it is not marked personal best
+    assert (nor['IsPersonalBest']
+            == [False, True, False, False, False, False,
+                False, True, False, False, False, False]).all()
+
+
+@pytest.mark.f1telapi
+def test_personal_best_q_session_handled_individually():
+    session = fastf1.get_session(2023, 'Canada', 'Q')
+    laps_data, _ = fastf1._api.timing_data(session.api_path)
+    ver = laps_data[laps_data['Driver'] == '1']  # get VER laps
+
+    # Over all three Quali sessions, a total of 9 laps should be marked
+    # as personal best. Quali was rainy with laps in Q2 and Q3 being slower.
+    # If Quali session are not handled correctly individually, those laps are
+    # not marked as personal best. (see issue #403)
+    assert sum(ver['IsPersonalBest']) == 9

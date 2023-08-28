@@ -83,7 +83,6 @@ EMPTY_STREAM = {'Time': pd.NaT, 'Driver': str(), 'Position': np.NaN,
                 'GapToLeader': np.NaN, 'IntervalToPositionAhead': np.NaN}
 
 
-@Cache.api_request_wrapper
 def timing_data(path: str,
                 response: Optional[str] = None,
                 livedata=None
@@ -154,7 +153,17 @@ def timing_data(path: str,
     Raises:
         SessionNotAvailableError: in case the F1 livetiming api returns no data
     """
+    # wraps _extended_timing_data to provide compatibility to the old return
+    # values
+    laps_data, stream_data, session_split_times \
+        = _extended_timing_data(path, response=response, livedata=livedata)
+    return laps_data, stream_data
 
+
+@Cache.api_request_wrapper
+def _extended_timing_data(path, response=None, livedata=None):
+    # extended over the documentation of ``timing_data``:
+    #   - returns session_split_times for splitting Q1/Q2/Q3 additionally
     # possible optional sanity checks (TODO, maybe):
     #   - inlap has to be followed by outlap
     #   - pit stops may never be negative (missing outlap)
@@ -186,12 +195,19 @@ def timing_data(path: str,
     laps_data = {key: list() for key, val in EMPTY_LAPS.items()}
     stream_data = {key: list() for key, val in EMPTY_STREAM.items()}
 
+    session_split_times = [datetime.timedelta(days=1), ] * 3
+
     for drv in resp_per_driver.keys():
-        drv_laps_data = _laps_data_driver(resp_per_driver[drv], EMPTY_LAPS, drv)
+        drv_laps_data, drv_session_split_times \
+            = _laps_data_driver(resp_per_driver[drv], EMPTY_LAPS, drv)
         drv_stream_data = _stream_data_driver(resp_per_driver[drv], EMPTY_STREAM, drv)
 
         if (drv_laps_data is None) or (drv_stream_data is None):
             continue
+
+        for i, split_time in enumerate(drv_session_split_times):
+            session_split_times[i] = min(drv_session_split_times[i],
+                                         session_split_times[i])
 
         for key in EMPTY_LAPS.keys():
             laps_data[key].extend(drv_laps_data[key])
@@ -207,7 +223,7 @@ def timing_data(path: str,
     # pandas doesn't correctly infer bool dtype columns, set type explicitly
     laps_data[['IsPersonalBest']] = laps_data[['IsPersonalBest']].astype(bool)
 
-    return laps_data, stream_data
+    return laps_data, stream_data, session_split_times
 
 
 @soft_exceptions("lap alignment",
@@ -215,6 +231,7 @@ def timing_data(path: str,
                  logger=_logger)
 def _align_laps(laps_data, stream_data):
     # align lap start and end times between drivers based on Gap to leader
+    # TODO: it should be possible to align based on different laps
     if not pd.isnull(stream_data['GapToLeader']).all():
         expected_gap = dict()
         delta = dict()
@@ -225,10 +242,30 @@ def _align_laps(laps_data, stream_data):
         # ideally, this is the end of the first lap
         offset = -1  # start at -1 so that value it is zero on first iteration
 
+        max_offset = (
+                laps_data.loc[:, ('Driver', 'NumberOfLaps')].groupby('Driver')
+                .max()['NumberOfLaps']  # find max lap count for each driver
+                .min()  # find the smallest max lap count (first retirement)
+                - 1  # subtract one, because offset counts from zero
+        )
+
         while leader is None:
             offset += 1
+
+            if offset >= max_offset:
+                _logger.warning('Skipping lap alignment (no suitable lap)!')
+                return
+
             # find the leader after the first useable lap and get the expected
             # gaps to the leader for all other drivers
+
+            if not pd.isnull(
+                laps_data.loc[laps_data['NumberOfLaps'] == (offset + 1)]
+                         .loc[:, 'PitInTime']).all():
+                # cannot align on laps where one or more drivers pit, therefore
+                # skip and try next one
+                continue
+
             for drv in laps_data['Driver'].unique():
                 try:
                     gap_str = _get_gap_str_for_drv(drv, offset, laps_data,
@@ -357,6 +394,9 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
 
     personal_best_lap_times = list()
 
+    session_split_times = [datetime.timedelta(0)]
+    # start times of (sub)sessions (Q1, Q2, Q3)
+
     pitstops = -1  # start with -1 because first is out lap, needs to be zero after that
 
     # iterate through the data; new lap triggers next row in data
@@ -428,8 +468,26 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
                 drv_data['PitOutTime'][lapcnt] = to_timedelta(time)  # add to current lap
                 pitstops += 1
 
+        # Get save information about personal best lap times at the timestamp
+        # at which this information was received.
+        # Whenever a lap is deleted (if that happens quickly after it was set),
+        # the previous 'BestLapTime' value is sent again. There is some extra
+        # logic at then end that correctly marks personal best laps based on
+        # the data that is saved here.
         if val := recursive_dict_get(resp, 'BestLapTime', 'Value'):
-            personal_best_lap_times.append(to_timedelta(val))
+            personal_best_lap_times.append(
+                (to_timedelta(time), to_timedelta(val))
+            )
+
+        # Create approximate (sub)session (i.e. quali) split times by
+        # (mis)using the session number counter from 'BestLapTimes'.
+        # (Note: those lap times cannot be used for correct personal best
+        #  detection, because the previous value is not resent here when a lap
+        #  is deleted.)
+        if (val := resp.get('BestLapTimes')) and isinstance(val, dict):
+            session_n = int(list(val.keys())[0])
+            if (session_n + 1) > len(session_split_times):
+                session_split_times.append(to_timedelta(time))
 
         # new lap; create next row
         if 'NumberOfLaps' in resp and resp['NumberOfLaps'] > api_lapcnt:
@@ -443,7 +501,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
                 lapcnt += 1
 
     if lapcnt == 0:  # no data at all for this driver
-        return None
+        return None, None
 
     # done reading the data, do postprocessing
 
@@ -474,7 +532,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
 
     if not drv_data['Time']:
         # ensure that there is still data left after potentially removing a lap
-        return drv_data
+        return drv_data, session_split_times
 
     for i in range(len(drv_data['Time'])):
         sector_sum = datetime.timedelta(0)
@@ -557,7 +615,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
 
     if not drv_data['Time']:
         # ensure that there is still data left after potentially removing a lap
-        return drv_data
+        return drv_data, session_split_times
 
     # more lap sync, this time check which lap triggered with the lowest latency
     for i in range(len(drv_data['Time']) - 1, 0, -1):
@@ -594,14 +652,25 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
                 < drv_data['Sector3SessionTime'][i+1]:
             drv_data['Sector3SessionTime'][i+1] = new_s3_time
 
-    # iterate over list of personal lap times set 'IsPersonalBest'
-    # when a lap is deleted, the API resends the previous personal best.
+    # Iterate over list of personal lap times set 'IsPersonalBest'.
+    # When a lap is deleted, the API resends the previous personal best.
     # Therefore, by iterating in reverse, if any lap is encountered that is
     # quicker than already processed personal best lap times, it must have
     # been deleted.
+    # This is just best effort but not exhaustive as it can only handle lap
+    # times that were deleted quickly (before the next personal best was set).
     _corrected_personal_best_lap_times = list()
     # list is only used for backreference within the loop
-    for pb_lap_time in reversed(personal_best_lap_times):
+    cur_sn = len(session_split_times) - 1
+    # current (sub)session number, personal best lap times need to be
+    # considered for each (sub)session individually
+    for time, pb_lap_time in reversed(personal_best_lap_times):
+        if time < session_split_times[cur_sn]:
+            # transitioned into the previous (sub)session (reverse iteration!)
+            # reset the reference list, so time are considered individually
+            cur_sn -= 1
+            _corrected_personal_best_lap_times = list()
+
         if _corrected_personal_best_lap_times:
             if pb_lap_time in _corrected_personal_best_lap_times:
                 continue
@@ -628,7 +697,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             f"integrity error(s) near lap(s): {integrity_errors}.\n"
             f"This might be a bug and should be reported.")
 
-    return drv_data
+    return drv_data, session_split_times
 
 
 def _stream_data_driver(driver_raw, empty_vals, drv):

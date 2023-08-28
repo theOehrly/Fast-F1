@@ -1,3 +1,45 @@
+What's new in v3.0.7
+--------------------
+
+(released 17/07/2023)
+
+Bug Fixes and Improvements
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Fixed an issue that prevented telemetry data from being loaded when position
+  data is missing (and vice versa) (#412)
+
+- Fixed loading of Sprint Shootout results
+  (#413, regression introduced in v3.0.3)
+
+- Added driver color for Ricciardo at AlphaTauri (by @pesaventofilippo in #418)
+
+
+What's new in v3.0.6
+--------------------
+
+(released 21/06/2023)
+
+Release forces a cache update after updating from v3.0.4 and lower. Else, the
+changes from v3.0.5 are not applied if the data is cached already.
+
+
+What's new in v3.0.5
+--------------------
+
+(released 21/06/2023)
+
+Bug Fixes and Improvements
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Fixed an error when loading historic sessions (#400).
+
+- Fixed an error where lap times are incorrectly not marked as 'Personal Best'.
+  This also caused :meth:`~fastf1.core.Laps.pick_fastest` to return incorrect
+  laps. (#403)
+
+
+
 What's new in v3.0.4
 --------------------
 

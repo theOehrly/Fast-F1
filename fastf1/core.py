@@ -1055,6 +1055,8 @@ class Session:
         self._weather_data: pd.DataFrame
         self._results: SessionResults
 
+        self._session_split_times: Optional[list] = None
+
     def __repr__(self):
         return (f"{self.event.year} Season Round {self.event.RoundNumber}: "
                 f"{self.event.EventName} - {self.name}")
@@ -1284,7 +1286,11 @@ class Session:
 
     @soft_exceptions("lap timing data", "Failed to load timing data!", _logger)
     def _load_laps_data(self, livedata=None):
-        data, _ = api.timing_data(self.api_path, livedata=livedata)
+        data, _, session_split_times \
+            = api._extended_timing_data(self.api_path, livedata=livedata)
+
+        self._session_split_times = session_split_times
+
         app_data = api.timing_app_data(self.api_path, livedata=livedata)
         _logger.info("Processing timing data...")
         # Matching data and app_data. Not super straightforward
@@ -1630,11 +1636,12 @@ class Session:
         quali_results = (self._laps.loc[:, ['DriverNumber']].copy()
                          .drop_duplicates()
                          .reset_index(drop=True))
-        sessions = self._laps.pick_quicklaps().split_qualifying_sessions()
+        sessions = self._laps.pick_accurate().split_qualifying_sessions()
 
         for i, session in enumerate(sessions):
             session_name = f'Q{i + 1}'
             if session is not None:
+                session = session.pick_quicklaps()  # 107% rule applies per Q
                 laps = (
                     session[~session['LapTime'].isna() & ~session['Deleted']]
                     .copy()
@@ -1651,11 +1658,10 @@ class Session:
         quali_results = quali_results \
             .sort_values(by=['Q3', 'Q2', 'Q1']) \
             .reset_index(drop=True)
-        quali_results['Position'] = quali_results.index + 1
+        quali_results['Position'] = (quali_results.index + 1).astype('float64')
         quali_results = quali_results.set_index('DriverNumber', drop=True)
 
-        self.results.loc[:, quali_results.columns] \
-            .update(quali_results, overwrite=force)
+        self.results.loc[:, quali_results.columns] = quali_results
         self.results.sort_values(by=['Position'], inplace=True)
 
     @soft_exceptions("add track status to laps",
@@ -2055,7 +2061,12 @@ class Session:
                     'Q3': 'Q3',
                 })
 
-        d = data.loc[:, list(rename_return.keys())] \
+        # ergast does not provide all data for old sessions
+        # (example: 'driverCode'), select only existing columns
+        existing_keys = set(rename_return.keys())\
+            .intersection(data.columns)
+
+        d = data.loc[:, list(existing_keys)] \
             .rename(columns=rename_return) \
             .astype({'DriverNumber': 'str'})
 
@@ -2105,37 +2116,45 @@ class Session:
                 instead of requesting the data from the api, locally saved
                 livetiming data can be used as a data source
         """
-        car_data = api.car_data(self.api_path, livedata=livedata)
-        pos_data = api.position_data(self.api_path, livedata=livedata)
+        try:
+            car_data = api.car_data(self.api_path, livedata=livedata)
+        except api.SessionNotAvailableError:
+            _logger.warning("Car telemetry data is unavailable!")
+            car_data = {}
+
+        try:
+            pos_data = api.position_data(self.api_path, livedata=livedata)
+        except api.SessionNotAvailableError:
+            _logger.warning("Car position data is unavailable!")
+            pos_data = {}
 
         self._calculate_t0_date(car_data, pos_data)
 
         self._car_data = dict()
         self._pos_data = dict()
 
-        for drv in self.drivers:
-            try:
-                # drop and recalculate time stamps based on 'Date', because 'Date' has a higher resolution
-                drv_car = Telemetry(car_data[drv].drop(labels='Time', axis=1),
-                                    session=self, driver=drv,
-                                    drop_unknown_channels=True)
-                drv_pos = Telemetry(pos_data[drv].drop(labels='Time', axis=1),
-                                    session=self, driver=drv,
-                                    drop_unknown_channels=True)
-            except KeyError:
-                # not pos data or car data exists for this driver
+        for (src, processed) in ((car_data, self._car_data),
+                                 (pos_data, self._pos_data)):
+            if not src:
                 continue
 
-            drv_car['Date'] = drv_car['Date'].round('ms')
-            drv_pos['Date'] = drv_pos['Date'].round('ms')
+            for drv in self.drivers:
+                # drop and recalculate timestamps based on 'Date', because
+                # 'Date' has a higher resolution
+                try:
+                    drv_car = Telemetry(src[drv].drop(labels='Time', axis=1),
+                                        session=self, driver=drv,
+                                        drop_unknown_channels=True)
+                except KeyError:
+                    # not pos data or car data exists for this driver
+                    continue
 
-            drv_car['Time'] = drv_car['Date'] - self.t0_date  # create proper continuous timestamps
-            drv_pos['Time'] = drv_pos['Date'] - self.t0_date
-            drv_car['SessionTime'] = drv_car['Time']
-            drv_pos['SessionTime'] = drv_pos['Time']
+                drv_car['Date'] = drv_car['Date'].round('ms')
 
-            self._car_data[drv] = drv_car
-            self._pos_data[drv] = drv_pos
+                drv_car['Time'] = drv_car['Date'] - self.t0_date
+                drv_car['SessionTime'] = drv_car['Time']
+
+                processed[drv] = drv_car
 
         if hasattr(self, '_laps'):
             self._laps['LapStartDate'] \
@@ -2177,7 +2196,7 @@ class Session:
         )
         return circuit_info
 
-    def _calculate_t0_date(self, car_data, pos_data):
+    def _calculate_t0_date(self, *tel_data_sets: dict):
         """Calculate the date timestamp at which data for this session is starting.
 
         This does not mark the start of a race (or other sessions). This marks the start of the data which is sometimes
@@ -2189,16 +2208,19 @@ class Session:
         the least delay.)
 
         Args:
-            car_data: Car telemetry; should contain all samples and only original ones
-            pos_data: Car position data; should contain all samples and only original ones
+            tel_data_sets: Dictionaries containing car telemetry data or
+                position data
         """
         date_offset = None
 
-        for data in (car_data, pos_data):
-            for drv in data.keys():
-                new_offset = max(data[drv]['Date'] - data[drv]['Time'])
-                if date_offset is None or new_offset > date_offset:
-                    date_offset = new_offset
+        data = list()
+        for tds in tel_data_sets:
+            data.extend(list(tds.values()))
+
+        for d in data:
+            new_offset = max(d['Date'] - d['Time'])
+            if date_offset is None or new_offset > date_offset:
+                date_offset = new_offset
 
         if date_offset is None:
             self._t0_date = None
@@ -2917,32 +2939,42 @@ class Laps(pd.DataFrame):
         elif self.session.session_status is None:
             raise ValueError("Session status data is unavailable!")
 
-        # get the timestamps for 'Started' from the session status data
-        # note that after a red flag, a session can be 'Started' as well.
-        # Therefore, it is necessary to check for red flags and ignore
-        # the first 'Started' entry after a red flag.
-        split_times = list()
-        session_suspended = False
-        for _, row in self.session.session_status.iterrows():
-            if row['Status'] == 'Started':
-                if not session_suspended:
-                    split_times.append(row['Time'])
-                else:
+        if self.session._session_split_times:
+            # prefer using the split times that were generated by the timing
+            # data parser, those are more reliable
+            split_times = self.session._session_split_times.copy()
+        else:
+            # get the timestamps for 'Started' from the session status data
+            # note that after a red flag, a session can be 'Started' as well.
+            # Therefore, it is necessary to check for red flags and ignore
+            # the first 'Started' entry after a red flag.
+            split_times = list()
+            session_suspended = False
+            for _, row in self.session.session_status.iterrows():
+                if row['Status'] == 'Started':
+                    if not session_suspended:
+                        split_times.append(row['Time'])
+                    else:
+                        session_suspended = False
+                elif row['Status'] == 'Aborted':
+                    session_suspended = True
+                elif row['Status'] == 'Finished':
+                    # This handles the case when a qualifying session isn't
+                    # restarted after a red flag.
                     session_suspended = False
-            elif row['Status'] == 'Aborted':
-                session_suspended = True
-            elif row['Status'] == 'Finished':
-                # This handles the case when a qualifying session isn't
-                # restarted after a red flag.
-                session_suspended = False
 
         # add the very last timestamp, to get an end for the last interval
         split_times.append(self.session.session_status['Time'].iloc[-1])
-
         laps = [None, None, None]
         for i in range(len(split_times) - 1):
-            laps[i] = self[(self['Time'] > split_times[i])
-                           & (self['Time'] < split_times[i + 1])]
+            # split by start time instead of end time, because the split times
+            # that are generated from timing data may not account for crashed
+            # cars being returned or having a generated lap time that results
+            # in a late 'Time' value!
+            laps[i] = self[(self['LapStartTime'] > split_times[i])
+                           & (self['LapStartTime'] < split_times[i + 1])]
+            if laps[i].empty:
+                laps[i] = None
         return laps
 
     def iterlaps(self, require: Optional[Iterable] = None) \
