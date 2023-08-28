@@ -29,7 +29,7 @@ data for a whole session.
 Usually you will be using :func:`fastf1.get_session` to get a :class:`Session`
 object.
 
-The :class:`Laps` object holds detailed information about multiples laps.
+The :class:`Laps` object holds detailed information about multiple laps.
 
 The :class:`Lap` object holds the same information as :class:`Laps` but only
 for one single lap. When selecting a single lap from a :class:`Laps` object,
