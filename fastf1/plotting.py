@@ -134,14 +134,17 @@ DRIVER_COLORS: Dict[str, str] = {
 (current season only)"""
 
 DRIVER_TRANSLATE: Dict[str, str] = {
-    'LEC': 'charles leclerc', 'SAI': 'carlos sainz', 'SHW': 'robert shwartzman',
+    'LEC': 'charles leclerc', 'SAI': 'carlos sainz',
+    'SHW': 'robert shwartzman',
     'VER': 'max verstappen', 'PER': 'sergio perez',
     'PIA': 'oscar piastri', 'NOR': 'lando norris',
     'GAS': 'pierre gasly', 'OCO': 'esteban ocon',
     'BOT': 'valtteri bottas', 'ZHO': 'zhou guanyu',
-    'DEV': 'nyck de vries', 'TSU': 'yuki tsunoda', 'RIC': 'daniel ricciardo', 'LAW': 'liam lawson',
+    'DEV': 'nyck de vries', 'TSU': 'yuki tsunoda',
+    'RIC': 'daniel ricciardo', 'LAW': 'liam lawson',
     'MAG': 'kevin magnussen', 'HUL': 'nico hulkenberg',
-    'ALO': 'fernando alonso', 'STR': 'lance stroll', 'DRU': 'felipe drugovich',
+    'ALO': 'fernando alonso', 'STR': 'lance stroll',
+    'DRU': 'felipe drugovich',
     'HAM': 'lewis hamilton', 'RUS': 'george russell',
     'ALB': 'alexander albon', 'SAR': 'logan sargeant'}
 """Mapping of driver names to theirs respective abbreviations."""
