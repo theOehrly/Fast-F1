@@ -2874,12 +2874,14 @@ class Laps(pd.DataFrame):
         Args:
             status (str): The track status as a string, e.g. '1'
             how (str): one of 'equals'/'contains'/'excludes'/'any'/'none'
-                For example, if how='equals', status='2' will only match '2'.
-                If how='contains', status='2' will also match '267' and similar
-                If how='excludes', status='26' will not match '267'
-                but will match '27'
-                If how='any', status='26' will match both '2' and '6'
-                If how='none', status='26' will not match either '12' or '16'
+
+                - how='equals': status='2' will only match '2'.
+                - how='contains': status='2' will also match '267' and similar
+                - how='excludes': status='26' will not match '267' but will
+                  match '27'
+                - how='any': status='26' will match both '2' and '6'
+                - how='none': status='26' will not match either '12' or '16'
+
         Returns:
             instance of :class:`Laps`
         """
