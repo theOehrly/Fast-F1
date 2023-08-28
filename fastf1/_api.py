@@ -225,6 +225,7 @@ def _extended_timing_data(path, response=None, livedata=None):
                  logger=_logger)
 def _align_laps(laps_data, stream_data):
     # align lap start and end times between drivers based on Gap to leader
+    # TODO: it should be possible to align based on different laps
     if not pd.isnull(stream_data['GapToLeader']).all():
         expected_gap = dict()
         delta = dict()
@@ -235,10 +236,30 @@ def _align_laps(laps_data, stream_data):
         # ideally, this is the end of the first lap
         offset = -1  # start at -1 so that value it is zero on first iteration
 
+        max_offset = (
+                laps_data.loc[:, ('Driver', 'NumberOfLaps')].groupby('Driver')
+                .max()['NumberOfLaps']  # find max lap count for each driver
+                .min()  # find the smallest max lap count (first retirement)
+                - 1  # subtract one, because offset counts from zero
+        )
+
         while leader is None:
             offset += 1
+
+            if offset >= max_offset:
+                _logger.warning('Skipping lap alignment (no suitable lap)!')
+                return
+
             # find the leader after the first useable lap and get the expected
             # gaps to the leader for all other drivers
+
+            if not pd.isnull(
+                laps_data.loc[laps_data['NumberOfLaps'] == (offset + 1)]
+                         .loc[:, 'PitInTime']).all():
+                # cannot align on laps where one or more drivers pit, therefore
+                # skip and try next one
+                continue
+
             for drv in laps_data['Driver'].unique():
                 try:
                     gap_str = _get_gap_str_for_drv(drv, offset, laps_data,
