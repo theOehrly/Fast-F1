@@ -46,6 +46,12 @@ New Features
     or exclude laps with one of multiple track status values.
 
 
+Performance
+^^^^^^^^^^^
+
+- greatly improved speed when parsing car data and position data
+
+
 Bug Fixes
 ^^^^^^^^^
 
