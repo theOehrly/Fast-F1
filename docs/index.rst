@@ -95,6 +95,7 @@ this pattern is the wrapper for Ergast.
    Session Status         started, finished, finalized                                                                                                    :attr:`~fastf1.core.Session.session_status`
    Race Control Messages  investigations, penalties, restart announcements,...                                                                            :attr:`~fastf1.core.Session.race_control_messages`
    Telemetry              speed, rpm, gear, normalized track position, ...                                                                                :class:`~fastf1.core.Telemetry` :func:`~fastf1.core.Lap.get_car_data`
+   Track Markers          corner numbers, marshall sectors, marshall lights                                                                               :func:`~fastf1.core.Session.get_circuit_info`, :ref:`circuit_info`
    Ergast API             all endpoints that are provided by Ergast                                                                                       :ref:`ergast`
    =====================  ==============================================================================================================================  ==================================================================================================
 
