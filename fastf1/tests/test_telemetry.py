@@ -143,7 +143,7 @@ def test_slice_by_lap(reference_laps_data):
     session, laps = reference_laps_data
     drv = list(session.car_data.keys())[1]  # some driver
     test_data = session.car_data[drv]
-    test_laps = laps.pick_driver(drv)
+    test_laps = laps.pick_drivers(drv)
 
     lap2 = test_laps[test_laps['LapNumber'] == 2].iloc[0]
     lap3 = test_laps[test_laps['LapNumber'] == 3].iloc[0]
@@ -302,7 +302,7 @@ def test_add_driver_ahead_resampled(reference_laps_data):
 def test_add_track_status(reference_laps_data):
     session, laps = reference_laps_data
 
-    test_data = laps.pick_driver('VER').get_telemetry()
+    test_data = laps.pick_drivers('VER').get_telemetry()
     test_data = test_data.add_track_status()
 
     # Get statuses

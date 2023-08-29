@@ -49,7 +49,7 @@ def test_crash_lap_added_1():
     session = fastf1.get_session(2021, "Monza", 'FP2')
 
     session.load(telemetry=False)
-    assert session.laps.pick_driver('SAI').shape[0] == 14
+    assert session.laps.pick_drivers('SAI').shape[0] == 14
 
 
 @pytest.mark.f1telapi
@@ -58,7 +58,7 @@ def test_crash_lap_added_2():
     session = fastf1.get_session(2021, 'British Grand Prix', 'R')
 
     session.load(telemetry=False)
-    assert session.laps.pick_driver('VER').shape[0] == 1
+    assert session.laps.pick_drivers('VER').shape[0] == 1
 
 
 @pytest.mark.f1telapi
@@ -69,7 +69,7 @@ def test_no_extra_lap_if_race_not_started():
 
     session.load(telemetry=False, weather=False)
     assert session.laps.size
-    assert session.laps.pick_driver('TSU').size == 0
+    assert session.laps.pick_drivers('TSU').size == 0
 
 
 @pytest.mark.f1telapi
@@ -106,7 +106,7 @@ def test_inlap_added():
     session = fastf1.get_session(2021, 'Mexico City', 'Q')
     session.load(telemetry=False)
 
-    last = session.laps.pick_driver('PER').iloc[-1]
+    last = session.laps.pick_drivers('PER').iloc[-1]
     assert not pd.isnull(last['PitInTime'])
     assert not pd.isnull(last['Time'])
 
@@ -121,7 +121,7 @@ def test_lap_start_time_after_red_flag():
 
     # ensure that verstappens first lap after the restart was also started
     # after the restart
-    ver_laps = session.laps.pick_driver('VER')
+    ver_laps = session.laps.pick_drivers('VER')
     idx = ver_laps[(ver_laps['Time'] > restart_time)
                    & pd.notna(ver_laps['Time'])].index[0]
     assert ver_laps.loc[idx]['LapStartTime'] > restart_time
@@ -133,7 +133,7 @@ def test_partial_lap_retired_added():
     session = fastf1.get_session(2022, 1, 'R')
     session.load()
 
-    assert session.laps.pick_driver('11').iloc[-1]['FastF1Generated']
+    assert session.laps.pick_drivers('11').iloc[-1]['FastF1Generated']
 
 
 @pytest.mark.f1telapi
@@ -147,7 +147,7 @@ def test_partial_lap_retired_not_added_after_finished():
     session = fastf1.get_session(2021, 21, 'R')
     session.load()
 
-    assert (session.laps.pick_driver('HAM')['LapNumber'].max()
+    assert (session.laps.pick_drivers('HAM')['LapNumber'].max()
             == session.total_laps)
 
 
@@ -156,7 +156,7 @@ def test_first_lap_time_added_from_ergast_in_race():
     session = fastf1.get_session(2022, 1, 'R')
     session.load(telemetry=False)
 
-    assert not pd.isna(session.laps.pick_lap(1)['LapTime']).any()
+    assert not pd.isna(session.laps.pick_laps(1)['LapTime']).any()
 
 
 @pytest.mark.f1telapi
@@ -166,12 +166,12 @@ def test_consecutive_equal_lap_times():
     # by calculating the lap time from the sector times.
     session = fastf1.get_session(2023, 1, 'R')
     session.load(telemetry=False, weather=False)
-    lt = session.laps.pick_driver('16')
+    lt = session.laps.pick_drivers('16')
 
-    assert lt.pick_lap(37)['LapTime'].iloc[0] == pd.Timedelta(seconds=97.170)
+    assert lt.pick_laps(37)['LapTime'].iloc[0] == pd.Timedelta(seconds=97.170)
 
-    assert lt.pick_lap(37)['LapTime'].iloc[0] \
-           == lt.pick_lap(38)['LapTime'].iloc[0]
+    assert lt.pick_laps(37)['LapTime'].iloc[0] \
+           == lt.pick_laps(38)['LapTime'].iloc[0]
 
 
 @pytest.mark.f1telapi
@@ -182,12 +182,12 @@ def test_consecutive_equal_sector_times():
     # times.
     session = fastf1.get_session(2023, 1, 'R')
     session.load(telemetry=False, weather=False)
-    lt = session.laps.pick_driver('21')
+    lt = session.laps.pick_drivers('21')
 
-    assert lt.pick_lap(20)['Sector1Time'].iloc[0] \
+    assert lt.pick_laps(20)['Sector1Time'].iloc[0] \
            == pd.Timedelta(seconds=31.442)
-    assert lt.pick_lap(19)['Sector1Time'].iloc[0] \
-           == lt.pick_lap(20)['Sector1Time'].iloc[0]
+    assert lt.pick_laps(19)['Sector1Time'].iloc[0] \
+           == lt.pick_laps(20)['Sector1Time'].iloc[0]
 
 
 @pytest.mark.f1telapi
@@ -213,8 +213,8 @@ def test_laps_aligned_across_drivers():
     }
 
     leader = session.results['DriverNumber'].iloc[0]
-    leader_time = session.laps.pick_driver(leader).iloc[-1]['Time']
+    leader_time = session.laps.pick_drivers(leader).iloc[-1]['Time']
     finished = (session.results['Status'] == 'Finished')
     for drv in session.results.loc[finished, 'DriverNumber'].iloc[1:]:
-        other_time = session.laps.pick_driver(drv).iloc[-1]['Time']
+        other_time = session.laps.pick_drivers(drv).iloc[-1]['Time']
         assert (other_time - leader_time) == ref[drv]
