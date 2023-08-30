@@ -18,8 +18,8 @@ def test_readme_example():
     session = fastf1.get_session(2020, 'Belgian', 'R')
     session.load()
 
-    lec = session.laps.pick_driver('LEC')
-    ham = session.laps.pick_driver('HAM')
+    lec = session.laps.pick_drivers('LEC')
+    ham = session.laps.pick_drivers('HAM')
 
     fig, ax = plt.subplots()
     ax.plot(lec['LapNumber'], lec['LapTime'], color='red')
@@ -37,7 +37,7 @@ def test_doc_example_fast_lec():
     session = fastf1.get_session(2020, 'Belgian', 'R')
 
     session.load()
-    fast_leclerc = session.laps.pick_driver('LEC').pick_fastest()
+    fast_leclerc = session.laps.pick_drivers('LEC').pick_fastest()
     t = fast_leclerc.telemetry['Time']
     vCar = fast_leclerc.telemetry['Speed']
 
@@ -56,8 +56,8 @@ def test_doc_example_fast_lec():
 def test_doc_example_delta_time():
     session = fastf1.get_session(2020, 'Belgian', 'R')
     session.load()
-    lec = session.laps.pick_driver('LEC').pick_fastest()
-    ham = session.laps.pick_driver('HAM').pick_fastest()
+    lec = session.laps.pick_drivers('LEC').pick_fastest()
+    ham = session.laps.pick_drivers('HAM').pick_fastest()
 
     fig, ax = plt.subplots()
     ax.plot(lec.telemetry['Distance'], lec.telemetry['Speed'],

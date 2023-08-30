@@ -26,7 +26,7 @@ def test_lap_data_loading_position_calculation():
         ]['driverCode'].iloc[0]
 
         erg_drv_laps = ergast_laps[ergast_laps['driverId'] == drv_id]
-        drv_laps = session.laps.pick_driver(abb)
+        drv_laps = session.laps.pick_drivers(abb)
 
         # subtract per-lap positions between the data sources
         delta = erg_drv_laps['position'].reset_index(drop=True) \
