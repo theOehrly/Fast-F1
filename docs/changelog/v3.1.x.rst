@@ -1,3 +1,25 @@
+What's new in v3.1.2
+--------------------
+
+(released 31/08/2023)
+
+Bug Fixes
+^^^^^^^^^
+
+- temporarily restrict Pandas<2.1.0 due to unexpected API changes
+
+
+
+What's new in v3.1.1
+--------------------
+
+(released 29/08/2023)
+
+
+Hotfix to correct incorrect package definition that prevented import of FastF1.
+
+
+
 What's new in v3.1.0
 --------------------
 
