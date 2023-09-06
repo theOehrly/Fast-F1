@@ -111,7 +111,7 @@ def save_int(i_str) -> int:
 
 def save_float(f_str) -> float:
     """Create a ``float`` object from a string that is formatted like a float.
-    In cases where the input string isn't a valid float, return ``float('nan')``
+    In cases where the input string isn't a valid float, return nan
     """
     # Match pure float strings, e.g.
     #   - '1234.5678' -> 1234.5678
