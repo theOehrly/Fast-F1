@@ -99,7 +99,7 @@ def save_int(i_str) -> int:
     """
     # Match pure integer strings, e.g.
     #   - '1234' -> 1234
-    if re.match(r'^-?\d+$', i_str):
+    if re.match(r'^[+-]?\d+$', i_str):
         return int(i_str)
 
     # Otherwise, return -1. A notable example is #432: 1954 British GP, where
@@ -115,7 +115,7 @@ def save_float(f_str) -> float:
     """
     # Match pure float strings, e.g.
     #   - '1234.5678' -> 1234.5678
-    if re.match(r'^-?\d*\.?\d*$', f_str):
+    if re.match(r'^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$', f_str):
         return float(f_str)
 
     # Otherwise, return np.nan
