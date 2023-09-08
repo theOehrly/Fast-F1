@@ -506,7 +506,7 @@ Seasons = {
     'name': 'Seasons',
     'type': list,
     'method': _flatten_by_rename,
-    'map': {'season': {'name': 'season', 'type': int},
+    'map': {'season': {'name': 'season', 'type': save_int},
             'url': {'name': 'seasonUrl', 'type': str}},
     'sub': [],
     'finalize': None
@@ -516,8 +516,8 @@ __StandingsLists = {
     'name': 'StandingsLists',
     'type': list,
     'method': _flatten_by_rename,
-    'map': {'season': {'name': 'season', 'type': int},
-            'round': {'name': 'round', 'type': int}},
+    'map': {'season': {'name': 'season', 'type': save_int},
+            'round': {'name': 'round', 'type': save_int}},
     'finalize': None
 }
 
@@ -536,8 +536,8 @@ __Races = {
     'name': 'Races',
     'type': list,
     'method': _flatten_by_rename,
-    'map': {'season': {'name': 'season', 'type': int},
-            'round': {'name': 'round', 'type': int},
+    'map': {'season': {'name': 'season', 'type': save_int},
+            'round': {'name': 'round', 'type': save_int},
             'url': {'name': 'raceUrl', 'type': str},
             'raceName': {'name': 'raceName', 'type': str},
             'date': {'name': 'raceDate', 'type': date_from_ergast},
@@ -598,8 +598,8 @@ Status = {
     'name': 'Status',
     'type': list,
     'method': _flatten_by_rename,
-    'map': {'statusId': {'name': 'statusId', 'type': int},
-            'count': {'name': 'count', 'type': int},
+    'map': {'statusId': {'name': 'statusId', 'type': save_int},
+            'count': {'name': 'count', 'type': save_int},
             'status': {'name': 'status', 'type': str}},
     'sub': [],
     'finalize': None
