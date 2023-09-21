@@ -1905,8 +1905,7 @@ class Session:
                             & (not pd.isnull(lap['Time']))
                             & (not pd.isnull(lap['LapTime'])))
 
-                if pre_check_4:
-                    pass
+                if pre_check_4: #needed condition for check_4
                     time_diff = np.sum((lap['Time'], -1 * prev_lap['Time'])).total_seconds()
                     lap_time = lap['LapTime'].total_seconds()
                     # If the difference between the two times is within a 
@@ -1917,13 +1916,12 @@ class Session:
                         integrity_errors += 1
                         lap_integrity_flag = False
                 else:
-                    pass
                     if not prev_lap_check:
                         check_4 = True #can't check if previous lap or its lap 'Time' is missing
                     else:
                         check_4 = False #data on current lap not available, means fail
 
-                result = check_1 and check_2 and check_3 #and check_4
+                result = check_1 and check_2 and check_3 and check_4
                 is_accurate.append(result)
                 prev_lap = lap
 
