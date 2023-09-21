@@ -194,6 +194,9 @@ result frame. This way it easy to see which keys are renamed.
 Additionally, both the "API Mapping" and the "DataFrame Description" will
 show the data type to which a value is cast when ``auto_cast=True``.
 
+.. note::
+  ``-1`` is used to indicate missing values for ``int``-type values (``int``
+  does not support a proper ``NaN`` value)
 
 MultiResponse DataFrames
 ::::::::::::::::::::::::
