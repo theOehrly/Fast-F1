@@ -16,7 +16,9 @@ import fastf1.ergast.structure as API
 from fastf1.ergast.structure import \
     date_from_ergast, \
     time_from_ergast, \
-    timedelta_from_ergast
+    timedelta_from_ergast, \
+    save_int, \
+    save_float
 
 
 # ############### test structure.py #################################
@@ -174,6 +176,31 @@ def test_timedelta_from_ergast_error(time_string, caplog):
     caplog.set_level(logging.DEBUG)
     assert timedelta_from_ergast(time_string) is None
     assert "Failed to parse" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "int_string, expected",
+    (
+        ("123", 123),
+        ("-4", -4),
+        ("", -1),
+        ("123.0", -1)
+    )
+)
+def test_save_int(int_string, expected):
+    assert save_int(int_string) == expected
+
+
+@pytest.mark.parametrize(
+    "float_string, expected",
+    (
+        ("123.4", 123.4),
+        ("-5.6", -5.6),
+        ("", float('nan'))
+    )
+)
+def test_save_float(float_string, expected):
+    assert save_float(float_string) == pytest.approx(expected, nan_ok=True)
 
 
 @pytest.mark.parametrize(
