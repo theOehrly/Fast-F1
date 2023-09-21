@@ -93,6 +93,36 @@ def timedelta_from_ergast(t_str) -> Optional[datetime.timedelta]:
     return None
 
 
+def save_int(i_str) -> int:
+    """Create an ``int`` object from a string that is formatted like an integer.
+    In cases where the input string is not a valid integer, return -1. See #432
+    """
+    # Match pure integer strings, e.g.
+    #   - '1234' -> 1234
+    if re.match(r'^[+-]?\d+$', i_str):
+        return int(i_str)
+
+    # Otherwise, return -1. A notable example is #432: 1954 British GP, where
+    # the racing time (in milliseconds) for Mike Hawthorn is an empty string
+    #   - '' -> -1
+    else:
+        return -1
+
+
+def save_float(f_str) -> float:
+    """Create a ``float`` object from a string that is formatted like a float.
+    In cases where the input string isn't a valid float, return nan
+    """
+    # Match pure float strings, e.g.
+    #   - '1234.5678' -> 1234.5678
+    if re.match(r'^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$', f_str):
+        return float(f_str)
+
+    # Otherwise, return np.nan
+    else:
+        return float('nan')
+
+
 # ########################################################
 # ### functions for flattening of ergast response data ###
 
@@ -277,7 +307,7 @@ TotalRaceTime = {
     'type': dict,
     'method': _flatten_by_rename,
     'map': {
-        'millis': {'name': 'totalRaceTimeMillis', 'type': int},
+        'millis': {'name': 'totalRaceTimeMillis', 'type': save_int},
         'time': {'name': 'totalRaceTime', 'type': timedelta_from_ergast}
     },
     'sub': [],
@@ -289,7 +319,7 @@ FastestLapTime = {
     'type': dict,
     'method': _flatten_by_rename,
     'map': {
-        'millis': {'name': 'fastestLapTimeMillis', 'type': int},
+        'millis': {'name': 'fastestLapTimeMillis', 'type': save_int},
         'time': {'name': 'fastestLapTime', 'type': timedelta_from_ergast}
     },
     'sub': [],
@@ -301,7 +331,7 @@ FastestLapAvgSpeed = {
     'type': dict,
     'method': _flatten_by_rename,
     'map': {'units': {'name': 'fastestLapAvgSpeedUnits', 'type': str},
-            'speed': {'name': 'fastestLapAvgSpeed', 'type': float}},
+            'speed': {'name': 'fastestLapAvgSpeed', 'type': save_float}},
     'sub': [],
     'finalize': None
 }
@@ -310,8 +340,8 @@ FastestLap = {
     'name': 'FastestLap',
     'type': dict,
     'method': _flatten_by_rename,
-    'map': {'rank': {'name': 'fastestLapRank', 'type': int},
-            'lap': {'name': 'fastestLapNumber', 'type': int}},
+    'map': {'rank': {'name': 'fastestLapRank', 'type': save_int},
+            'lap': {'name': 'fastestLapNumber', 'type': save_int}},
     'sub': [FastestLapTime, FastestLapAvgSpeed],
     'finalize': None
 }
@@ -321,7 +351,7 @@ Driver = {
     'type': dict,
     'method': _flatten_by_rename,
     'map': {'driverId': {'name': 'driverId', 'type': str},
-            'permanentNumber': {'name': 'driverNumber', 'type': int},
+            'permanentNumber': {'name': 'driverNumber', 'type': save_int},
             'code': {'name': 'driverCode', 'type': str},
             'url': {'name': 'driverUrl', 'type': str},
             'givenName': {'name': 'givenName', 'type': str},
@@ -364,8 +394,8 @@ Location = {
     'name': 'Location',
     'type': dict,
     'method': _flatten_by_rename,
-    'map': {'lat': {'name': 'lat', 'type': float},
-            'long': {'name': 'long', 'type': float},
+    'map': {'lat': {'name': 'lat', 'type': save_float},
+            'long': {'name': 'long', 'type': save_float},
             'locality': {'name': 'locality', 'type': str},
             'country': {'name': 'country', 'type': str}},
     'sub': [],
@@ -387,8 +417,8 @@ QualifyingResults = {
     'name': 'QualifyingResults',
     'type': list,
     'method': _flatten_by_rename,
-    'map': {'number': {'name': 'number', 'type': int},
-            'position': {'name': 'position', 'type': int},
+    'map': {'number': {'name': 'number', 'type': save_int},
+            'position': {'name': 'position', 'type': save_int},
             'Q1': {'name': 'Q1', 'type': timedelta_from_ergast},
             'Q2': {'name': 'Q2', 'type': timedelta_from_ergast},
             'Q3': {'name': 'Q3', 'type': timedelta_from_ergast}},
@@ -400,12 +430,12 @@ RaceResults = {
     'name': 'Results',
     'type': list,
     'method': _flatten_by_rename,
-    'map': {'number': {'name': 'number', 'type': int},
-            'position': {'name': 'position', 'type': int},
+    'map': {'number': {'name': 'number', 'type': save_int},
+            'position': {'name': 'position', 'type': save_int},
             'positionText': {'name': 'positionText', 'type': str},
-            'points': {'name': 'points', 'type': float},
-            'grid': {'name': 'grid', 'type': int},
-            'laps': {'name': 'laps', 'type': int},
+            'points': {'name': 'points', 'type': save_float},
+            'grid': {'name': 'grid', 'type': save_int},
+            'laps': {'name': 'laps', 'type': save_int},
             'status': {'name': 'status', 'type': str}},
     'sub': [Driver, Constructor, TotalRaceTime, FastestLap,
             FastestLapAvgSpeed],
@@ -421,10 +451,10 @@ DriverStandings = {
     'name': 'DriverStandings',
     'type': list,
     'method': _flatten_by_rename,
-    'map': {'position': {'name': 'position', 'type': int},
+    'map': {'position': {'name': 'position', 'type': save_int},
             'positionText': {'name': 'positionText', 'type': str},
-            'points': {'name': 'points', 'type': float},
-            'wins': {'name': 'wins', 'type': int}},
+            'points': {'name': 'points', 'type': save_float},
+            'wins': {'name': 'wins', 'type': save_int}},
     'sub': [Driver, ConstructorsInline],
     'finalize': None
 }
@@ -440,7 +470,7 @@ Timings = {
     'type': list,
     'method': _flatten_inline_list_of_dicts,
     'map': {'driverId': {'name': 'driverId', 'type': str},
-            'position': {'name': 'position', 'type': int},
+            'position': {'name': 'position', 'type': save_int},
             'time': {'name': 'time', 'type': timedelta_from_ergast},
             },
     'sub': [],
@@ -451,7 +481,7 @@ Laps = {
     'name': 'Laps',
     'type': list,
     'method': _lap_timings_flatten_by_rename,
-    'map': {'number': {'name': 'number', 'type': int}},
+    'map': {'number': {'name': 'number', 'type': save_int}},
     'sub': [Timings],
     'finalize': _merge_dicts_of_lists
 }
@@ -461,8 +491,8 @@ PitStops = {
     'type': list,
     'method': _flatten_by_rename,
     'map': {'driverId': {'name': 'driverId', 'type': str},
-            'stop': {'name': 'stop', 'type': int},
-            'lap': {'name': 'lap', 'type': int},
+            'stop': {'name': 'stop', 'type': save_int},
+            'lap': {'name': 'lap', 'type': save_int},
             'time': {'name': 'time', 'type': time_from_ergast},
             'duration': {'name': 'duration', 'type': timedelta_from_ergast}},
     'sub': [Driver, ConstructorsInline],
@@ -476,7 +506,7 @@ Seasons = {
     'name': 'Seasons',
     'type': list,
     'method': _flatten_by_rename,
-    'map': {'season': {'name': 'season', 'type': int},
+    'map': {'season': {'name': 'season', 'type': save_int},
             'url': {'name': 'seasonUrl', 'type': str}},
     'sub': [],
     'finalize': None
@@ -486,8 +516,8 @@ __StandingsLists = {
     'name': 'StandingsLists',
     'type': list,
     'method': _flatten_by_rename,
-    'map': {'season': {'name': 'season', 'type': int},
-            'round': {'name': 'round', 'type': int}},
+    'map': {'season': {'name': 'season', 'type': save_int},
+            'round': {'name': 'round', 'type': save_int}},
     'finalize': None
 }
 
@@ -506,8 +536,8 @@ __Races = {
     'name': 'Races',
     'type': list,
     'method': _flatten_by_rename,
-    'map': {'season': {'name': 'season', 'type': int},
-            'round': {'name': 'round', 'type': int},
+    'map': {'season': {'name': 'season', 'type': save_int},
+            'round': {'name': 'round', 'type': save_int},
             'url': {'name': 'raceUrl', 'type': str},
             'raceName': {'name': 'raceName', 'type': str},
             'date': {'name': 'raceDate', 'type': date_from_ergast},
@@ -568,8 +598,8 @@ Status = {
     'name': 'Status',
     'type': list,
     'method': _flatten_by_rename,
-    'map': {'statusId': {'name': 'statusId', 'type': int},
-            'count': {'name': 'count', 'type': int},
+    'map': {'statusId': {'name': 'statusId', 'type': save_int},
+            'count': {'name': 'count', 'type': save_int},
             'status': {'name': 'status', 'type': str}},
     'sub': [],
     'finalize': None
