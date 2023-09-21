@@ -1866,6 +1866,7 @@ class Session:
             prev_lap = None
             integrity_errors = 0
             for _, lap in self.laps[self.laps['DriverNumber'] == drv].iterrows():
+                lap_integrity_flag = True #to avoid to add two integrity_errors for the same lap
                 # require existence, non-existence and specific values for some variables
                 check_1 = (pd.isnull(lap['PitInTime'])
                            & pd.isnull(lap['PitOutTime'])
@@ -1884,16 +1885,45 @@ class Session:
                                           atol=0.003, rtol=0, equal_nan=False)
                     if not check_2:
                         integrity_errors += 1
+                        lap_integrity_flag = False
                 else:
                     check_2 = False  # data not available means fail
 
                 if prev_lap is not None:
+                    if (not pd.isnull(prev_lap['Time'])):
+                        prev_lap_check = True #it's needed for check_4
+                    else:
+                        prev_lap_check = False
                     # first lap after safety car often has timing issues (as do all laps under safety car)
                     check_3 = (prev_lap['TrackStatus'] != '4')
                 else:
+                    prev_lap_check = False
                     check_3 = True  # no previous lap, no SC error
 
-                result = check_1 and check_2 and check_3
+                
+                pre_check_4 = (prev_lap_check
+                            & (not pd.isnull(lap['Time']))
+                            & (not pd.isnull(lap['LapTime'])))
+
+                if pre_check_4:
+                    pass
+                    time_diff = np.sum((lap['Time'], -1 * prev_lap['Time'])).total_seconds()
+                    lap_time = lap['LapTime'].total_seconds()
+                    # If the difference between the two times is within a 
+                    # certain tolerance, the lap time data is considered to be valid.
+                    check_4 = np.allclose(time_diff, lap_time, atol=0.003, rtol=0, equal_nan=False)
+
+                    if not check_4 and lap_integrity_flag:
+                        integrity_errors += 1
+                        lap_integrity_flag = False
+                else:
+                    pass
+                    if not prev_lap_check:
+                        check_4 = True #can't check if previous lap or its lap 'Time' is missing
+                    else:
+                        check_4 = False #data on current lap not available, means fail
+
+                result = check_1 and check_2 and check_3 #and check_4
                 is_accurate.append(result)
                 prev_lap = lap
 
