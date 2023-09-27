@@ -2908,6 +2908,22 @@ class Laps(pd.DataFrame):
         """
         return self[pd.isnull(self['PitInTime']) & pd.isnull(self['PitOutTime'])]
 
+    def pick_inlaps(self) -> "Laps":
+        """Return all laps which are in laps (driver entered the pit lane).
+
+        Returns:
+            instance of :class:`Laps`
+        """
+        return self[~pd.isnull(self['PitInTime'])]
+
+    def pick_outlaps(self) -> "Laps":
+        """Return all laps which are out laps (driver exited the pit lane).
+
+        Returns:
+            instance of :class:`Laps`
+        """
+        return self[~pd.isnull(self['PitOutTime'])]
+
     def pick_not_deleted(self) -> "Laps":
         """Return all laps whose lap times are NOT deleted.
 
