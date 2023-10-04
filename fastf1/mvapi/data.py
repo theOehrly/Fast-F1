@@ -75,7 +75,7 @@ class CircuitInfo:
         # get merged reference telemetry and limit to data source 'pos' so that
         # only position values are used that are not interpolated
         try:
-            tel = reference_lap.get_telemetry()
+            tel = reference_lap.get_telemetry(frequency='original')
         except fastf1.core.DataNotLoadedError:
             _logger.warning("Failed to generate marker distance information: "
                             "telemetry data has not been loaded")
