@@ -87,6 +87,22 @@ def test_laps_get_telemetry(reference_laps_data):
 
 
 @pytest.mark.f1telapi
+def test_laps_get_telemetry_non_default_frequency(reference_laps_data):
+    session, laps = reference_laps_data
+    drv_laps = laps.pick_drivers('BOT')
+
+    # test for <Laps>
+    tel = drv_laps.get_telemetry(frequency=10)
+    assert (tel['Time'].diff().iloc[2:-2].unique()
+            == pd.Timedelta(0.1, 'seconds'))
+
+    # test for <Lap>
+    ftel = drv_laps.pick_fastest().get_telemetry(frequency=10)
+    assert (ftel['Time'].diff().iloc[2:-2].unique()
+            == pd.Timedelta(0.1, 'seconds'))
+
+
+@pytest.mark.f1telapi
 def test_laps_get_weather_data(reference_laps_data):
     session, laps = reference_laps_data
     wd = laps.get_weather_data()

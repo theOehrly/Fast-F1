@@ -1,0 +1,12 @@
+What's new in v3.2.0
+--------------------
+
+(released dd/mm/2023)
+
+New Features
+^^^^^^^^^^^^
+
+- Methods :meth:`fastf1.core.Lap.get_telemetry` and
+  :meth:`fastf1.core.Laps.get_telemetry` now take an additional ``frequency``
+  keyword argument to override the default frequency that is used for
+  resampling.

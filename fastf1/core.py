@@ -44,7 +44,7 @@ import re
 from functools import cached_property
 import warnings
 import typing
-from typing import Optional, List, Iterable, Union, Tuple, Any
+from typing import Optional, List, Literal, Iterable, Union, Tuple, Any
 
 import numpy as np
 import pandas as pd
@@ -370,7 +370,7 @@ class Telemetry(pd.DataFrame):
     def merge_channels(
             self,
             other: Union["Telemetry", pd.DataFrame],
-            frequency: Union[int, str] = None
+            frequency: Union[int, Literal['original'], None] = None
     ):
         """Merge telemetry objects containing different telemetry channels.
 
@@ -406,7 +406,8 @@ class Telemetry(pd.DataFrame):
 
         Args:
             other: Object to be merged with self
-            frequency: Optional frequency to overwrite global preset.
+            frequency: Optional frequency to overwrite the default value set by
+                :attr:`~Telemetry.TELEMETRY_FREQUENCY`.
                 (Either string 'original' or integer for a frequency in Hz)
         """
         # merge the data and interpolate missing; 'Date' needs to be the index
@@ -2474,22 +2475,34 @@ class Laps(pd.DataFrame):
             instance of :class:`Telemetry`"""
         return self.get_telemetry()
 
-    def get_telemetry(self) -> Telemetry:
+    def get_telemetry(self,
+                      *,
+                      frequency: Union[int, Literal['original'], None] = None
+                      ) -> Telemetry:
         """Telemetry data for all laps in `self`
 
-        Telemetry data is the result of merging the returned data from :meth:`get_car_data` and :meth:`get_pos_data`.
-        This means that telemetry data at least partially contains interpolated values! Telemetry data additionally
-        already has computed channels added (e.g. Distance).
+        Telemetry data is the result of merging the returned data from
+        :meth:`get_car_data` and :meth:`get_pos_data`. This means that
+        telemetry data at least partially contains interpolated values!
+        Telemetry data additionally already has computed channels added
+        (e.g. Distance).
 
-        This method is provided for convenience and compatibility reasons. But using it does usually not produce
-        the most accurate possible result.
-        It is recommended to use :meth:`get_car_data` or :meth:`get_pos_data` when possible. This is also faster if
-        merging of car and position data is not necessary and if not all computed channels are needed.
+        This method is provided for convenience and compatibility reasons. But
+        using it does usually not produce the most accurate possible result.
+        It is recommended to use :meth:`get_car_data` or :meth:`get_pos_data`
+        when possible. This is also faster if merging of car and position data
+        is not necessary and if not all computed channels are needed.
 
         Resampling during merging is done according to the frequency set by
         :attr:`~Telemetry.TELEMETRY_FREQUENCY`.
 
-        .. note:: Telemetry can only be returned if `self` contains laps of one driver only.
+        .. note:: Telemetry can only be returned if `self` contains laps of one
+            driver only.
+
+        Args:
+            frequency: Optional frequency to overwrite the default value set by
+                :attr:`~Telemetry.TELEMETRY_FREQUENCY`.
+                (Either string 'original' or integer for a frequency in Hz)
 
         Returns:
             instance of :class:`Telemetry`
@@ -2505,8 +2518,8 @@ class Laps(pd.DataFrame):
                      'Date', 'Time', 'SessionTime')]
 
         car_data = car_data.add_distance().add_relative_distance()
-        car_data = car_data.merge_channels(drv_ahead)
-        merged = pos_data.merge_channels(car_data)
+        car_data = car_data.merge_channels(drv_ahead, frequency=frequency)
+        merged = pos_data.merge_channels(car_data, frequency=frequency)
         return merged.slice_by_lap(self, interpolate_edges=True)
 
     def get_car_data(self, **kwargs) -> Telemetry:
@@ -3050,20 +3063,32 @@ class Lap(pd.Series):
             instance of :class:`Telemetry`"""
         return self.get_telemetry()
 
-    def get_telemetry(self) -> Telemetry:
+    def get_telemetry(self,
+                      *,
+                      frequency: Union[int, Literal['original'], None] = None
+                      ) -> Telemetry:
         """Telemetry data for this lap
 
-        Telemetry data is the result of merging the returned data from :meth:`get_car_data` and :meth:`get_pos_data`.
-        This means that telemetry data at least partially contains interpolated values! Telemetry data additionally
-        already has computed channels added (e.g. Distance).
+        Telemetry data is the result of merging the returned data from
+        :meth:`get_car_data` and :meth:`get_pos_data`. This means that
+        telemetry data at least partially contains interpolated values!
+        Telemetry data additionally already has computed channels added
+        (e.g. Distance).
 
-        This method is provided for convenience and compatibility reasons. But using it does usually not produce
-        the most accurate possible result.
-        It is recommended to use :meth:`get_car_data` or :meth:`get_pos_data` when possible. This is also faster if
-        merging of car and position data is not necessary and if not all computed channels are needed.
+        This method is provided for convenience and compatibility reasons. But
+        using it does usually not produce the most accurate possible result.
+        It is recommended to use :meth:`get_car_data` or :meth:`get_pos_data`
+        when possible. This is also faster if merging of car and position data
+        is not necessary and if not all computed channels are needed.
 
         Resampling during merging is done according to the frequency set by
-        :attr:`~Telemetry.TELEMETRY_FREQUENCY`.
+        :attr:`~Telemetry.TELEMETRY_FREQUENCY` if not overwritten with the
+        ``frequency`` argument.
+
+        Args:
+            frequency: Optional frequency to overwrite default value set by
+                :attr:`~Telemetry.TELEMETRY_FREQUENCY`.
+                (Either string 'original' or integer for a frequency in Hz)
 
         Returns:
             instance of :class:`Telemetry`
@@ -3071,7 +3096,7 @@ class Lap(pd.Series):
         pos_data = self.get_pos_data(pad=1, pad_side='both')
         car_data = self.get_car_data(pad=1, pad_side='both')
 
-        # calculate driver ahead from from data without padding to
+        # calculate driver ahead from data without padding to
         # prevent out of bounds errors
         drv_ahead = car_data.iloc[1:-1] \
             .add_driver_ahead() \
@@ -3079,8 +3104,8 @@ class Lap(pd.Series):
                      'Date', 'Time', 'SessionTime')]
 
         car_data = car_data.add_distance().add_relative_distance()
-        car_data = car_data.merge_channels(drv_ahead)
-        merged = pos_data.merge_channels(car_data)
+        car_data = car_data.merge_channels(drv_ahead, frequency=frequency)
+        merged = pos_data.merge_channels(car_data, frequency=frequency)
         return merged.slice_by_lap(self, interpolate_edges=True)
 
     def get_car_data(self, **kwargs) -> Telemetry:
