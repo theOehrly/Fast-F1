@@ -1,0 +1,30 @@
+name: Run tests
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 */3 * *'
+
+
+jobs:
+  access-fastf1-master-cache:
+    # Simply access the FastF1 cache for all runners of the test matrix without
+    # modifying them to prevent GitHub from deleting the cache entries because
+    # they have not been accessed.
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ '3.8', '3.9', '3.10', '3.11']
+    name: Tests on ${{ matrix.python-version }}
+    steps:
+      - name: Create cache directory
+        run: |
+          mkdir test_cache  # make sure cache dir exists
+
+      - name: Cache FastF1
+        uses: actions/cache@v3
+        with:
+          path: ./test_cache
+          key: fastf1-${{ matrix.python-version }}-${{ hashFiles('*.*') }}
+          restore-keys: |
+            fastf1-${{ matrix.python-version }}
