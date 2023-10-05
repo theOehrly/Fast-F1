@@ -2910,9 +2910,9 @@ class Laps(pd.DataFrame):
 
     def pick_box_laps(self, which: str = 'both') -> "Laps":
         """Return all laps which are either in-laps, out-laps, or both.
-           Note: a lap could be an in-lap and an out-lap at the same time.
-           In that case, it will get returned regardless of the 'which'
-           parameter.
+        Note: a lap could be an in-lap and an out-lap at the same time.
+        In that case, it will get returned regardless of the 'which'
+        parameter.
 
         Args:
             which (str): one of 'in'/'out'/'both'
@@ -2931,7 +2931,8 @@ class Laps(pd.DataFrame):
         elif which == 'out':
             return self[~pd.isnull(self['PitOutTime'])]
         elif which == 'both':
-            return self[~pd.isnull(self['PitInTime']) | ~pd.isnull(self['PitOutTime'])]
+            return self[~pd.isnull(self['PitInTime'])
+                        | ~pd.isnull(self['PitOutTime'])]
         else:
             raise ValueError(f"Invalid value '{which}' for kwarg 'which'")
 
