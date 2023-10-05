@@ -2911,7 +2911,7 @@ class Laps(pd.DataFrame):
     def pick_box_laps(self, which: str = 'both') -> "Laps":
         """Return all laps which are either in-laps, out-laps, or both.
            Note: a lap could be an in-lap and an out-lap at the same time.
-           In that case, it will get returned regardless of the 'which' 
+           In that case, it will get returned regardless of the 'which'
            parameter.
 
         Args:
