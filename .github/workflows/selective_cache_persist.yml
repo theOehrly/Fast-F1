@@ -1,4 +1,4 @@
-name: Run tests
+name: Cache persist
 
 on:
   workflow_dispatch:

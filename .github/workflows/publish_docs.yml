@@ -1,4 +1,4 @@
-name: Publish Documentatio
+name: Publish Documentation
 
 on:
   workflow_dispatch:
