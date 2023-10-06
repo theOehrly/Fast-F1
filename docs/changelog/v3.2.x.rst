@@ -3,6 +3,14 @@ What's new in v3.2.0
 
 (released dd/mm/2023)
 
+
+Bug Fixes
+^^^^^^^^^
+
+- Fix incorrect lap number (zero instead of one) for generated laps that are
+  added when a driver crashes on the very first lap.
+
+
 New Features
 ^^^^^^^^^^^^
 
