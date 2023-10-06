@@ -1336,7 +1336,7 @@ class Session:
                     result = d1.copy()
                     result.reset_index(drop=True, inplace=True)
                     result['Driver'] = [driver, ]
-                    result['NumberOfLaps'] = 0
+                    result['NumberOfLaps'] = 1
                     result['Time'] = data['Time'].min()
                     result['IsPersonalBest'] = False
                     result['Compound'] = d2['Compound'].iloc[0]
