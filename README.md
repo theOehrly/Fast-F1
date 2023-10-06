@@ -37,6 +37,14 @@ You can also install using `conda`:
 conda install -c conda-forge fastf1
 ```
 
+### Third-party packages
+
+- R package that wraps FastF1: https://github.com/SCasanova/f1dataR
+
+These packages are not directly related to the FastF1 project. Questions and
+suggestions regarding these packages need to be directed at their respective 
+maintainers.
+
 ## Documentation
 
 The official documentation can be found here:
