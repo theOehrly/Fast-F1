@@ -32,7 +32,7 @@ def calculate_max_points_for_remaining_season():
 
     events = fastf1.events.get_events_remaining(backend="ergast")
     # Count how many sprints and conventional races are left
-    sprint_events = len(events.loc[events["EventFormat"] == "sprint"])
+    sprint_events = len(events.loc[events["EventFormat"] == "sprint_shootout"])
     conventional_events = len(events.loc[events["EventFormat"] == "conventional"])
 
     # Calculate points for each
