@@ -3262,7 +3262,7 @@ class SessionResults(pd.DataFrame):
 
         - ``GridPosition`` | :class:`float` |
           The drivers starting position (values only given if session is
-          'Race', 'Sprint', or 'Sprint Qualifying')
+          'Race', 'Sprint', 'Sprint Shootout' or 'Sprint Qualifying')
 
         - ``Q1`` | :class:`pd.Timedelta` |
           The drivers best Q1 time (values only given if session is
@@ -3278,15 +3278,15 @@ class SessionResults(pd.DataFrame):
 
         - ``Time`` | :class:`pd.Timedelta` |
           The drivers total race time (values only given if session is
-          'Race', 'Sprint', or 'Sprint Qualifying' and the driver was not
-          more than one lap behind the leader)
+          'Race', 'Sprint', 'Sprint Shootout' or 'Sprint Qualifying' and the
+          driver was not more than one lap behind the leader)
 
         - ``Status`` | :class:`str` |
           A status message to indicate if and how the driver finished the race
           or to indicate the cause of a DNF. Possible values include but are
           not limited to 'Finished', '+ 1 Lap', 'Crash', 'Gearbox', ...
-          (values only given if session is 'Race', 'Sprint', or
-          'Sprint Qualifying')
+          (values only given if session is 'Race', 'Sprint', 'Sprint Shootout'
+          or 'Sprint Qualifying')
 
         - ``Points`` | :class:`float` |
           The number of points received by each driver for their finishing

@@ -41,7 +41,8 @@ DataFrame columns or Series values:
     Usually, this is the same as the date of the last session.
 
   - ``EventFormat`` | :class:`str` |
-    The format of the event. One of 'conventional', 'sprint', 'testing'.
+    The format of the event. One of 'conventional', 'sprint',
+    'sprint_shootout', 'testing'.
 
   - ``Session*`` | :class:`str` |
     The name of the session. One of 'Practice 1', 'Practice 2', 'Practice 3',
