@@ -240,12 +240,13 @@ def test_driver_list():
     # ########## verify driver data
     assert isinstance(data, dict)
     assert len(data.keys()) == 20
-    dtypes = [str, str, str, str, int, str, str, str, str, str, str,
-              datetime.timedelta, datetime.timedelta, datetime.timedelta,
-              datetime.timedelta, str, float]
+    dtypes = {'RacingNumber': str, 'BroadcastName': str, 'FullName': str,
+              'Tla': str, 'Line': int, 'TeamName': str, 'TeamColour': str,
+              'FirstName': str, 'LastName': str, 'Reference': str,
+              'HeadshotUrl': str}
     for driver in data.values():
-        for col, dtype in zip(driver.values(), dtypes):
-            assert isinstance(col, dtype)
+        for key, val in driver.items():
+            assert isinstance(val, dtypes[key])
 
 
 # ########## special test cases ##########

@@ -1,3 +1,16 @@
+What's new in v3.1.3
+--------------------
+
+(released 07/10/2023)
+
+Bug Fixes
+^^^^^^^^^
+
+- fixed a bug in the driver list parser that caused Piastri to be missing from
+  the results in the 2023 Qatar Sprint Shootout (#460)
+
+
+
 What's new in v3.1.2
 --------------------
 
