@@ -2921,6 +2921,34 @@ class Laps(pd.DataFrame):
         """
         return self[pd.isnull(self['PitInTime']) & pd.isnull(self['PitOutTime'])]
 
+    def pick_box_laps(self, which: str = 'both') -> "Laps":
+        """Return all laps which are either in-laps, out-laps, or both.
+        Note: a lap could be an in-lap and an out-lap at the same time.
+        In that case, it will get returned regardless of the 'which'
+        parameter.
+
+        Args:
+            which (str): one of 'in'/'out'/'both'
+
+                - which='in': only laps in which the driver entered
+                  the pit lane are returned
+                - which='out': only laps in which the driver exited
+                  the pit lane are returned
+                - which='both': both in-laps and out-laps are returned
+
+        Returns:
+            instance of :class:`Laps`
+        """
+        if which == 'in':
+            return self[~pd.isnull(self['PitInTime'])]
+        elif which == 'out':
+            return self[~pd.isnull(self['PitOutTime'])]
+        elif which == 'both':
+            return self[~pd.isnull(self['PitInTime'])
+                        | ~pd.isnull(self['PitOutTime'])]
+        else:
+            raise ValueError(f"Invalid value '{which}' for kwarg 'which'")
+
     def pick_not_deleted(self) -> "Laps":
         """Return all laps whose lap times are NOT deleted.
 
