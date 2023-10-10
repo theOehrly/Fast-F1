@@ -1,3 +1,17 @@
+What's new in v3.1.4
+--------------------
+
+(released ??/??/2023)
+
+Bug Fixes
+^^^^^^^^^
+
+- fixed a bug that caused :func:`~fastf1.core.Telemetry.add_driver_ahead` to
+  only work with telemetry data that matches the sampling timebase of the
+  car data (#430)
+
+
+
 What's new in v3.1.3
 --------------------
 

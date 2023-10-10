@@ -280,12 +280,22 @@ def test_resampling_up(reference_laps_data):
 
 
 @pytest.mark.f1telapi
-def test_add_driver_ahead(reference_laps_data):
+@pytest.mark.parametrize(
+    "resample_rule",
+    [None, "0.1S"]  # test base frequency and resampled
+)
+def test_add_driver_ahead(reference_laps_data, resample_rule):
     session, laps = reference_laps_data
     test_data = laps.pick_fastest().get_car_data()
+    if resample_rule is not None:
+        test_data = test_data.resample_channels(rule=resample_rule)
     test_data = test_data.add_driver_ahead()
     # only first value may be NaN
     assert test_data['DistanceToDriverAhead'].isnull().sum() <= 1
+    # values need to change over the course of the lap
+    assert len(test_data['DistanceToDriverAhead'].unique()) > 2
+    # DriverAhead must not be empty
+    assert (test_data['DriverAhead'].unique() != ['']).any()
 
 
 @pytest.mark.f1telapi

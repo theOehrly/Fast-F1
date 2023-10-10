@@ -812,10 +812,10 @@ class Telemetry(pd.DataFrame):
                          index=ref_tel.index)
         )
 
-        if ((d['SessionTime'].shape != dtd['SessionTime'].shape)
-                or np.any((d['SessionTime'].values
-                           != dtd['SessionTime'].values))):
-            dtd = dtd.resample_channels(new_date_ref=d["SessionTime"])
+        if ((d['Date'].shape != dtd['Date'].shape)
+                or np.any((d['Date'].values
+                           != dtd['Date'].values))):
+            dtd = dtd.resample_channels(new_date_ref=d["Date"])
 
         # indices need to match as .join works index-on-index
         dtd['_SelfIndex'] = d.index
