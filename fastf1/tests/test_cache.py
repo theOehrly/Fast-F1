@@ -51,7 +51,7 @@ def _test_cache_used_and_clear(tmpdir):
         mocker.get('https://livetiming.formula1.com/static/2020/Index.json',
                    content=content, status_code=200)
 
-        # create mock repsonses for general api requests
+        # create mock responses for general api requests
         with open('fastf1/testing/reference_data/2020_05_FP2/'
                   'ergast_race.raw', 'rb') as fobj:
             content = fobj.read()

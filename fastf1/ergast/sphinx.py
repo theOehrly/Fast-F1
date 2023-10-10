@@ -168,7 +168,7 @@ class ApiMappingDirective(Directive):
         flat = ErgastResultFrame._prepare_response(tree, root_category,
                                                    cast=False)
         # print the flattened data nicely formatted as a table (use str
-        # represenation of a dataframe for this)
+        # representation of a dataframe for this)
         # remove the last line (unnecessary info about dataframe)
         result_str = '\n'.join(
             str(pd.DataFrame(flat).iloc[0]).split('\n')[:-1]

@@ -49,7 +49,7 @@ _logger = get_logger(__name__)
 # of charge and in their spare time. Because of that, they may have very
 # limited server capacity. We should accept that and be grateful that they
 # even exist in the first place.
-# Other APIs may be provided by larger companies. But consequentially they
+# Other APIs may be provided by larger companies. But consequently they
 # also need to cope with more traffic. We should accept their API limits as
 # well.
 #
@@ -138,7 +138,7 @@ class Cache:
     should almost always be left enabled to speed up the runtime of your
     0scripts and to prevent exceeding the rate limit of api servers.
 
-    The default cache directory is defined, in order of precendence, in one
+    The default cache directory is defined, in order of precedence, in one
     of the following ways:
 
     #. A call to :func:`enable_cache`
@@ -177,7 +177,7 @@ class Cache:
 
         >>> import fastf1
         >>> fastf1.Cache.enable_cache('path/to/cache')  # doctest: +SKIP
-        # change cache directory to an exisitng empty directory on your machine
+        # change cache directory to an existing empty directory on your machine
         >>> session = fastf1.get_session(2021, 5, 'Q')
         >>> # ...
 
@@ -185,7 +185,7 @@ class Cache:
     environment variable `FASTF1_CACHE`. However, this value will be
     ignored if `Cache.enable_cache()` is called.
 
-    If no explicit location is provied, Fast-F1 will use a default location
+    If no explicit location is provided, Fast-F1 will use a default location
     depending on operating system.
 
     - Windows: `%LOCALAPPDATA%\\\\Temp\\\\fastf1`

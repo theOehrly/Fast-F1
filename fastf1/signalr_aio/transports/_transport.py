@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# python compatiblity for <3.6
+# python compatibility for <3.6
 try:
     ModuleNotFoundError
 except NameError:
@@ -9,7 +9,6 @@ except NameError:
 
 # -----------------------------------
 # Internal Imports
-from ._exceptions import ConnectionClosed
 from ._parameters import WebSocketParameters
 from ._queue_events import InvokeEvent, CloseEvent
 

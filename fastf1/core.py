@@ -378,7 +378,7 @@ class Telemetry(pd.DataFrame):
         missing values will be interpolated.
 
         :attr:`Telemetry.TELEMETRY_FREQUENCY` determines if and how the data is resampled. This can be overridden using
-        the `frequency` keyword fo this method.
+        the `frequency` keyword for this method.
 
         Merging and resampling:
 
