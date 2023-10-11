@@ -142,7 +142,7 @@ def soft_exceptions(descr_name: str, msg: str, logger: logging.Logger):
     # partially and FastF1 will not become completely unusable.
     # For development purposes the automatic error handling can be disabled
     # by explicitly setting `Logger.debug = True` or by setting the environment
-    # variable `FASTF1_DEBUG=1`. In this case, all unhandled excpetions will
+    # variable `FASTF1_DEBUG=1`. In this case, all unhandled exceptions will
     # be raised.
     def __decorator(func):
         @functools.wraps(func)

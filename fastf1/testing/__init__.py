@@ -7,7 +7,7 @@ import multiprocessing
 
 
 class SubprocessTestError(Exception):
-    """Raised if an Excpetion is encounterd in a subprocess test.
+    """Raised if an Exception is encountered in a subprocess test.
     """
     pass
 

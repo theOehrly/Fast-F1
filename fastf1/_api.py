@@ -131,10 +131,12 @@ def timing_data(path: str,
                 - Driver (str): Driver number
                 - NumberOfLaps (int): Number of laps driven by this driver including the lap in this row
                 - NumberOfPitStops (int): Number of pit stops of this driver
-                - PitInTime (pandas.Timedelta): Session time at which the driver entered the pits. Consequentially,
-                  if this value is not NaT the lap in this row is an inlap.
-                - PitOutTime (pandas.Timedelta): Session time at which the driver exited the pits. Consequentially,
-                  if this value is not NaT  the lap in this row is an outlap.
+                - PitInTime (pandas.Timedelta): Session time at which the
+                  driver entered the pits. Consequently, if this value is
+                  not NaT the lap in this row is an inlap.
+                - PitOutTime (pandas.Timedelta): Session time at which the
+                  driver exited the pits. Consequently, if this value is
+                  not NaT, the lap in this row is an outlap.
                 - Sector1/2/3Time (pandas.Timedelta): Sector times (one column for each sector time)
                 - Sector1/2/3SessionTime (pandas.Timedelta): Session time at which the corresponding sector time
                   was set (one column for each sector's session time)
@@ -238,7 +240,7 @@ def _align_laps(laps_data, stream_data):
         leader = None
         max_delta = None
 
-        # try to align on the first lap where useable data is available
+        # try to align on the first lap where usable data is available
         # ideally, this is the end of the first lap
         offset = -1  # start at -1 so that value it is zero on first iteration
 
@@ -256,7 +258,7 @@ def _align_laps(laps_data, stream_data):
                 _logger.warning('Skipping lap alignment (no suitable lap)!')
                 return
 
-            # find the leader after the first useable lap and get the expected
+            # find the leader after the first usable lap and get the expected
             # gaps to the leader for all other drivers
 
             if not pd.isnull(
@@ -786,7 +788,7 @@ def timing_app_data(path, response=None, livedata=None):
         livedata: An instance of :class:`fastf1.livetiming.data.LiveTimingData` to use as a source instead of the api
 
     Returns:
-        A DataFrame contianing one column for each data channel as listed above.
+        A DataFrame containing one column for each data channel listed above.
 
     Raises:
         SessionNotAvailableError: in case the F1 livetiming api returns no data
@@ -1197,7 +1199,8 @@ def track_status_data(path, response=None, livedata=None):
 
     Track status is indicated using single digit integer status codes (as string). List of known statuses:
 
-        - '1': Track clear (beginning of session ot to indicate the end of another status)
+        - '1': Track clear (beginning of session or to indicate the end
+           of another status)
         - '2': Yellow flag (sectors are unknown)
         - '3': ??? Never seen so far, does not exist?
         - '4': Safety Car

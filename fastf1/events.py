@@ -894,7 +894,7 @@ class EventSchedule(pd.DataFrame):
         name and officialName of each event. This is not guaranteed to return
         the correct result. You should therefore always check if the function
         actually returns the event you had wanted.
-        To gurantee the function returns the event queried, toggle
+        To guarantee the function returns the event queried, toggle
         strict_search, which will only return an event if its event name
         matches (non case sensitive) the query string.
 
