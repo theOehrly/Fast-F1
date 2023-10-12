@@ -41,7 +41,7 @@ def test_lap_data_loading_position_calculation():
 
 @pytest.mark.f1telapi
 def test_first_lap_pitout_times():
-    sprint_session = fastf1.get_session(2023, 4, "SS")
+    sprint_session = fastf1.get_session(2023, 4, "Sprint")
     sprint_session.load(telemetry=False, weather=False, messages=False)
     sprint_laps = sprint_session.laps
     sprint_mask = (sprint_laps["LapNumber"] == 1) & \
