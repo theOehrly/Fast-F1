@@ -1421,6 +1421,11 @@ class Session:
             mask = pd.isna(result['LapStartTime']) & (~pd.isna(result['PitOutTime']))
             result.loc[mask, 'LapStartTime'] = result.loc[mask, 'PitOutTime']
 
+            # remove first lap pitout time if it is before session_start_time
+            mask = (result["PitOutTime"] < self.session_start_time) & \
+                   (result["NumberOfLaps"] == 1)
+            result.loc[mask, 'PitOutTime'] = pd.NaT
+
             # create total laps counter for each tyre used
             for npit in result['Stint'].unique():
                 sel = result['Stint'] == npit

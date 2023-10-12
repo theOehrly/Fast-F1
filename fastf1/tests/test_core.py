@@ -39,6 +39,23 @@ def test_lap_data_loading_position_calculation():
         assert (delta == 0).all()  # assert that the delta is zero for all laps
 
 
+@pytest.mark.f1telapi
+def test_first_lap_pitout_times():
+    sprint_session = fastf1.get_session(2023, 4, "SS")
+    sprint_session.load(telemetry=False, weather=False, messages=False)
+    sprint_laps = sprint_session.laps
+    sprint_mask = (sprint_laps["LapNumber"] == 1) & \
+                  (~sprint_laps["PitOutTime"].isna())
+    assert sprint_laps[sprint_mask]["Driver"].tolist() == ["OCO"]
+
+    race_session = fastf1.get_session(2023, 5, "R")
+    race_session.load(telemetry=False, weather=False, messages=False)
+    race_laps = race_session.laps
+    race_mask = (race_laps["LapNumber"] == 1) & \
+                (~race_laps["PitOutTime"].isna())
+    assert race_laps[race_mask]["Driver"].tolist() == []
+
+
 def test_laps_constructor_metadata_propagation(reference_laps_data):
     session, laps = reference_laps_data
 
