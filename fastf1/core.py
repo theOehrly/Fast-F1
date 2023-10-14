@@ -1866,6 +1866,7 @@ class Session:
             prev_lap = None
             integrity_errors = 0
             for _, lap in self.laps[self.laps['DriverNumber'] == drv].iterrows():
+                lap_integrity_ok = True
                 # require existence, non-existence and specific values for some variables
                 check_1 = (pd.isnull(lap['PitInTime'])
                            & pd.isnull(lap['PitOutTime'])
@@ -1883,7 +1884,7 @@ class Session:
                                           lap['LapTime'].total_seconds(),
                                           atol=0.003, rtol=0, equal_nan=False)
                     if not check_2:
-                        integrity_errors += 1
+                        lap_integrity_ok = False
                 else:
                     check_2 = False  # data not available means fail
 
@@ -1899,20 +1900,23 @@ class Session:
                                and (not pd.isnull(prev_lap['Time'])))
 
                 if pre_check_4:  # needed condition for check_4
-                    time_diff = np.sum((lap['Time'], -1 * prev_lap['Time'])).total_seconds()
+                    time_diff = np.sum((lap['Time'],
+                                        -1 * prev_lap['Time'])).total_seconds()
                     lap_time = lap['LapTime'].total_seconds()
                     # If the difference between the two times is within a
-                    # certain tolerance, the lap time data is considered to be valid.
-                    check_4 = np.allclose(time_diff, lap_time, atol=0.003, rtol=0, equal_nan=False)
+                    # certain tolerance, the lap time data is considered
+                    # to be valid.
+                    check_4 = np.allclose(time_diff, lap_time,
+                                          atol=0.003, rtol=0, equal_nan=False)
 
-                    # first condition is added to avoid to add two integrity_errors for the same lap
-                    if not check_4 and check_1 and check_2:
-                        integrity_errors += 1
-                    elif not check_4:
-                        integrity_errors += 1
+                    if not check_4:
+                        lap_integrity_ok = False
 
                 else:
                     check_4 = True
+
+                if not lap_integrity_ok:
+                    integrity_errors += 1
 
                 result = check_1 and check_2 and check_3 and check_4
                 is_accurate.append(result)
