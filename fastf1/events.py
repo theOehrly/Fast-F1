@@ -110,7 +110,7 @@ Multiple event (schedule) related functions and methods make use of a session
 identifier to differentiate between the various sessions of one event.
 This identifier can currently be one of the following:
 
-    - session name abbreviation: ``'FP1', 'FP2', 'FP3', 'Q', 'S', 'SS', R'``
+    - session name abbreviation: ``'FP1', 'FP2', 'FP3', 'Q', 'S', 'SS', 'R'``
     - full session name: ``'Practice 1', 'Practice 2',
       'Practice 3', 'Sprint', 'Sprint Shootout', 'Qualifying', 'Race'``;
       provided names will be normalized, so that the name is
