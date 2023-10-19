@@ -736,6 +736,9 @@ def _get_schedule_from_ergast(year) -> "EventSchedule":
 class EventSchedule(pd.DataFrame):
     """This class implements a per-season event schedule.
 
+    For detailed information about the information that is available for each
+    event, see `Event Schedule Data`_.
+
     This class is usually not instantiated directly. You should use
     :func:`fastf1.get_event_schedule` to get an event schedule for a specific
     season.
@@ -933,6 +936,9 @@ class Event(pd.Series):
 
     Each event consists of one or multiple sessions, depending on the type
     of event and depending on the event format.
+
+    For detailed information about the information that is available for each
+    event, see `Event Schedule Data`_.
 
     This class is usually not instantiated directly. You should use
     :func:`fastf1.get_event` or similar to get a specific event.
