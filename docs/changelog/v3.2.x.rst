@@ -10,6 +10,9 @@ Bug Fixes
 - Fix incorrect lap number (zero instead of one) for generated laps that are
   added when a driver crashes on the very first lap.
 
+- Fix broken schedule backend 'f1timing' (failed to load 2023 season schedule
+  after Qatar GP due to unexpected data)
+
 
 New Features
 ^^^^^^^^^^^^

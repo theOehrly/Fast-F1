@@ -607,15 +607,21 @@ def _get_schedule_from_f1_timing(year):
         data['EventName'].append(event['Name'])
         data['OfficialEventName'].append(event['OfficialName'])
 
-        n_events = min(len(event['Sessions']), 5)
+        # select only valid sessions
+        sessions = list()
+        for ses in event['Sessions']:
+            if (ses.get('Key') != -1) and ses.get('Name'):
+                sessions.append(ses)
+
+        n_events = min(len(sessions), 5)
         # number of events, usually 3 for testing, 5 for race weekends
         # in special cases there are additional unrelated events
 
-        if (n_events >= 4) and ('Sprint' in event['Sessions'][3]['Name']):
-            if event['Sessions'][3]['Name'] == 'Sprint Qualifying':
+        if (n_events >= 4) and ('Sprint' in sessions[3]['Name']):
+            if sessions[3]['Name'] == 'Sprint Qualifying':
                 # fix for 2021 where Sprint was called Sprint Qualifying
-                event['Sessions'][3]['Name'] = 'Sprint'
-            if event['Sessions'][2]['Name'] == 'Sprint Shootout':
+                sessions[3]['Name'] = 'Sprint'
+            if sessions[2]['Name'] == 'Sprint Shootout':
                 data['EventFormat'].append('sprint_shootout')
             else:
                 data['EventFormat'].append('sprint')
@@ -632,7 +638,7 @@ def _get_schedule_from_f1_timing(year):
         for i in range(0, 5):
             # parse the up to five sessions for each event
             try:
-                session = event['Sessions'][i]
+                session = sessions[i]
             except IndexError:
                 data[f'Session{i+1}'].append(None)
                 data[f'Session{i+1}Date'].append(None)
