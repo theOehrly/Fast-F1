@@ -1929,11 +1929,15 @@ class Session:
                 prev_lap = lap
 
             if len(is_accurate) > 0:
-                self._laps.loc[self.laps['DriverNumber'] == drv, 'IsAccurate'] = is_accurate
+                self._laps.loc[
+                    self.laps['DriverNumber'] == drv, 'IsAccurate'
+                ] = is_accurate
             else:
-                _logger.warning("Failed to perform lap accuracy check - all "
-                                "laps marked as inaccurate.")
-                self.laps['IsAccurate'] = False  # default should be inaccurate
+                _logger.warning(f"Failed to perform lap accuracy check - all "
+                                f"laps marked as inaccurate (driver {drv})")
+                self._laps.loc[
+                    self.laps['DriverNumber'] == drv, 'IsAccurate'
+                ] = False  # default should be inaccurate
 
             # necessary to explicitly cast to bool
             self._laps[['IsAccurate']] \

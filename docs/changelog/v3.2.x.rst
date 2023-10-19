@@ -13,6 +13,9 @@ Bug Fixes
 - Fix broken schedule backend 'f1timing' (failed to load 2023 season schedule
   after Qatar GP due to unexpected data)
 
+- Fix: failing lap accuracy check for one driver caused laps of all drivers to
+  be marked as inaccurate (#464)
+
 
 New Features
 ^^^^^^^^^^^^
