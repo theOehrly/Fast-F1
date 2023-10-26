@@ -98,14 +98,17 @@ TEAM_TRANSLATE: Dict[str, str] = {
 DRIVER_COLORS: Dict[str, str] = {
     "valtteri bottas": "#900000",
     "zhou guanyu": "#500000",
+    "theo pourchaire": "#700000",
 
     "nyck de vries": "#1e3d61",
     "yuki tsunoda": "#356cac",
     "daniel ricciardo": "#2b4562",
     "liam lawson": "#2b4562",
+    "isack hadjar": "#1e6176",
 
     "pierre gasly": "#0090ff",
     "esteban ocon": "#70c2ff",
+    "jack doohan": "#0075c2",
 
     "fernando alonso": "#006f62",
     "lance stroll": "#25a617",
@@ -114,6 +117,7 @@ DRIVER_COLORS: Dict[str, str] = {
     "charles leclerc": "#dc0000",
     "carlos sainz": "#ff8181",
     "robert shwartzman": "#9c0000",
+    "oliver bearman": "#c40000",
 
     "kevin magnussen": "#ffffff",
     "nico hulkenberg": "#cacaca",
@@ -123,6 +127,7 @@ DRIVER_COLORS: Dict[str, str] = {
 
     "lewis hamilton": "#00d2be",
     "george russell": "#24ffff",
+    "frederik vesti": "#00a6ff",
 
     "max verstappen": "#0600ef",
     "sergio perez": "#716de2",
@@ -139,13 +144,18 @@ DRIVER_TRANSLATE: Dict[str, str] = {
     'VER': 'max verstappen', 'PER': 'sergio perez',
     'PIA': 'oscar piastri', 'NOR': 'lando norris',
     'GAS': 'pierre gasly', 'OCO': 'esteban ocon',
+    'DOO': 'jack doohan',
     'BOT': 'valtteri bottas', 'ZHO': 'zhou guanyu',
+    'POU': 'theo pourchaire',
     'DEV': 'nyck de vries', 'TSU': 'yuki tsunoda',
     'RIC': 'daniel ricciardo', 'LAW': 'liam lawson',
+    'HAD': 'isack hadjar',
     'MAG': 'kevin magnussen', 'HUL': 'nico hulkenberg',
+    'BEA': 'oliver bearman',
     'ALO': 'fernando alonso', 'STR': 'lance stroll',
     'DRU': 'felipe drugovich',
     'HAM': 'lewis hamilton', 'RUS': 'george russell',
+    'VES': 'frederik vesti',
     'ALB': 'alexander albon', 'SAR': 'logan sargeant'}
 """Mapping of driver names to theirs respective abbreviations."""
 
