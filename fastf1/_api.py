@@ -1361,11 +1361,11 @@ def race_control_messages(path, response=None, livedata=None):
 
     data = {
         'Time': [], 'Category': [], 'Message': [], 'Status': [],
-        'Flag': [], 'Scope': [], 'Sector': [], 'RacingNumber': []
+        'Flag': [], 'Scope': [], 'Sector': [], 'RacingNumber': [], 'Lap': []
     }
     data_keys = ('Category', 'Message', 'Status', 'Flag', 'Scope', 'Sector',
-                 'RacingNumber')
-    converters = (str, str, str, str, str, int, str)
+                 'RacingNumber', 'Lap')
+    converters = (str, str, str, str, str, int, str, int)
 
     for line in response:
         messages = line[1]['Messages']
