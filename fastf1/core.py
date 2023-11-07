@@ -2844,18 +2844,32 @@ class Laps(pd.DataFrame):
         Returns:
             instance of :class:`Lap`
         """
+        # TODO: Deprecate returning empty lap object when there is no lap
+        # that matches definion
         if only_by_time:
             laps = self  # all laps
         else:
             # select only laps marked as personal fastest
-            laps = self.loc[self['IsPersonalBest'] == True]  # noqa: E712 comparison with True
+            laps = self.loc[self['IsPersonalBest'] == True]  # noqa: E712
 
         if not laps.size:
+            warnings.warn(("None will be returned instead of an empty Lap "
+                           "object when there are no laps with "
+                           "IsPersonalBest=True starting from version 3.3"),
+                          DeprecationWarning)
+            return Lap(index=self.columns, dtype=object).__finalize__(self)
+
+        if laps['LapTime'].isna().all():
+            warnings.warn(("None will be returned instead of an empty Lap "
+                           "object when there is no recorded LapTime for "
+                           "any lap with IsPersonalBest=True starting from "
+                           " version 3.3"),
+                          DeprecationWarning)
             return Lap(index=self.columns, dtype=object).__finalize__(self)
 
         lap = laps.loc[laps['LapTime'].idxmin()]
         if isinstance(lap, pd.DataFrame):
-            # More laps, same time
+            # Multiple laps, same time
             lap = lap.iloc[0]  # take first clocked
 
         return lap
