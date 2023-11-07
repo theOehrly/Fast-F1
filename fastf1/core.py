@@ -2854,16 +2854,16 @@ class Laps(pd.DataFrame):
 
         if not laps.size:
             warnings.warn(("None will be returned instead of an empty Lap "
-                           "object when there are no laps with "
-                           "IsPersonalBest=True starting from version 3.3"),
+                           "object when there are no laps that satisfies "
+                           "the definition for fastest lap starting from "
+                           "version 3.3"),
                           DeprecationWarning)
             return Lap(index=self.columns, dtype=object).__finalize__(self)
 
         if laps['LapTime'].isna().all():
             warnings.warn(("None will be returned instead of an empty Lap "
                            "object when there is no recorded LapTime for "
-                           "any lap with IsPersonalBest=True starting from "
-                           " version 3.3"),
+                           "any lap starting from version 3.3"),
                           DeprecationWarning)
             return Lap(index=self.columns, dtype=object).__finalize__(self)
 
