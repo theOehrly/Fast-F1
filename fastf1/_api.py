@@ -1330,6 +1330,7 @@ def race_control_messages(path, response=None, livedata=None):
         - Scope (str): Scope of message "Track", "Sector", "Driver"
         - Sector (int): Affected track sector for sector-scoped messages
         - RacingNumber (str): Affected driver for CarEvent messages
+        - Lap (int): Number of the lap in which the message was displayed
 
     Args:
         path (str): api path base string (usually ``Session.api_path``)
