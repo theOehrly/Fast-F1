@@ -1027,10 +1027,17 @@ class Session:
         telemetry data are available."""
         self.date = self.event.get_session_date(session_name, utc=True)
         """pandas.Datetime: Date at which this session took place."""
+
+        try:
+            _api_date = self.event.get_session_date(session_name, utc=False)
+        except ValueError:
+            # not all backends provide local timestamps, use UTC then which
+            # works in almost all cases
+            _api_date = self.date
         self.api_path = api.make_path(
             self.event['EventName'],
             self.event['EventDate'].strftime('%Y-%m-%d'),
-            self.name, self.date.strftime('%Y-%m-%d')
+            self.name, _api_date.strftime('%Y-%m-%d')
         )
         """str: API base path for this session"""
 
