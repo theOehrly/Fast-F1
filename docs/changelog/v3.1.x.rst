@@ -1,3 +1,30 @@
+What's new in v3.1.5
+--------------------
+
+(released 17/11/2023)
+
+Bug Fixes
+^^^^^^^^^
+
+- Fixed a bug that caused inconsistent behaviour in
+  :func:`~fastf1.core.Laps.pick_fastest` in some cases were there was no lap
+  that met the criteria for a fastest lap. Now, an empty
+  :class:`~fastf1.core.Lap` object will always be returned when there is no
+  fastest lap. (Note that this will change in the future, see 'Deprecations'
+  below (#476) (by @Casper-Guo)
+
+- Fixed a bug that prevented some sessions of the Las Vegas Grand Prix from
+  being loaded (#481)
+
+Deprecations
+^^^^^^^^^^^^
+
+- In cases were no lap meets the criteria for a fastest lap,
+  :func:`~fastf1.core.Laps.pick_fastest` currently returns an empty
+  :class:`~fastf1.core.Lap` object. Starting from version 3.3, this will
+  return ``None`` instead
+
+
 What's new in v3.1.4
 --------------------
 
