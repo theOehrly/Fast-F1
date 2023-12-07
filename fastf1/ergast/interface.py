@@ -778,8 +778,7 @@ class Ergast:
                      'fastest_rank': fastest_rank,
                      'status': status}
 
-        return self._build_default_result(endpoint='drivers',
-                                          table='DriverTable',
+        return self._build_default_result(table='DriverTable',
                                           category=API.Drivers,
                                           subcategory=None,
                                           result_type=result_type,
@@ -845,8 +844,7 @@ class Ergast:
                      'fastest_rank': fastest_rank,
                      'status': status}
 
-        return self._build_default_result(endpoint='constructors',
-                                          table='ConstructorTable',
+        return self._build_default_result(table='ConstructorTable',
                                           category=API.Constructors,
                                           subcategory=None,
                                           result_type=result_type,
