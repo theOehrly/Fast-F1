@@ -434,6 +434,7 @@ class Ergast:
             standings_position: Optional[int] = None
     ) -> str:
         selectors = list()
+        baseJson = True
 
         if season is not None:
             selectors.append(f"/{season}")
@@ -441,23 +442,31 @@ class Ergast:
             selectors.append(f"/{round}")
         if circuit is not None:
             selectors.append(f"/circuits/{circuit}")
+            baseJson = not baseJson
         if constructor is not None:
             selectors.append(f"/constructors/{constructor}")
+            baseJson = not baseJson
         if driver is not None:
+            baseJson = not baseJson
             selectors.append(f"/drivers/{driver}")
         if grid_position is not None:
+            baseJson = not baseJson
             selectors.append(f"/grid/{grid_position}")
         if results_position is not None:
+            baseJson = not baseJson
             selectors.append(f"/results/{results_position}")
         if fastest_rank is not None:
+            baseJson = not baseJson
             selectors.append(f"/fastest/{fastest_rank}")
         if status is not None:
+            baseJson = not baseJson
             selectors.append(f"/status/{status}")
 
         # some special cases: the endpoint may also be used as selector
         # therefore, if the specifier is defined, do not add the endpoint
         # string additionally
         if standings_position is not None:
+            baseJson = not baseJson
             if endpoint == 'driverStandings':
                 selectors.append(f"/driverStandings/{standings_position}")
                 endpoint = None
@@ -466,17 +475,22 @@ class Ergast:
                 endpoint = None
 
         if lap_number is not None:
+            baseJson = not baseJson
             selectors.append(f"/laps/{lap_number}")
             if endpoint == 'laps':
                 endpoint = None
 
         if stop_number is not None:
+            baseJson = not baseJson
             selectors.append(f"/pitstops/{stop_number}")
             if endpoint == 'pitstops':
                 endpoint = None
 
-        if endpoint is not None:
+        # This needs very special cases
+        # Exclusively for season & circuit only, not additional selectors
+        if endpoint is not None and baseJson:
             selectors.append(f"/{endpoint}")
+
 
         return BASE_URL + "".join(selectors) + ".json"
 
@@ -778,7 +792,8 @@ class Ergast:
                      'fastest_rank': fastest_rank,
                      'status': status}
 
-        return self._build_default_result(table='DriverTable',
+        return self._build_default_result(endpoint='drivers',
+                                          table='DriverTable',
                                           category=API.Drivers,
                                           subcategory=None,
                                           result_type=result_type,
@@ -844,7 +859,8 @@ class Ergast:
                      'fastest_rank': fastest_rank,
                      'status': status}
 
-        return self._build_default_result(table='ConstructorTable',
+        return self._build_default_result(endpoint="constructors",
+                                          table='ConstructorTable',
                                           category=API.Constructors,
                                           subcategory=None,
                                           result_type=result_type,
