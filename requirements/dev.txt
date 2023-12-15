@@ -8,7 +8,7 @@ pytest>=6.0.0  # equals pytest min version requirement
 pytest-mpl==0.14.0  # logging issues in newer versions
 requests-mock
 ruff
-seaborn<0.13.0
+seaborn>0.13.0
 sphinx>6.0
 sphinx-autodoc-typehints
 sphinx-gallery>=0.10.0
