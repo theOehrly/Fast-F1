@@ -1,0 +1,55 @@
+[project]
+dynamic = ["version"]
+
+name = "fastf1"
+authors = [
+  {email = "oehrly@mailbox.org"},
+  {name = "Philipp Schaefer"}
+]
+description = "Python package for accessing and analyzing Formula 1 results, schedules, timing data and telemetry."
+readme = "README.md"
+
+license = { file = "LICENSE" }
+
+requires-python = ">=3.8"
+dependencies = [
+  "matplotlib>=3.4.2,<4.0.0",
+  "numpy>=1.20.3,<2.0.0",
+  "pandas>=1.2.4,<2.1.0",
+  "python-dateutil",
+  "requests>=2.28.0",
+  "requests-cache>=0.8.0",
+  "scipy>=1.6.3,<2.0.0",
+  "thefuzz",
+  "timple>=0.1.6",
+  "websockets>=8.1",
+]
+
+[project.urls]
+"Source Code" = "https://github.com/theOehrly/Fast-F1"
+"Documentation" = "https://docs.fastf1.dev"
+
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+
+[tool.ruff]
+line-length = 79
+select = [
+#    "D", TODO: select and fix docstrings
+    "E",
+    "F",
+    "W",
+]
+exclude = [
+  "scripts",
+  "fastf1/tests",
+  "fastf1/testing",
+  "fastf1/signalr_aio",
+  "fastf1/legacy.py",
+]
+
+[tool.ruff.per-file-ignores]
+"fastf1/_api.py" = ["E501"]

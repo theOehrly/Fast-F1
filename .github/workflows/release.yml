@@ -17,7 +17,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install setuptools wheel twine
+        pip install --upgrade build twine
 
     # if this is a release, upload to PyPI
     - name: Build and publish release
@@ -26,7 +26,7 @@ jobs:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
       run: |
-        python setup.py sdist bdist_wheel
+        python -m build
         twine upload dist/*
 
     # if this is a manual dispatch, upload to TestPyPI
@@ -36,5 +36,5 @@ jobs:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.TEST_PYPI_TOKEN}}
       run: |
-        python setup.py sdist bdist_wheel
+        python -m build
         twine upload --repository testpypi dist/*

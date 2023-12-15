@@ -7,7 +7,6 @@ sphinx-gallery>=0.10.0
 autodocsumm>=0.2.10  # support for sphinx v6
 sphinx-autodoc-typehints
 wheel
-flake8<5.0.0
 readme-renderer[md]
 xdoctest
 pre-commit
@@ -17,3 +16,4 @@ seaborn<0.13.0
 plotly
 seaborn
 kaleido
+ruff

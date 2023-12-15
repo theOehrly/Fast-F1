@@ -59,7 +59,7 @@ jobs:
 
   run-lint-checks:
     runs-on: ubuntu-latest
-    name: Flake8 lint checks
+    name: Linting Ruff
     steps:
       - name: Setup python
         uses: actions/setup-python@v4
@@ -91,10 +91,8 @@ jobs:
         run: |
           mkdir test_cache  # make sure cache dir exists
           git fetch origin --quiet
-          # flake8 with default config
-          flake8 fastf1 examples scripts
-          # flake8 check new shorter line length only on diff
-          git diff origin/master -U0 --relative | flake8 --max-line-length 79 --diff --select E501 fastf1 examples scripts
+          # ruff with default config
+          ruff check .
 
       - name: Run tests (master push)
         if: ${{ github.ref == 'refs/heads/master' && env.GITHUB_EVENT_NAME == 'push'}}
