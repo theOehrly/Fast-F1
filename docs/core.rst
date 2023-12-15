@@ -13,7 +13,6 @@
     .. autoclass:: fastf1.core.Session
       :members:
       :autosummary:
-      :show-inheritance:
 
   Laps
   ++++
@@ -21,7 +20,6 @@
     .. autoclass:: fastf1.core.Laps
       :members:
       :autosummary:
-      :show-inheritance:
 
   Lap
   +++
@@ -29,7 +27,6 @@
     .. autoclass:: fastf1.core.Lap
       :members:
       :autosummary:
-      :show-inheritance:
 
   Telemetry
   +++++++++
@@ -37,7 +34,6 @@
     .. autoclass:: fastf1.core.Telemetry
       :members:
       :autosummary:
-      :show-inheritance:
 
   Results
   +++++++
@@ -45,12 +41,10 @@
     .. autoclass:: fastf1.core.SessionResults
       :members:
       :autosummary:
-      :show-inheritance:
 
     .. autoclass:: fastf1.core.DriverResult
       :members:
       :autosummary:
-      :show-inheritance:
 
 
   CircuitInfo

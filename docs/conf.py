@@ -75,6 +75,8 @@ exclude_patterns = [
     '../fastf1/signalr_aio'
 ]
 
+nitpicky = True
+
 nitpick_ignore_regex = [
     (r'py:data', r'typing\..*'),
     (r'py:.*', r'datetime\..*'),

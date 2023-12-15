@@ -1,13 +1,11 @@
 import copy
 import json
-from typing import List, Literal, Optional, Union
+from typing import List, Literal, Optional, Type, Union
 
 from fastf1 import __version_short__
 from fastf1.req import Cache
 import fastf1.ergast.structure as API
-
-
-import pandas as pd
+from fastf1.internals.pandas_base import BaseDataFrame, BaseSeries
 
 
 BASE_URL = 'https://ergast.com/api/f1'
@@ -101,7 +99,7 @@ class ErgastResponseMixin:
         )
 
 
-class ErgastResultFrame(pd.DataFrame):
+class ErgastResultFrame(BaseDataFrame):
     """
     Wraps a Pandas ``DataFrame``. Additionally, this class can be
     initialized from Ergast response data with automatic flattening and type
@@ -117,7 +115,7 @@ class ErgastResultFrame(pd.DataFrame):
         auto_cast: Determines if values are automatically cast to the most
             appropriate data type from their original string representation
     """
-    _internal_names = pd.DataFrame._internal_names + ['base_class_view']
+    _internal_names = BaseDataFrame._internal_names + ['base_class_view']
     _internal_names_set = set(_internal_names)
 
     def __init__(self, data=None, *,
@@ -164,48 +162,17 @@ class ErgastResultFrame(pd.DataFrame):
         return nested, flat
 
     @property
-    def _constructor(self):
-        def _new(*args, **kwargs):
-            return ErgastResultFrame(*args, **kwargs).__finalize__(self)
-
-        return _new
-
-    @property
-    def _constructor_sliced(self):
-        def _new(*args, **kwargs):
-            name = kwargs.get('name')
-            if name and (name in self.columns):
-                # vertical slice
-                return pd.Series(*args, **kwargs).__finalize__(self)
-
-            # horizontal slice
-            return ErgastResultSeries(*args, **kwargs).__finalize__(self)
-
-        return _new
-
-    @property
-    def base_class_view(self):
-        """For a nicer debugging experience; can view DataFrame through
-        this property in various IDEs"""
-        return pd.DataFrame(self)
+    def _constructor_sliced_horizontal(self):
+        return ErgastResultSeries
 
 
-class ErgastResultSeries(pd.Series):
+class ErgastResultSeries(BaseSeries):
     """
     Wraps a Pandas ``Series``.
 
     Currently, no extra functionality is implemented.
     """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    @property
-    def _constructor(self):
-        def _new(*args, **kwargs):
-            return ErgastResultSeries(*args, **kwargs).__finalize__(self)
-
-        return _new
+    pass
 
 
 class ErgastRawResponse(ErgastResponseMixin, list):
@@ -274,6 +241,13 @@ class ErgastSimpleResponse(ErgastResponseMixin, ErgastResultFrame):
         ErgastResultFrame._internal_names \
         + ErgastResponseMixin._internal_names
     _internal_names_set = set(_internal_names)
+
+    @property
+    def _constructor(self) -> Type["ErgastResultFrame"]:
+        # drop from ErgastSimpleResponse to ErgastResultFrame, removing the
+        # ErgastResponseMixin because a slice of the data is no longer a full
+        # response and pagination, ... is therefore not supported anymore
+        return ErgastResultFrame
 
 
 class ErgastMultiResponse(ErgastResponseMixin):

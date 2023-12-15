@@ -238,3 +238,23 @@ def test_event_get_nonexistent_session_date():
     event = fastf1.get_event(2020, 13)
     with pytest.raises(ValueError, match="does not exist"):
         event.get_session_date('FP2')
+
+
+def test_events_constructors():
+    frame = fastf1.events.EventSchedule({'RoundNumber': [1, 2, 3],
+                                         'Country': ['a', 'b', 'c']})
+
+    # test slicing to frame
+    assert isinstance(frame.iloc[1:], fastf1.events.EventSchedule)
+
+    # test horizontal slicing
+    assert isinstance(frame.iloc[0], fastf1.events.Event)
+    assert isinstance(frame.iloc[0], pd.Series)
+
+    # test vertical slicing
+    assert not isinstance(frame.loc[:, 'Country'], fastf1.events.Event)
+    assert isinstance(frame.loc[:, 'Country'], pd.Series)
+
+    # test base class view
+    assert isinstance(frame.base_class_view, pd.DataFrame)
+    assert not isinstance(frame.base_class_view, fastf1.events.EventSchedule)
