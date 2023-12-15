@@ -117,18 +117,21 @@ custom_template = go.layout.Template({
 # PLOT THE GRAPH #
 fig = go.Figure()
 
-# As we're plotting every driver laptime, is better to use a dynamic method to plot
+# As we're plotting every driver laptime, is better
+# to use a dynamic method to plot
 # each graph. We use the driver list we got before.
 for driver in driver_list:
     driver_laps = race.laps.pick_drivers(driver)  # pick all laps
     driver_laps = driver_laps.reset_index()  # clean index from race.laps
-    driver_laps['LapTime(s)'] = driver_laps['LapTime'].dt.total_seconds()  # convert to number each laptime
+    # convert to number each laptime
+    driver_laps['LapTime(s)'] = driver_laps['LapTime'].dt.total_seconds()
     scatter = go.Scatter(
         x=driver_laps['LapNumber'],
         y=driver_laps['LapTime(s)'],
         mode='lines+markers',  # use lines and scatters for each driver
         name=driver,
-        marker=dict(color=driver_laps['Compound'].map(compound_colors)),  # use compound colors for scatters
+        # use compound colors for scatters
+        marker=dict(color=driver_laps['Compound'].map(compound_colors)),
         line=dict(color=driver_colors[driver]),  # use driver assigned colors
     )
     fig.add_trace(scatter)  # show the trace
