@@ -8,6 +8,7 @@ import fastf1
 import fastf1.plotting
 import plotly.graph_objects as go
 
+
 # load a session
 race = fastf1.get_session(2023, 'Abu Dhabi', 'R')
 race.load(weather=False, telemetry=False)
@@ -18,7 +19,7 @@ driver_list = list(fastf1.plotting.DRIVER_TRANSLATE.keys())
 # Set the colors for the graph: for drivers, we use the combination of both
 # DRIVER_TRANSLATE and DRIVER_COLORS to associate colors with driver's initials
 driver_colors = {
-    key:fastf1.plotting.DRIVER_COLORS[value] 
+    key: fastf1.plotting.DRIVER_COLORS[value]
     for key, value in fastf1.plotting.DRIVER_TRANSLATE.items()
     }
 
@@ -119,18 +120,18 @@ fig = go.Figure()
 # As we're plotting every driver laptime, is better to use a dynamic method to plot
 # each graph. We use the driver list we got before.
 for driver in driver_list:
-    driver_laps = race.laps.pick_drivers(driver) # pick all laps
-    driver_laps = driver_laps.reset_index() # clean index from race.laps
-    driver_laps['LapTime(s)'] = driver_laps['LapTime'].dt.total_seconds() # convert to number each laptime
+    driver_laps = race.laps.pick_drivers(driver)  # pick all laps
+    driver_laps = driver_laps.reset_index()  # clean index from race.laps
+    driver_laps['LapTime(s)'] = driver_laps['LapTime'].dt.total_seconds()  # convert to number each laptime
     scatter = go.Scatter(
-        x=driver_laps['LapNumber'], 
+        x=driver_laps['LapNumber'],
         y=driver_laps['LapTime(s)'],
-        mode='lines+markers', # use lines and scatters for each driver
+        mode='lines+markers',  # use lines and scatters for each driver
         name=driver,
-        marker=dict(color=driver_laps['Compound'].map(compound_colors)), # use compound colors for scatters
-        line=dict(color=driver_colors[driver]), # use driver assigned colors
+        marker=dict(color=driver_laps['Compound'].map(compound_colors)),  # use compound colors for scatters
+        line=dict(color=driver_colors[driver]),  # use driver assigned colors
     )
-    fig.add_trace(scatter) # show the trace
+    fig.add_trace(scatter)  # show the trace
 
 # After building the graph, apply the template and titles to the graph
 fig.update_layout(template=custom_template)
