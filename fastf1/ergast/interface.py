@@ -228,6 +228,7 @@ class ErgastRawResponse(ErgastResponseMixin, list):
         auto_cast: Determines if values are automatically cast to the most
             appropriate data type from their original string representation
     """
+
     def __init__(self, *, query_result, category, auto_cast, **kwargs):
         if auto_cast:
             query_result = self._prepare_response(query_result, category)
@@ -351,6 +352,7 @@ class ErgastMultiResponse(ErgastResponseMixin):
         auto_cast: Flag that enables or disables automatic casting from the
             original string representation to the most suitable data type.
     """
+
     def __init__(self, *args,
                  response_description: dict,
                  response_data: list,
@@ -409,6 +411,7 @@ class Ergast:
             30 if not set. Maximum: 1000. See also "Response Paging" on
             https://ergast.com/mrd/.
     """
+
     def __init__(self,
                  result_type: Literal['raw', 'pandas'] = 'pandas',
                  auto_cast: bool = True,
@@ -434,7 +437,6 @@ class Ergast:
             standings_position: Optional[int] = None
     ) -> str:
         selectors = list()
-        baseJson = True
 
         if season is not None:
             selectors.append(f"/{season}")
@@ -442,31 +444,27 @@ class Ergast:
             selectors.append(f"/{round}")
         if circuit is not None:
             selectors.append(f"/circuits/{circuit}")
-            baseJson = not baseJson
+            endpoint = None
         if constructor is not None:
             selectors.append(f"/constructors/{constructor}")
-            baseJson = not baseJson
+            endpoint = None
         if driver is not None:
-            baseJson = not baseJson
             selectors.append(f"/drivers/{driver}")
+            endpoint = None
         if grid_position is not None:
-            baseJson = not baseJson
             selectors.append(f"/grid/{grid_position}")
         if results_position is not None:
-            baseJson = not baseJson
             selectors.append(f"/results/{results_position}")
         if fastest_rank is not None:
-            baseJson = not baseJson
             selectors.append(f"/fastest/{fastest_rank}")
         if status is not None:
-            baseJson = not baseJson
             selectors.append(f"/status/{status}")
+            endpoint = None
 
         # some special cases: the endpoint may also be used as selector
         # therefore, if the specifier is defined, do not add the endpoint
         # string additionally
         if standings_position is not None:
-            baseJson = not baseJson
             if endpoint == 'driverStandings':
                 selectors.append(f"/driverStandings/{standings_position}")
                 endpoint = None
@@ -475,22 +473,17 @@ class Ergast:
                 endpoint = None
 
         if lap_number is not None:
-            baseJson = not baseJson
             selectors.append(f"/laps/{lap_number}")
             if endpoint == 'laps':
                 endpoint = None
 
         if stop_number is not None:
-            baseJson = not baseJson
             selectors.append(f"/pitstops/{stop_number}")
             if endpoint == 'pitstops':
                 endpoint = None
 
-        # This needs very special cases
-        # Exclusively for season & circuit only, not additional selectors
-        if endpoint is not None and baseJson:
+        if endpoint is not None:
             selectors.append(f"/{endpoint}")
-
 
         return BASE_URL + "".join(selectors) + ".json"
 
