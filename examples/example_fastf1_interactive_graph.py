@@ -1,4 +1,5 @@
-"""Interactive graph for laptimes
+"""
+Interactive graph for laptimes
 =================================
 
 Plot an interactive graph showing laptimes for each driver lap by lap.
@@ -7,8 +8,9 @@ Plot an interactive graph showing laptimes for each driver lap by lap.
 import fastf1
 import fastf1.plotting
 import plotly.graph_objects as go
+from plotly.io import show
 
-
+# SETTING UP THE DATA #########################################################
 # load a session
 race = fastf1.get_session(2023, 'Abu Dhabi', 'R')
 race.load(weather=False, telemetry=False)
@@ -31,95 +33,39 @@ title = "2023 Abu Dhabi Grand Prix Laptime Evolution"
 xaxis_title = "Lap Number"
 yaxis_title = "Lap Time (s)"
 legend_title = "Driver"
+###############################################################################
 
+
+# DEFINING THE LIMITS OF THE GRAPH#############################################
 # Define the limits of the graph:
 # As we are going to show a representation of the whole race, there are
 # some laps that are considerably slower than the average. We want to keep them
 # in the graph but we don't need to see them, so we're focusing our view in the
 # relevant ones. For this reason, we're picking the fastest lap and the
-# slowest lap of the quick laps and we're defining a margin of 0'5 for the
+# slowest lap of the quick laps and we're defining a margin of 0'5s for the
 # limits of the graph.
 quicklaps = race.laps.pick_quicklaps()
 quicklaps['LapTime(s)'] = quicklaps['LapTime'].dt.total_seconds()
 
 fastest_lap = quicklaps['LapTime(s)'].min()
-min_range_y = fastest_lap - 0.5
+min_range_y = fastest_lap - 0.5  # Fastest lap -0'5s
 
 slowest_quicklap = quicklaps['LapTime(s)'].max()
-max_range_y = slowest_quicklap + 0.5
+max_range_y = slowest_quicklap + 0.5  # Slowest lap of the quickest + 0'5s
 
 # Also, we have to define the number of laps for getting a nice x axis.
-# We're picking 0 for start and last lap number plus 1
+# We're picking 0 for start and last lap number + 1
 howmany_laps = race.laps['LapNumber'].max()
 max_range_x = howmany_laps + 1
-
-# Here we're defining a nice template to show the graph:
-custom_template = go.layout.Template({
-    'layout': {
-        'width': 1200,
-        'height': 600,
-        'title': {
-            'font': {
-                'family': 'Arial Bold, sans-serif',
-                'color': '#ffffff',
-                'size': 24
-            }
-        },
-        'hovermode': 'x',
-        'font': {
-            'family': 'Arial Bold, sans-serif',
-            'color': '#ffffff'
-        },
-        'paper_bgcolor': '#222222',
-        'plot_bgcolor': '#222222',
-        'xaxis': {
-            'title': {
-                'font': {
-                    'family': 'Arial Bold, sans-serif',
-                    'color': '#ffffff',
-                    'size': 18
-                }
-            },
-            'gridcolor': None,
-            'range': [1, 59],
-        },
-        'yaxis': {
-            'title': {
-                'font': {
-                    'family': 'Arial Bold, sans-serif',
-                    'color': '#ffffff',
-                    'size': 18
-                }
-            },
-            'gridcolor': 'grey',
-            'gridwidth': 1,
-            'dtick': 1,
-            'griddash': 'dot',
-            'range': [86.5, 94],
-        },
-        'legend': {
-            'title': {
-                'font': {
-                    'family': 'Arial Bold, sans-serif',
-                    'color': '#ffffff',
-                    'size': 14
-                }
-            },
-            'x': 1,
-            'y': 1,
-            'traceorder': 'normal',
-            'orientation': 'v'
-        }
-    }
-})
+###############################################################################
 
 
-# PLOT THE GRAPH #
+# PLOTING THE GRAPH ###########################################################
 fig = go.Figure()
 
 # As we're plotting every driver laptime, is better
-# to use a dynamic method to plot
-# each graph. We use the driver list we got before.
+# to use a dynamic method to plot each graph.
+# We use the driver list we got before.
 for driver in driver_list:
     driver_laps = race.laps.pick_drivers(driver)  # pick all laps
     driver_laps = driver_laps.reset_index()  # clean index from race.laps
@@ -133,11 +79,24 @@ for driver in driver_list:
         # use compound colors for scatters
         marker=dict(color=driver_laps['Compound'].map(compound_colors)),
         line=dict(color=driver_colors[driver]),  # use driver assigned colors
+        visible='legendonly'
     )
+    # We set every driver hidden, but for the first view we want to show
+    # two of them. In this case, Verstappen and Leclerc.
+    if (driver == 'VER') | (driver == 'LEC'):
+        scatter.update(visible=True)
     fig.add_trace(scatter)  # show the trace
+###############################################################################
 
-# After building the graph, apply the template and titles to the graph
-fig.update_layout(template=custom_template)
+
+# APPLYING A NICE LAYOUT ######################################################
+# After building the graph, apply the template to the graph
+# We use 'plotly_dark' as default. It coud be possible to define a custom one.
+# We fix the height in 600 to fit all the legeng in the graph.
+fig.update_layout(template='plotly_dark',
+                  height=600)
+
+# Apply titles and labels
 fig.update_layout(dict(
     title=title,
     xaxis_title=xaxis_title,
@@ -146,7 +105,13 @@ fig.update_layout(dict(
     ))
 
 # Fit the graph to a nice view
-fig.update_yaxes(range=[min_range_y, max_range_y])
-fig.update_xaxes(range=[0, max_range_x])
+fig.update_yaxes(range=[min_range_y, max_range_y],
+                 griddash='dot')
+fig.update_xaxes(range=[0, max_range_x],
+                 showgrid=False,
+                 showline=False)
+###############################################################################
 
-fig.show()
+
+fig
+show(fig)
