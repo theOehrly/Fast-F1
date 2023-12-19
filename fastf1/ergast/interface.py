@@ -442,32 +442,36 @@ class Ergast:
             selectors.append(f"/{season}")
         if round is not None:
             selectors.append(f"/{round}")
-        if circuit is not None:
-            selectors.append(f"/circuits/{circuit}")
-            if endpoint == 'circuits':
-                endpoint = None
-        if constructor is not None:
-            selectors.append(f"/constructors/{constructor}")
-            if endpoint == 'constructors':
-                endpoint = None
-        if driver is not None:
-            selectors.append(f"/drivers/{driver}")
-            if endpoint == 'driver':
-                endpoint = None
         if grid_position is not None:
             selectors.append(f"/grid/{grid_position}")
         if results_position is not None:
             selectors.append(f"/results/{results_position}")
         if fastest_rank is not None:
             selectors.append(f"/fastest/{fastest_rank}")
+
+        # some special cases: the endpoint may also be used as selector
+        # therefore, if the specifier is defined, do not add the endpoint
+        # string additionally
+        if circuit is not None:
+            selectors.append(f"/circuits/{circuit}")
+            if endpoint == 'circuits':
+                endpoint = None
+
+        if constructor is not None:
+            selectors.append(f"/constructors/{constructor}")
+            if endpoint == 'constructors':
+                endpoint = None
+
+        if driver is not None:
+            selectors.append(f"/drivers/{driver}")
+            if endpoint == 'driver':
+                endpoint = None
+
         if status is not None:
             selectors.append(f"/status/{status}")
             if endpoint == 'status':
                 endpoint = None
 
-        # some special cases: the endpoint may also be used as selector
-        # therefore, if the specifier is defined, do not add the endpoint
-        # string additionally
         if standings_position is not None:
             if endpoint == 'driverStandings':
                 selectors.append(f"/driverStandings/{standings_position}")
