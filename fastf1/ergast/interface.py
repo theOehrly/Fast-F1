@@ -438,8 +438,11 @@ class Ergast:
     ) -> str:
         selectors = list()
 
+        # ! Need to add endpoint if additional filters otherwise do not
+        # https://ergast.com/mrd/methods/schedule/
         if season is not None:
             selectors.append(f"/{season}")
+
         if round is not None:
             selectors.append(f"/{round}")
         if grid_position is not None:
@@ -452,43 +455,52 @@ class Ergast:
         # some special cases: the endpoint may also be used as selector
         # therefore, if the specifier is defined, do not add the endpoint
         # string additionally
-        if circuit is not None:
-            selectors.append(f"/circuits/{circuit}")
-            if endpoint == 'circuits':
-                endpoint = None
+        if driver is not None:
+            if endpoint == 'driver':
+                endpoint = f"/drivers/{driver}"
+            else:
+                selectors.append(f"/drivers/{driver}")
 
         if constructor is not None:
-            selectors.append(f"/constructors/{constructor}")
             if endpoint == 'constructors':
-                endpoint = None
+                endpoint = f"/constructors/{constructor}"
+            else:
+                selectors.append(f"/constructors/{constructor}")
 
-        if driver is not None:
-            selectors.append(f"/drivers/{driver}")
-            if endpoint == 'driver':
-                endpoint = None
+        if circuit is not None:
+            if endpoint == 'circuits':
+                endpoint = f"/circuits/{circuit}"
+            else:
+                selectors.append(f"/circuits/{circuit}")
 
         if status is not None:
-            selectors.append(f"/status/{status}")
             if endpoint == 'status':
-                endpoint = None
+                endpoint = f"/status/{status}"
+            else:
+                selectors.append(f"/status/{status}")
 
         if standings_position is not None:
             if endpoint == 'driverStandings':
-                selectors.append(f"/driverStandings/{standings_position}")
-                endpoint = None
+                endpoint = f"/driverStandings/{standings_position}"
             elif endpoint == 'constructorStandings':
-                selectors.append(f"/constructorStandings/{standings_position}")
-                endpoint = None
+                endpoint = f"/constructorStandings/{standings_position}"
 
         if lap_number is not None:
-            selectors.append(f"/laps/{lap_number}")
             if endpoint == 'laps':
-                endpoint = None
+                endpoint = f"/laps/{lap_number}"
+            else:
+                selectors.append(f"/laps/{lap_number}")
 
         if stop_number is not None:
-            selectors.append(f"/pitstops/{stop_number}")
             if endpoint == 'pitstops':
-                endpoint = None
+                endpoint = f"/pitstops/{stop_number}"
+            else:
+                selectors.append(f"/pitstops/{stop_number}")
+
+        # Special case for race_schedule
+        # If no additional filters besides required (season) exclude endpoint
+        if endpoint == 'races' and len(selectors) == 1:
+            endpoint = None
 
         if endpoint is not None:
             selectors.append(f"/{endpoint}")
