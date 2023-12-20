@@ -438,11 +438,8 @@ class Ergast:
     ) -> str:
         selectors = list()
 
-        # ! Need to add endpoint if additional filters otherwise do not
-        # https://ergast.com/mrd/methods/schedule/
         if season is not None:
             selectors.append(f"/{season}")
-
         if round is not None:
             selectors.append(f"/{round}")
         if grid_position is not None:
@@ -499,8 +496,8 @@ class Ergast:
 
         # Special case for race_schedule
         # If no additional filters besides required (season) exclude endpoint
-        if endpoint == 'races' and len(selectors) == 1:
-            endpoint = None
+        # if endpoint == 'races' and len(selectors) == 1:
+        #     endpoint = None
 
         if endpoint is not None:
             selectors.append(f"/{endpoint}")
