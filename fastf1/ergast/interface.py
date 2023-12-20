@@ -442,65 +442,47 @@ class Ergast:
             selectors.append(f"/{season}")
         if round is not None:
             selectors.append(f"/{round}")
+        if circuit is not None:
+            selectors.append(f"/circuits/{circuit}")
+        if constructor is not None:
+            selectors.append(f"/constructors/{constructor}")
+        if driver is not None:
+            selectors.append(f"/drivers/{driver}")
         if grid_position is not None:
             selectors.append(f"/grid/{grid_position}")
         if results_position is not None:
             selectors.append(f"/results/{results_position}")
         if fastest_rank is not None:
             selectors.append(f"/fastest/{fastest_rank}")
+        if status is not None:
+            selectors.append(f"/status/{status}")
 
         # some special cases: the endpoint may also be used as selector
         # therefore, if the specifier is defined, do not add the endpoint
         # string additionally
-        if driver is not None:
-            if endpoint == 'driver':
-                endpoint = f"/drivers/{driver}"
-            else:
-                selectors.append(f"/drivers/{driver}")
-
-        if constructor is not None:
-            if endpoint == 'constructors':
-                endpoint = f"/constructors/{constructor}"
-            else:
-                selectors.append(f"/constructors/{constructor}")
-
-        if circuit is not None:
-            if endpoint == 'circuits':
-                endpoint = f"/circuits/{circuit}"
-            else:
-                selectors.append(f"/circuits/{circuit}")
-
-        if status is not None:
-            if endpoint == 'status':
-                endpoint = f"/status/{status}"
-            else:
-                selectors.append(f"/status/{status}")
-
         if standings_position is not None:
             if endpoint == 'driverStandings':
-                endpoint = f"/driverStandings/{standings_position}"
+                selectors.append(f"/driverStandings")
+                endpoint = None
             elif endpoint == 'constructorStandings':
-                endpoint = f"/constructorStandings/{standings_position}"
+                selectors.append(f"/constructorStandings")
+                endpoint = None
 
         if lap_number is not None:
+            selectors.append(f"/laps/{lap_number}")
             if endpoint == 'laps':
-                endpoint = f"/laps/{lap_number}"
-            else:
-                selectors.append(f"/laps/{lap_number}")
+                endpoint = None
 
         if stop_number is not None:
+            selectors.append(f"/pitstops/{stop_number}")
             if endpoint == 'pitstops':
-                endpoint = f"/pitstops/{stop_number}"
-            else:
-                selectors.append(f"/pitstops/{stop_number}")
-
-        # Special case for race_schedule
-        # If no additional filters besides required (season) exclude endpoint
-        # if endpoint == 'races' and len(selectors) == 1:
-        #     endpoint = None
+                endpoint = None
 
         if endpoint is not None:
             selectors.append(f"/{endpoint}")
+
+        if standings_position is not None:
+            selectors.append(f"/{standings_position}")
 
         return BASE_URL + "".join(selectors) + ".json"
 
@@ -869,7 +851,7 @@ class Ergast:
                      'fastest_rank': fastest_rank,
                      'status': status}
 
-        return self._build_default_result(endpoint="constructors",
+        return self._build_default_result(endpoint='constructors',
                                           table='ConstructorTable',
                                           category=API.Constructors,
                                           subcategory=None,
@@ -1026,6 +1008,7 @@ class Ergast:
             grid_position: Optional[int] = None,
             fastest_rank: Optional[int] = None,
             status: Optional[str] = None,
+            standings_position: Optional[int] = None,
             result_type: Optional[Literal['pandas', 'raw']] = None,
             auto_cast: Optional[bool] = None,
             limit: Optional[int] = None,
@@ -1049,6 +1032,7 @@ class Ergast:
             grid_position: select a grid position by its number (default: all)
             fastest_rank: select fastest by rank number (default: all)
             status: select by finishing status (default: all)
+            standings_position: select a result by final position (default: all)
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
@@ -1068,7 +1052,8 @@ class Ergast:
                      'driver': driver,
                      'grid_position': grid_position,
                      'fastest_rank': fastest_rank,
-                     'status': status}
+                     'status': status,
+                     'standings_position': standings_position}
 
         return self._build_default_result(endpoint='results',
                                           table='RaceTable',
@@ -1091,6 +1076,7 @@ class Ergast:
             results_position: Optional[int] = None,
             fastest_rank: Optional[int] = None,
             status: Optional[str] = None,
+            standings_position: Optional[int] = None,
             result_type: Optional[Literal['pandas', 'raw']] = None,
             auto_cast: Optional[bool] = None,
             limit: Optional[int] = None,
@@ -1116,6 +1102,7 @@ class Ergast:
                 (default: all)
             fastest_rank: select fastest by rank number (default: all)
             status: select by finishing status (default: all)
+            standings_position: select a result by final position (default: all)
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
@@ -1136,7 +1123,8 @@ class Ergast:
                      'grid_position': grid_position,
                      'results_position': results_position,
                      'fastest_rank': fastest_rank,
-                     'status': status}
+                     'status': status,
+                     'standings_position': standings_position}
 
         return self._build_default_result(endpoint='qualifying',
                                           table='RaceTable',
@@ -1157,6 +1145,7 @@ class Ergast:
             driver: Optional[str] = None,
             grid_position: Optional[int] = None,
             status: Optional[str] = None,
+            standings_position: Optional[int] = None,
             result_type: Optional[Literal['pandas', 'raw']] = None,
             auto_cast: Optional[bool] = None,
             limit: Optional[int] = None,
@@ -1179,6 +1168,7 @@ class Ergast:
             driver: select a driver by its driver id (default: all)
             grid_position: select a grid position by its number (default: all)
             status: select by finishing status (default: all)
+            standings_position: select a result by final position (default: all)
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
             limit: Overwrites the default value for ``limit``
@@ -1197,7 +1187,8 @@ class Ergast:
                      'constructor': constructor,
                      'driver': driver,
                      'grid_position': grid_position,
-                     'status': status}
+                     'status': status,
+                     'standings_position': standings_position}
 
         return self._build_default_result(endpoint='sprint',
                                           table='RaceTable',
