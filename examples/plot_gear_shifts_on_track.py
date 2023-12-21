@@ -61,7 +61,8 @@ title = plt.suptitle(
 # Add a colorbar to the plot. Shift the colorbar ticks by +0.5 so that they
 # are centered for each color segment.
 
-cbar = plt.colorbar(mappable=lc_comp, label="Gear", boundaries=np.arange(1, 10))
+cbar = plt.colorbar(mappable=lc_comp, label="Gear",
+                    boundaries=np.arange(1, 10))
 cbar.set_ticks(np.arange(1.5, 9.5))
 cbar.set_ticklabels(np.arange(1, 9))
 

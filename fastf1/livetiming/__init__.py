@@ -82,16 +82,16 @@ Important Notes
   You only need to use ``forece_renew=True`` once after modifying the
   input data.
 
-- The SignalR Client seems to get disconnected after 2 hours of recording. It looks
-  like the connection is terminated by the server. You need to manually start a
-  second recording before the first one disconnects if you want to have no gap in
-  your recording.
+- The SignalR Client seems to get disconnected after 2 hours of recording. It
+  looks like the connection is terminated by the server. You need to manually
+  start a second recording before the first one disconnects if you want to
+  have no gap in your recording.
 
-  Use a different output file name for the second (or any subsequent) recording.
-  You can then load :class:`.data.LiveTimingData` from multiple files. The files need
-  to be provided in chronological order. The content of the files may overlap.
-  Data from overlapping recordings is recognized and will not be loaded as a
-  duplicate.
+  Use a different output file name for the second (or any subsequent)
+  recording. You can then load :class:`.data.LiveTimingData` from multiple
+  files. The files need to be provided in chronological order. The content of
+  the files may overlap. Data from overlapping recordings is recognized and
+  will not be loaded as a duplicate.
 
 
 
@@ -116,16 +116,20 @@ Save
 
 .. code-block:: console
 
-    usage: python -m fastf1.livetiming save [-h] [--append] [--debug] [--timeout TIMEOUT] file
+    usage: python -m fastf1.livetiming save [-h] [--append] [--debug]
+           [--timeout TIMEOUT] file
 
     positional arguments:
       file               Output file name
 
     optional arguments:
       -h, --help         show this help message and exit
-      --append           Append to output file. By default the file is overwritten if it exists already.
-      --debug            Enable debug mode: save full SignalR message, not just the data.
-      --timeout TIMEOUT  Timeout in seconds after which the client will automatically exit if no data is received
+      --append           Append to output file. By default the file is
+                         overwritten if it exists already.
+      --debug            Enable debug mode: save full SignalR message, not
+                         just the data.
+      --timeout TIMEOUT  Timeout in seconds after which the client will
+                         automatically exit if no data is received
 
 
 Extract
@@ -133,10 +137,11 @@ Extract
 
 **Only for when data was saved with the optional '--debug' argument**
 
-Recording in debug mode saves the full SignalR messages as received. The non debug mode saves only the
-important data part of a message. The data part of each message needs to be extracted to utilize the debug-mode
-data.
-The extracted data is the same data you get when saving without the '--debug' argument.
+Recording in debug mode saves the full SignalR messages as received. The non
+debug mode saves only the important data part of a message. The data part of
+each message needs to be extracted to utilize the debug-mode data.
+The extracted data is the same data you get when saving without the '--debug'
+argument.
 
 .. code-block:: console
 

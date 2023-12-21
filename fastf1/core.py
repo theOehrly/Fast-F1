@@ -52,6 +52,7 @@ import pandas as pd
 import fastf1
 from fastf1 import _api as api
 from fastf1 import ergast
+from fastf1.livetiming.data import LiveTimingData
 from fastf1.mvapi import get_circuit_info, CircuitInfo
 from fastf1.logger import get_logger, soft_exceptions
 from fastf1.utils import to_timedelta
@@ -166,15 +167,16 @@ class Telemetry(pd.DataFrame):
         'Y': {'type': 'continuous', 'missing': 'quadratic'},
         'Z': {'type': 'continuous', 'missing': 'quadratic'},
         'Status': {'type': 'discrete'},
-        'Speed': {'type': 'continuous', 'missing': 'linear'},  # linear is often required as quadratic overshoots
-        'RPM': {'type': 'continuous', 'missing': 'linear'},  # on sudden changes like sudden pedal application)
+        'Speed': {'type': 'continuous', 'missing': 'linear'},
+        'RPM': {'type': 'continuous', 'missing': 'linear'},
         'Throttle': {'type': 'continuous', 'missing': 'linear'},
+        # linear is often required as quadratic overshoots on sudden changes
         'Brake': {'type': 'discrete'},
         'DRS': {'type': 'discrete'},
         'nGear': {'type': 'discrete'},
-        'Source': {'type': 'excluded'},  # special case, custom handling
-        'Date': {'type': 'excluded'},  # special case, used as the index during resampling
-        'Time': {'type': 'excluded'},  # special case, Time/SessionTime recalculated from 'Date'
+        'Source': {'type': 'excluded'},  # special, custom handling
+        'Date': {'type': 'excluded'},  # special, used as index when resampling
+        'Time': {'type': 'excluded'},  # special, recalculated from 'Date'
         'SessionTime': {'type': 'excluded'},
         'Distance': {'type': 'continuous', 'missing': 'quadratic'},
         'RelativeDistance': {'type': 'continuous', 'missing': 'quadratic'},
@@ -217,7 +219,8 @@ class Telemetry(pd.DataFrame):
 
     @property
     def base_class_view(self):
-        """For a nicer debugging experience; can view DataFrame through this property in various IDEs"""
+        """For a nicer debugging experience; can view DataFrame through this
+        property in various IDEs"""
         return pd.DataFrame(self)
 
     def join(self, *args, **kwargs):
@@ -289,9 +292,10 @@ class Telemetry(pd.DataFrame):
 
         .. note:: Self needs to contain a 'SessionTime' column.
 
-        .. note:: When slicing with an instance of :class:`Laps` as a reference, the data will be sliced by first and
-            last lap. Missing laps in between will not be considered and data for these will still be included in
-            the sliced result.
+        .. note:: When slicing with an instance of :class:`Laps` as a
+            reference, the data will be sliced by first and last lap. Missing
+            laps in between will not be considered and data for these will
+            still be included in the sliced result.
 
         Args:
             ref_laps: The lap/laps by which to slice self
@@ -303,25 +307,30 @@ class Telemetry(pd.DataFrame):
         """
         if isinstance(ref_laps, Laps) and len(ref_laps) > 1:
             if 'DriverNumber' not in ref_laps.columns:
-                ValueError("Laps is missing 'DriverNumber'. Cannot return telemetry for unknown driver.")
+                ValueError("Laps is missing 'DriverNumber'. Cannot return "
+                           "telemetry for unknown driver.")
             if not len(ref_laps['DriverNumber'].unique()) <= 1:
-                raise ValueError("Cannot create telemetry for multiple drivers at once!")
+                raise ValueError("Cannot create telemetry for multiple "
+                                 "drivers at once!")
 
             end_time = ref_laps['Time'].max()
             start_time = ref_laps['LapStartTime'].min()
 
         elif isinstance(ref_laps, (Lap, Laps)):
             if isinstance(ref_laps, Laps):  # one lap in Laps
-                ref_laps = ref_laps.iloc[0]  # needs to be handled as a single lap
+                ref_laps = ref_laps.iloc[0]  # handle as a single lap
             if 'DriverNumber' not in ref_laps.index:
-                ValueError("Lap is missing 'DriverNumber'. Cannot return telemetry for unknown driver.")
+                ValueError("Lap is missing 'DriverNumber'. Cannot return "
+                           "telemetry for unknown driver.")
             end_time = ref_laps['Time']
             start_time = ref_laps['LapStartTime']
 
         else:
-            raise TypeError("Attribute 'ref_laps' needs to be an instance of `Lap` or `Laps`")
+            raise TypeError("Attribute 'ref_laps' needs to be an instance of "
+                            "`Lap` or `Laps`")
 
-        return self.slice_by_time(start_time, end_time, pad, pad_side, interpolate_edges)
+        return self.slice_by_time(start_time, end_time, pad, pad_side,
+                                  interpolate_edges)
 
     def slice_by_time(
             self,
@@ -333,7 +342,8 @@ class Telemetry(pd.DataFrame):
     ) -> "Telemetry":
         """Slice self to only include data in a specific time frame.
 
-        .. note:: Self needs to contain a 'SessionTime' column. Slicing by time use the 'SessionTime' as its reference.
+        .. note:: Self needs to contain a 'SessionTime' column. Slicing by
+            time use the 'SessionTime' as its reference.
 
         Args:
             start_time: Start of the section
@@ -349,20 +359,24 @@ class Telemetry(pd.DataFrame):
         """
         if interpolate_edges:
             edges = Telemetry({'SessionTime': (start_time, end_time),
-                               'Date': (start_time + self.session.t0_date, end_time + self.session.t0_date)},
+                               'Date': (start_time + self.session.t0_date,
+                                        end_time + self.session.t0_date)
+                               },
                               session=self.session).__finalize__(self)
             d = self.merge_channels(edges)
 
         else:
             d = self.copy()  # TODO no copy?
 
-        sel = ((d['SessionTime'] <= end_time) & (d['SessionTime'] >= start_time))
+        sel = ((d['SessionTime'] <= end_time)
+               & (d['SessionTime'] >= start_time))
         if np.any(sel):
             data_slice = d.slice_by_mask(sel, pad, pad_side)
 
             if 'Time' in data_slice.columns:
                 # shift time to 0 so laps can overlap
-                data_slice.loc[:, 'Time'] = data_slice['SessionTime'] - start_time
+                data_slice.loc[:, 'Time'] \
+                    = data_slice['SessionTime'] - start_time
 
             return data_slice
         return Telemetry().__finalize__(self)
@@ -374,35 +388,45 @@ class Telemetry(pd.DataFrame):
     ):
         """Merge telemetry objects containing different telemetry channels.
 
-        The two objects don't need to have a common time base. The data will be merged, optionally resampled and
-        missing values will be interpolated.
+        The two objects don't need to have a common time base. The data will
+        be merged, optionally resampled and missing values will be
+        interpolated.
 
-        :attr:`Telemetry.TELEMETRY_FREQUENCY` determines if and how the data is resampled. This can be overridden using
-        the `frequency` keyword for this method.
+        :attr:`Telemetry.TELEMETRY_FREQUENCY` determines if and how the data
+        is resampled. This can be overridden using the `frequency` keyword for
+        this method.
 
         Merging and resampling:
 
-            If the frequency is 'original', data will not be resampled. The two objects will be merged and all
-            timestamps of both objects are kept. Values will be interpolated so that all telemetry channels contain
-            valid data for all timestamps. This is the default and recommended option.
+            If the frequency is 'original', data will not be resampled. The
+            two objects will be merged and all timestamps of both objects are
+            kept. Values will be interpolated so that all telemetry channels
+            contain valid data for all timestamps. This is the default and
+            recommended option.
 
-            If the frequency is specified as an integer in Hz the data will be merged as before. After that, the merged
-            time base will be resampled from the first value on at the specified frequency. Afterwards, the data will
-            be interpolated to fit the new time base. This means that usually most if not all values of the data will
-            be interpolated values. This is detrimental for overall accuracy.
+            If the frequency is specified as an integer in Hz the data will be
+            merged as before. After that, the merged time base will be
+            resampled from the first value on at the specified frequency.
+            Afterward, the data will be interpolated to fit the new time base.
+            This means that usually most if not all values of the data will be
+            interpolated values. This is detrimental for overall accuracy.
 
         Interpolation:
 
-            Missing values after merging will be interpolated for all known telemetry channels using
-            :meth:`fill_missing`. Different interpolation methods are used depending on what kind of data the channel
-            contains. For example, forward fill is used to interpolated 'nGear' while linear interpolation is used
-            for 'RPM' interpolation.
+            Missing values after merging will be interpolated for all known
+            telemetry channels using :meth:`fill_missing`. Different
+            interpolation methods are used depending on what kind of data the
+            channel contains. For example, forward fill is used to
+            interpolated 'nGear' while linear interpolation is used for 'RPM'
+            interpolation.
 
-        .. note :: Unknown telemetry channels will be merged but missing values will not be interpolated. This can
-            either be done manually or a custom telemetry channel can be added using :meth:`register_new_channel`.
+        .. note :: Unknown telemetry channels will be merged but missing
+            values will not be interpolated. This can either be done manually
+            or a custom telemetry channel can be added using
+            :meth:`register_new_channel`.
 
-        .. note :: Do not resample data multiple times. Always resample based on the original data
-            to preserve accuracy
+        .. note :: Do not resample data multiple times. Always resample based
+            on the original data to preserve accuracy
 
         Args:
             other: Object to be merged with self
@@ -414,20 +438,25 @@ class Telemetry(pd.DataFrame):
         data = self.set_index('Date')
         other = other.set_index('Date')
 
-        # save dtypes before merging so they can be restored after merging
-        # necessary for example because merging produces NaN values which would cause an int column to become float
-        # but it can be converted back to int after interpolating missing values
+        # save dtypes before merging, so they can be restored after merging
+        # necessary for example because merging produces NaN values which
+        # would cause an int column to become float, but it can be converted
+        # back to int after interpolating missing values
         dtype_map = dict()
         for df in data, other:
             for col in df.columns:
                 if col not in dtype_map.keys():
                     dtype_map[col] = df[col].dtype
 
-        # Exclude columns existing on both dataframes from one dataframe before merging (cannot merge with duplicates)
+        # Exclude columns existing on both dataframes from one dataframe
+        # before merging (cannot merge with duplicates)
         on_both_columns = set(other.columns).intersection(set(data.columns))
-        merged = other.merge(data[data.columns.difference(on_both_columns, sort=False)],
-                             how='outer', left_index=True, right_index=True, sort=True)
-        # now use the previously excluded columns to update the missing values in the merged dataframe
+        merged = other.merge(
+            data[data.columns.difference(on_both_columns, sort=False)],
+            how='outer', left_index=True, right_index=True, sort=True
+        )
+        # now use the previously excluded columns to update the missing values
+        # in the merged dataframe
         for col in on_both_columns:
             merged[col].update(data[col])
 
@@ -443,13 +472,15 @@ class Telemetry(pd.DataFrame):
 
         ref_date = merged.index[i]
 
-        # data needs to be resampled/interpolated differently, depending on what kind of data it is
-        # how to handle which column is defined in self._CHANNELS
+        # data needs to be resampled/interpolated differently, depending on
+        # what kind of data it is how to handle which column is defined in
+        # self._CHANNELS
 
         if frequency == 'original':
             # no resampling but still interpolation due to merging
             merged = merged.fill_missing()
-            merged = merged.reset_index().rename(columns={'index': 'Date'})  # make 'Date' a column again
+            # make 'Date' a column again
+            merged = merged.reset_index().rename(columns={'index': 'Date'})
 
         else:
             frq = f'{1 / frequency}S'
@@ -464,21 +495,28 @@ class Telemetry(pd.DataFrame):
                 if sig_type == 'continuous':
                     missing = self._CHANNELS[ch]['missing']
                     res = merged.loc[:, ch] \
-                        .resample(frq, origin=ref_date).mean().interpolate(method=missing, fill_value='extrapolate')
+                        .resample(frq, origin=ref_date).mean() \
+                        .interpolate(method=missing, fill_value='extrapolate')
 
                 elif sig_type == 'discrete':
-                    res = merged.loc[:, ch].resample(frq, origin=ref_date).ffill().ffill().bfill()
-                    # first ffill is a method of the resampler object and will ONLY ffill values created during
-                    # resampling but not already existing NaN values. NaN values already existed because of merging,
-                    # therefore call ffill a second time as a method of the returned series to fill these too
-                    # only use bfill after ffill to fix first row
+                    res = merged.loc[:, ch].resample(frq, origin=ref_date) \
+                        .ffill().ffill().bfill()
+                    # first ffill is a method of the resampler object and will
+                    # ONLY ffill values created during resampling but not
+                    # already existing NaN values. NaN values already existed
+                    # because of merging, therefore call ffill a second time as
+                    # a method of the returned series to fill these too only
+                    # use bfill after ffill to fix first row
 
                 else:
                     continue
 
                 resampled_columns[ch] = res
 
-            res_source = merged.loc[:, 'Source'].resample(frq, origin=ref_date).asfreq().fillna(value='interpolation')
+            res_source = merged.loc[:, 'Source'] \
+                .resample(frq, origin=ref_date) \
+                .asfreq() \
+                .fillna(value='interpolation')
             resampled_columns['Source'] = res_source
 
             # join resampled columns and make 'Date' a column again
@@ -488,8 +526,10 @@ class Telemetry(pd.DataFrame):
                 .rename(columns={'index': 'Date'})
 
             # recalculate the time columns
-            merged['SessionTime'] = merged['Date'] - self.session.t0_date
-            merged['Time'] = merged['SessionTime'] - merged['SessionTime'].iloc[0]
+            merged['SessionTime'] \
+                = merged['Date'] - self.session.t0_date
+            merged['Time'] \
+                = merged['SessionTime'] - merged['SessionTime'].iloc[0]
 
         # restore data types from before merging
         for col in dtype_map.keys():
@@ -509,18 +549,22 @@ class Telemetry(pd.DataFrame):
     ):
         """Resample telemetry data.
 
-        Convenience method for frequency conversion and resampling. Up and down sampling of data is supported.
-        'Date' and 'SessionTime' need to exist in the data. 'Date' is used as the main time reference.
+        Convenience method for frequency conversion and resampling. Up and
+        down sampling of data is supported. 'Date' and 'SessionTime' need to
+        exist in the data. 'Date' is used as the main time reference.
 
         There are two ways to use this method:
 
-            - Usage like :meth:`pandas.DataFrame.resample`: In this case you need to specify the 'rule' for resampling
-              and any additional keywords will be passed on to :meth:`pandas.Series.resample` to create a new time
-              reference. See the pandas method to see which options are available.
+            - Usage like :meth:`pandas.DataFrame.resample`: In this case you
+              need to specify the 'rule' for resampling and any additional
+              keywords will be passed on to :meth:`pandas.Series.resample` to
+              create a new time reference. See the pandas method to see which
+              options are available.
 
-            - using the 'new_date_ref' keyword a :class:`pandas.Series` containing new values for date
-              (dtype :class:`pandas.Timestamp`) can be provided. The existing data will be resampled onto this new
-              time reference.
+            - using the 'new_date_ref' keyword a :class:`pandas.Series`
+              containing new values for date (dtype :class:`pandas.Timestamp`)
+              can be provided. The existing data will be resampled onto this
+              new time reference.
 
         Args:
             rule: Resampling rule for :meth:`pandas.Series.resample`
@@ -529,9 +573,11 @@ class Telemetry(pd.DataFrame):
                 for :meth:`pandas.Series.resample`
         """
         if rule is not None and new_date_ref is not None:
-            raise ValueError("You can only specify one of 'rule' or 'new_index'")
+            raise ValueError("You can only specify one of 'rule' or "
+                             "'new_index'")
         if rule is None and new_date_ref is None:
-            raise ValueError("You need to specify either 'rule' or 'new_index'")
+            raise ValueError("You need to specify either 'rule' or "
+                             "'new_index'")
 
         if new_date_ref is None:
             st = pd.Series(index=pd.DatetimeIndex(self['Date']), dtype=int) \
@@ -553,8 +599,9 @@ class Telemetry(pd.DataFrame):
     def fill_missing(self):
         """Calculate missing values in self.
 
-        Only known telemetry channels will be interpolated. Unknown channels are skipped and returned unmodified.
-        Interpolation will be done according to the default mapping and according to options specified for
+        Only known telemetry channels will be interpolated. Unknown channels
+        are skipped and returned unmodified. Interpolation will be done
+        according to the default mapping and according to options specified for
         registered custom channels. For example:
         | Linear interpolation will be used for continuous values (Speed, RPM)
         | Forward-fill will be used for discrete values (Gear, DRS, ...)
@@ -567,28 +614,33 @@ class Telemetry(pd.DataFrame):
             if ch not in self.columns:
                 continue
             sig_type = self._CHANNELS[ch]['type']
-            if sig_type == 'continuous':  # yes, this is necessary to prevent pandas from crashing
+            if sig_type == 'continuous':
                 if ret[ch].dtype == 'object':
                     warnings.warn("Interpolation not possible for telemetry "
                                   "channel because dtype is 'object'")
                 missing = self._CHANNELS[ch]['missing']
                 ret.loc[:, ch] = ret.loc[:, ch] \
-                    .interpolate(method=missing, limit_direction='both', fill_value='extrapolate')
+                    .interpolate(method=missing, limit_direction='both',
+                                 fill_value='extrapolate')
 
             elif sig_type == 'discrete':
                 ret.loc[:, ch] = ret.loc[:, ch].ffill().ffill().bfill()
-                # first ffill is a method of the resampler object and will ONLY ffill values created during
-                # resampling but not already existing NaN values. NaN values already existed because of merging,
-                # therefore call ffill a second time as a method of the returned series to fill these too
-                # only use bfill after ffill to fix first row
+                # first ffill is a method of the resampler object and will
+                # ONLY ffill values created during resampling but not already
+                # existing NaN values. NaN values already existed because of
+                # merging, therefore call ffill a second time as a method of
+                # the returned series to fill these too only use bfill after
+                # ffill to fix first row
 
         if 'Source' in ret.columns:
-            ret.loc[:, 'Source'] = ret.loc[:, 'Source'].fillna(value='interpolation')
+            ret.loc[:, 'Source'] = ret.loc[:, 'Source'] \
+                .fillna(value='interpolation')
 
         if 'Date' in self.columns:
             ret['SessionTime'] = ret['Date'] - self.session.t0_date
         elif isinstance(ret.index, pd.DatetimeIndex):
-            ret['SessionTime'] = ret.index - self.session.t0_date  # assume index is Date
+            # assume index is Date
+            ret['SessionTime'] = ret.index - self.session.t0_date
         ret['Time'] = ret['SessionTime'] - ret['SessionTime'].iloc[0]
 
         return ret
@@ -602,7 +654,8 @@ class Telemetry(pd.DataFrame):
     ):
         """Register a custom telemetry channel.
 
-        Registered telemetry channels are automatically interpolated when merging or resampling data.
+        Registered telemetry channels are automatically interpolated when
+        merging or resampling data.
 
         Args:
             name: Telemetry channel/column name
@@ -619,14 +672,21 @@ class Telemetry(pd.DataFrame):
         if signal_type not in ('discrete', 'continuous', 'excluded'):
             raise ValueError(f"Unknown signal type {signal_type}.")
         if signal_type == 'continuous' and interpolation_method is None:
-            raise ValueError("signal_type='continuous' requires interpolation_method to be specified.")
+            raise ValueError("signal_type='continuous' requires "
+                             "interpolation_method to be specified.")
 
-        cls._CHANNELS[name] = {'type': signal_type, 'missing': interpolation_method}
+        cls._CHANNELS[name] = {'type': signal_type,
+                               'missing': interpolation_method}
 
     def get_first_non_zero_time_index(self):
-        """Return the first index at which the 'Time' value is not zero or NA/NaT"""
-        # find first row where time is not zero; usually this is the first row but sometimes.....
-        i_arr = np.where((self['Time'] != pd.Timedelta(0)) & ~pd.isna(self['Time']))[0]
+        """
+        Return the first index at which the 'Time' value is not zero
+        or NA/NaT
+        """
+        # find first row where time is not zero; usually this is the first row
+        # but sometimes.....
+        i_arr = np.where((self['Time'] != pd.Timedelta(0))
+                         & ~pd.isna(self['Time']))[0]
         if i_arr.size != 0:
             return np.min(i_arr)
         return None
@@ -663,10 +723,12 @@ class Telemetry(pd.DataFrame):
     def add_distance(self, drop_existing: bool = True) -> "Telemetry":
         """Add column 'Distance' to self.
 
-        This column contains the distance driven since the first sample of self in meters.
+        This column contains the distance driven since the first sample of
+        self in meters.
 
-        The data is produced by integrating the differential distance between subsequent laps.
-        You should not apply this function to telemetry of many laps simultaneously to reduce integration error.
+        The data is produced by integrating the differential distance between
+        subsequent laps. You should not apply this function to telemetry of
+        many laps simultaneously to reduce integration error.
         Instead apply it only to single laps or few laps at a time!
 
         Calls :meth:`integrate_distance` and joins the result with self.
@@ -682,7 +744,8 @@ class Telemetry(pd.DataFrame):
 
         new_dist = pd.DataFrame({'Distance': self.integrate_distance()})
         if 'Distance' in self.columns:
-            return self.drop(labels='Distance', axis=1).join(new_dist, how='outer')
+            return self.drop(labels='Distance', axis=1) \
+                .join(new_dist, how='outer')
 
         return self.join(new_dist, how='outer')
 
@@ -693,7 +756,8 @@ class Telemetry(pd.DataFrame):
         a floating point number where ``0.0`` is the first sample of self
         and ``1.0`` is the last sample.
 
-        This is calculated the same way as 'Distance' (see: :meth:`add_distance`). The same warnings apply.
+        This is calculated the same way as 'Distance'
+        (see: :meth:`add_distance`). The same warnings apply.
 
         Args:
             drop_existing: Drop and recalculate column if it already exists
@@ -714,7 +778,8 @@ class Telemetry(pd.DataFrame):
         else:
             dist = d.integrate_distance()
             rel_dist = dist / dist.iloc[-1]
-        return d.join(pd.DataFrame({'RelativeDistance': rel_dist}), how='outer')
+        return d.join(pd.DataFrame({'RelativeDistance': rel_dist}),
+                      how='outer')
 
     def add_track_status(self, drop_existing=True):
         """Add column 'TrackStatus' to self.
@@ -771,15 +836,18 @@ class Telemetry(pd.DataFrame):
         DriverAhead: Driver number of the driver ahead as string
         DistanceToDriverAhead: Distance to next car ahead in meters
 
-        .. note:: Cars in the pit lane are currently not excluded from the data. They will show up when overtaken on
-            pit straight even if they're not technically in front of the car. A fix for this is TBD with other
-            improvements.
+        .. note:: Cars in the pit lane are currently not excluded from the
+            data. They will show up when overtaken on pit straight even if
+            they're not technically in front of the car. A fix for this is
+            TBD with other improvements.
 
-        This should only be applied to data of single laps or few laps at a time to reduce integration error.
+        This should only be applied to data of single laps or few laps at a
+        time to reduce integration error.
         For longer time spans it should be applied per lap and the laps
         should be merged afterwards.
-        If you absolutely need to apply it to a whole session, use the legacy implementation. Note that data of
-        the legacy implementation will be considerably less smooth. (see :mod:`fastf1.legacy`)
+        If you absolutely need to apply it to a whole session, use the legacy
+        implementation. Note that data of the legacy implementation will be
+        considerably less smooth. (see :mod:`fastf1.legacy`)
 
         Calls :meth:`calculate_driver_ahead` and joins the result with self.
 
@@ -789,7 +857,8 @@ class Telemetry(pd.DataFrame):
             self joined with new column or self if column exists
             and `drop_existing` is False.
         """
-        if 'DriverAhead' in self.columns and 'DistanceToDriverAhead' in self.columns:
+        if (('DriverAhead' in self.columns)
+                and ('DistanceToDriverAhead' in self.columns)):
             if drop_existing:
                 d = self.drop(labels='DriverAhead', axis=1) \
                     .drop(labels='DistanceToDriverAhead', axis=1)
@@ -831,7 +900,8 @@ class Telemetry(pd.DataFrame):
         Distance is in meters
         """
         if not all([col in self.columns for col in ('Speed', 'Time')]):
-            raise ValueError("Telemetry does not contain required channels 'Time' and 'Speed'.")
+            raise ValueError("Telemetry does not contain required channels "
+                             "'Time' and 'Speed'.")
         if self.size != 0:
             dt = self['Time'].dt.total_seconds().diff()
             dt.iloc[0] = self['Time'].iloc[0].total_seconds()
@@ -843,8 +913,10 @@ class Telemetry(pd.DataFrame):
     def integrate_distance(self):
         """Return the distance driven since the first sample of self.
 
-        Distance is in meters. The data is produce by integration. Integration error will stack up when used for
-        long slices of data. This should therefore only be used for data of single laps or few laps at a time.
+        Distance is in meters. The data is produce by integration.
+        Integration error will stack up when used for long slices of data.
+        This should therefore only be used for data of single laps or few
+        laps at a time.
 
         Returns:
             :class:`pd.Series`
@@ -861,9 +933,11 @@ class Telemetry(pd.DataFrame):
         Driver ahead: Driver number of the driver ahead as string
         Distance to driver ahead: Distance to the car ahead in meters
 
-        .. note:: This gives a smoother/cleaner result than the legacy implementation but WILL introduce
-            integration error when used over long distances (more than one or two laps may sometimes be considered
-            a long distance). If in doubt, do sanity checks (against the legacy version or in another way).
+        .. note:: This gives a smoother/cleaner result than the legacy
+            implementation but WILL introduce integration error when used
+            over long distances (more than one or two laps may sometimes be
+            considered a long distance). If in doubt, do sanity checks
+            (against the legacy version or in another way).
 
         Args:
             return_reference: Additionally return the reference
@@ -880,38 +954,48 @@ class Telemetry(pd.DataFrame):
 
         # Assume the following lap profile as a catch all for all drivers
         #
-        # |------ Lap before ------|------ n Laps between ------|------ Lap after ------|
-        #        ^                                                   ^
-        #        t_start                                             t_end
-        # Integration of the distance needs to start at the finish line so that there exists a common zero point
-        # Therefore find the "lap before" which is the lap during which the telemetry slice starts and the "lap after"
-        # where the telemetry slice ends
-        # Integrate distance over all relevant laps and slice by t_start and t_end after to get the interesting
-        # part only
-        own_laps = self.session.laps[self.session.laps['DriverNumber'] == self.driver]
-        first_lap_number = (own_laps[own_laps['LapStartTime'] <= t_start])['LapNumber'].iloc[-1]
-
+        # |---- Lap before ----|---- n Laps between ----|---- Lap after ----|
+        #      ^                                           ^
+        #      t_start                                     t_end
+        # Integration of the distance needs to start at the finish line so
+        # that there exists a common zero point. Therefore find the "lap
+        # before" which is the lap during which the telemetry slice starts and
+        # the "lap after" where the telemetry slice ends.
+        # Integrate distance over all relevant laps and slice by t_start and
+        # t_end after to get the interesting part only.
+        own_laps = self.session.laps[
+            self.session.laps['DriverNumber'] == self.driver
+            ]
+        first_lap_number = ((own_laps[own_laps['LapStartTime'] <= t_start])
+                            ['LapNumber'].iloc[-1])
         own_ref_tel = None
 
         for drv in self.session.drivers:
             if drv not in self.session.car_data:
                 continue
-            # find correct first relevant lap; very important for correct zero point in distance
-            drv_laps = self.session.laps[self.session.laps['DriverNumber'] == drv]
-            if drv_laps.empty:  # Only include drivers who participated in this session
+            # find correct first relevant lap; very important for correct zero
+            # point in distance
+            drv_laps = self.session.laps[
+                self.session.laps['DriverNumber'] == drv
+                ]
+            if drv_laps.empty:
+                # Only include drivers who participated in this session
                 continue
             drv_laps_before = drv_laps[(drv_laps['LapStartTime'] <= t_start)]
             if not drv_laps_before.empty:
                 lap_n_before = drv_laps_before['LapNumber'].iloc[-1]
                 if lap_n_before < first_lap_number:
-                    # driver is behind on track an therefore will cross the finish line AFTER self
-                    # therefore above check for LapStartTime <= t_start is wrong
-                    # the first relevant lap is the first lap with LapStartTime > t_start which is lap_n_before += 1
+                    # driver is behind on track an therefore will cross the
+                    # finish line AFTER self therefore above check for
+                    # LapStartTime <= t_start is wrong the first relevant lap
+                    # is the first lap with LapStartTime > t_start which is
+                    # lap_n_before += 1
                     lap_n_before += 1
             else:
                 lap_n_before = min(drv_laps['LapNumber'])
 
-            # find last relevant lap so as to no do too much unnecessary calculation later
+            # find last relevant lap so as to no do too much unnecessary
+            # calculation later
             drv_laps_after = drv_laps[drv_laps['Time'] >= t_end]
             lap_n_after = drv_laps_after['LapNumber'].iloc[0] \
                 if not drv_laps_after.empty \
@@ -954,7 +1038,8 @@ class Telemetry(pd.DataFrame):
             if (relevant_laps is None) or relevant_laps.empty:
                 continue
 
-            # first slice by lap and calculate distance, so that distance is zero at finish line
+            # first slice by lap and calculate distance, so that distance is
+            # zero at finish line
             drv_tel = self.session.car_data[drv] \
                 .slice_by_lap(relevant_laps)
 
@@ -978,28 +1063,44 @@ class Telemetry(pd.DataFrame):
             combined_distance = combined_distance.join(drv_tel, how='outer')
 
         # create driver map for array
-        drv_map = combined_distance.loc[:, combined_distance.columns != self.driver].columns.to_numpy()
+        drv_map = combined_distance \
+            .loc[:, combined_distance.columns != self.driver] \
+            .columns.to_numpy()
 
         own_dst = combined_distance.loc[:, self.driver].to_numpy()
-        other_dst = combined_distance.loc[:, combined_distance.columns != self.driver].to_numpy()
+        other_dst = combined_distance \
+            .loc[:, combined_distance.columns != self.driver] \
+            .to_numpy()
         # replace distance with nan if it does not change
-        # prepend first row before diff so that array size stays the same; but missing first sample because of that
-        other_dst[np.diff(other_dst, n=1, axis=0, prepend=other_dst[0, :].reshape((1, -1))) == 0] = np.nan
+        # prepend first row before diff so that array size stays the same;
+        # but missing first sample because of that
+        other_dst[
+            np.diff(other_dst, n=1, axis=0, prepend=other_dst[0, :]
+                    .reshape((1, -1))) == 0
+            ] = np.nan
 
         # resize own_dst to match shape of other_dst for easy subtraction
-        own_dst = np.repeat(own_dst.reshape((-1, 1)), other_dst.shape[1], axis=1)
+        own_dst = np.repeat(
+            own_dst.reshape((-1, 1)), other_dst.shape[1], axis=1
+        )
 
         delta_dst = other_dst - own_dst
-        delta_dst[np.isnan(delta_dst)] = np.inf  # substitute nan with inf, else nan is returned as min
-        delta_dst[delta_dst < 0] = np.inf  # remove cars behind so that neg numbers are not returned as min
+        # substitute nan with inf, else nan is returned as min
+        delta_dst[np.isnan(delta_dst)] = np.inf
+        # remove cars behind so that neg numbers are not returned as min
+        delta_dst[delta_dst < 0] = np.inf
 
         index_ahead = np.argmin(delta_dst, axis=1)
 
         drv_ahead = np.array([drv_map[i] for i in index_ahead])
-        drv_ahead[np.all(delta_dst == np.inf, axis=1)] = ''  # remove driver from all inf rows
+        # remove driver from all inf rows
+        drv_ahead[np.all(delta_dst == np.inf, axis=1)] = ''
 
-        dist_to_drv_ahead = np.array([delta_dst[i, index_ahead[i]] for i in range(len(index_ahead))])
-        dist_to_drv_ahead[np.all(delta_dst == np.inf, axis=1)] = np.nan  # remove value from all inf rows
+        dist_to_drv_ahead = np.array(
+            [delta_dst[i, index_ahead[i]] for i in range(len(index_ahead))]
+        )
+        # remove value from all inf rows
+        dist_to_drv_ahead[np.all(delta_dst == np.inf, axis=1)] = np.nan
 
         if return_reference:
             return drv_ahead, dist_to_drv_ahead, own_ref_tel
@@ -1022,10 +1123,11 @@ class Session:
         """:class:`~fastf1.events.Event`: Reference to the associated event
         object."""
         self.name = session_name
-        """str: Name of this session, for example 'Qualifying', 'Race', 'FP1', ..."""
+        """str: Name of this session, for example 'Qualifying', 'Race',
+        'FP1', ..."""
         self.f1_api_support = f1_api_support
-        """bool: The official F1 API supports this event and lap timing data and
-        telemetry data are available."""
+        """bool: The official F1 API supports this event and lap timing
+        data and telemetry data are available."""
         self.date = self.event.get_session_date(session_name, utc=True)
         """pandas.Datetime: Date at which this session took place."""
         self.api_path = api.make_path(
@@ -1064,8 +1166,10 @@ class Session:
 
     def _get_property_warn_not_loaded(self, name):
         if not hasattr(self, name):
-            raise DataNotLoadedError("The data you are trying to access has not "
-                                     "been loaded yet. See `Session.load`")
+            raise DataNotLoadedError(
+                "The data you are trying to access has not been loaded yet. "
+                "See `Session.load`"
+            )
         return getattr(self, name, None)
 
     @property
@@ -1191,8 +1295,9 @@ class Session:
         """
         return self._get_property_warn_not_loaded('_t0_date')
 
-    def load(self, *, laps=True, telemetry=True, weather=True, messages=True,
-             livedata=None):
+    def load(self, *, laps: bool = True, telemetry: bool = True,
+             weather: bool = True, messages: bool = True,
+             livedata: LiveTimingData = None):
         """Load session data from the supported APIs.
 
         This method allows to flexibly load some or all data that FastF1 can
@@ -1231,13 +1336,12 @@ class Session:
             data of different laps.
 
         Args:
-            laps (bool): Load laps and session status data.
-            telemetry (bool): Load telemetry data.
-            weather (bool): Load weather data.
-            messages (bool): Load race control messages for the session
-            livedata (:class:`fastf1.livetiming.data.LiveTimingData`, optional):
-                instead of requesting the data from the api, locally saved
-                livetiming data can be used as a data source
+            laps: Load laps and session status data.
+            telemetry: Load telemetry data.
+            weather: Load weather data.
+            messages: Load race control messages for the session
+            livedata: instead of requesting the data from the api, locally
+                saved livetiming data can be used as a data source
         """
         _logger.info(f"Loading data for "
                      f"{self.event['EventName']} - {self.name}"
@@ -1417,8 +1521,9 @@ class Session:
                 laps_start_time, dtype='timedelta64[ns]'
             )
 
-            # set missing lap start times to pit out time where possible
-            mask = pd.isna(result['LapStartTime']) & (~pd.isna(result['PitOutTime']))
+            # set missing lap start times to pit out time, where possible
+            mask = (pd.isna(result['LapStartTime'])
+                    & (~pd.isna(result['PitOutTime'])))
             result.loc[mask, 'LapStartTime'] = result.loc[mask, 'PitOutTime']
 
             # remove first lap pitout time if it is before session_start_time
@@ -1864,38 +1969,49 @@ class Session:
                      "Failed to perform lap accuracy check!",
                      _logger)
     def _check_lap_accuracy(self):
-        """Accuracy validation; simples yes/no validation
-        Currently only relies on provided information which can't catch all problems"""
+        """
+        Accuracy validation; simples yes/no validation. Currently only relies
+        on provided information which can't catch all problems
+        """
         # TODO: check for outliers in lap start position
         for drv in self.drivers:
             is_accurate = list()
             prev_lap = None
             integrity_errors = 0
-            for _, lap in self.laps[self.laps['DriverNumber'] == drv].iterrows():
+            for _, lap in self.laps[self.laps['DriverNumber'] == drv] \
+                    .iterrows():
                 lap_integrity_ok = True
-                # require existence, non-existence and specific values for some variables
+                # require existence, non-existence and specific values for
+                # some variables
                 check_1 = (pd.isnull(lap['PitInTime'])
                            & pd.isnull(lap['PitOutTime'])
                            & (not lap['FastF1Generated'])
-                           & (lap['TrackStatus'] in ('1', '2'))  # slightly paranoid, allow only green and yellow flag
+                           # slightly paranoid, allow only green + yellow flag
+                           & (lap['TrackStatus'] in ('1', '2'))
                            & (not pd.isnull(lap['LapTime']))
                            & (not pd.isnull(lap['Sector1Time']))
                            & (not pd.isnull(lap['Sector2Time']))
                            & (not pd.isnull(lap['Sector3Time'])))
 
-                if check_1:  # only do check 2 if all necessary values for this check are even available
-                    # sum of sector times should be almost equal to lap time (tolerance 3ms)
-                    check_2 = np.allclose(np.sum((lap['Sector1Time'], lap['Sector2Time'],
-                                                  lap['Sector3Time'])).total_seconds(),
-                                          lap['LapTime'].total_seconds(),
-                                          atol=0.003, rtol=0, equal_nan=False)
+                if check_1:
+                    # only do check 2 if all necessary values for this check
+                    # are even available;
+                    # sum of sector times should be almost equal to lap time
+                    # (tolerance 3ms)
+                    check_2 = np.allclose(
+                        np.sum((lap['Sector1Time'], lap['Sector2Time'],
+                                lap['Sector3Time'])).total_seconds(),
+                        lap['LapTime'].total_seconds(),
+                        atol=0.003, rtol=0, equal_nan=False
+                    )
                     if not check_2:
                         lap_integrity_ok = False
                 else:
                     check_2 = False  # data not available means fail
 
                 if prev_lap is not None:
-                    # first lap after safety car often has timing issues (as do all laps under safety car)
+                    # first lap after safety car often has timing issues
+                    # (as do all laps under safety car)
                     check_3 = (prev_lap['TrackStatus'] != '4')
                 else:
                     check_3 = True  # no previous lap, no SC error
@@ -2135,7 +2251,7 @@ class Session:
 
     @soft_exceptions("telemetry data", "Failed to load telemetry data!",
                      _logger)
-    def _load_telemetry(self, livedata=None):
+    def _load_telemetry(self, livedata: LiveTimingData = None):
         """Load telemetry data from the API.
 
         This method can only be called after :meth:`load_laps` has been
@@ -2143,22 +2259,23 @@ class Session:
         the optional ``with_telemetry=True`` argument instead of calling this
         method separately. The result will be the same.
 
-        The raw data is divided into car data (Speed, RPM, ...) and position data (coordinates, on/off track). For each
-        of the two types an instance of :class:`Telemetry` is created per driver. The properties
-        :attr:`Session.car_data` and :attr:`Session.pos_data` are dictionaries which hold the the `Telemetry` objects
-        keyed by driver number.
+        The raw data is divided into car data (Speed, RPM, ...) and position
+        data (coordinates, on/off track). For each of the two types an
+        instance of :class:`Telemetry` is created per driver. The properties
+        :attr:`Session.car_data` and :attr:`Session.pos_data` are dictionaries
+        which hold the the `Telemetry` objects keyed by driver number.
 
-        The telemetry data can either be accessed through the above mentioned attributes or conveniently on a per
-        lap basis through :class:`Lap` and :class:`Laps`. See :class:`Telemetry` on how to work with the telemetry
-        data.
+        The telemetry data can either be accessed through the above mentioned
+        attributes or conveniently on a per ap basis through :class:`Lap`
+        and :class:`Laps`. See :class:`Telemetry` on how to work with the
+        telemetry data.
 
-        Note that this method additionally calculates :attr:`Session.t0_date` and adds a `LapStartDate` column to
-        :attr:`Session.laps`.
+        Note that this method additionally calculates :attr:`Session.t0_date`
+        and adds a `LapStartDate` column to :attr:`Session.laps`.
 
         Args:
-            livedata (:class:`fastf1.livetiming.data.LiveTimingData`, optional) :
-                instead of requesting the data from the api, locally saved
-                livetiming data can be used as a data source
+            livedata: instead of requesting the data from the api, locally
+                saved livetiming data can be used as a data source
         """
         try:
             car_data = api.car_data(self.api_path, livedata=livedata)
@@ -2206,7 +2323,8 @@ class Session:
 
     def get_driver(self, identifier) -> "DriverResult":
         """
-        Get a driver object which contains additional information about a driver.
+        Get a driver object which contains additional information about a
+        driver.
 
         Args:
             identifier (str): driver's three letter identifier (for
@@ -2241,15 +2359,18 @@ class Session:
         return circuit_info
 
     def _calculate_t0_date(self, *tel_data_sets: dict):
-        """Calculate the date timestamp at which data for this session is starting.
+        """
+        Calculate the date timestamp at which data for this session is
+        starting.
 
-        This does not mark the start of a race (or other sessions). This marks the start of the data which is sometimes
-        far before.
+        This does not mark the start of a race (or other sessions). This marks
+        the start of the data which is sometimes far before.
 
-        This function sets :attr:`self.t0_date` which is an internally required offset for some calculations.
+        This function sets :attr:`self.t0_date` which is an internally
+        required offset for some calculations.
 
-        The current assumption is that the latest date which can be calculated is correct. (Based on the timestamp with
-        the least delay.)
+        The current assumption is that the latest date which can be calculated
+        is correct. (Based on the timestamp with the least delay.)
 
         Args:
             tel_data_sets: Dictionaries containing car telemetry data or
@@ -2496,14 +2617,16 @@ class Laps(pd.DataFrame):
     def telemetry(self) -> Telemetry:
         """Telemetry data for all laps in `self`
 
-        This is a cached (!) property for :meth:`get_telemetry`. It will return the same value as `get_telemetry`
-        but cache the result so that the involved processing is only done once.
+        This is a cached (!) property for :meth:`get_telemetry`. It will
+        return the same value as `get_telemetry` but cache the result so that
+        the involved processing is only done once.
 
         This is mainly provided for convenience and backwards compatibility.
 
         See :meth:`get_telemetry` for more information.
 
-        .. note:: Telemetry can only be returned if `self` contains laps of one driver only.
+        .. note:: Telemetry can only be returned if `self` contains laps of
+            one driver only.
 
         Returns:
             instance of :class:`Telemetry`"""
@@ -2557,50 +2680,68 @@ class Laps(pd.DataFrame):
         return merged.slice_by_lap(self, interpolate_edges=True)
 
     def get_car_data(self, **kwargs) -> Telemetry:
-        """Car data for all laps in `self`
+        """
+        Car data for all laps in `self`
 
-        Slices the car data in :attr:`Session.car_data` using this set of laps and returns the result.
+        Slices the car data in :attr:`Session.car_data` using this set of laps
+        and returns the result.
 
-        The data returned by this method does not contain computed telemetry channels. The can be added by calling the
-        appropriate `add_*()` method on the returned telemetry object..
+        The data returned by this method does not contain computed telemetry
+        channels. The can be added by calling the appropriate `add_*()` method
+        on the returned telemetry object..
 
-        .. note:: Car data can only be returned if `self` contains laps of one driver only.
+        .. note:: Car data can only be returned if `self` contains laps of
+            one driver only.
 
         Args:
-            **kwargs: Keyword arguments are passed to :meth:`Telemetry.slice_by_lap`
+            **kwargs: Keyword arguments are passed to
+                :meth:`Telemetry.slice_by_lap`
 
         Returns:
             instance of :class:`Telemetry`
         """
         drv_num = self['DriverNumber'].unique()
         if len(drv_num) == 0:
-            raise ValueError("Cannot slice telemetry because self contains no driver number!")
+            raise ValueError("Cannot slice telemetry because self contains "
+                             "no driver number!")
         if len(drv_num) > 1:
-            raise ValueError("Cannot slice telemetry because self contains Laps of multiple drivers!")
+            raise ValueError("Cannot slice telemetry because self contains "
+                             "Laps of multiple drivers!")
         drv_num = drv_num[0]
-        car_data = self.session.car_data[drv_num].slice_by_lap(self, **kwargs).reset_index(drop=True)
+        car_data = self.session.car_data[drv_num] \
+            .slice_by_lap(self, **kwargs) \
+            .reset_index(drop=True)
+
         return car_data
 
     def get_pos_data(self, **kwargs) -> Telemetry:
-        """Pos data for all laps in `self`
+        """
+        Pos data for all laps in `self`
 
-        Slices the position data in :attr:`Session.pos_data` using this set of laps and returns the result.
+        Slices the position data in :attr:`Session.pos_data` using this set
+        of laps and returns the result.
 
-        .. note:: Position data can only be returned if `self` contains laps of one driver only.
+        .. note:: Position data can only be returned if `self` contains laps
+            of one driver only.
 
         Args:
-            **kwargs: Keyword arguments are passed to :meth:`Telemetry.slice_by_lap`
+            **kwargs: Keyword arguments are passed to
+                :meth:`Telemetry.slice_by_lap`
 
         Returns:
             instance of :class:`Telemetry`
         """
         drv_num = self['DriverNumber'].unique()
         if len(drv_num) == 0:
-            raise ValueError("Cannot slice telemetry because self contains no driver number!")
+            raise ValueError("Cannot slice telemetry because self contains "
+                             "no driver number!")
         if len(drv_num) > 1:
-            raise ValueError("Cannot slice telemetry because self contains Laps of multiple drivers!")
+            raise ValueError("Cannot slice telemetry because self contains "
+                             "Laps of multiple drivers!")
         drv_num = drv_num[0]
-        pos_data = self.session.pos_data[drv_num].slice_by_lap(self, **kwargs).reset_index(drop=True)
+        pos_data = self.session.pos_data[drv_num] \
+            .slice_by_lap(self, **kwargs) \
+            .reset_index(drop=True)
         return pos_data
 
     def get_weather_data(self) -> pd.DataFrame:
@@ -2675,7 +2816,7 @@ class Laps(pd.DataFrame):
             274 0 days 00:36:47.787000    VER  ...           339       1.1
             <BLANKLINE>
             [275 rows x 38 columns]
-        """
+        """  # noqa: E501 (due to long examples and doctest output)
         wd = [lap.get_weather_data() for _, lap in self.iterrows()]
         if wd:
             return pd.concat(wd, axis=1).T
@@ -2789,7 +2930,8 @@ class Laps(pd.DataFrame):
             mercedes = session_laps.pick_team('Mercedes')
             alfa_romeo = session_laps.pick_team('Alfa Romeo')
 
-        Have a look to :attr:`fastf1.plotting.TEAM_COLORS` for a quick reference on team names.
+        Have a look to :attr:`fastf1.plotting.TEAM_COLORS` for a quick
+        reference on team names.
 
         Args:
             name (str): Team name
@@ -2967,7 +3109,8 @@ class Laps(pd.DataFrame):
         Returns:
             instance of :class:`Laps`
         """
-        return self[pd.isnull(self['PitInTime']) & pd.isnull(self['PitOutTime'])]
+        return self[pd.isnull(self['PitInTime'])
+                    & pd.isnull(self['PitOutTime'])]
 
     def pick_box_laps(self, which: str = 'both') -> "Laps":
         """Return all laps which are either in-laps, out-laps, or both.
@@ -3105,9 +3248,11 @@ class Laps(pd.DataFrame):
 
 
 class Lap(pd.Series):
-    """Object for accessing lap (timing) data of a single lap.
+    """
+    Object for accessing lap (timing) data of a single lap.
 
-    This class wraps :class:`pandas.Series`. It provides extra functionality for accessing a lap's associated
+    This class wraps :class:`pandas.Series`. It provides extra functionality
+    for accessing a lap's associated
     telemetry data.
     """
     _metadata = ['session']
@@ -3128,8 +3273,9 @@ class Lap(pd.Series):
     def telemetry(self) -> Telemetry:
         """Telemetry data for this lap
 
-        This is a cached (!) property for :meth:`get_telemetry`. It will return the same value as `get_telemetry`
-        but cache the result so that the involved processing is only done once.
+        This is a cached (!) property for :meth:`get_telemetry`. It will
+        return the same value as `get_telemetry` but cache the result so
+        that the involved processing is only done once.
 
         This is mainly provided for convenience and backwards compatibility.
 
@@ -3187,32 +3333,42 @@ class Lap(pd.Series):
     def get_car_data(self, **kwargs) -> Telemetry:
         """Car data for this lap
 
-        Slices the car data in :attr:`Session.car_data` using this lap and returns the result.
+        Slices the car data in :attr:`Session.car_data` using this lap and
+        returns the result.
 
-        The data returned by this method does not contain computed telemetry channels. The can be added by calling the
-        appropriate `add_*()` method on the returned telemetry object.
+        The data returned by this method does not contain computed telemetry
+        channels. The can be added by calling the appropriate `add_*()`
+        method on the returned telemetry object.
 
         Args:
-            **kwargs: Keyword arguments are passed to :meth:`Telemetry.slice_by_lap`
+            **kwargs: Keyword arguments are passed to
+                :meth:`Telemetry.slice_by_lap`
 
         Returns:
             instance of :class:`Telemetry`
         """
-        car_data = self.session.car_data[self['DriverNumber']].slice_by_lap(self, **kwargs).reset_index(drop=True)
+        car_data = self.session.car_data[self['DriverNumber']] \
+            .slice_by_lap(self, **kwargs) \
+            .reset_index(drop=True)
         return car_data
 
     def get_pos_data(self, **kwargs) -> Telemetry:
         """Pos data for all laps in `self`
 
-        Slices the position data in :attr:`Session.pos_data` using this lap and returns the result.
+        Slices the position data in :attr:`Session.pos_data` using this lap
+        and returns the result.
 
         Args:
-            **kwargs: Keyword arguments are passed to :meth:`Telemetry.slice_by_lap`
+            **kwargs: Keyword arguments are passed to
+                :meth:`Telemetry.slice_by_lap`
 
         Returns:
             instance of :class:`Telemetry`
         """
-        pos_data = self.session.pos_data[self['DriverNumber']].slice_by_lap(self, **kwargs).reset_index(drop=True)
+        pos_data = self.session.pos_data[self['DriverNumber']] \
+            .slice_by_lap(self, **kwargs) \
+            .reset_index(drop=True)
+
         return pos_data
 
     def get_weather_data(self) -> pd.Series:
@@ -3291,8 +3447,8 @@ class SessionResults(pd.DataFrame):
           drivers permanent number)
 
         - ``BroadcastName`` | :class:`str` |
-          First letter of the drivers first name plus the drivers full last name
-          in all capital letters. (e.g. 'P GASLY')
+          First letter of the drivers first name plus the drivers full last
+          name in all capital letters. (e.g. 'P GASLY')
 
         - ``FullName`` | :class:`str` |
           The drivers full name (e.g. "Pierre Gasly")
@@ -3505,10 +3661,14 @@ class DataNotLoadedError(Exception):
 
 
 class NoLapDataError(Exception):
-    """Raised if the API request does not fail but there is no usable data after processing the result."""
-
+    """
+    Raised if the API request does not fail but there is no usable data
+    after processing the result.
+    """
     def __init__(self, *args):
-        super(NoLapDataError, self).__init__("Failed to load session because the API did not provide any usable data.")
+        super(NoLapDataError, self).__init__("Failed to load session because "
+                                             "the API did not provide any "
+                                             "usable data.")
 
 
 class InvalidSessionError(Exception):

@@ -152,7 +152,8 @@ class SignalRClient:
             self._connection.error += self._on_debug
             # Assign debug message handler to save raw responses
             self._connection.received += self._on_debug
-            hub.client.on('feed', self._on_do_nothing)  # need to connect an async method
+            hub.client.on('feed', self._on_do_nothing)
+            # need to connect an async method
         else:
             # Assign hub message handler
             hub.client.on('feed', self._on_message)

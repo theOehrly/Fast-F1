@@ -15,7 +15,8 @@ from fastf1.core import Laps
 
 
 # we only want support for timedelta plotting in this example
-fastf1.plotting.setup_mpl(mpl_timedelta_support=True, color_scheme=None, misc_mpl_mods=False)
+fastf1.plotting.setup_mpl(mpl_timedelta_support=True, color_scheme=None,
+                          misc_mpl_mods=False)
 
 session = fastf1.get_session(2021, 'Spanish Grand Prix', 'Q')
 session.load()
@@ -37,7 +38,9 @@ list_fastest_laps = list()
 for drv in drivers:
     drvs_fastest_lap = session.laps.pick_driver(drv).pick_fastest()
     list_fastest_laps.append(drvs_fastest_lap)
-fastest_laps = Laps(list_fastest_laps).sort_values(by='LapTime').reset_index(drop=True)
+fastest_laps = Laps(list_fastest_laps) \
+    .sort_values(by='LapTime') \
+    .reset_index(drop=True)
 
 
 ##############################################################################
