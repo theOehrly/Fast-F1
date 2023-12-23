@@ -365,7 +365,7 @@ def get_event(
                                   force_ergast=force_ergast,
                                   backend=backend)
 
-    if type(gp) is str:
+    if isinstance(gp, str):
         event = schedule.get_event_by_name(gp, strict_search=strict_search)
     else:
         event = schedule.get_event_by_round(gp)
