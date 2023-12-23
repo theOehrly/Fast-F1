@@ -28,14 +28,15 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: pip-cache-${{ hashFiles('requirements/*/*.txt') }}
+          key: pip-cache-${{ hashFiles('requirements/*.txt') }}
           restore-keys: |
             pip-cache
 
       - name: Install python requirements
         run: |
-          python3 -m pip install --upgrade pip setuptools wheel
-          python3 -m pip install -r requirements-dev.txt
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade build setuptools twine
+          python -m pip install -r requirements/dev.txt
 
       - name: Create cache directory
         run: |
@@ -51,7 +52,7 @@ jobs:
 
       - name: Install Fast-F1 from sources
         run: |
-          python3 -m pip install -e .
+          python -m pip install -e .
 
       - name: Create doc build dir
         run: |

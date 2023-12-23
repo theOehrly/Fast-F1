@@ -13,11 +13,11 @@ jobs:
     - uses: actions/checkout@v3
     - uses: actions/setup-python@v4
       with:
-        python-version: '3.8'
+        python-version: '3.12'
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install --upgrade build twine
+        python -m pip install --upgrade build setuptools twine
 
     # if this is a release, upload to PyPI
     - name: Build and publish release
