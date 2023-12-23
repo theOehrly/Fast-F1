@@ -17,6 +17,9 @@ dist/
 build/
 fastf1.egg-info/
 
+# version info dynamically created by setuptools-scm
+fastf1/_version.py
+
 # temporary testrun directories
 fastf1/tests/testenv/
 fastf1/tests/mpl-results/

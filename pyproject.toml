@@ -42,6 +42,7 @@ exclude = ["fastf1/testing*"]
 namespaces = false
 
 [tool.setuptools_scm]
+write_to = "fastf1/_version.py"
 
 [tool.ruff]
 line-length = 79

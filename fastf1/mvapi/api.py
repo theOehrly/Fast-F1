@@ -2,10 +2,9 @@ import requests.exceptions
 
 from typing import Optional
 
+from fastf1 import __version__
 from fastf1.mvapi.internals import _logger
 from fastf1.req import Cache
-from fastf1.version import __version__
-
 
 PROTO = "https"
 HOST = "api.multiviewer.app"

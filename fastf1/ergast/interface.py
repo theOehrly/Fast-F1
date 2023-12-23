@@ -2,9 +2,9 @@ import copy
 import json
 from typing import List, Literal, Optional, Union
 
+from fastf1 import __version__
 from fastf1.req import Cache
 import fastf1.ergast.structure as API
-from fastf1.version import __version__
 
 
 import pandas as pd
