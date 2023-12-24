@@ -245,7 +245,7 @@ def test_driver_list():
               'FirstName': str, 'LastName': str, 'Reference': str,
               'HeadshotUrl': str, 'CountryCode': str}
     for driver in data.values():
-        assert len(driver.keys) == 12  # 12 fields in each driver's info.
+        assert len(driver.keys()) == 12  # 12 fields in each driver's info.
         for key, val in driver.items():
             assert isinstance(val, dtypes[key])
 
