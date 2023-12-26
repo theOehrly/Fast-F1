@@ -22,7 +22,9 @@ jobs:
           python-version: '3.9'
 
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # fetch the complete repo history (for setuptools-scm)
 
       - name: Cache pip
         uses: actions/cache@v3

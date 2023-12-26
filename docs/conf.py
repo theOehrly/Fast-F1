@@ -10,12 +10,13 @@
 
 from datetime import datetime
 import os.path
-import re
 import sys
 import warnings
 
 import plotly.io as pio
 from plotly.io._sg_scraper import plotly_sg_scraper
+
+import fastf1
 
 sys.path.append(os.path.abspath('extensions'))
 
@@ -33,16 +34,10 @@ doc_cache = os.path.abspath('../doc_cache')
 
 # -- Project information -----------------------------------------------------
 
-# load version number from file in sources dir without importing
-with open('../fastf1/version.py') as vfobj:
-    vstring = str(vfobj.read())
-    version = re.search(r"(\d+.\d+.\d+[-\w]*)", vstring)[0]
-
-
 project = 'FastF1'
 # copyright = 'MIT'
 # author = 'Oehrly'
-version = version
+version = fastf1.__version__
 release = version
 copyright = f'{datetime.now().year}, theOehrly'
 html_title = f"{project} <small>{release}</small>"
