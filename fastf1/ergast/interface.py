@@ -228,6 +228,7 @@ class ErgastRawResponse(ErgastResponseMixin, list):
         auto_cast: Determines if values are automatically cast to the most
             appropriate data type from their original string representation
     """
+
     def __init__(self, *, query_result, category, auto_cast, **kwargs):
         if auto_cast:
             query_result = self._prepare_response(query_result, category)
@@ -351,6 +352,7 @@ class ErgastMultiResponse(ErgastResponseMixin):
         auto_cast: Flag that enables or disables automatic casting from the
             original string representation to the most suitable data type.
     """
+
     def __init__(self, *args,
                  response_description: dict,
                  response_data: list,
@@ -409,6 +411,7 @@ class Ergast:
             30 if not set. Maximum: 1000. See also "Response Paging" on
             https://ergast.com/mrd/.
     """
+
     def __init__(self,
                  result_type: Literal['raw', 'pandas'] = 'pandas',
                  auto_cast: bool = True,
@@ -439,41 +442,57 @@ class Ergast:
             selectors.append(f"/{season}")
         if round is not None:
             selectors.append(f"/{round}")
-        if circuit is not None:
-            selectors.append(f"/circuits/{circuit}")
-        if constructor is not None:
-            selectors.append(f"/constructors/{constructor}")
-        if driver is not None:
-            selectors.append(f"/drivers/{driver}")
         if grid_position is not None:
             selectors.append(f"/grid/{grid_position}")
         if results_position is not None:
             selectors.append(f"/results/{results_position}")
         if fastest_rank is not None:
             selectors.append(f"/fastest/{fastest_rank}")
-        if status is not None:
-            selectors.append(f"/status/{status}")
 
         # some special cases: the endpoint may also be used as selector
         # therefore, if the specifier is defined, do not add the endpoint
         # string additionally
+        if driver is not None:
+            if endpoint == 'drivers':
+                endpoint = f"drivers/{driver}"
+            else:
+                selectors.append(f"/drivers/{driver}")
+
+        if constructor is not None:
+            if endpoint == 'constructors':
+                endpoint = f"constructors/{constructor}"
+            else:
+                selectors.append(f"/constructors/{constructor}")
+
+        if circuit is not None:
+            if endpoint == 'circuits':
+                endpoint = f"circuits/{circuit}"
+            else:
+                selectors.append(f"/circuits/{circuit}")
+
+        if status is not None:
+            if endpoint == 'status':
+                endpoint = f"status/{status}"
+            else:
+                selectors.append(f"/status/{status}")
+
         if standings_position is not None:
             if endpoint == 'driverStandings':
-                selectors.append(f"/driverStandings/{standings_position}")
-                endpoint = None
+                endpoint = f"driverStandings/{standings_position}"
             elif endpoint == 'constructorStandings':
-                selectors.append(f"/constructorStandings/{standings_position}")
-                endpoint = None
+                endpoint = f"constructorStandings/{standings_position}"
 
         if lap_number is not None:
-            selectors.append(f"/laps/{lap_number}")
             if endpoint == 'laps':
-                endpoint = None
+                endpoint = f"laps/{lap_number}"
+            else:
+                selectors.append(f"/laps/{lap_number}")
 
         if stop_number is not None:
-            selectors.append(f"/pitstops/{stop_number}")
             if endpoint == 'pitstops':
-                endpoint = None
+                endpoint = f"pitstops/{stop_number}"
+            else:
+                selectors.append(f"/pitstops/{stop_number}")
 
         if endpoint is not None:
             selectors.append(f"/{endpoint}")
@@ -845,7 +864,7 @@ class Ergast:
                      'fastest_rank': fastest_rank,
                      'status': status}
 
-        return self._build_default_result(endpoint='constructors',
+        return self._build_default_result(endpoint="constructors",
                                           table='ConstructorTable',
                                           category=API.Constructors,
                                           subcategory=None,
