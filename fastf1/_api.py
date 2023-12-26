@@ -1459,7 +1459,7 @@ def driver_info(path, response=None, livedata=None):
 
         `['RacingNumber', 'BroadcastName', 'FullName', 'Tla', 'Line',
         'TeamName', 'TeamColour', 'FirstName', 'LastName', 'Reference',
-        'HeadshotUrl']`
+        'HeadshotUrl', 'CountryCode']`
 
     Args:
         path (str): api path base string (usually ``Session.api_path``)
@@ -1491,8 +1491,9 @@ def driver_info(path, response=None, livedata=None):
     drivers = collections.defaultdict(dict)
 
     default_keys = [
-        'RacingNumber', 'BroadcastName', 'FullName', 'Tla', 'Line', 'TeamName',
-        'TeamColour', 'FirstName', 'LastName', 'Reference', 'HeadshotUrl'
+        'RacingNumber', 'BroadcastName', 'FullName', 'Tla', 'Line',
+        'TeamName', 'TeamColour', 'FirstName', 'LastName', 'Reference',
+        'HeadshotUrl', 'CountryCode'
     ]
 
     for line in response:

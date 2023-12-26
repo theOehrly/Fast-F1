@@ -229,7 +229,7 @@ def test_driver_list():
     response = list()
     tl = 12  # length of timestamp: len('00:00:00:000')
     with open('fastf1/testing/reference_data/'
-              '2020_05_FP2/driver_list.raw', 'rb') as fobj:
+              '2023_01_FP1/driver_list.raw', 'rb') as fobj:
         for line in fobj.readlines():
             dec = line.decode('utf-8-sig')
             response.append([dec[:tl], fastf1._api.parse(dec[tl:])])
@@ -239,12 +239,13 @@ def test_driver_list():
 
     # ########## verify driver data
     assert isinstance(data, dict)
-    assert len(data.keys()) == 20
+    assert len(data.keys()) == 20  # 20 drivers in this GP
     dtypes = {'RacingNumber': str, 'BroadcastName': str, 'FullName': str,
               'Tla': str, 'Line': int, 'TeamName': str, 'TeamColour': str,
               'FirstName': str, 'LastName': str, 'Reference': str,
-              'HeadshotUrl': str}
+              'HeadshotUrl': str, 'CountryCode': str}
     for driver in data.values():
+        assert len(driver.keys()) == 12  # 12 fields in each driver's info.
         for key, val in driver.items():
             assert isinstance(val, dtypes[key])
 
