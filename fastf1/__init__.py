@@ -88,6 +88,13 @@ except ImportError:
     _version = None
 
 __version__ = getattr(_version, 'version', 'UNKNOWN')
+__version_tuple__ = getattr(_version, 'version_tuple', tuple())
+if __version_tuple__:
+    # create a short version containing only the public version
+    __version_short__ = ".".join(str(digit) for digit in __version_tuple__
+                                 if str(digit).isnumeric())
+else:
+    __version_short__ = __version__
 
 
 from typing import Dict
