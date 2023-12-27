@@ -6,6 +6,7 @@ import numpy as np
 
 from pandas import DataFrame, Index, RangeIndex
 try:
+    # import internal pandas functions and objects
     from pandas.core.internals.construction import \
         _get_axes, \
         BlockPlacement, \
@@ -13,8 +14,16 @@ try:
         new_block_2d
     from pandas.core.internals.managers import \
         _consolidate
-except ImportError as import_exc:
+
+    # verify existence of non-public methods of public objects
+    if not hasattr(Index, '_with_infer'):
+        raise AttributeError
+
+except (AttributeError, ImportError) as import_exc:
     logger.warning("Import of pandas internals failed", exc_info=import_exc)
+    CREATE_DF_FAST = False
+else:
+    CREATE_DF_FAST = True
 
 
 def create_df_fast(
@@ -39,7 +48,8 @@ def create_df_fast(
             of errors
 
     Returns:
-
+        Pandas DataFrame equivalent to the one create with the default
+        dataframe constructor
 
     """
     try:
@@ -50,10 +60,25 @@ def create_df_fast(
         # in case of error, use the usual but slower method
         logger.warning("Falling back to slow data frame creation!")
         logger.debug("Error during fast DataFrame creation", exc_info=exc)
-        data = {col: arr for col, arr in zip(columns, arrays)}
-        return DataFrame(data)
+        return _fallback_create_df(arrays, columns)
 
 
+def _fallback_create_df(
+        arrays: List[np.ndarray],
+        columns: list
+) -> DataFrame:
+    data = {col: arr for col, arr in zip(columns, arrays)}
+    return DataFrame(data)
+
+
+def _fallback_if_unsupported(func):
+    if not CREATE_DF_FAST:
+        return _fallback_create_df
+    else:
+        return func
+
+
+@_fallback_if_unsupported
 def _unsafe_create_df_fast(
         arrays: List[np.ndarray],
         columns: list
