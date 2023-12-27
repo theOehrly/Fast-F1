@@ -1,8 +1,8 @@
 """
 Helper functions for creating data plots.
 
-:mod:`fastf1.plotting` provides optional functionality with the intention of making
-it easy to create nice plots.
+:mod:`fastf1.plotting` provides optional functionality with the intention of
+making it easy to create nice plots.
 
 This module offers mainly two things:
     - team names and colors
@@ -44,9 +44,10 @@ except ImportError:
 import warnings
 
 with warnings.catch_warnings():
-    warnings.filterwarnings('ignore', message="Using slow pure-python SequenceMatcher")
-    # suppress that warning, it's confusing at best here, we don't need fast sequence matching
-    # and the installation (on windows) some effort
+    warnings.filterwarnings('ignore',
+                            message="Using slow pure-python SequenceMatcher")
+    # suppress that warning, it's confusing at best here, we don't need fast
+    # sequence matching and the installation (on windows) some effort
     from thefuzz import fuzz
 
 
@@ -197,12 +198,13 @@ def setup_mpl(
             you wish to customize the tick formatting for timedelta.
 
         color_scheme (str, None):
-            This enables the Fast-F1 color scheme that you can see in all example
-            images.
+            This enables the Fast-F1 color scheme that you can see in all
+            example images.
             Valid color scheme names are: ['fastf1', None]
 
         misc_mpl_mods (bool):
-            This enables a collection of patches for the following mpl features:
+            This enables a collection of patches for the following mpl
+            features:
 
                 - ``.savefig`` (saving of figures)
                 - ``.bar``/``.barh`` (plotting of bar graphs)
@@ -247,7 +249,8 @@ def driver_color(identifier: str) -> str:
         '#dc0000'
 
     Args:
-        identifier (str): Abbreviation or uniquely identifying name of the driver.
+        identifier (str): Abbreviation or uniquely identifying name of the
+            driver.
 
     Returns:
         str: hex color code
@@ -319,7 +322,8 @@ def team_color(identifier: str) -> str:
         '#00d2be'
 
     Args:
-        identifier (str): Abbreviation or uniquely identifying name of the team.
+        identifier (str): Abbreviation or uniquely identifying name of the
+            team.
 
     Returns:
         str: hex color code
@@ -369,7 +373,8 @@ def lapnumber_axis(ax, axis='xaxis'):
         the modified axis instance
 
     """
-    getattr(ax, axis).get_major_locator().set_params(integer=True, min_n_ticks=0)
+    getattr(ax, axis).get_major_locator().set_params(integer=True,
+                                                     min_n_ticks=0)
 
     return ax
 

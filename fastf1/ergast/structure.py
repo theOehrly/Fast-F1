@@ -94,8 +94,10 @@ def timedelta_from_ergast(t_str) -> Optional[datetime.timedelta]:
 
 
 def save_int(i_str) -> int:
-    """Create an ``int`` object from a string that is formatted like an integer.
-    In cases where the input string is not a valid integer, return -1. See #432
+    """
+    Create an ``int`` object from a string that is formatted like an
+    integer. In cases where the input string is not a valid integer,
+    return -1. See #432
     """
     # Match pure integer strings, e.g.
     #   - '1234' -> 1234

@@ -491,7 +491,9 @@ def get_events_remaining(
         backend: Optional[Literal['fastf1', 'f1timing', 'ergast']] = None,
         force_ergast: bool = False
 ) -> 'EventSchedule':
-    """Create an :class:`~fastf1.events.EventSchedule` object for remaining season.
+    """
+    Create an :class:`~fastf1.events.EventSchedule` object for remaining
+    season.
 
     Args:
         dt: Optional DateTime to get events after.
@@ -919,7 +921,8 @@ class EventSchedule(pd.DataFrame):
                 event for the British Grand Prix.
             strict_search: Search only for exact query matches
                 instead of using fuzzy search. For example,
-                ``.get_event_by_name("British Grand Prix", strict_search=True)`` # noqa: E501
+                ``.get_event_by_name("British Grand Prix",
+                strict_search=True)``
                 will return the event for the British Grand Prix, whereas
                 ``.get_event_by_name("British", strict_search=True)``
                 will return ``None``

@@ -28,11 +28,11 @@ def delta_time(
         modified or removed at a future point.
 
     .. warning:: This is a nice gimmick but not actually very accurate which
-        is an inherent problem from the way this is calculated currently (There
-        may not be a better way though). In comparison with the sector times and the
-        differences that can be calculated from these, there are notable differences!
-        You should always verify the result against sector time differences or find a
-        different way for verification.
+        is an inherent problem from the way this is calculated currently
+        (There may not be a better way though). In comparison with the sector
+        times and the differences that can be calculated from these, there are
+        notable differences! You should always verify the result against
+        sector time differences or find a different way for verification.
 
     Here is an example that compares the quickest laps of Leclerc and
     Hamilton from Bahrain 2021 Qualifying:
@@ -95,7 +95,9 @@ def delta_time(
         # Ensure that all samples are interpolated
         dstream_start = stream[1] - stream[0]
         dstream_end = stream[-1] - stream[-2]
-        return np.concatenate([[stream[0] - dstream_start], stream, [stream[-1] + dstream_end]])
+        return np.concatenate(
+            [[stream[0] - dstream_start], stream, [stream[-1] + dstream_end]]
+        )
 
     ltime = mini_pro(comp['Time'].dt.total_seconds().to_numpy())
     ldistance = mini_pro(comp['Distance'].to_numpy())
@@ -107,8 +109,8 @@ def delta_time(
 
 
 def recursive_dict_get(d: Dict, *keys: str, default_none: bool = False):
-    """Recursive dict get. Can take an arbitrary number of keys and returns an empty
-    dict if any key does not exist.
+    """Recursive dict get. Can take an arbitrary number of keys and returns an
+    empty dict if any key does not exist.
     https://stackoverflow.com/a/28225747"""
     ret = reduce(lambda c, k: c.get(k, {}), keys, d)
     if default_none and ret == {}:
