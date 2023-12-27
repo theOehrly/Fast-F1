@@ -19,7 +19,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install --upgrade build setuptools twine
+        python -m pip install --upgrade build setuptools setuptools_scm twine
 
     # if this is a release, upload to PyPI
     - name: Build and publish release
@@ -28,15 +28,22 @@ jobs:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
       run: |
+        PACKAGE_VERSION=$(python -m setuptools_scm)
+        echo "Creating package with version $PACKAGE_VERSION"
         python -m build
         twine upload dist/*
 
-    # if this is a manual dispatch, upload to TestPyPI
+    # if this is a manual dispatch, upload to PyPI test index
     - name: Build and publish test release
       if: github.event_name == 'workflow_dispatch'
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.TEST_PYPI_TOKEN}}
+        # override setuptools_scm config to remove local version, else PyPI will not accept the package
+        # this allows to push development releases to the test index from any repository state
+        SETUPTOOLS_SCM_OVERRIDES_FOR_FASTF1: local_scheme="no-local-version"
       run: |
+        PACKAGE_VERSION=$(python -m setuptools_scm)
+        echo "Creating package with version $PACKAGE_VERSION"
         python -m build
         twine upload --repository testpypi dist/*

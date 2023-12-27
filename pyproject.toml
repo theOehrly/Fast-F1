@@ -44,7 +44,7 @@ namespaces = false
 [tool.setuptools_scm]
 version_file = "fastf1/_version.py"
 version_scheme = "release-branch-semver"
-#local_scheme = "no-local-version"
+local_scheme = "node-and-date"
 fallback_version = "0.0+UNKNOWN"
 
 [tool.ruff]
