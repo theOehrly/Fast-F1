@@ -460,29 +460,54 @@ class Ergast:
         # some special cases: the endpoint may also be used as selector
         # therefore, if the specifier is defined, do not add the endpoint
         # string additionally
+        if driver is not None:
+            if endpoint == 'drivers':
+                endpoint = f"drivers/{driver}"
+            else:
+                selectors.append(f"/drivers/{driver}")
+
+        if constructor is not None:
+            if endpoint == 'constructors':
+                endpoint = f"constructors/{constructor}"
+            else:
+                selectors.append(f"/constructors/{constructor}")
+
+        if circuit is not None:
+            if endpoint == 'circuits':
+                endpoint = f"circuits/{circuit}"
+            else:
+                selectors.append(f"/circuits/{circuit}")
+
+        if status is not None:
+            if endpoint == 'status':
+                endpoint = f"status/{status}"
+            else:
+                selectors.append(f"/status/{status}")
+
         if standings_position is not None:
             if endpoint == 'driverStandings':
-                selectors.append(f"/driverStandings")
-                endpoint = None
+                endpoint = f"driverStandings/{standings_position}"
             elif endpoint == 'constructorStandings':
-                selectors.append(f"/constructorStandings")
-                endpoint = None
+                endpoint = f"constructorStandings/{standings_position}"
+            else:
+                endpoint = f"{endpoint}/{standings_position}"
 
         if lap_number is not None:
             selectors.append(f"/laps/{lap_number}")
             if endpoint == 'laps':
-                endpoint = None
+                endpoint = f"laps/{lap_number}"
+            else:
+                selectors.append(f"/laps/{lap_number}")
 
         if stop_number is not None:
             selectors.append(f"/pitstops/{stop_number}")
             if endpoint == 'pitstops':
-                endpoint = None
+                endpoint = f"pitstops/{stop_number}"
+            else:
+                selectors.append(f"/pitstops/{stop_number}")
 
         if endpoint is not None:
             selectors.append(f"/{endpoint}")
-
-        if standings_position is not None:
-            selectors.append(f"/{standings_position}")
 
         return BASE_URL + "".join(selectors) + ".json"
 

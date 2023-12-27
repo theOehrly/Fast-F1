@@ -30,83 +30,83 @@ def test_date_from_ergast():
 @pytest.mark.parametrize(
     "time_string, expected",
     (
-            ("10:30:25.123456+00:00",
-             datetime.time(hour=10, minute=30, second=25, microsecond=123456,
-                           tzinfo=datetime.timezone.utc)),
-            ("10:30:25.123456Z",
-             datetime.time(hour=10, minute=30, second=25, microsecond=123456,
-                           tzinfo=datetime.timezone.utc)),
-            ("10:30:25.123456",
-             datetime.time(hour=10, minute=30, second=25, microsecond=123456)),
+        ("10:30:25.123456+00:00",
+         datetime.time(hour=10, minute=30, second=25, microsecond=123456,
+                       tzinfo=datetime.timezone.utc)),
+        ("10:30:25.123456Z",
+         datetime.time(hour=10, minute=30, second=25, microsecond=123456,
+                       tzinfo=datetime.timezone.utc)),
+        ("10:30:25.123456",
+         datetime.time(hour=10, minute=30, second=25, microsecond=123456)),
 
 
-            ("10:30:25.12+00:00",
-             datetime.time(hour=10, minute=30, second=25, microsecond=120000,
-                           tzinfo=datetime.timezone.utc)),
-            ("10:30:25.12Z",
-             datetime.time(hour=10, minute=30, second=25, microsecond=120000,
-                           tzinfo=datetime.timezone.utc)),
-            ("10:30:25.12",
-             datetime.time(hour=10, minute=30, second=25, microsecond=120000)),
+        ("10:30:25.12+00:00",
+         datetime.time(hour=10, minute=30, second=25, microsecond=120000,
+                       tzinfo=datetime.timezone.utc)),
+        ("10:30:25.12Z",
+         datetime.time(hour=10, minute=30, second=25, microsecond=120000,
+                       tzinfo=datetime.timezone.utc)),
+        ("10:30:25.12",
+         datetime.time(hour=10, minute=30, second=25, microsecond=120000)),
 
 
-            ("10:30:25+00:00",
-             datetime.time(hour=10, minute=30, second=25,
-                           tzinfo=datetime.timezone.utc)),
-            ("10:30:25Z",
-             datetime.time(hour=10, minute=30, second=25,
-                           tzinfo=datetime.timezone.utc)),
-            ("10:30:25",
-             datetime.time(hour=10, minute=30, second=25)),
+        ("10:30:25+00:00",
+         datetime.time(hour=10, minute=30, second=25,
+                       tzinfo=datetime.timezone.utc)),
+        ("10:30:25Z",
+         datetime.time(hour=10, minute=30, second=25,
+                       tzinfo=datetime.timezone.utc)),
+        ("10:30:25",
+         datetime.time(hour=10, minute=30, second=25)),
 
 
-            ("1:30:25+00:00",
-             datetime.time(hour=1, minute=30, second=25,
-                           tzinfo=datetime.timezone.utc)),
-            ("1:30:25Z",
-             datetime.time(hour=1, minute=30, second=25,
-                           tzinfo=datetime.timezone.utc)),
-            ("1:30:25",
-             datetime.time(hour=1, minute=30, second=25)),
+        ("1:30:25+00:00",
+         datetime.time(hour=1, minute=30, second=25,
+                       tzinfo=datetime.timezone.utc)),
+        ("1:30:25Z",
+         datetime.time(hour=1, minute=30, second=25,
+                       tzinfo=datetime.timezone.utc)),
+        ("1:30:25",
+         datetime.time(hour=1, minute=30, second=25)),
 
-            ("10:30:25+05:30",
-             datetime.time(hour=10, minute=30, second=25,
-                           tzinfo=datetime.timezone(
-                               datetime.timedelta(hours=5, minutes=30)
-                           ))),
-            ("10:30:25-05:30",
-             datetime.time(hour=10, minute=30, second=25,
-                           tzinfo=datetime.timezone(
-                               datetime.timedelta(hours=-5, minutes=-30)
-                           ))),
-            ("10:30:25+00:00",
-             datetime.time(hour=10, minute=30, second=25,
-                           tzinfo=datetime.timezone.utc)),
-            ("10:30:25Z",
-             datetime.time(hour=10, minute=30, second=25,
-                           tzinfo=datetime.timezone.utc)),
-            ("10:30:25",
-             datetime.time(hour=10, minute=30, second=25)),
-
-
-            ("5:25.12+00:00",
-             datetime.time(minute=5, second=25, microsecond=120000,
-                           tzinfo=datetime.timezone.utc)),
-            ("5:25.12Z",
-             datetime.time(minute=5, second=25, microsecond=120000,
-                           tzinfo=datetime.timezone.utc)),
-            ("5:25.12",
-             datetime.time(minute=5, second=25, microsecond=120000)),
+        ("10:30:25+05:30",
+         datetime.time(hour=10, minute=30, second=25,
+                       tzinfo=datetime.timezone(
+                           datetime.timedelta(hours=5, minutes=30)
+                       ))),
+        ("10:30:25-05:30",
+         datetime.time(hour=10, minute=30, second=25,
+                       tzinfo=datetime.timezone(
+                           datetime.timedelta(hours=-5, minutes=-30)
+                       ))),
+        ("10:30:25+00:00",
+         datetime.time(hour=10, minute=30, second=25,
+                       tzinfo=datetime.timezone.utc)),
+        ("10:30:25Z",
+         datetime.time(hour=10, minute=30, second=25,
+                       tzinfo=datetime.timezone.utc)),
+        ("10:30:25",
+         datetime.time(hour=10, minute=30, second=25)),
 
 
-            ("5.12+00:00",
-             datetime.time(second=5, microsecond=120000,
-                           tzinfo=datetime.timezone.utc)),
-            ("5.12Z",
-             datetime.time(second=5, microsecond=120000,
-                           tzinfo=datetime.timezone.utc)),
-            ("5.12",
-             datetime.time(second=5, microsecond=120000)),
+        ("5:25.12+00:00",
+         datetime.time(minute=5, second=25, microsecond=120000,
+                       tzinfo=datetime.timezone.utc)),
+        ("5:25.12Z",
+         datetime.time(minute=5, second=25, microsecond=120000,
+                       tzinfo=datetime.timezone.utc)),
+        ("5:25.12",
+         datetime.time(minute=5, second=25, microsecond=120000)),
+
+
+        ("5.12+00:00",
+         datetime.time(second=5, microsecond=120000,
+                       tzinfo=datetime.timezone.utc)),
+        ("5.12Z",
+         datetime.time(second=5, microsecond=120000,
+                       tzinfo=datetime.timezone.utc)),
+        ("5.12",
+         datetime.time(second=5, microsecond=120000)),
     )
 )
 def test_time_from_ergast(time_string, expected):
@@ -129,36 +129,36 @@ def test_time_from_ergast_errors(time_string, caplog):
 @pytest.mark.parametrize(
     "time_string, expected",
     (
-            ("10:30:25.123456",
-             datetime.timedelta(hours=10, minutes=30, seconds=25,
-                                microseconds=123456)),
+        ("10:30:25.123456",
+         datetime.timedelta(hours=10, minutes=30, seconds=25,
+                            microseconds=123456)),
 
-            ("+10:30:25.123456",
-             datetime.timedelta(hours=10, minutes=30, seconds=25,
-                                microseconds=123456)),
+        ("+10:30:25.123456",
+         datetime.timedelta(hours=10, minutes=30, seconds=25,
+                            microseconds=123456)),
 
-            ("-10:30:25.123456",
-             -datetime.timedelta(hours=10, minutes=30, seconds=25,
-                                 microseconds=123456)),
+        ("-10:30:25.123456",
+         -datetime.timedelta(hours=10, minutes=30, seconds=25,
+                             microseconds=123456)),
 
-            ("10:30:25.12",
-             datetime.timedelta(hours=10, minutes=30, seconds=25,
-                                microseconds=120000)),
+        ("10:30:25.12",
+         datetime.timedelta(hours=10, minutes=30, seconds=25,
+                            microseconds=120000)),
 
-            ("10:30:25",
-             datetime.timedelta(hours=10, minutes=30, seconds=25)),
+        ("10:30:25",
+         datetime.timedelta(hours=10, minutes=30, seconds=25)),
 
-            ("1:30:25",
-             datetime.timedelta(hours=1, minutes=30, seconds=25)),
+        ("1:30:25",
+         datetime.timedelta(hours=1, minutes=30, seconds=25)),
 
-            ("10:30:25",
-             datetime.timedelta(hours=10, minutes=30, seconds=25)),
+        ("10:30:25",
+         datetime.timedelta(hours=10, minutes=30, seconds=25)),
 
-            ("5:25.12",
-             datetime.timedelta(minutes=5, seconds=25, microseconds=120000)),
+        ("5:25.12",
+         datetime.timedelta(minutes=5, seconds=25, microseconds=120000)),
 
-            ("5.12",
-             datetime.timedelta(seconds=5, microseconds=120000)),
+        ("5.12",
+         datetime.timedelta(seconds=5, microseconds=120000)),
     )
 )
 def test_timedelta_from_ergast(time_string, expected):
@@ -313,30 +313,87 @@ def test_merge_dicts_of_lists(data, expected):
 @pytest.mark.parametrize(
     "endpoint, selectors, expected",
     (
-        # "normal" behaviour for most endpoints
+        # "simple" behaviour
         ['seasons', {}, "https://ergast.com/api/f1/seasons.json"],
 
-        ['circuits', {'driver': 'alonso', 'constructor': 'alpine'},
-         "https://ergast.com/api/f1/constructors/alpine/"
-         "drivers/alonso/circuits.json"],
+        ['races', {'season': 2022},
+         "https://ergast.com/api/f1/2022/races.json"],
 
-        # special case where endpoint name matches selector
+        ['results', {'season': 2022, 'round': '10'},
+         "https://ergast.com/api/f1/2022/10/results.json"],
+
+        ['results', {'season': 2022, 'round': '10', 'standings_position': '1'},
+         "https://ergast.com/api/f1/2022/10/results/1.json"],
+
+        ['sprint', {'season': 2022, 'round': '4'},
+         "https://ergast.com/api/f1/2022/4/sprint.json"],
+
+        ['sprint', {'season': 2022, 'round': '4', 'standings_position': '1'},
+         "https://ergast.com/api/f1/2022/4/sprint/1.json"],
+
+        ['qualifying', {'season': 2022, 'round': '10'},
+         "https://ergast.com/api/f1/2022/10/qualifying.json"],
+
+        ['qualifying', {'season': 2022, 'round': '10', 'standings_position': '1'},
+         "https://ergast.com/api/f1/2022/10/qualifying/1.json"],
+
+        # special cases where endpoint name matches selector and the endpoint
+        # gets extended with its selection
+        ['drivers', {},
+         "https://ergast.com/api/f1/drivers.json"],
+
+        ['drivers', {'driver': 'alonso'},
+         "https://ergast.com/api/f1/drivers/alonso.json"],
+
+        ['constructors', {},
+         "https://ergast.com/api/f1/constructors.json"],
+
+        ['constructors', {'constructor': 'ferrari'},
+         "https://ergast.com/api/f1/constructors/ferrari.json"],
+
+        ['circuits', {},
+         "https://ergast.com/api/f1/circuits.json"],
+
+        ['circuits', {'circuit': 'monza'},
+         "https://ergast.com/api/f1/circuits/monza.json"],
+
+        ['status', {},
+         "https://ergast.com/api/f1/status.json"],
+
+        ['status', {'status': '1'},
+         "https://ergast.com/api/f1/status/1.json"],
+
+        ['driverStandings', {'season': 2022},
+         "https://ergast.com/api/f1/2022/driverStandings.json"],
+
+        ['driverStandings', {'season': 2022, 'standings_position': '1'},
+         "https://ergast.com/api/f1/2022/driverStandings/1.json"],
+
+        ['constructorStandings', {'season': 2022},
+         "https://ergast.com/api/f1/2022/constructorStandings.json"],
+
+        ['constructorStandings', {'season': 2022, 'standings_position': '1'},
+         "https://ergast.com/api/f1/2022/constructorStandings/1.json"],
+
         ['laps', {'season': 2022, 'round': 10},
          "https://ergast.com/api/f1/2022/10/laps.json"],
 
         ['laps', {'season': 2022, 'round': 10, 'lap_number': 1},
          "https://ergast.com/api/f1/2022/10/laps/1.json"],
 
+        ['pitstops', {'season': 2022, 'round': 10},
+         "https://ergast.com/api/f1/2022/10/pitstops.json"],
+
+        ['pitstops', {'season': 2022, 'round': 10, 'stop_number': '1'},
+         "https://ergast.com/api/f1/2022/10/pitstops/1.json"],
+
         # endpoint/selector combination in other request
         ['pitstops', {'season': 2022, 'round': 10, 'lap_number': 1},
          "https://ergast.com/api/f1/2022/10/laps/1/pitstops.json"],
 
-        # combined selector standings_position
-        ['driverStandings', {'season': 2022, 'standings_position': 1},
-         "https://ergast.com/api/f1/2022/driverStandings/1.json"],
-
-        ['constructorStandings', {'season': 2022, 'standings_position': 3},
-         "https://ergast.com/api/f1/2022/constructorStandings/3.json"]
+        ['circuits', {'driver': 'alonso', 'constructor': 'alpine'},
+         "https://ergast.com/api/f1/drivers/alonso/"
+         "constructors/alpine/circuits.json"],
     )
 )
 def test_ergast_build_url(endpoint: str, selectors: dict, expected: str):
