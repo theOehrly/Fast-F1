@@ -444,8 +444,6 @@ class Ergast:
             selectors.append(f"/{round}")
         if grid_position is not None:
             selectors.append(f"/grid/{grid_position}")
-        if results_position is not None:
-            selectors.append(f"/results/{results_position}")
         if fastest_rank is not None:
             selectors.append(f"/fastest/{fastest_rank}")
 
@@ -481,6 +479,12 @@ class Ergast:
                 endpoint = f"driverStandings/{standings_position}"
             elif endpoint == 'constructorStandings':
                 endpoint = f"constructorStandings/{standings_position}"
+
+        if results_position is not None:
+            if endpoint in ('results', 'qualifying', 'sprint'):
+                endpoint = f"{endpoint}/{results_position}"
+            else:
+                selectors.append(f"/results/{results_position}")
 
         if lap_number is not None:
             if endpoint == 'laps':
@@ -1019,6 +1023,7 @@ class Ergast:
             constructor: Optional[str] = None,
             driver: Optional[str] = None,
             grid_position: Optional[int] = None,
+            results_position: Optional[int] = None,
             fastest_rank: Optional[int] = None,
             status: Optional[str] = None,
             result_type: Optional[Literal['pandas', 'raw']] = None,
@@ -1042,6 +1047,8 @@ class Ergast:
                 (default: all)
             driver: select a driver by its driver id (default: all)
             grid_position: select a grid position by its number (default: all)
+            results_position: select a finishing result by its position
+                (default: all)
             fastest_rank: select fastest by rank number (default: all)
             status: select by finishing status (default: all)
             result_type: Overwrites the default result type
@@ -1062,6 +1069,7 @@ class Ergast:
                      'constructor': constructor,
                      'driver': driver,
                      'grid_position': grid_position,
+                     'results_position': results_position,
                      'fastest_rank': fastest_rank,
                      'status': status}
 
@@ -1151,6 +1159,7 @@ class Ergast:
             constructor: Optional[str] = None,
             driver: Optional[str] = None,
             grid_position: Optional[int] = None,
+            results_position: Optional[int] = None,
             status: Optional[str] = None,
             result_type: Optional[Literal['pandas', 'raw']] = None,
             auto_cast: Optional[bool] = None,
@@ -1173,6 +1182,8 @@ class Ergast:
                 (default: all)
             driver: select a driver by its driver id (default: all)
             grid_position: select a grid position by its number (default: all)
+            results_position: select a finishing result by its position
+                (default: all)
             status: select by finishing status (default: all)
             result_type: Overwrites the default result type
             auto_cast: Overwrites the default value for ``auto_cast``
@@ -1192,6 +1203,7 @@ class Ergast:
                      'constructor': constructor,
                      'driver': driver,
                      'grid_position': grid_position,
+                     'results_position': results_position,
                      'status': status}
 
         return self._build_default_result(endpoint='sprint',
