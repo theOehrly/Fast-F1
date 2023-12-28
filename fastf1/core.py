@@ -163,13 +163,13 @@ class Telemetry(pd.DataFrame):
     the string ``'original'`` or an integer to specify a frequency in Hz."""
 
     _CHANNELS = {
-        'X': {'type': 'continuous', 'missing': 'quadratic'},
-        'Y': {'type': 'continuous', 'missing': 'quadratic'},
-        'Z': {'type': 'continuous', 'missing': 'quadratic'},
+        'X': {'type': 'continuous', 'method': 'quadratic'},
+        'Y': {'type': 'continuous', 'method': 'quadratic'},
+        'Z': {'type': 'continuous', 'method': 'quadratic'},
         'Status': {'type': 'discrete'},
-        'Speed': {'type': 'continuous', 'missing': 'linear'},
-        'RPM': {'type': 'continuous', 'missing': 'linear'},
-        'Throttle': {'type': 'continuous', 'missing': 'linear'},
+        'Speed': {'type': 'continuous', 'method': 'linear'},
+        'RPM': {'type': 'continuous', 'method': 'linear'},
+        'Throttle': {'type': 'continuous', 'method': 'linear'},
         # linear is often required as quadratic overshoots on sudden changes
         'Brake': {'type': 'discrete'},
         'DRS': {'type': 'discrete'},
@@ -178,11 +178,11 @@ class Telemetry(pd.DataFrame):
         'Date': {'type': 'excluded'},  # special, used as index when resampling
         'Time': {'type': 'excluded'},  # special, recalculated from 'Date'
         'SessionTime': {'type': 'excluded'},
-        'Distance': {'type': 'continuous', 'missing': 'quadratic'},
-        'RelativeDistance': {'type': 'continuous', 'missing': 'quadratic'},
-        'DifferentialDistance': {'type': 'continuous', 'missing': 'quadratic'},
+        'Distance': {'type': 'continuous', 'method': 'quadratic'},
+        'RelativeDistance': {'type': 'continuous', 'method': 'quadratic'},
+        'DifferentialDistance': {'type': 'continuous', 'method': 'quadratic'},
         'DriverAhead': {'type': 'discrete'},
-        'DistanceToDriverAhead': {'type': 'continuous', 'missing': 'linear'}
+        'DistanceToDriverAhead': {'type': 'continuous', 'method': 'linear'}
     }
     """Known telemetry channels which are supported by default"""
 
@@ -493,10 +493,19 @@ class Telemetry(pd.DataFrame):
                 sig_type = self._CHANNELS[ch]['type']
 
                 if sig_type == 'continuous':
-                    missing = self._CHANNELS[ch]['missing']
+                    method = self._CHANNELS[ch]['method']
+                    if method in ('nearest', 'zero', 'slinear', 'quadratic',
+                                  'cubic', 'barycentric', 'polynomial'):
+                        # interpolation done using scipy.interpolate.interp1d
+                        interp_kwargs = {'fill_value': 'extrapolate'}
+                    elif method in ('pad', 'backfill', 'ffill', 'bfill'):
+                        interp_kwargs = {}
+                    else:
+                        interp_kwargs = {'limit_direction': 'both'}
+
                     res = merged.loc[:, ch] \
                         .resample(frq, origin=ref_date).mean() \
-                        .interpolate(method=missing, fill_value='extrapolate')
+                        .interpolate(method=method, **interp_kwargs)
 
                 elif sig_type == 'discrete':
                     res = merged.loc[:, ch].resample(frq, origin=ref_date) \
@@ -618,10 +627,19 @@ class Telemetry(pd.DataFrame):
                 if ret[ch].dtype == 'object':
                     warnings.warn("Interpolation not possible for telemetry "
                                   "channel because dtype is 'object'")
-                missing = self._CHANNELS[ch]['missing']
+
+                method = self._CHANNELS[ch]['method']
+                if method in ('nearest', 'zero', 'slinear', 'quadratic',
+                              'cubic', 'barycentric', 'polynomial'):
+                    # interpolation done using scipy.interpolate.interp1d
+                    interp_kwargs = {'fill_value': 'extrapolate'}
+                elif method in ('pad', 'backfill', 'ffill', 'bfill'):
+                    interp_kwargs = {}
+                else:
+                    interp_kwargs = {'limit_direction': 'both'}
+
                 ret.loc[:, ch] = ret.loc[:, ch] \
-                    .interpolate(method=missing, limit_direction='both',
-                                 fill_value='extrapolate')
+                    .interpolate(method=method, **interp_kwargs)
 
             elif sig_type == 'discrete':
                 ret.loc[:, ch] = ret.loc[:, ch].ffill().ffill().bfill()
@@ -676,7 +694,7 @@ class Telemetry(pd.DataFrame):
                              "interpolation_method to be specified.")
 
         cls._CHANNELS[name] = {'type': signal_type,
-                               'missing': interpolation_method}
+                               'method': interpolation_method}
 
     def get_first_non_zero_time_index(self):
         """
