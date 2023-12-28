@@ -99,7 +99,6 @@ jobs:
           python -m pip install -e .
 
       - name: Run tests
-        if: ${{ github.ref != 'refs/heads/master' }}
         run: |
           mkdir test_cache  # make sure cache dir exists
           git fetch origin --quiet
