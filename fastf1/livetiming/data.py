@@ -161,7 +161,8 @@ class LiveTimingData:
     def _parse_session_data(self, msg):
         # make sure the categories exist as we want to append to them
         if 'TrackStatus' not in self.data.keys():
-            self.data['TrackStatus'] = {'Time': [], 'Status': [], 'Message': []}
+            self.data['TrackStatus'] = {'Time': [], 'Status': [],
+                                        'Message': []}
         if 'SessionStatus' not in self.data.keys():
             self.data['SessionStatus'] = {'Time': [], 'Status': []}
 
