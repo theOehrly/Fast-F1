@@ -32,19 +32,41 @@ dependencies = [
 "Documentation" = "https://docs.fastf1.dev"
 
 [build-system]
-requires = ["setuptools", "setuptools-scm"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
 
-[tool.setuptools.packages.find]
-where = [""]
-include = ["fastf1*"]
-exclude = ["fastf1/testing*"]
-namespaces = false
+[tool.hatch.version]
+source = "vcs"
 
-[tool.setuptools_scm]
-version_file = "fastf1/_version.py"
+[tool.hatch.build.targets.wheel]
+ignore-vcs = true
+include = [
+  "fastf1/**",
+]
+exclude = [
+  "fastf1/tests/**",
+  "fastf1/testing/**",
+]
+
+[tool.hatch.build.targets.sdist]
+ignore-vcs = true
+include = [
+  "fastf1/**",
+  "requirements/**",
+  "examples/**"
+]
+exclude = [
+  "fastf1/tests/**",
+  "fastf1/testing/**",
+]
+
+[tool.hatch.build.hooks.vcs]
+version-file = "fastf1/_version.py"
+
+[tool.hatch.version.raw-options]
+# configures setuptools_scm within the hatchling build backend
 version_scheme = "release-branch-semver"
-local_scheme = "node-and-date"
+local_scheme = "no-local-version"  # needed for PyPI support for dev releases; hatch-vcs ignores setuptools_scm overrides through env vars
 fallback_version = "0.0+UNKNOWN"
 
 [tool.ruff]
