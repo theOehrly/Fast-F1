@@ -87,8 +87,8 @@ try:
 except ImportError:
     _version = None
 
-__version__ = getattr(_version, 'version', 'UNKNOWN')
-__version_tuple__ = getattr(_version, 'version_tuple', tuple())
+__version__ = getattr(_version, 'version', '0.0+UNKNOWN')
+__version_tuple__ = getattr(_version, 'version_tuple', (0, 0, '+UNKNOWN'))
 if __version_tuple__:
     # create a short version containing only the public version
     __version_short__ = ".".join(str(digit) for digit in __version_tuple__
