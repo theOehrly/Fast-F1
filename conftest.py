@@ -13,10 +13,6 @@ def pytest_addoption(parser):
         help="run tests which require connecting to ergast"
     )
     parser.addoption(
-        "--lint-only", action="store_true", default=False,
-        help="only run linter and skip all tests"
-    )
-    parser.addoption(
         "--prj-doc", action="store_true", default=False,
         help="run only tests for general project structure and documentation"
     )
@@ -64,11 +60,6 @@ def pytest_collection_modifyitems(config, items):
         for item in items:
             if "ergastapi" in item.keywords:
                 item.add_marker(skip_ergast)
-
-    # lint only: skip all
-    if config.getoption('--lint-only'):
-        items[:] = [item for item in items
-                    if item.get_closest_marker('flake8')]
 
     # only test documentation and project structure
     if config.getoption('--prj-doc'):

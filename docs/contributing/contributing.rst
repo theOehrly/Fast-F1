@@ -134,7 +134,7 @@ rules before submitting a pull request:
 
 * Formatting should follow the recommendations of PEP8_, as enforced by
   ruff_. The maximum line length for all changed lines is 79 characters.
-  You can check flake8 compliance from the command line with ::
+  You can check code style compliance from the command line with ::
 
     python -m pip install ruff
     ruff check .
@@ -142,9 +142,8 @@ rules before submitting a pull request:
   or your editor may provide integration with it. The above command will not
   flag lines that are too long!
 
-  Flake8 will also be run before each commit if you have the pre-commit hooks
-  installed (see :ref:`install_pre_commit`). Contrary to the manual invocation of flake8, this will also flag
-  lines which are too long!
+  Ruff will also be run before each commit if you have the pre-commit hooks
+  installed (see :ref:`install_pre_commit`).
 
   .. _PEP8: https://www.python.org/dev/peps/pep-0008/
   .. _ruff: https://docs.astral.sh/ruff/

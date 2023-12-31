@@ -1,4 +1,4 @@
-name: setuptools-scm test
+name: Hatch SCM versioning test
 
 on:
   workflow_dispatch:
