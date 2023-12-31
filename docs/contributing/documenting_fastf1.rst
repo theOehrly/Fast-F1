@@ -31,18 +31,26 @@ The documentation sources are found in the :file:`docs/` directory in the trunk.
 The configuration file for Sphinx is :file:`docs/conf.py`. It controls which
 directories Sphinx parses, how the docs are built, and how the extensions are
 used. To build the documentation in html format run the following command
-from the project root directory:
+from the :file:`docs/` directory:
 
 .. code:: sh
 
-  python setup.py build_sphinx
+  make html
 
 
-The documentation build expects the cache directory :file:`doc_cache/` to exist. You will have to create it the first time.
+The documentation build expects the cache directory :file:`doc_cache/` to exist
+in the project root.
+You will have to create it manually the first time you build the documentation.
 
 
 The generated documentation can be found in :file:`docs/_build/html` and viewed
-in an internet browser by opening the html files.
+in an internet browser by opening the html files. Run the following command
+to open the homepage of the documentation build:
+
+.. code:: sh
+
+  make show
+
 
 Writing documentation
 ---------------------

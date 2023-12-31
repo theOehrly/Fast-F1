@@ -2,16 +2,16 @@ import copy
 import json
 from typing import List, Literal, Optional, Union
 
+from fastf1 import __version_short__
 from fastf1.req import Cache
 import fastf1.ergast.structure as API
-from fastf1.version import __version__
 
 
 import pandas as pd
 
 
 BASE_URL = 'https://ergast.com/api/f1'
-HEADERS = {'User-Agent': f'FastF1/{__version__}'}
+HEADERS = {'User-Agent': f'FastF1/{__version_short__}'}
 
 
 class ErgastResponseMixin:

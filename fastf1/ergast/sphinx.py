@@ -4,9 +4,9 @@ from docutils.parsers.rst import Directive, directives
 import json
 from typing import get_type_hints
 
+from fastf1 import __version__
 from fastf1.ergast.interface import ErgastResultFrame
 import fastf1.ergast.structure
-from fastf1.version import __version__
 
 
 class ApiMappingDirective(Directive):

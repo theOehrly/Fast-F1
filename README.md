@@ -27,8 +27,6 @@ It is recommended to install FastF1 using `pip`:
 pip install fastf1
 ```
 
-Note that Python 3.8 or higher is required.
-
 Alternatively, a wheel or a source distribution can be downloaded from Pypi.
 
 You can also install using `conda`:
@@ -41,9 +39,9 @@ conda install -c conda-forge fastf1
 
 - R package that wraps FastF1: https://github.com/SCasanova/f1dataR
 
-These packages are not directly related to the FastF1 project. Questions and
-suggestions regarding these packages need to be directed at their respective 
-maintainers.
+Third-party packages are not directly related to the FastF1 project. Questions 
+and suggestions regarding these packages need to be directed at their 
+respective maintainers.
 
 ## Documentation
 
