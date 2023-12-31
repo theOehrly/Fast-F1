@@ -133,11 +133,11 @@ rules before submitting a pull request:
   <https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html>`_.
 
 * Formatting should follow the recommendations of PEP8_, as enforced by
-  flake8_. The maximum line length for all changed lines is 79 characters.
+  ruff_. The maximum line length for all changed lines is 79 characters.
   You can check flake8 compliance from the command line with ::
 
-    python -m pip install flake8
-    flake8 fastf1 examples
+    python -m pip install ruff
+    ruff check .
 
   or your editor may provide integration with it. The above command will not
   flag lines that are too long!
@@ -147,7 +147,7 @@ rules before submitting a pull request:
   lines which are too long!
 
   .. _PEP8: https://www.python.org/dev/peps/pep-0008/
-  .. _flake8: https://flake8.pycqa.org/
+  .. _ruff: https://docs.astral.sh/ruff/
 
 * Changes (both new features and bugfixes) should have good test coverage. See
   :ref:`testing` for more details.
@@ -168,9 +168,6 @@ rules before submitting a pull request:
     of those guidelines, but we expect that enforcing those constraints on all
     new contributions will move the overall code base quality in the right
     direction.
-
-    Most notably, all new and changed lines should adhere to the 79 character
-    line length limit.
 
 .. seealso::
 
@@ -258,20 +255,19 @@ below, except in very rare circumstances as deemed necessary by the developers.
 This ensures that users are notified before the change will take effect and thus
 prevents unexpected breaking of code.
 
-Note that FastF1 uses a rather short deprecation timeline compared to other
-projects. This is necessary as FastF1 often needs to be adapted to changes in
-external APIs which may come without prior warning. To be able to efficiently
-keep up with these external changes, it can be necessary to make changes to
-FastF1 on short notice. In general, breaking changes and deprecations should
-be avoided if possible and users should be given prior warnings and as much time
-as possible to adapt.
+Note that FastF1 often needs to be adapted to changes in external APIs which
+may come without prior warning. To be able to efficiently keep up with these
+external changes, it can be necessary to make changes to FastF1 on shorter
+notice than described below. In general, breaking changes and deprecations
+should be avoided if possible and users should be given prior warnings and as
+much time as possible to adapt.
 
 
 Rules
 ~~~~~
 
-- Deprecations are targeted at the next patch release (e.g. 2.3.x)
-- Deprecated API is generally removed on the next point-releases (e.g. 2.x)
+- Deprecations are targeted at the next point release (e.g. 3.x)
+- Deprecated API is generally removed two point-releases
   after introduction of the deprecation. Longer deprecations can be imposed by
   core developers on a case-by-case basis to give more time for the transition
 - The old API must remain fully functional during the deprecation period
@@ -284,8 +280,8 @@ Introducing
 
 1. Announce the deprecation in the changelog
    :file:`docs/changelog.rst` (reference your pull request as well)
-2. If possible, issue a warning when the deprecated
-   API is used, using the python `logging` module.
+2. If possible, issue a `DeprecationWarning` when the deprecated
+   API is used, using the python `warnings` module.
 
 
 Expiring
@@ -352,12 +348,14 @@ will log to a logger named ``fastf1.yourmodulename``.
 
 Which logging level to use?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-logger
+
 There are five levels at which you can emit messages.
 
 - `logger.critical` and `logger.error` are really only there for errors that
   will end the use of the library but not kill the interpreter.
-- `logger.warning` are used to warn the user, see below.
+- `logger.warning` is used to warn the user, for example, if an operation has
+  failed gracefully, if some action is likely to have unintended side-effects
+  or similar.
 - `logger.info` is for information that the user may want to know if the
   program behaves oddly. For instance, if a driver did not participate in a
   session, some data cannot be loaded for this specific driver. But FastF1 can

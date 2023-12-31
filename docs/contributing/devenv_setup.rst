@@ -61,13 +61,13 @@ Installing additional dependencies for development
 To install additional dependencies for development, testing and building of the
 documentation, run the following command within the :file:`Fast-F1` directory::
 
-    python -m pip install -r requirements-dev.txt
+    python -m pip install -r requirements/dev.txt
 
 [Optional] Installing pre-commit hooks
 ======================================
 You can optionally install `pre-commit <https://pre-commit.com/>`_ hooks.
-These will automatically check flake8 and other style issues when you run
-``git commit``. The hooks are defined in the top level
+These will automatically check code style issues (using the ruff linter) when
+you run ``git commit``. The hooks are defined in the top level
 ``.pre-commit-config.yaml`` file. To install the hooks ::
 
     pip install pre-commit

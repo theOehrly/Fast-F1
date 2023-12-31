@@ -58,7 +58,7 @@ Documentation
 * Every new feature should be documented.  If it's a new module, don't
   forget to add a new rst file to the API docs.
 
-* Each high-level plotting function should have a small example in
+* Each high-level function should have a small example in
   the ``Examples`` section of the docstring.  This should be as simple as
   possible to demonstrate the method.  More complex examples should go into
   a dedicated example file in the :file:`examples` directory, which will be
@@ -77,7 +77,7 @@ Automated tests
 ---------------
 
 Whenever a pull request is created or updated, various automated test tools
-will run on all supported platforms and versions of Python.
+will run on all supported versions of Python.
 
 Make sure that all test are passing. (All checks are listed at the bottom of
 the GitHub page of your pull request)

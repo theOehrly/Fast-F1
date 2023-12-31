@@ -11,6 +11,7 @@ set SOURCEDIR=.
 set BUILDDIR=_build
 
 if "%1" == "" goto help
+if "%1" == "show" goto show
 
 %SPHINXBUILD% >NUL 2>NUL
 if errorlevel 9009 (
@@ -30,6 +31,9 @@ goto end
 
 :help
 %SPHINXBUILD% -M help %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O%
+
+:show
+python -m webbrowser -t "%~dp0\_build\html\index.html"
 
 :end
 popd

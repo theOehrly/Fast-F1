@@ -28,6 +28,7 @@ fastf1/tests/mpl-baseline-new/
 # documentation build directories
 docs/_build/
 docs/examples_gallery/
+**/sg_execution_times.rst
 
 # all variations of cache directories
 *_cache/
