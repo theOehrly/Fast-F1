@@ -10,7 +10,7 @@ import fastf1
 
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
-from matplotlib import cm
+from matplotlib import colormaps
 import numpy as np
 
 
@@ -37,7 +37,7 @@ gear = tel['nGear'].to_numpy().astype(float)
 # Create a line collection. Set a segmented colormap and normalize the plot
 # to full integer values of the colormap
 
-cmap = cm.get_cmap('Paired')
+cmap = colormaps['Paired']
 lc_comp = LineCollection(segments, norm=plt.Normalize(1, cmap.N+1), cmap=cmap)
 lc_comp.set_array(gear)
 lc_comp.set_linewidth(4)
