@@ -49,7 +49,7 @@ jobs:
 
       - name: Install Fast-F1 from sources
         run: |
-          python3 -m pip install -e .
+          python3 -m pip install ${{ matrix.extra-requirements }} -e .
 
       - name: Create cache directory
         run: |
