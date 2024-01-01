@@ -5,8 +5,9 @@ Position changes during a race
 Plot the position of each driver at the end of each lap.
 """
 
-import fastf1.plotting
 import matplotlib.pyplot as plt
+
+import fastf1.plotting
 
 
 fastf1.plotting.setup_mpl(misc_mpl_mods=False)

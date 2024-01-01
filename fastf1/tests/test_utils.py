@@ -1,6 +1,9 @@
 import datetime
 
-from fastf1.utils import to_datetime, to_timedelta
+from fastf1.utils import (
+    to_datetime,
+    to_timedelta
+)
 
 
 def test_to_timedelta():

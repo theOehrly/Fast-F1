@@ -10,16 +10,26 @@ except NameError:
 # -----------------------------------
 # Internal Imports
 from ._parameters import WebSocketParameters
-from ._queue_events import InvokeEvent, CloseEvent
+from ._queue_events import (
+    CloseEvent,
+    InvokeEvent
+)
+
 
 # -----------------------------------
 # External Imports
 try:
-    from ujson import dumps, loads
+    from ujson import (
+        dumps,
+        loads
+    )
 except ModuleNotFoundError:
     from json import dumps, loads
-import websockets
+
 import asyncio
+
+import websockets
+
 
 try:
     import uvloop

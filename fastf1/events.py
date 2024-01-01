@@ -161,9 +161,15 @@ import collections
 import datetime
 import json
 import warnings
-from typing import Literal, Type, Union, Optional
+from typing import (
+    Literal,
+    Optional,
+    Type,
+    Union
+)
 
 import dateutil.parser
+
 
 with warnings.catch_warnings():
     warnings.filterwarnings(
@@ -176,12 +182,22 @@ with warnings.catch_warnings():
 import pandas as pd
 
 import fastf1._api
-from fastf1.core import Session
 import fastf1.ergast
-from fastf1.internals.pandas_base import BaseSeries, BaseDataFrame
-from fastf1.logger import get_logger, soft_exceptions
+from fastf1.core import Session
+from fastf1.internals.pandas_base import (
+    BaseDataFrame,
+    BaseSeries
+)
+from fastf1.logger import (
+    get_logger,
+    soft_exceptions
+)
 from fastf1.req import Cache
-from fastf1.utils import recursive_dict_get, to_datetime, to_timedelta
+from fastf1.utils import (
+    recursive_dict_get,
+    to_datetime,
+    to_timedelta
+)
 
 
 _logger = get_logger(__name__)

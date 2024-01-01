@@ -91,7 +91,7 @@ jobs:
       - name: Install python requirements
         run: |
           python -m pip install --upgrade pip
-          python -m pip install --upgrade build setuptools twine
+          python -m pip install --upgrade build twine
           python -m pip install -r requirements/dev.txt
 
       - name: Install FastF1 from sources
@@ -100,11 +100,39 @@ jobs:
 
       - name: Run tests
         run: |
-          mkdir test_cache  # make sure cache dir exists
-          git fetch origin --quiet
           # ruff with default config
           ruff check .
 
+
+  run-isort-test:
+    name: Test import order (isort)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: pip-cache-${{ hashFiles('requirements/*.txt') }}
+          restore-keys: |
+            pip-cache
+
+      - name: Install python requirements
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements/dev.txt
+
+      - name: Run isort (check only)
+        run: |
+          python -m isort . --check-only
 
   run-readme-render-test:
     name: Test readme renders on PyPi

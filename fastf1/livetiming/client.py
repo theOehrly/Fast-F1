@@ -2,13 +2,16 @@ import asyncio
 import concurrent.futures
 import json
 import logging
-import requests
 import time
-from typing import Iterable, Optional
+from typing import (
+    Iterable,
+    Optional
+)
 
-from fastf1.signalr_aio import Connection
+import requests
 
 import fastf1
+from fastf1.signalr_aio import Connection
 
 
 def messages_from_raw(r: Iterable):

@@ -63,12 +63,15 @@ documentation, run the following command within the :file:`Fast-F1` directory::
 
     python -m pip install -r requirements/dev.txt
 
-[Optional] Installing pre-commit hooks
-======================================
-You can optionally install `pre-commit <https://pre-commit.com/>`_ hooks.
-These will automatically check code style issues (using the ruff linter) when
-you run ``git commit``. The hooks are defined in the top level
-``.pre-commit-config.yaml`` file. To install the hooks ::
+
+.. _pre_commit_hooks:
+
+Installing pre-commit hooks
+===========================
+It is recommended to install `pre-commit <https://pre-commit.com/>`_ hooks.
+These will automatically check and partially fix code style issues (using the
+ruff linter and isort) when you run ``git commit``. The hooks are defined in
+the top level ``.pre-commit-config.yaml`` file. To install the hooks ::
 
     pip install pre-commit
     pre-commit install

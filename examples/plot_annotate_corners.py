@@ -8,10 +8,10 @@ Then annotate the map with corner numbers.
 # Import FastF1 and load the data. Use the telemetry from the fastest for the
 # track map. (You could also use any other lap instead.)
 
-import fastf1
-
 import matplotlib.pyplot as plt
 import numpy as np
+
+import fastf1
 
 
 session = fastf1.get_session(2023, 'Silverstone', 'Q')

@@ -1,5 +1,7 @@
-import pytest
 import subprocess
+
+import pytest
+
 
 pytestmark = pytest.mark.prjdoc
 

@@ -87,3 +87,9 @@ exclude = [
 
 [tool.ruff.per-file-ignores]
 "fastf1/_api.py" = ["E501"]
+
+[tool.isort]
+skip = ["docs/**"]
+multi_line_output = 3
+force_grid_wrap = 2
+lines_after_imports = 2

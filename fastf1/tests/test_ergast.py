@@ -1,24 +1,24 @@
+import datetime
 import logging
 
 import pandas as pd
 import pytest
 
-import datetime
-
-from fastf1.ergast.interface import \
-    Ergast, \
-    ErgastResponseMixin, \
-    ErgastResultFrame, \
-    ErgastResultSeries, \
-    ErgastRawResponse
-
 import fastf1.ergast.structure as API
-from fastf1.ergast.structure import \
-    date_from_ergast, \
-    time_from_ergast, \
-    timedelta_from_ergast, \
-    save_int, \
-    save_float
+from fastf1.ergast.interface import (
+    Ergast,
+    ErgastRawResponse,
+    ErgastResponseMixin,
+    ErgastResultFrame,
+    ErgastResultSeries
+)
+from fastf1.ergast.structure import (
+    date_from_ergast,
+    save_float,
+    save_int,
+    time_from_ergast,
+    timedelta_from_ergast
+)
 
 
 # ############### test structure.py #################################

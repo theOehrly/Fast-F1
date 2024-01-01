@@ -2,12 +2,15 @@
 Data object for livetiming data
 """
 
-from datetime import timedelta
-import json
 import hashlib
+import json
+from datetime import timedelta
 
 from fastf1.logger import get_logger
-from fastf1.utils import to_datetime, recursive_dict_get
+from fastf1.utils import (
+    recursive_dict_get,
+    to_datetime
+)
 
 
 _logger = get_logger(__name__)

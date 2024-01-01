@@ -2,7 +2,12 @@
 # -*- coding: utf-8 -*-
 
 from json import dumps
-from urllib.parse import urlparse, urlunparse, urlencode
+from urllib.parse import (
+    urlencode,
+    urlparse,
+    urlunparse
+)
+
 import requests
 
 

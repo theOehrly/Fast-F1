@@ -6,12 +6,12 @@ Plot which gear is being used at which point of the track
 ##############################################################################
 # Import FastF1 and load the data
 
-import fastf1
-
 import matplotlib.pyplot as plt
-from matplotlib.collections import LineCollection
-from matplotlib import colormaps
 import numpy as np
+from matplotlib import colormaps
+from matplotlib.collections import LineCollection
+
+import fastf1
 
 
 session = fastf1.get_session(2021, 'Austrian Grand Prix', 'Q')

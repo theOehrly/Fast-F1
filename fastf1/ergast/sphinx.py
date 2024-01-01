@@ -1,12 +1,16 @@
-import pandas as pd
-from docutils import nodes
-from docutils.parsers.rst import Directive, directives
 import json
 from typing import get_type_hints
 
+import pandas as pd
+from docutils import nodes
+from docutils.parsers.rst import (
+    Directive,
+    directives
+)
+
+import fastf1.ergast.structure
 from fastf1 import __version__
 from fastf1.ergast.interface import ErgastResultFrame
-import fastf1.ergast.structure
 
 
 class ApiMappingDirective(Directive):

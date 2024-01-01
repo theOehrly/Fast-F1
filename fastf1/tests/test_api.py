@@ -1,12 +1,11 @@
-import pytest
-
 import datetime
 
 import numpy as np
 import pandas as pd
+import pytest
 
-from fastf1 import Cache
 import fastf1._api
+from fastf1 import Cache
 
 
 def test_timing_data():

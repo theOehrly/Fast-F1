@@ -1,5 +1,9 @@
 """Base classes for objects that inherit form Pandas Series or DataFrame."""
-from typing import final, Callable, Optional
+from typing import (
+    Callable,
+    Optional,
+    final
+)
 
 import pandas as pd
 

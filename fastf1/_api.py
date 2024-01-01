@@ -2,15 +2,27 @@ import base64
 import datetime
 import json
 import zlib
-from typing import Dict, Optional, Union
+from typing import (
+    Dict,
+    Optional,
+    Union
+)
 
 import numpy as np
 import pandas as pd
 
 from fastf1.internals.pandas_extensions import create_df_fast
-from fastf1.logger import get_logger, soft_exceptions
+from fastf1.logger import (
+    get_logger,
+    soft_exceptions
+)
 from fastf1.req import Cache
-from fastf1.utils import recursive_dict_get, to_timedelta, to_datetime
+from fastf1.utils import (
+    recursive_dict_get,
+    to_datetime,
+    to_timedelta
+)
+
 
 _logger = get_logger('api')
 

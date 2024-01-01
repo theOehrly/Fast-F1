@@ -3,12 +3,12 @@
 
 (Example provided by @JSEHV on Github)
 """
-import fastf1 as ff1
-import numpy as np
 import matplotlib as mpl
-
+import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.collections import LineCollection
+
+import fastf1 as ff1
 
 
 ##############################################################################

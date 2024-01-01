@@ -1,5 +1,11 @@
 import pytest
-from fastf1.plotting import TEAM_COLORS, TEAM_TRANSLATE, DRIVER_TRANSLATE, DRIVER_COLORS
+
+from fastf1.plotting import (
+    DRIVER_COLORS,
+    DRIVER_TRANSLATE,
+    TEAM_COLORS,
+    TEAM_TRANSLATE
+)
 
 
 def test_team_colors_dict_warning():

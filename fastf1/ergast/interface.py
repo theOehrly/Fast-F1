@@ -1,11 +1,20 @@
 import copy
 import json
-from typing import List, Literal, Optional, Type, Union
+from typing import (
+    List,
+    Literal,
+    Optional,
+    Type,
+    Union
+)
 
-from fastf1 import __version_short__
-from fastf1.req import Cache
 import fastf1.ergast.structure as API
-from fastf1.internals.pandas_base import BaseDataFrame, BaseSeries
+from fastf1 import __version_short__
+from fastf1.internals.pandas_base import (
+    BaseDataFrame,
+    BaseSeries
+)
+from fastf1.req import Cache
 
 
 BASE_URL = 'https://ergast.com/api/f1'

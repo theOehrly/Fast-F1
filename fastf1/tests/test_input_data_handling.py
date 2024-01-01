@@ -1,10 +1,9 @@
 # test some known special cases
 
-import pytest
-
 import logging
 
 import pandas as pd
+import pytest
 
 import fastf1
 import fastf1.ergast

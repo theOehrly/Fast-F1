@@ -1,10 +1,10 @@
 import pytest
-
 from matplotlib import pyplot as plt
 
 import fastf1
 import fastf1.plotting
 import fastf1.utils
+
 
 fastf1.plotting.setup_mpl()
 

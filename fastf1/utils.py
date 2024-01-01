@@ -1,8 +1,13 @@
 """This is a collection of various functions."""
 import datetime
-from functools import reduce
-from typing import Dict, Tuple, Optional, Union
 import warnings
+from functools import reduce
+from typing import (
+    Dict,
+    Optional,
+    Tuple,
+    Union
+)
 
 import numpy as np
 import pandas as pd

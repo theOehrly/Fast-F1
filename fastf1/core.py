@@ -41,10 +41,19 @@ analyzing specific parts of the data.
 """
 import collections
 import re
-from functools import cached_property
-import warnings
 import typing
-from typing import Optional, List, Literal, Iterable, Union, Tuple, Any, Type
+import warnings
+from functools import cached_property
+from typing import (
+    Any,
+    Callable,
+    Iterable,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    Union
+)
 
 import numpy as np
 import pandas as pd
@@ -52,11 +61,21 @@ import pandas as pd
 import fastf1
 from fastf1 import _api as api
 from fastf1 import ergast
-from fastf1.internals.pandas_base import BaseDataFrame, BaseSeries
+from fastf1.internals.pandas_base import (
+    BaseDataFrame,
+    BaseSeries
+)
 from fastf1.livetiming.data import LiveTimingData
-from fastf1.mvapi import get_circuit_info, CircuitInfo
-from fastf1.logger import get_logger, soft_exceptions
+from fastf1.logger import (
+    get_logger,
+    soft_exceptions
+)
+from fastf1.mvapi import (
+    CircuitInfo,
+    get_circuit_info
+)
 from fastf1.utils import to_timedelta
+
 
 _logger = get_logger(__name__)
 
@@ -2604,7 +2623,7 @@ class Laps(BaseDataFrame):
         self.session = session
 
     @property
-    def _constructor_sliced_horizontal(self) -> Type["Lap"]:
+    def _constructor_sliced_horizontal(self) -> Callable[..., "Lap"]:
         return Lap
 
     @cached_property
@@ -3576,7 +3595,7 @@ class SessionResults(BaseDataFrame):
                 self[col] = self[col].astype(_type)
 
     @property
-    def _constructor_sliced_horizontal(self) -> Type["DriverResult"]:
+    def _constructor_sliced_horizontal(self) -> Callable[..., "DriverResult"]:
         return DriverResult
 
 

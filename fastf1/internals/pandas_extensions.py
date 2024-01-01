@@ -1,19 +1,24 @@
-from fastf1.internals import internals_logger as logger
-
 from typing import List
 
 import numpy as np
+from pandas import (
+    DataFrame,
+    Index,
+    RangeIndex
+)
 
-from pandas import DataFrame, Index, RangeIndex
+from fastf1.internals import internals_logger as logger
+
+
 try:
     # import internal pandas functions and objects
-    from pandas.core.internals.construction import \
-        _get_axes, \
-        BlockPlacement, \
-        create_block_manager_from_blocks, \
+    from pandas.core.internals.construction import (
+        BlockPlacement,
+        _get_axes,
+        create_block_manager_from_blocks,
         new_block_2d
-    from pandas.core.internals.managers import \
-        _consolidate
+    )
+    from pandas.core.internals.managers import _consolidate
 
     # verify existence of non-public methods of public objects
     if not hasattr(Index, '_with_infer'):

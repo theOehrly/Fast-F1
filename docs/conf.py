@@ -8,15 +8,16 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('../'))
 
-from datetime import datetime
 import os.path
 import sys
 import warnings
+from datetime import datetime
 
 import plotly.io as pio
 from plotly.io._sg_scraper import plotly_sg_scraper
 
 import fastf1
+
 
 sys.path.append(os.path.abspath('extensions'))
 

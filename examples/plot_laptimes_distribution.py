@@ -3,10 +3,12 @@
 Visualizae different drivers' laptime distributions.
 """
 
-import fastf1
-import fastf1.plotting
 import seaborn as sns
 from matplotlib import pyplot as plt
+
+import fastf1
+import fastf1.plotting
+
 
 # enabling misc_mpl_mods will turn on minor grid lines that clutters the plot
 fastf1.plotting.setup_mpl(mpl_timedelta_support=False, misc_mpl_mods=False)

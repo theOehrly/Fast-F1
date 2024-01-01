@@ -5,9 +5,11 @@ Tyre strategies during a race
 Plot all drivers' tyre strategies during a race.
 """
 
+from matplotlib import pyplot as plt
+
 import fastf1
 import fastf1.plotting
-from matplotlib import pyplot as plt
+
 
 ###############################################################################
 # Load the race session

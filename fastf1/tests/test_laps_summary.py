@@ -1,6 +1,7 @@
 # test api laps data stuff; only make sure that nothing crashes
 
 import pytest
+
 import fastf1 as ff1
 
 

@@ -51,3 +51,29 @@ not need to be installed, but FastF1 should be)::
 
 
 .. _command-line parameters: http://doc.pytest.org/en/latest/usage.html
+
+
+==========================
+Linting - Code style tests
+==========================
+
+FastF1 uses Ruff_ and isort_ to ensure that the code has a consistent style and
+is easily readable. All code should conform to the guidelines that are defined
+by PEP8_.
+
+To check whether your code is formatted correctly, run::
+
+  ruff check .
+
+
+To check and correct the import order, run::
+
+  python -m isort .
+
+If you have installed the :ref:`pre-commit hooks <pre_commit_hooks>`,
+these commands will also be run automatically before each commit.
+
+
+.. _Ruff: https://docs.astral.sh/ruff/
+.. _isort: https://pycqa.github.io/isort/
+.. _PEP8: https://pep8.org/

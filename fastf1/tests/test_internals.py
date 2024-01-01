@@ -1,8 +1,11 @@
-from fastf1.internals.pandas_base import BaseDataFrame, BaseSeries
-from fastf1.internals.pandas_extensions import _unsafe_create_df_fast
-
 import numpy as np
 import pandas as pd
+
+from fastf1.internals.pandas_base import (
+    BaseDataFrame,
+    BaseSeries
+)
+from fastf1.internals.pandas_extensions import _unsafe_create_df_fast
 
 
 def test_fast_df_creation():

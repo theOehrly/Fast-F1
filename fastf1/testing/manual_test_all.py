@@ -4,8 +4,9 @@ All sessions for 2019 (currently) will be downloaded and processed.
 Any occurring exceptions will be caught and written to a log file.
 """
 
-import fastf1 as ff1
 import traceback
+
+import fastf1 as ff1
 
 
 # GPs 2019

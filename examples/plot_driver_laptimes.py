@@ -4,10 +4,12 @@
 Plot a driver's lap times in a race, with color coding for the compounds.
 """
 
-import fastf1
-import fastf1.plotting
 import seaborn as sns
 from matplotlib import pyplot as plt
+
+import fastf1
+import fastf1.plotting
+
 
 # The misc_mpl_mods option enables minor grid lines which clutter the plot
 fastf1.plotting.setup_mpl(misc_mpl_mods=False)

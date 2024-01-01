@@ -1,6 +1,10 @@
 import argparse
 import sys
-from fastf1.livetiming.client import SignalRClient, messages_from_raw
+
+from fastf1.livetiming.client import (
+    SignalRClient,
+    messages_from_raw
+)
 
 
 def save(args):

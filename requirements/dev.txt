@@ -1,5 +1,6 @@
 autodocsumm>=0.2.10  # support for sphinx v6
 furo
+isort
 kaleido
 plotly
 pre-commit

@@ -2,9 +2,9 @@ import logging
 import os
 
 import fastf1._api
+import fastf1.testing
 from fastf1 import Cache
 from fastf1.logger import LoggingManager
-import fastf1.testing
 
 
 def test_enable_cache(tmpdir):
@@ -23,8 +23,9 @@ def _test_cache_used_and_clear(tmpdir):
     # this test requires using requests_mock to allow running offline
     # other tests can depend on fastf1's internal cache (which is tested here)
     # for offline running, after they've had one online run
-    import fastf1
     import requests_mock
+
+    import fastf1
 
     with requests_mock.Mocker() as mocker:
         # create a custom requests session here so that requests_mock is

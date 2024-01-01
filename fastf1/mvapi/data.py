@@ -1,12 +1,12 @@
-import fastf1.core
-from fastf1.mvapi.internals import _logger
-from fastf1.mvapi.api import get_circuit
-
 from dataclasses import dataclass
 from typing import Optional
 
 import numpy as np
 import pandas as pd
+
+import fastf1.core
+from fastf1.mvapi.api import get_circuit
+from fastf1.mvapi.internals import _logger
 
 
 @dataclass

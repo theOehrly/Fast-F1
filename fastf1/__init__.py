@@ -99,16 +99,19 @@ else:
 
 from typing import Dict
 
-from fastf1.events import (get_session,  # noqa: F401
-                           get_testing_session,
-                           get_event,
-                           get_events_remaining,
-                           get_testing_event,
-                           get_event_schedule)
-
+from fastf1.events import get_session  # noqa: F401
+from fastf1.events import (  # noqa: F401
+    get_event,
+    get_event_schedule,
+    get_events_remaining,
+    get_testing_event,
+    get_testing_session
+)
 from fastf1.logger import set_log_level  # noqa: F401
-
-from fastf1.req import Cache, RateLimitExceededError   # noqa: F401
+from fastf1.req import (  # noqa: F401
+    Cache,
+    RateLimitExceededError
+)
 
 
 _DRIVER_TEAM_MAPPING: Dict[str, Dict[str, str]] = {

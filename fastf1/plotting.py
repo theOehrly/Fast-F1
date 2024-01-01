@@ -21,16 +21,20 @@ and colors which are provided below.
 .. note:: Plotting related functionality is likely to change in a future
     release.
 """
-from typing import Dict, List
-
-import pandas as pd
-import numpy as np
 import warnings
+from typing import (
+    Dict,
+    List
+)
+
+import numpy as np
+import pandas as pd
+
 
 try:
     import matplotlib
-    from matplotlib import pyplot as plt
     from matplotlib import cycler
+    from matplotlib import pyplot as plt
 except ImportError:
     warnings.warn("Failed to import optional dependency 'matplotlib'!"
                   "Plotting functionality will be unavailable!", UserWarning)
@@ -42,6 +46,7 @@ except ImportError:
                   UserWarning)
 
 import warnings
+
 
 with warnings.catch_warnings():
     warnings.filterwarnings('ignore',

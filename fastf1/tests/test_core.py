@@ -1,9 +1,13 @@
+import pandas as pd
 import pytest
 
-import pandas as pd
-
 import fastf1
-from fastf1.core import DriverResult, Lap, Laps, SessionResults
+from fastf1.core import (
+    DriverResult,
+    Lap,
+    Laps,
+    SessionResults
+)
 from fastf1.ergast import Ergast
 
 

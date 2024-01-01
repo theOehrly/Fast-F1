@@ -40,9 +40,8 @@ Functions for direct access
 
 import functools
 import logging
-import warnings
 import os
-
+import warnings
 from typing import Union
 
 

@@ -1,12 +1,14 @@
-import pytest
-
 import datetime
 
-import pandas as pd
 import pandas
+import pandas as pd
+import pytest
 
 import fastf1
-from fastf1.testing.reference_values import LAP_DTYPES, ensure_data_type
+from fastf1.testing.reference_values import (
+    LAP_DTYPES,
+    ensure_data_type
+)
 
 
 def test_constructor():
