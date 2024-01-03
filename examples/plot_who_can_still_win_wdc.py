@@ -14,11 +14,20 @@ from fastf1.ergast import Ergast
 
 
 ##############################################################################
+# For this example, we are looking at the 2023 season.
+# We want to know who can theoretically still win the drivers' championship
+# after the first 15 races.
+
+SEASON = 2023
+ROUND = 15
+
+
+##############################################################################
 # Get the current driver standings from Ergast.
 # Reference https://theoehrly.github.io/Fast-F1-Pre-Release-Documentation/ergast.html#fastf1.ergast.Ergast.get_driver_standings
 def get_drivers_standings():
     ergast = Ergast()
-    standings = ergast.get_driver_standings(season=2023)
+    standings = ergast.get_driver_standings(season=SEASON, round=ROUND)
     return standings.content[0]
 
 
@@ -30,7 +39,8 @@ def calculate_max_points_for_remaining_season():
     POINTS_FOR_SPRINT = 8 + 25 + 1  # Winning the sprint, race and fastest lap
     POINTS_FOR_CONVENTIONAL = 25 + 1  # Winning the race and fastest lap
 
-    events = fastf1.events.get_events_remaining(backend="ergast")
+    events = fastf1.events.get_event_schedule(SEASON, backend='ergast')
+    events = events[events['RoundNumber'] > ROUND]
     # Count how many sprints and conventional races are left
     sprint_events = len(events.loc[events["EventFormat"] == "sprint_shootout"])
     conventional_events = len(events.loc[events["EventFormat"] == "conventional"])

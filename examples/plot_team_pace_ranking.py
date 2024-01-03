@@ -48,6 +48,7 @@ sns.boxplot(
     data=transformed_laps,
     x="Team",
     y="LapTime (s)",
+    hue="Team",
     order=team_order,
     palette=team_palette,
     whiskerprops=dict(color="white"),

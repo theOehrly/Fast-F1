@@ -57,8 +57,9 @@ driver_laps["LapTime(s)"] = driver_laps["LapTime"].dt.total_seconds()
 sns.violinplot(data=driver_laps,
                x="Driver",
                y="LapTime(s)",
+               hue="Driver",
                inner=None,
-               scale="area",
+               density_norm="area",
                order=finishing_order,
                palette=driver_colors
                )
@@ -71,7 +72,7 @@ sns.swarmplot(data=driver_laps,
               palette=fastf1.plotting.COMPOUND_COLORS,
               hue_order=["SOFT", "MEDIUM", "HARD"],
               linewidth=0,
-              size=5,
+              size=4,
               )
 # sphinx_gallery_defer_figures
 
