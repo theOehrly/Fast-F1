@@ -2100,51 +2100,72 @@ class Session:
                     f"Driver {drv: >2}: Lap timing integrity check "
                     f"failed for {integrity_errors} lap(s)")
 
-    @soft_exceptions("results", "Failed to load results data!", _logger)
+    # @soft_exceptions("results", "Failed to load results data!", _logger)
     def _load_drivers_results(self, *, livedata=None):
-        # get list of drivers
-        driver_info = None
+        # get list of drivers and results
+
+        driver_info_f1 = None
+        driver_info_ergast = None
+
+        info_cols = ('Abbreviation', 'FirstName', 'LastName', 'TeamName',
+                     'FullName', 'DriverNumber')
+
+        # try loading from both sources if they are supported
+        # data is joined afterwards depending on availability
         if self.f1_api_support:
             # load driver info from f1 api
-            driver_info = self._drivers_from_f1_api(livedata=livedata)
+            driver_info_f1 = self._drivers_from_f1_api(livedata=livedata)
+        if not self.event.is_testing():
+            # load driver info from ergast
+            driver_info_ergast = self._drivers_results_from_ergast(
+                load_drivers=True, load_results=True
+            )
 
-        if not driver_info:
-            if not self.event.is_testing():
-                # load driver info and results from ergast
-                # (season 2017 and older or fallback from f1 api)
-                driver_info = self._drivers_results_from_ergast(
-                    load_drivers=True, load_results=True
-                )
-                if driver_info is not None:
-                    self._results = SessionResults(
-                        driver_info, force_default_cols=True
-                    )
-                    self._results.index = driver_info['DriverNumber']
-            else:
-                _logger.warning("Failed to load driver list and "
-                                "session results!")
-                self._results = SessionResults(force_default_cols=True)
+        # set results from either source or join if both data is available
+        # use driver info from F1 as primary source, only fall back to Ergast
+        # if unavailable
+        # use results from Ergast, unavailable from F1 API
 
+        # no data
+        if (driver_info_f1 is None) and (driver_info_ergast is None):  # LP1
+            _logger.warning("Failed to load driver list and "
+                            "session results!")
+            self._results = SessionResults(force_default_cols=True)
+
+        # only Ergast data
+        elif driver_info_f1 is None:  # LP2
+            self._results = SessionResults(driver_info_ergast,
+                                           force_default_cols=True)
+
+        # only F1 data
+        elif driver_info_ergast is None:  # LP3
+            self._results = SessionResults(driver_info_f1,
+                                           force_default_cols=True)
+
+        # F1 and Ergast data
         else:
-            # extend existing driver info (f1 api) with results from ergast
-            drivers = pd.DataFrame(driver_info,
-                                   index=driver_info['DriverNumber'])
-            if not self.event.is_testing():
-                r = self._drivers_results_from_ergast(load_results=True)
-            else:
-                r = None
+            missing_drivers = list(set(driver_info_ergast['DriverNumber'])
+                                   .difference(driver_info_f1['DriverNumber']))
+            # drivers are missing if DNSed (did not start)
+            # in that case, pull more information from Ergast for these drivers
 
-            if r is not None:
-                # join driver info and session results
-                results = r.set_index('DriverNumber')
-                self._results = SessionResults(
-                    drivers.join(results, how='outer'), force_default_cols=True
-                )
-                self._results['DriverNumber'] = self._results.index
-            else:
-                # return driver info without session results
-                self._results = SessionResults(drivers,
-                                               force_default_cols=True)
+            join_cols \
+                = list(set(driver_info_ergast.columns).difference(info_cols))
+
+            self._results = SessionResults(
+                driver_info_f1.join(driver_info_ergast.loc[:, join_cols],
+                                    how='outer'),
+                force_default_cols=True
+            )
+
+            if missing_drivers:
+                self._results.loc[missing_drivers, info_cols] \
+                    = driver_info_ergast.loc[missing_drivers, info_cols]
+
+                # set (Grid)Position to NaN instead of default last or zero to
+                # make the DNS more obvious
+                self._results.loc[missing_drivers,
+                                  ('Position', 'GridPosition')] = np.NaN
 
         if (dupl_mask := self._results.index.duplicated()).any():
             dupl_drv = list(self._results.index[dupl_mask])
@@ -2177,7 +2198,7 @@ class Session:
                 for first, last in zip(driver_info['FirstName'],
                                        driver_info['LastName']):
                     driver_info['FullName'].append(f"{first} {last}")
-        return driver_info
+        return pd.DataFrame(driver_info, index=driver_info['DriverNumber'])
 
     def _drivers_results_from_ergast(
             self, *, load_drivers=False, load_results=False
@@ -2268,6 +2289,8 @@ class Session:
 
         if load_drivers:
             d['FullName'] = d['FirstName'] + " " + d['LastName']
+
+        d.set_index('DriverNumber', drop=False, inplace=True)
 
         return d
 
