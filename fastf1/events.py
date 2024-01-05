@@ -54,14 +54,13 @@ DataFrame columns or Series values:
   - ``Session*Date`` | :class:`pd.Timestamp` |
     The date and time at which the session is scheduled to start or was
     scheduled to start as timezone-aware local timestamp.
-    (Timezone information is not available when the ``'ergast'`` backend
-    is used.)
+    (Timezone-aware local timestamps are not available when the ``'ergast'``
+    backend is used.)
     ``*`` denotes the number of the session (1, 2, 3, 4, 5).
 
   - ``Session*DateUtc`` | :class:`pd.Timestamp` |
     The date and time at which the session is scheduled to start or was
     scheduled to start as non-timezone-aware UTC timestamp.
-    (UTC timestamps are not available when the ``'ergast'`` backend is used.)
     ``*`` denotes the number of the session (1, 2, 3, 4, 5).
 
   - ``F1ApiSupport`` | :class:`bool` |
@@ -75,8 +74,8 @@ Supported Seasons
 FastF1 provides its own event schedule for the 2018 season and all later
 seasons. The schedule for the all seasons before 2018 is built using data from
 the Ergast API. Only limited data is available for these seasons. Usage of the
-Ergast API can be enforced for all seasons, in which case the same limitations
-apply for the more recent seasons too.
+Ergast API can be enforced for all seasons by setting ``backend='ergast'``,
+in which case the same limitations apply for the more recent seasons too.
 
 **Exact scheduled starting times for all sessions**:
 Supported starting with the 2018 season.
