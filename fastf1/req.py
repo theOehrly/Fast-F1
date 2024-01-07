@@ -29,7 +29,10 @@ import pickle
 import re
 import sys
 import time
-from typing import Optional
+from typing import (
+    Optional,
+    Tuple
+)
 
 import requests
 from requests_cache import CacheMixin
@@ -131,7 +134,18 @@ class _CachedSessionWithRateLimiting(CacheMixin, _SessionWithRateLimiting):
     pass
 
 
-class Cache:
+class _MetaCache(type):
+    def __repr__(self):
+        # implements __repr__ for the Cache class itself
+        if self._CACHE_DIR:
+            path = self._CACHE_DIR
+            size = self._convert_size(self._get_size(path))
+            return f"FastF1 cache ({size}) {path}"
+
+        return "FastF1 cache - not configured"
+
+
+class Cache(metaclass=_MetaCache):
     """Pickle and requests based API cache.
 
     Fast-F1 will per default enable caching. While this can be disabled, it
@@ -153,6 +167,7 @@ class Cache:
     .. autosummary::
         fastf1.Cache.enable_cache
         fastf1.Cache.clear_cache
+        fastf1.Cache.get_cache_info
         fastf1.Cache.disabled
         fastf1.Cache.set_disabled
         fastf1.Cache.set_enabled
@@ -210,9 +225,6 @@ class Cache:
 
     _request_counter = 0  # count uncached requests for debugging purposes
 
-    def __repr__(self):
-        return "ahaha"
-
     @classmethod
     def enable_cache(
             cls, cache_dir: str, ignore_version: bool = False,
@@ -223,7 +235,7 @@ class Cache:
         Args:
             cache_dir: Path to the directory which should be used to store
                 cached data. Path needs to exist.
-            ignore_version: Ignore if cached data was create with a different
+            ignore_version: Ignore if cached data was created with a different
                 version of the API parser (not recommended: this can cause
                 crashes or unrecognized errors as incompatible data may be
                 loaded)
@@ -350,7 +362,7 @@ class Cache:
         """
         if cache_dir is None:
             if cls._CACHE_DIR is None:
-                cache_dir = cls.get_default_cache_path()
+                cache_dir = cls._get_default_cache_path()
             else:
                 cache_dir = cls._CACHE_DIR
 
@@ -480,7 +492,7 @@ class Cache:
             pickle.dump(new_cached, cache_file_obj)
 
     @classmethod
-    def get_default_cache_path(cls):
+    def _get_default_cache_path(cls):
         if sys.platform == "linux":
             # If .cache exists we will use it. Otherwise, ~/
             tmp = os.path.expanduser("~/.cache")
@@ -502,7 +514,7 @@ class Cache:
             if "FASTF1_CACHE" in os.environ:
                 cache_dir = os.environ.get("FASTF1_CACHE")
             else:
-                cache_dir = cls.get_default_cache_path()
+                cache_dir = cls._get_default_cache_path()
 
             if cache_dir is not None:
                 # Ensure the default cache folder exists
@@ -519,9 +531,9 @@ class Cache:
                 # Enable cache with default
                 cls.enable_cache(cache_dir)
                 _logger.warning(
-                    f"\n\nDEFAULT CACHE ENABLED!\n\t"
-                    f"Cache directory: {cache_dir}.\n\t"
-                    f"Size: {cls._convert_size(cls._get_size(cache_dir))}"
+                    f"DEFAULT CACHE ENABLED! "
+                    f"({cls._convert_size(cls._get_size(cache_dir))}) "
+                    f"{cache_dir}"
                 )
             else:
                 # warn only once and only if cache is not enabled
@@ -618,6 +630,25 @@ class Cache:
         always executed and not skipped due to caching.
         """
         cls._ci_mode = enabled
+
+    @classmethod
+    def get_cache_info(cls) -> Tuple[Optional[str], Optional[int]]:
+        """Returns information about the cache directory and its size.
+
+        If the cache is not configured, None will be returned for both the
+        cache path and the cache size.
+
+        Returns:
+            A tuple of ``(path, size)`` if the cache is configured, else
+            ``(None, None)``. The cache size is given in bytes.
+        """
+        path = cls._CACHE_DIR
+        if path is not None:
+            size = cls._get_size(path)
+        else:
+            size = None
+
+        return path, size
 
     @classmethod
     def _convert_size(cls, size_bytes):  # https://stackoverflow.com/questions/5194057/better-way-to-convert-file-sizes-in-python # noqa: E501

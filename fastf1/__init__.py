@@ -50,7 +50,13 @@ Cache API
 .........
 
 .. autoclass:: Cache
-    :members: enable_cache, clear_cache, disabled, set_disabled, set_enabled,
+    :members:
+        enable_cache,
+        clear_cache,
+        get_cache_info,
+        disabled,
+        set_disabled,
+        set_enabled,
         offline_mode
     :autosummary:
 
