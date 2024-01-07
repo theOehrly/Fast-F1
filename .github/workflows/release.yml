@@ -19,7 +19,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install --upgrade build twine
+        python -m pip install --upgrade build hatch twine
 
     # if this is a release, upload to PyPI
     - name: Build and publish release
