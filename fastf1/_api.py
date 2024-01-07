@@ -1,4 +1,5 @@
 import base64
+import collections
 import datetime
 import json
 import zlib
@@ -1474,7 +1475,7 @@ def driver_info(path, response=None, livedata=None):
 
         `['RacingNumber', 'BroadcastName', 'FullName', 'Tla', 'Line',
         'TeamName', 'TeamColour', 'FirstName', 'LastName', 'Reference',
-        'HeadshotUrl']`
+        'HeadshotUrl', 'CountryCode']`
 
     Args:
         path (str): api path base string (usually ``Session.api_path``)
@@ -1503,51 +1504,31 @@ def driver_info(path, response=None, livedata=None):
                 "recently, please try again in a few minutes."
             )
 
-    # search for the correct entries that contain driver/team/headshot info
-    # for some sessions headshots are one entry for each team (Miami 22 FPs, Q)
-    drv_idx = None
-    team_idx = None
-    headshots = []
+    drivers = collections.defaultdict(dict)
 
-    for i, entry in enumerate(response):
-        if 'RacingNumber' in str(entry):
-            drv_idx = i
-        if 'TeamName' in str(entry):
-            team_idx = i
-        if 'HeadshotUrl' in str(entry):
-            headshots.append(i)
-        if drv_idx and team_idx:
-            break
+    default_keys = [
+        'RacingNumber', 'BroadcastName', 'FullName', 'Tla', 'Line',
+        'TeamName', 'TeamColour', 'FirstName', 'LastName', 'Reference',
+        'HeadshotUrl', 'CountryCode'
+    ]
 
-    # parse data
-    try:
-        drv_info = response[drv_idx][1]
-    except (IndexError, TypeError):
-        return dict()
+    for line in response:
+        try:
+            ts, content = line
+        except ValueError:
+            # unexpected data format, incorrect number of values to unpack
+            continue
+        if not isinstance(content, dict):
+            continue  # unexpected data format
+        for drv_num, patch in content.items():
+            if not isinstance(patch, dict):
+                continue  # unexpected data format
+            for key, val in patch.items():
+                if key not in default_keys:
+                    continue
+                drivers[drv_num][key] = val
 
-    try:
-        team_info = response[team_idx][1]
-    except (IndexError, TypeError):
-        return dict()
-
-    # loop through headshots
-    try:
-        head_info = dict()
-        for head in headshots:
-            head_info.update(response[head][1])
-    except (IndexError, TypeError):
-        return dict()
-
-    else:
-        for drv in drv_info:
-            drv_info[drv].update(team_info.get(drv, {}))
-            drv_info[drv].update(head_info.get(drv, {}))
-
-        if not len(drv_info) or not isinstance(drv_info, dict):
-            return dict()
-        if 'RacingNumber' not in list(drv_info.values())[0]:
-            return dict()
-        return drv_info
+    return drivers
 
 
 @Cache.api_request_wrapper
