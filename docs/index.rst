@@ -58,7 +58,7 @@ You can also install using `conda`:
 Third-party packages
 --------------------
 
-- R package that wraps FastF1: https://github.com/SCasanova/f1dataR
+- R package that wraps FastF1: https://cran.r-project.org/package=f1dataR
 
 These packages are not directly related to the FastF1 project. Questions and
 suggestions regarding these packages need to be directed at their respective
