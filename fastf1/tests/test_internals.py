@@ -1,11 +1,22 @@
 import numpy as np
 import pandas as pd
+import pytest
 
 from fastf1.internals.pandas_base import (
     BaseDataFrame,
-    BaseSeries
+    BaseSeries,
+    _BaseSeriesConstructor
 )
 from fastf1.internals.pandas_extensions import _unsafe_create_df_fast
+
+
+def test_pandas_base_internal_imports():
+    # ensure that the internal import (still) works and ensure that the
+    # fallback resolves to the same type
+    from pandas.core.internals import SingleBlockManager
+
+    FallbackSingleBlockManager = type(getattr(pd.Series(dtype=float), '_mgr'))
+    assert SingleBlockManager is FallbackSingleBlockManager
 
 
 def test_fast_df_creation():
@@ -22,6 +33,30 @@ def test_fast_df_creation():
     )
 
     pd.testing.assert_frame_equal(df_safe, df_fast)
+
+
+def test_base_frame_slicing_default():
+    class TestDataFrame(BaseDataFrame):
+        pass
+
+    df = TestDataFrame({'A': [10, 11, 12], 'B': [20, 21, 22]})
+    assert isinstance(df, TestDataFrame)
+    assert isinstance(df, pd.DataFrame)
+
+    df_sliced = df.iloc[0:2]
+    assert isinstance(df_sliced, TestDataFrame)
+    assert isinstance(df_sliced, pd.DataFrame)
+    assert (df_sliced
+            == pd.DataFrame({'A': [10, 11], 'B': [20, 21]})
+            ).all().all()
+
+    vert_ser = df.loc[:, 'A']
+    assert isinstance(vert_ser, pd.Series)
+    assert (vert_ser == pd.Series([10, 11, 12])).all()
+
+    hor_ser = df.iloc[0]
+    assert isinstance(hor_ser, pd.Series)
+    assert (hor_ser == pd.Series({'A': 10, 'B': 20})).all()
 
 
 def test_base_frame_slicing():
@@ -128,3 +163,19 @@ def test_base_series_metadata_propagation():
     series.some_value = 100
     ser_sliced = series.iloc[0:2]
     assert ser_sliced.some_value == 100
+
+
+@pytest.mark.parametrize(
+    "test_data", ([0, 1, 2, 3], pd.Series([0, 1, 2, 3]))
+)
+def test_base_series_constructor_direct_fallback(test_data):
+    # If for whatever reason the _BaseSeriesConstructor is not called as
+    # intended as _constructor_sliced from a BaseDataFrame but instead
+    # unplanned from anywhere else, it should fall back to behaving as if
+    # a pandas.Series object is created directly.
+    series_a = _BaseSeriesConstructor(test_data)
+    series_b = pd.Series(test_data)
+
+    assert not isinstance(series_a, _BaseSeriesConstructor)
+    assert isinstance(series_a, pd.Series)
+    assert (series_a == series_b).all()

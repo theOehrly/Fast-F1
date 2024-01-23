@@ -8,6 +8,23 @@ from typing import (
 import pandas as pd
 
 
+# dangerous import of pandas internals
+# these imports are covered by
+# test_internals.py::test_pandas_base_internal_imports
+# to detect any failures as soon as possible
+try:
+    from pandas.core.internals import SingleBlockManager
+except ImportError as exc:
+    _mgr_instance = getattr(pd.Series(dtype=float), '_mgr')
+    if _mgr_instance is None:
+        raise ImportError("Import of Pandas internals failed. You are likely "
+                          "using a recently released version of Pandas that "
+                          "isn't yet supported. Please report this issue. In"
+                          "the meantime, you can try downgrading to an older "
+                          "version of Pandas.") from exc
+    SingleBlockManager = type(_mgr_instance)
+
+
 class BaseDataFrame(pd.DataFrame):
     """Base class for objects that inherit from ``pandas.DataFrame``.
 
@@ -78,11 +95,13 @@ class _BaseSeriesConstructor(pd.Series):
     __meta_created_from: Optional[BaseDataFrame]
 
     def __new__(cls, data=None, index=None, *args, **kwargs) -> pd.Series:
-        parent = getattr(cls, '__meta_created_from')
+        parent = getattr(cls, '__meta_created_from', None)
 
-        if index is None:
+        if ((index is None) and isinstance(data, (pd.Series,
+                                                  pd.DataFrame,
+                                                  SingleBlockManager))):
             # no index is explicitly given, try to get an index from the
-            # data itself (for example, if `data` is a BlockManager)
+            # data itself
             index = getattr(data, 'index', None)
 
         if (parent is None) or (index is None):
@@ -97,7 +116,12 @@ class _BaseSeriesConstructor(pd.Series):
             # the data is a row of the parent DataFrame
             constructor = parent._constructor_sliced_horizontal
 
-        obj = constructor(data=data, index=index, *args, **kwargs)
+        if (isinstance(data, SingleBlockManager)
+                and hasattr(constructor, '_from_mgr')
+                and pd.__version__.startswith('2.')):
+            obj = constructor._from_mgr(data, axes=data.axes)
+        else:
+            obj = constructor(data=data, index=index, *args, **kwargs)
 
         if parent is not None:
             # catch-all fix for some missing __finalize__ calls in Pandas
