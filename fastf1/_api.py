@@ -1180,7 +1180,8 @@ def position_data(path, response=None, livedata=None):
                 .merge(most_complete_ref, how='outer') \
                 .sort_values(by='Date') \
                 .reset_index(drop=True)
-            data[drv]['Status'].fillna(value='OffTrack', inplace=True)
+            data[drv]['Status'] = data[drv]['Status'] \
+                .fillna(value='OffTrack', inplace=False)
             data[drv].loc[:, ['X', 'Y', 'Z']] = \
                 data[drv].loc[:, ['X', 'Y', 'Z']]\
                 .fillna(value=0, inplace=False)

@@ -475,7 +475,7 @@ class Telemetry(pd.DataFrame):
         # now use the previously excluded columns to update the missing values
         # in the merged dataframe
         for col in on_both_columns:
-            merged[col].update(data[col])
+            merged.update({col: data[col]})
 
         if 'Driver' in merged.columns and len(merged['Driver'].unique()) > 1:
             raise ValueError("Cannot merge multiple drivers")
