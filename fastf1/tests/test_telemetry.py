@@ -1,5 +1,6 @@
 import numpy
 import pandas
+import pandas as pd
 import pytest
 
 import fastf1.core
@@ -82,7 +83,7 @@ def test_resample_channels_with_metadata_propagation(reference_laps_data):
     lap = laps.pick_fastest()
     car_data = lap.get_car_data()
 
-    for freq in ('0.5S', '0.1S'):
+    for freq in (pd.Timedelta(seconds=0.5), pd.Timedelta(seconds=0.1)):
         resampled = car_data.resample_channels(rule=freq)
         for attr in fastf1.core.Telemetry._metadata:
             assert getattr(resampled, attr, None) is not None
@@ -246,7 +247,7 @@ def test_resampling_down(reference_laps_data):
     drv = lap['DriverNumber']
     test_data = session.car_data[drv].slice_by_lap(lap)
 
-    test_data = test_data.resample_channels(rule='0.5S')
+    test_data = test_data.resample_channels(rule=pd.Timedelta(seconds=0.5))
 
     # assert correct number of samples for duration at 2 Hz within +-1 sample
     n_samples_target = round(test_data['Time'].iloc[-1].total_seconds() * 2, 0)
@@ -267,7 +268,7 @@ def test_resampling_up(reference_laps_data):
     drv = lap['DriverNumber']
     test_data = session.car_data[drv].slice_by_lap(lap)
 
-    test_data = test_data.resample_channels(rule='0.05S')
+    test_data = test_data.resample_channels(rule=pd.Timedelta(seconds=0.05))
 
     # assert correct number of samples for duration at 20 Hz within +-1 sample
     n_samples_target = round(test_data['Time'].iloc[-1].total_seconds() * 20, 0)
@@ -284,7 +285,7 @@ def test_resampling_up(reference_laps_data):
 @pytest.mark.f1telapi
 @pytest.mark.parametrize(
     "resample_rule",
-    [None, "0.1S"]  # test base frequency and resampled
+    [None, pd.Timedelta(seconds=0.1)]  # test base frequency and resampled
 )
 def test_add_driver_ahead(reference_laps_data, resample_rule):
     session, laps = reference_laps_data
@@ -304,7 +305,7 @@ def test_add_driver_ahead(reference_laps_data, resample_rule):
 def test_add_driver_ahead_resampled(reference_laps_data):
     session, laps = reference_laps_data
     test_data = laps.pick_fastest().get_car_data()\
-        .resample_channels(rule='0.5S')
+        .resample_channels(rule=pd.Timedelta(seconds=0.5))
     test_data = test_data.add_driver_ahead()
     # only first value may be NaN
     assert test_data['DistanceToDriverAhead'].isnull().sum() <= 1

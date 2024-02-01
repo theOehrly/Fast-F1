@@ -500,7 +500,7 @@ class Telemetry(pd.DataFrame):
             merged = merged.reset_index().rename(columns={'index': 'Date'})
 
         else:
-            frq = f'{1 / frequency}S'
+            frq = pd.Timedelta(seconds=1/frequency)
 
             resampled_columns = dict()
 
