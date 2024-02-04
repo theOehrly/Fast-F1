@@ -525,8 +525,19 @@ class Telemetry(pd.DataFrame):
                         .interpolate(method=method, **interp_kwargs)
 
                 elif sig_type == 'discrete':
-                    res = merged.loc[:, ch].resample(frq, origin=ref_date) \
-                        .ffill().ffill().bfill()
+                    with warnings.catch_warnings():
+                        # deprecated since pandas 2.2.0; don't opt in to new
+                        # behaviour as that would silently change behaviour for
+                        # user code; irrelevant here, therefore just filter
+                        warnings.filterwarnings(
+                            "ignore",
+                            "Downcasting object dtype arrays on .fillna, "
+                            ".ffill, .bfill is deprecated",
+                            FutureWarning
+                        )
+                        res = merged.loc[:, ch] \
+                            .resample(frq, origin=ref_date) \
+                            .ffill().ffill().bfill()
                     # first ffill is a method of the resampler object and will
                     # ONLY ffill values created during resampling but not
                     # already existing NaN values. NaN values already existed
@@ -659,7 +670,17 @@ class Telemetry(pd.DataFrame):
                     .interpolate(method=method, **interp_kwargs)
 
             elif sig_type == 'discrete':
-                ret.loc[:, ch] = ret.loc[:, ch].ffill().ffill().bfill()
+                with warnings.catch_warnings():
+                    # deprecated since pandas 2.2.0; don't opt in to new
+                    # behaviour as that would silently change behaviour for
+                    # user code; irrelevant here, therefore just filter
+                    warnings.filterwarnings(
+                        "ignore",
+                        "Downcasting object dtype arrays on .fillna, "
+                        ".ffill, .bfill is deprecated",
+                        FutureWarning
+                    )
+                    ret.loc[:, ch] = ret.loc[:, ch].ffill().ffill().bfill()
                 # first ffill is a method of the resampler object and will
                 # ONLY ffill values created during resampling but not already
                 # existing NaN values. NaN values already existed because of
