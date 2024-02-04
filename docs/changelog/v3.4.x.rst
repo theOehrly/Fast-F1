@@ -1,0 +1,37 @@
+
+What's new in v3.4.0
+--------------------
+
+(released dd/mm/yyyy)
+
+
+New Features
+^^^^^^^^^^^^
+
+
+
+Bug Fixes
+^^^^^^^^^
+
+
+Deprecations
+^^^^^^^^^^^^
+
+- The following module level properties of :mod:`fastf1.plotting` have been
+  deprecated:
+  :attr:`~fastf1.plotting.COMPOUND_COLORS`,
+  :attr:`~fastf1.plotting.DRIVER_TRANSLATE`,
+  :attr:`~fastf1.plotting.TEAM_COLORS`,
+  :attr:`~fastf1.plotting.TEAM_TRANSLATE`,
+  :attr:`~fastf1.plotting.COLOR_PALETTE`
+
+
+- The following functions in :mod:`fastf1.plotting` have been deprecated:
+  :func:`~fastf1.plotting.driver_color`,
+  :func:`~fastf1.plotting.team_color`
+
+
+Removals
+^^^^^^^^
+
+- ``fastf1.plotting.lapnumber_axis`` has been removed

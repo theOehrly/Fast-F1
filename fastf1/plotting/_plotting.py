@@ -1,36 +1,11 @@
-"""
-Helper functions for creating data plots.
-
-:mod:`fastf1.plotting` provides optional functionality with the intention of
-making it easy to create nice plots.
-
-This module offers mainly two things:
-    - team names and colors
-    - matplotlib mods and helper functions
-
-Fast-F1 focuses on plotting data with matplotlib. Of course, you are not
-required to use matplotlib and you can use any other tool you like.
-
-If you wish to use matplotlib, it is highly recommended to enable some
-helper functions by calling :func:`setup_mpl`.
-
-If you don't want to use matplotlib, you can still use the team names
-and colors which are provided below.
-
-
-.. note:: Plotting related functionality is likely to change in a future
-    release.
-"""
 import warnings
 from typing import (
-    Dict,
-    List
+    List,
+    Optional
 )
 
 import numpy as np
 import pandas as pd
-
-from fastf1.logger import get_logger
 
 
 try:
@@ -39,165 +14,59 @@ try:
     from matplotlib import pyplot as plt
 except ImportError:
     warnings.warn("Failed to import optional dependency 'matplotlib'!"
-                  "Plotting functionality will be unavailable!", UserWarning)
+                  "Plotting functionality will be unavailable!",
+                  RuntimeWarning)
 try:
     import timple
 except ImportError:
     warnings.warn("Failed to import optional dependency 'timple'!"
                   "Plotting of timedelta values will be restricted!",
-                  UserWarning)
+                  RuntimeWarning)
 
-_logger = get_logger(__name__)
+from rapidfuzz import fuzz
 
-with warnings.catch_warnings():
-    warnings.filterwarnings('ignore',
-                            message="Using slow pure-python SequenceMatcher")
-    # suppress that warning, it's confusing at best here, we don't need fast
-    # sequence matching and the installation (on windows) some effort
-    from rapidfuzz import fuzz
-
-
-class __TeamColorsWarnDict(dict):
-    """Implements userwarning on KeyError in :any:`TEAM_COLORS` after
-    changing team names."""
-
-    def get(self, key, default=None):
-        value = super().get(key, default)
-        if value is None:
-            self.warn_change()
-        return value
-
-    def __getitem__(self, item):
-        try:
-            return super().__getitem__(item)
-        except KeyError as err:
-            self.warn_change()
-            raise err
-        except Exception as err:
-            raise err
-
-    def warn_change(self):
-        warnings.warn(
-            "Team names in `TEAM_COLORS` are now lower-case and only contain "
-            "the most identifying part of the name. "
-            "Use function `.team_color` alternatively.", UserWarning
-        )
+from fastf1.logger import get_logger
+from fastf1.plotting._constants import (
+    LEGACY_DRIVER_COLORS,
+    LEGACY_DRIVER_TRANSLATE,
+    LEGACY_TEAM_COLORS,
+    LEGACY_TEAM_TRANSLATE
+)
 
 
-TEAM_COLORS = __TeamColorsWarnDict({
-    'mercedes': '#00d2be', 'ferrari': '#dc0000',
-    'red bull': '#fcd700', 'mclaren': '#ff8700',
-    'alpine': '#fe86bc', 'aston martin': '#006f62',
-    'sauber': '#00e701', 'visa rb': '#1634cb',
-    'haas': '#ffffff', 'williams': '#00a0dd'
-})
-"""Mapping of team names to team colors (hex color codes).
-(current season only)"""
+_logger = get_logger(__package__)
 
-TEAM_TRANSLATE: Dict[str, str] = {
-    'MER': 'mercedes', 'FER': 'ferrari',
-    'RBR': 'red bull', 'MCL': 'mclaren',
-    'APN': 'alpine', 'AMR': 'aston martin',
-    'SAU': 'sauber', 'VRB': 'visa rb',
-    'HAA': 'haas', 'WIL': 'williams'}
-"""Mapping of team names to theirs respective abbreviations."""
 
-DRIVER_COLORS: Dict[str, str] = {
-    "valtteri bottas": "#00e701",
-    "zhou guanyu": "#008d01",
-    "theo pourchaire": "#004601",
+_COLOR_PALETTE: List[str] = ['#FF79C6', '#50FA7B', '#8BE9FD', '#BD93F9',
+                             '#FFB86C', '#FF5555', '#F1FA8C']
+# The default color palette for matplotlib plot lines in fastf1's color scheme
 
-    "nyck de vries": "#1e3d61",
-    "yuki tsunoda": "#356cac",
-    "daniel ricciardo": "#2b4562",
-    "liam lawson": "#2b4562",
-    "isack hadjar": "#1e6176",
-    "ayumu iwasa": "#1e6176",
 
-    "pierre gasly": "#fe86bc",
-    "esteban ocon": "#ff117c",
-    "jack doohan": "#894667",
+class __DefaultStringArgType(str):
+    pass
 
-    "fernando alonso": "#006f62",
-    "lance stroll": "#00413b",
-    "felipe drugovich": "#2f9b90",
 
-    "charles leclerc": "#dc0000",
-    "carlos sainz": "#ff8181",
-    "robert shwartzman": "#9c0000",
-    "oliver bearman": "#c40000",
-
-    "kevin magnussen": "#ffffff",
-    "nico hulkenberg": "#cacaca",
-
-    "oscar piastri": "#ff8700",
-    "lando norris": "#eeb370",
-    "pato oward": "#ee6d3a",
-
-    "lewis hamilton": "#00d2be",
-    "george russell": "#24ffff",
-    "frederik vesti": "#00a6ff",
-
-    "max verstappen": "#fcd700",
-    "sergio perez": "#ffec7b",
-    "jake dennis": "#907400",
-
-    "alexander albon": "#005aff",
-    "logan sargeant": "#012564",
-    "zak osullivan": "#1b3d97",
-    "franco colapinto": "#639aff"
-}
-"""Mapping of driver names to driver colors (hex color codes).
-(current season only)"""
-
-DRIVER_TRANSLATE: Dict[str, str] = {
-    'LEC': 'charles leclerc', 'SAI': 'carlos sainz',
-    'SHW': 'robert shwartzman',
-    'VER': 'max verstappen', 'PER': 'sergio perez',
-    'DEN': 'jake dennis',
-    'PIA': 'oscar piastri', 'NOR': 'lando norris',
-    'OWA': 'pato oward',
-    'GAS': 'pierre gasly', 'OCO': 'esteban ocon',
-    'DOO': 'jack doohan',
-    'BOT': 'valtteri bottas', 'ZHO': 'zhou guanyu',
-    'POU': 'theo pourchaire',
-    'DEV': 'nyck de vries', 'TSU': 'yuki tsunoda',
-    'RIC': 'daniel ricciardo', 'LAW': 'liam lawson',
-    'HAD': 'isack hadjar', 'IWA': 'ayumu iwasa',
-    'MAG': 'kevin magnussen', 'HUL': 'nico hulkenberg',
-    'BEA': 'oliver bearman',
-    'ALO': 'fernando alonso', 'STR': 'lance stroll',
-    'DRU': 'felipe drugovich',
-    'HAM': 'lewis hamilton', 'RUS': 'george russell',
-    'VES': 'frederik vesti',
-    'ALB': 'alexander albon', 'SAR': 'logan sargeant',
-    'OSU': 'zak osullivan', 'COL': 'franco colapinto'}
-"""Mapping of driver names to theirs respective abbreviations."""
-
-COMPOUND_COLORS: Dict[str, str] = {
-    "SOFT": "#da291c",
-    "MEDIUM": "#ffd12e",
-    "HARD": "#f0f0ec",
-    "INTERMEDIATE": "#43b02a",
-    "WET": "#0067ad",
-    "UNKNOWN": "#00ffff",
-    "TEST-UNKNOWN": "#434649"
-}
-"""Mapping of tyre compound names to compound colors (hex color codes).
-(current season only)"""
-
-COLOR_PALETTE: List[str] = ['#FF79C6', '#50FA7B', '#8BE9FD', '#BD93F9',
-                            '#FFB86C', '#FF5555', '#F1FA8C']
-"""The default color palette for matplotlib plot lines in fastf1's color
-scheme."""
+__color_scheme_default_arg = __DefaultStringArgType('fastf1')
 
 
 def setup_mpl(
-        mpl_timedelta_support: bool = True, color_scheme: str = 'fastf1',
+        mpl_timedelta_support: bool = True,
+        color_scheme: Optional[str] = __color_scheme_default_arg,
         misc_mpl_mods: bool = True):
     """Setup matplotlib for use with fastf1.
 
     This is optional but, at least partly, highly recommended.
+
+    .. deprecated:: 3.4.0
+
+        The optional argument ``misc_mpls_mods`` is deprecated.
+
+    .. deprecated:: 3.4.0
+
+        The default value for ``color_scheme`` will change from ``'fastf1'``
+        to ``None``. You should explicitly set the desired value when calling
+        this function.
+
 
     Parameters:
         mpl_timedelta_support (bool):
@@ -217,13 +86,25 @@ def setup_mpl(
             Valid color scheme names are: ['fastf1', None]
 
         misc_mpl_mods (bool):
-            This enables a collection of patches for the following mpl
-            features:
-
-                - ``.savefig`` (saving of figures)
-                - ``.bar``/``.barh`` (plotting of bar graphs)
-                - ``plt.subplots`` (for creating a nice background grid)
+            This argument is deprecated since v3.4.0 and should no longer be
+            used.
     """
+    if color_scheme is __color_scheme_default_arg:
+        warnings.warn(
+            "FastF1 will no longer silently modify the default Matplotlib "
+            "colors in the future.\nTo remove this warning, explicitly set "
+            "`color_scheme=None` or `color_scheme='fastf1'` when calling "
+            "`.setup_mpl()`.", FutureWarning
+        )
+
+    if misc_mpl_mods:
+        warnings.warn(
+            "FastF1 will stop modifying the default Matplotlib settings in "
+            "the future.\nTo opt-in to the new behaviour and remove this "
+            "warning, explicitly set `misc_mpl_mods=False` when calling "
+            "`.setup_mpl()`.", FutureWarning
+        )
+
     if mpl_timedelta_support:
         _enable_timple()
     if color_scheme == 'fastf1':
@@ -233,33 +114,34 @@ def setup_mpl(
 
 
 def driver_color(identifier: str) -> str:
-    """Get a driver's color from a driver name or abbreviation.
+    """
+    Get a driver's color from a driver name or abbreviation.
+
+    .. deprecated:: 3.4.0
+        This function is deprecated and will be removed in a future version.
+        Use :func:`~fastf1.plotting.get_driver_color` instead.
 
     This function will try to find a matching driver for any identifier string
-    that is passed to it. This involves case insensitive matching and partial
+    that is passed to it. This involves case-insensitive matching and partial
     string matching.
-
-    If you want exact string matching, you should use the
-    :any:`DRIVER_COLORS` dictionary directly, using :any:`DRIVER_TRANSLATE` to
-    convert abbreviations to team names if necessary.
 
     Example::
 
-        >>> driver_color('charles leclerc')
+        >>> driver_color('charles leclerc')  # doctest: +SKIP
         '#dc0000'
-        >>> driver_color('max verstappen')
+        >>> driver_color('max verstappen')  # doctest: +SKIP
         '#fcd700'
-        >>> driver_color('ver')
+        >>> driver_color('ver')  # doctest: +SKIP
         '#fcd700'
-        >>> driver_color('lec')
+        >>> driver_color('lec')  # doctest: +SKIP
         '#dc0000'
 
         shortened driver names and typos can be dealt with
         too (within reason)
 
-        >>> driver_color('Max Verst')
+        >>> driver_color('Max Verst')  # doctest: +SKIP
         '#fcd700'
-        >>> driver_color('Charles')
+        >>> driver_color('Charles')  # doctest: +SKIP
         '#dc0000'
 
     Args:
@@ -269,25 +151,31 @@ def driver_color(identifier: str) -> str:
     Returns:
         str: hex color code
     """
+    warnings.warn("The function `driver_color` is deprecated and will be "
+                  "removed in a future version. Use "
+                  "`fastf1.plotting.get_driver_color` instead.",
+                  FutureWarning)
 
-    if identifier.upper() in DRIVER_TRANSLATE:
+    if identifier.upper() in LEGACY_DRIVER_TRANSLATE:
         # try short team abbreviations first
-        return DRIVER_COLORS[DRIVER_TRANSLATE[identifier.upper()]]
+        return LEGACY_DRIVER_COLORS[
+            LEGACY_DRIVER_TRANSLATE[identifier.upper()]
+        ]
     else:
         identifier = identifier.lower()
 
         # check for an exact team name match
-        if identifier in DRIVER_COLORS:
-            return DRIVER_COLORS[identifier]
+        if identifier in LEGACY_DRIVER_COLORS:
+            return LEGACY_DRIVER_COLORS[identifier]
 
         # check for exact partial string match
-        for team_name, color in DRIVER_COLORS.items():
+        for team_name, color in LEGACY_DRIVER_COLORS.items():
             if identifier in team_name:
                 return color
 
         # do fuzzy string matching
         key_ratios = list()
-        for existing_key in DRIVER_COLORS:
+        for existing_key in LEGACY_DRIVER_COLORS:
             ratio = fuzz.ratio(identifier, existing_key)
             key_ratios.append((ratio, existing_key))
         key_ratios.sort(reverse=True)
@@ -304,41 +192,42 @@ def driver_color(identifier: str) -> str:
             # than second best)
             raise KeyError
         best_matched_key = key_ratios[0][1]
-        return DRIVER_COLORS[best_matched_key]
+        return LEGACY_DRIVER_COLORS[best_matched_key]
 
 
 def team_color(identifier: str) -> str:
-    """Get a team's color from a team name or abbreviation.
+    """
+    Get a team's color from a team name or abbreviation.
+
+    .. deprecated:: 3.4.0
+        This function is deprecated and will be removed in a future version.
+        Use :func:`~fastf1.plotting.get_team_color` instead.
 
     This function will try to find a matching team for any identifier string
-    that is passed to it. This involves case insensitive matching and partial
+    that is passed to it. This involves case-insensitive matching and partial
     string matching.
-
-    If you want exact string matching, you should use the
-    :any:`TEAM_COLORS` dictionary directly, using :any:`TEAM_TRANSLATE` to
-    convert abbreviations to team names if necessary.
 
     Example::
 
-        >>> team_color('Red Bull')
+        >>> team_color('Red Bull')  # doctest: +SKIP
         '#fcd700'
-        >>> team_color('redbull')
+        >>> team_color('redbull')  # doctest: +SKIP
         '#fcd700'
-        >>> team_color('Red')
+        >>> team_color('Red')  # doctest: +SKIP
         '#fcd700'
-        >>> team_color('RBR')
+        >>> team_color('RBR')  # doctest: +SKIP
         '#fcd700'
 
-        shortened team names, included sponsors and typos can be dealt with
-        too (within reason)
+        # shortened team names, included sponsors and typos can be dealt with
+        # too (within reason)
 
-        >>> team_color('Mercedes')
+        >>> team_color('Mercedes')  # doctest: +SKIP
         '#00d2be'
-        >>> team_color('Merc')
+        >>> team_color('Merc')  # doctest: +SKIP
         '#00d2be'
-        >>> team_color('Merecds')
+        >>> team_color('Merecds')  # doctest: +SKIP
         '#00d2be'
-        >>> team_color('Mercedes-AMG Petronas F1 Team')
+        >>> team_color('Mercedes-AMG Petronas F1 Team')  # doctest: +SKIP
         '#00d2be'
 
     Args:
@@ -348,9 +237,14 @@ def team_color(identifier: str) -> str:
     Returns:
         str: hex color code
     """
-    if identifier.upper() in TEAM_TRANSLATE:
+    warnings.warn("The function `team_color` is deprecated and will be "
+                  "removed in a future version. Use "
+                  "`fastf1.plotting.get_team_color` instead.",
+                  FutureWarning)
+
+    if identifier.upper() in LEGACY_TEAM_TRANSLATE:
         # try short team abbreviations first
-        return TEAM_COLORS[TEAM_TRANSLATE[identifier.upper()]]
+        return LEGACY_TEAM_COLORS[LEGACY_TEAM_TRANSLATE[identifier.upper()]]
     else:
         identifier = identifier.lower()
         # remove common non-unique words
@@ -358,17 +252,17 @@ def team_color(identifier: str) -> str:
             identifier = identifier.replace(word, "")
 
         # check for an exact team name match
-        if identifier in TEAM_COLORS:
-            return TEAM_COLORS[identifier]
+        if identifier in LEGACY_TEAM_COLORS:
+            return LEGACY_TEAM_COLORS[identifier]
 
         # check for exact partial string match
-        for team_name, color in TEAM_COLORS.items():
+        for team_name, color in LEGACY_TEAM_COLORS.items():
             if identifier in team_name:
                 return color
 
         # do fuzzy string matching
         key_ratios = list()
-        for existing_key in TEAM_COLORS.keys():
+        for existing_key in LEGACY_TEAM_COLORS.keys():
             ratio = fuzz.ratio(identifier, existing_key)
             key_ratios.append((ratio, existing_key))
         key_ratios.sort(reverse=True)
@@ -385,24 +279,7 @@ def team_color(identifier: str) -> str:
             # than second best)
             raise KeyError
         best_matched_key = key_ratios[0][1]
-        return TEAM_COLORS[best_matched_key]
-
-
-def lapnumber_axis(ax, axis='xaxis'):
-    """Set axis to integer ticks only."
-
-    Args:
-        ax: matplotlib axis
-        axis: can be 'xaxis' or 'yaxis'
-
-    Returns:
-        the modified axis instance
-
-    """
-    getattr(ax, axis).get_major_locator().set_params(integer=True,
-                                                     min_n_ticks=0)
-
-    return ax
+        return LEGACY_TEAM_COLORS[best_matched_key]
 
 
 def _enable_timple():
@@ -501,9 +378,33 @@ def _enable_fastf1_color_scheme():
     plt.rcParams['axes.titlesize'] = '19'
     plt.rcParams['axes.titlepad'] = '12'
     plt.rcParams['axes.titleweight'] = 'light'
-    plt.rcParams['axes.prop_cycle'] = cycler('color', COLOR_PALETTE)
+    plt.rcParams['axes.prop_cycle'] = cycler('color', _COLOR_PALETTE)
     plt.rcParams['legend.fancybox'] = False
     plt.rcParams['legend.facecolor'] = (0.1, 0.1, 0.1, 0.7)
     plt.rcParams['legend.edgecolor'] = (0.1, 0.1, 0.1, 0.9)
     plt.rcParams['savefig.transparent'] = False
     plt.rcParams['axes.axisbelow'] = True
+
+
+def lapnumber_axis(ax, axis='xaxis'):
+    """
+    Set axis to integer ticks only.
+
+    .. deprecated:: 3.4.0
+        The function ``lapnumber_axis`` is deprecated and will ber removed in a
+        future version without replacement.
+
+    Args:
+        ax: matplotlib axis
+        axis: can be 'xaxis' or 'yaxis'
+
+    Returns:
+        the modified axis instance
+    """
+    warnings.warn("The function `lapnumber_axis` is deprecated and will be "
+                  "removed without replacement in a future version.",
+                  FutureWarning)
+    getattr(ax, axis).get_major_locator().set_params(integer=True,
+                                                     min_n_ticks=0)
+
+    return ax

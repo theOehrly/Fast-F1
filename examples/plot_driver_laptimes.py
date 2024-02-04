@@ -11,8 +11,11 @@ import fastf1
 import fastf1.plotting
 
 
-# The misc_mpl_mods option enables minor grid lines which clutter the plot
-fastf1.plotting.setup_mpl(misc_mpl_mods=False)
+# Enable Matplotlib patches for plotting timedelta values and load
+# FastF1's dark color scheme
+fastf1.plotting.setup_mpl(mpl_timedelta_support=True, misc_mpl_mods=False,
+                          color_scheme='fastf1')
+
 
 ###############################################################################
 # Load the race session.
@@ -39,7 +42,7 @@ sns.scatterplot(data=driver_laps,
                 y="LapTime",
                 ax=ax,
                 hue="Compound",
-                palette=fastf1.plotting.COMPOUND_COLORS,
+                palette=fastf1.plotting.get_compound_mapping(session=race),
                 s=80,
                 linewidth=0,
                 legend='auto')
