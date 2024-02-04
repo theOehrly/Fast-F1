@@ -1,11 +1,16 @@
+import warnings
+
 import pytest
 
-from fastf1.plotting import (
-    DRIVER_COLORS,
-    DRIVER_TRANSLATE,
-    TEAM_COLORS,
-    TEAM_TRANSLATE
-)
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", FutureWarning)
+    from fastf1.plotting import (
+        DRIVER_COLORS,
+        DRIVER_TRANSLATE,
+        TEAM_COLORS,
+        TEAM_TRANSLATE
+    )
 
 
 def test_team_colors_dict_warning():

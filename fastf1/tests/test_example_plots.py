@@ -51,6 +51,7 @@ def test_doc_example_fast_lec():
     return fig
 
 
+@pytest.mark.xfail  # TODO: un-xfail once 2020 constants are added
 @pytest.mark.f1telapi
 @pytest.mark.mpl_image_compare(style='default')
 def test_doc_example_delta_time():
@@ -61,14 +62,17 @@ def test_doc_example_delta_time():
 
     fig, ax = plt.subplots()
     ax.plot(lec.telemetry['Distance'], lec.telemetry['Speed'],
-            color=fastf1.plotting.team_color(lec['Team']))
+            color=fastf1.plotting.get_team_color(lec['Team'],
+                                                 session=session))
     ax.plot(ham.telemetry['Distance'], ham.telemetry['Speed'],
-            color=fastf1.plotting.team_color(ham['Team']))
+            color=fastf1.plotting.get_team_color(ham['Team'],
+                                                 session=session))
     twin = ax.twinx()
     delta_time, ham_car_data, lec_car_data = fastf1.utils.delta_time(ham, lec)
     ham_car_data = ham_car_data.add_distance()
     twin.plot(ham_car_data['Distance'], delta_time, '--',
-              color=fastf1.plotting.team_color(lec['Team']))
+              color=fastf1.plotting.get_team_color(lec['Team'],
+                                                   session=session))
 
     return fig
 

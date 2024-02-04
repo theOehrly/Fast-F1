@@ -28,10 +28,12 @@ for drv in session.drivers:
     drv_laps = session.laps.pick_driver(drv)
 
     abb = drv_laps['Driver'].iloc[0]
-    color = fastf1.plotting.driver_color(abb)
+    style = fastf1.plotting.get_driver_style(identifier=abb,
+                                             style=['color', 'linestyle'],
+                                             session=session)
 
     ax.plot(drv_laps['LapNumber'], drv_laps['Position'],
-            label=abb, color=color)
+            label=abb, **style)
 # sphinx_gallery_defer_figures
 
 ##############################################################################

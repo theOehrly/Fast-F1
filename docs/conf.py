@@ -84,6 +84,7 @@ nitpick_ignore_regex = [
     (r'py:.*', r'pandas\..*'),
     (r'py:.*', r'pd\..*'),
     (r'py:.*', r'numpy\..*'),
+    (r'py:.*', r'matplotlib\..*'),
     (r'py:mod', r'logging'),
     (r'py:class', r'logging.Logger'),
 ]
