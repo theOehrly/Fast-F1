@@ -2397,7 +2397,7 @@ class Session:
                     # not pos data or car data exists for this driver
                     continue
 
-                drv_car['Date'] = drv_car['Date'].round('ms')
+                drv_car['Date'] = drv_car['Date'].dt.round('ms')
 
                 drv_car['Time'] = drv_car['Date'] - self.t0_date
                 drv_car['SessionTime'] = drv_car['Time']
