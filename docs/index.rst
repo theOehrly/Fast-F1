@@ -25,7 +25,7 @@ tyre data, weather data, the event schedule and session results.
 
 
 To get a quick overview over how to use FastF1, check out
-:doc:`examples/index` or the :doc:`examples_gallery/index`.
+:doc:`examples/index` or the :doc:`gen_modules/examples_gallery/index`.
 
 Note that FastF1 handles big chunks of data (~50-100mb per session). To improve
 performance, data is per default cached locally. The default placement
@@ -141,7 +141,7 @@ Contents
    :caption: Contents:
 
    examples/index
-   examples_gallery/index
+   gen_modules/examples_gallery/index
    fastf1
    core
    events

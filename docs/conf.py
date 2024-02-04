@@ -29,6 +29,10 @@ warnings.filterwarnings(action='ignore',
 warnings.filterwarnings(action='ignore',
                         message=r'`utils.delta_time` is considered '
                                 r'deprecated.*')
+warnings.filterwarnings(action='ignore',
+                        message=r'(COMPOUND_COLORS|DRIVER_COLORS|'
+                                r'DRIVER_TRANSLATE|TEAM_COLORS|TEAM_TRANSLATE|'
+                                r'COLOR_PALETTE) is deprecated and.*')
 
 doc_cache = os.path.abspath('../doc_cache')
 
@@ -84,6 +88,7 @@ nitpick_ignore_regex = [
     (r'py:.*', r'pandas\..*'),
     (r'py:.*', r'pd\..*'),
     (r'py:.*', r'numpy\..*'),
+    (r'py:.*', r'matplotlib\..*'),
     (r'py:mod', r'logging'),
     (r'py:class', r'logging.Logger'),
 ]
@@ -151,14 +156,19 @@ def sphinx_gallery_setup(gallery_conf, fname):
 
 sphinx_gallery_conf = {
     'examples_dirs': '../examples',
-    'gallery_dirs': 'examples_gallery',
+    'gallery_dirs': 'gen_modules/examples_gallery',
     'download_all_examples': False,
     'remove_config_comments': True,
     'image_scrapers': ('matplotlib',  # default
                        plotly_sg_scraper),  # for plotly thumbnail
     'reset_modules': ('matplotlib', 'seaborn',  # defaults
                       sphinx_gallery_setup),  # custom setup
-    'expected_failing_examples': ('../examples/plot_qualifying_results.py', ),
+    # directory where function/class granular galleries are stored
+    'backreferences_dir': 'gen_modules/backreferences',
+
+    # Modules for which function/class level galleries are created. In
+    # this case sphinx_gallery and numpy in a tuple of strings.
+    'doc_module': ('fastf1', ),
 }
 
 

@@ -3024,9 +3024,6 @@ class Laps(BaseDataFrame):
             mercedes = session_laps.pick_team('Mercedes')
             alfa_romeo = session_laps.pick_team('Alfa Romeo')
 
-        Have a look to :attr:`fastf1.plotting.TEAM_COLORS` for a quick
-        reference on team names.
-
         Args:
             name (str): Team name
 
