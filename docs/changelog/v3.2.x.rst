@@ -1,3 +1,24 @@
+What's new in v3.2.1
+--------------------
+
+(released 05/02/2024)
+
+
+Bug Fixes
+^^^^^^^^^
+
+- Fixed a bug that caused timestamps of telemetry data to have (apparent)
+  microseconds precision (even though this is not the case). As a result,
+  merging position data and car data did not have a well matching timestamp
+  index resulting in additional interpolated values. This problem only occurred
+  in combination with recent versions of Pandas.
+
+Other
+^^^^^
+
+- Various changes to address deprecations in Pandas.
+
+
 What's new in v3.2.0
 --------------------
 
