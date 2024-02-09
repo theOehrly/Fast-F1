@@ -1,3 +1,17 @@
+What's new in v3.2.2
+--------------------
+
+(released 09/02/2024)
+
+
+Bug Fixes
+^^^^^^^^^
+
+- Fixed another bug that caused :meth:`fastf1.core.Session.get_circuit_info`
+  to fail only in some cases if the default resampling frequency for
+  telemetry data is changed (#455)
+
+
 What's new in v3.2.1
 --------------------
 
