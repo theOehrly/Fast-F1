@@ -380,7 +380,7 @@ class Telemetry(pd.DataFrame):
                                         end_time + self.session.t0_date)
                                },
                               session=self.session).__finalize__(self)
-            d = self.merge_channels(edges)
+            d = self.merge_channels(edges, frequency='original')
 
         else:
             d = self.copy()  # TODO no copy?
@@ -625,7 +625,8 @@ class Telemetry(pd.DataFrame):
         new_tel.loc[:, 'Date'] = new_date_ref
 
         combined_tel = self.merge_channels(
-            Telemetry({'Date': new_date_ref}).__finalize__(self)
+            Telemetry({'Date': new_date_ref}).__finalize__(self),
+            frequency='original'
         )
 
         mask = combined_tel['Date'].isin(new_date_ref)
