@@ -105,7 +105,8 @@ def delta_time(
         )
 
     ltime = mini_pro(comp['Time'].dt.total_seconds().to_numpy())
-    ldistance = mini_pro(comp['Distance'].to_numpy())
+    multiplier = ref.Distance.iat[-1]/comp.Distance.iat[-1]
+    ldistance = mini_pro(comp['Distance'].to_numpy())*multiplier
     lap_time = np.interp(ref['Distance'], ldistance, ltime)
 
     delta = lap_time - ref['Time'].dt.total_seconds()
