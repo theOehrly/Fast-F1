@@ -85,10 +85,10 @@ class __TeamColorsWarnDict(dict):
 
 TEAM_COLORS = __TeamColorsWarnDict({
     'mercedes': '#00d2be', 'ferrari': '#dc0000',
-    'red bull': '#0600ef', 'mclaren': '#ff8700',
-    'alpine': '#0090ff', 'aston martin': '#006f62',
-    'alfa romeo': '#900000', 'alphatauri': '#2b4562',
-    'haas': '#ffffff', 'williams': '#005aff'
+    'red bull': '#fcd700', 'mclaren': '#ff8700',
+    'alpine': '#fe86bc', 'aston martin': '#006f62',
+    'sauber': '#00e701', 'visa rb': '#1634cb',
+    'haas': '#ffffff', 'williams': '#00a0dd'
 })
 """Mapping of team names to team colors (hex color codes).
 (current season only)"""
@@ -97,14 +97,14 @@ TEAM_TRANSLATE: Dict[str, str] = {
     'MER': 'mercedes', 'FER': 'ferrari',
     'RBR': 'red bull', 'MCL': 'mclaren',
     'APN': 'alpine', 'AMR': 'aston martin',
-    'ARR': 'alfa romeo', 'APT': 'alphatauri',
+    'SAU': 'sauber', 'VRB': 'visa rb',
     'HAA': 'haas', 'WIL': 'williams'}
 """Mapping of team names to theirs respective abbreviations."""
 
 DRIVER_COLORS: Dict[str, str] = {
-    "valtteri bottas": "#900000",
-    "zhou guanyu": "#500000",
-    "theo pourchaire": "#700000",
+    "valtteri bottas": "#00e701",
+    "zhou guanyu": "#008d01",
+    "theo pourchaire": "#004601",
 
     "nyck de vries": "#1e3d61",
     "yuki tsunoda": "#356cac",
@@ -112,12 +112,12 @@ DRIVER_COLORS: Dict[str, str] = {
     "liam lawson": "#2b4562",
     "isack hadjar": "#1e6176",
 
-    "pierre gasly": "#0090ff",
-    "esteban ocon": "#70c2ff",
-    "jack doohan": "#0075c2",
+    "pierre gasly": "#fe86bc",
+    "esteban ocon": "#ff117c",
+    "jack doohan": "#894667",
 
     "fernando alonso": "#006f62",
-    "lance stroll": "#25a617",
+    "lance stroll": "#00413b",
     "felipe drugovich": "#2f9b90",
 
     "charles leclerc": "#dc0000",
@@ -136,9 +136,9 @@ DRIVER_COLORS: Dict[str, str] = {
     "george russell": "#24ffff",
     "frederik vesti": "#00a6ff",
 
-    "max verstappen": "#0600ef",
-    "sergio perez": "#716de2",
-    "jake dennis": "#9f99e2",
+    "max verstappen": "#fcd700",
+    "sergio perez": "#ffec7b",
+    "jake dennis": "#907400",
 
     "alexander albon": "#005aff",
     "logan sargeant": "#012564",
@@ -245,9 +245,9 @@ def driver_color(identifier: str) -> str:
         >>> driver_color('charles leclerc')
         '#dc0000'
         >>> driver_color('max verstappen')
-        '#0600ef'
+        '#fcd700'
         >>> driver_color('ver')
-        '#0600ef'
+        '#fcd700'
         >>> driver_color('lec')
         '#dc0000'
 
@@ -255,7 +255,7 @@ def driver_color(identifier: str) -> str:
         too (within reason)
 
         >>> driver_color('Max Verst')
-        '#0600ef'
+        '#fcd700'
         >>> driver_color('Charles')
         '#dc0000'
 
@@ -312,13 +312,13 @@ def team_color(identifier: str) -> str:
     Example::
 
         >>> team_color('Red Bull')
-        '#0600ef'
+        '#fcd700'
         >>> team_color('redbull')
-        '#0600ef'
+        '#fcd700'
         >>> team_color('Red')
-        '#0600ef'
+        '#fcd700'
         >>> team_color('RBR')
-        '#0600ef'
+        '#fcd700'
 
         shortened team names, included sponsors and typos can be dealt with
         too (within reason)
