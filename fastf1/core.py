@@ -3060,18 +3060,17 @@ class Laps(BaseDataFrame):
             laps = self.loc[self['IsPersonalBest'] == True]  # noqa: E712
 
         if not laps.size:
-            warnings.warn(("None will be returned instead of an empty Lap "
-                           "object when there are no laps that satisfies "
-                           "the definition for fastest lap starting from "
-                           "version 3.3"),
-                          DeprecationWarning)
+            warnings.warn(("In the future, `None` will be returned instead of "
+                           "an empty `Lap` object when there are no laps that "
+                           "satisfy the definition for fastest lap."),
+                          FutureWarning)
             return Lap(index=self.columns, dtype=object).__finalize__(self)
 
         if laps['LapTime'].isna().all():
-            warnings.warn(("None will be returned instead of an empty Lap "
-                           "object when there is no recorded LapTime for "
-                           "any lap starting from version 3.3"),
-                          DeprecationWarning)
+            warnings.warn(("In the future, `None` will be returned instead of "
+                           "an empty `Lap` object when there is no recorded "
+                           "LapTime for any lap."),
+                          FutureWarning)
             return Lap(index=self.columns, dtype=object).__finalize__(self)
 
         lap = laps.loc[laps['LapTime'].idxmin()]
