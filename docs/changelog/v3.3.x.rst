@@ -1,0 +1,14 @@
+What's new in v3.3.0
+--------------------
+
+(released 19/02/2024)
+
+
+New Features
+^^^^^^^^^^^^
+
+- Updated team names and team colors for the 2024 season. (As usual, this means
+  that this information is no longer valid for the previous season!)
+
+- Improved the accuracy of :func:`fastf1.utils.delta_time` (by @grahamjwhite)
+  (#512)
