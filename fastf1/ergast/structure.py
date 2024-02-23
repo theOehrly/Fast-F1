@@ -243,7 +243,7 @@ def _merge_dicts_of_lists(data):
     if len(data) <= 1:
         return data[0]
 
-    for i in range(len(data) - 1):
+    for _ in range(len(data) - 1):
         _tmp = data.pop(1)
         for key in data[0].keys():
             data[0][key].extend(_tmp.pop(key))

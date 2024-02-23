@@ -163,10 +163,10 @@ class LiveTimingData:
 
     def _parse_session_data(self, msg):
         # make sure the categories exist as we want to append to them
-        if 'TrackStatus' not in self.data.keys():
+        if 'TrackStatus' not in self.data:
             self.data['TrackStatus'] = {'Time': [], 'Status': [],
                                         'Message': []}
-        if 'SessionStatus' not in self.data.keys():
+        if 'SessionStatus' not in self.data:
             self.data['SessionStatus'] = {'Time': [], 'Status': []}
 
         if ('StatusSeries' in msg) and isinstance(msg['StatusSeries'], dict):
@@ -194,7 +194,7 @@ class LiveTimingData:
                     self.data['SessionStatus']['Status'].append(entry['SessionStatus'])
 
     def _parse_race_control_message(self, msg):
-        if 'RaceControlMessages' not in self.data.keys():
+        if 'RaceControlMessages' not in self.data:
             self.data['RaceControlMessages'] = {
                 'Utc': [], 'Category': [], 'Message': [], 'Status': [],
                 'Flag': [], 'Scope': [], 'Sector': [], 'RacingNumber': []

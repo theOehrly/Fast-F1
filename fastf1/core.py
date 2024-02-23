@@ -312,8 +312,8 @@ class Telemetry(pd.DataFrame):
         """
         if isinstance(ref_laps, Laps) and len(ref_laps) > 1:
             if 'DriverNumber' not in ref_laps.columns:
-                ValueError("Laps is missing 'DriverNumber'. Cannot return "
-                           "telemetry for unknown driver.")
+                raise ValueError("Laps is missing 'DriverNumber'. "
+                           "Cannot return telemetry for unknown driver.")
             if not len(ref_laps['DriverNumber'].unique()) <= 1:
                 raise ValueError("Cannot create telemetry for multiple "
                                  "drivers at once!")
@@ -325,8 +325,8 @@ class Telemetry(pd.DataFrame):
             if isinstance(ref_laps, Laps):  # one lap in Laps
                 ref_laps = ref_laps.iloc[0]  # handle as a single lap
             if 'DriverNumber' not in ref_laps.index:
-                ValueError("Lap is missing 'DriverNumber'. Cannot return "
-                           "telemetry for unknown driver.")
+                raise ValueError("Lap is missing 'DriverNumber'. "
+                           "Cannot return telemetry for unknown driver.")
             end_time = ref_laps['Time']
             start_time = ref_laps['LapStartTime']
 
@@ -450,7 +450,7 @@ class Telemetry(pd.DataFrame):
         dtype_map = dict()
         for df in data, other:
             for col in df.columns:
-                if col not in dtype_map.keys():
+                if col not in dtype_map:
                     dtype_map[col] = df[col].dtype
 
         # Exclude columns existing on both dataframes from one dataframe
@@ -492,7 +492,7 @@ class Telemetry(pd.DataFrame):
 
             resampled_columns = dict()
 
-            for ch in self._CHANNELS.keys():
+            for ch in self._CHANNELS:
                 if ch not in merged.columns:
                     continue
                 sig_type = self._CHANNELS[ch]['type']
@@ -557,7 +557,7 @@ class Telemetry(pd.DataFrame):
                 = merged['SessionTime'] - merged['SessionTime'].iloc[0]
 
         # restore data types from before merging
-        for col in dtype_map.keys():
+        for col in dtype_map:
             try:
                 merged[col] = merged.loc[:, col].astype(dtype_map[col])
             except ValueError:
@@ -631,12 +631,12 @@ class Telemetry(pd.DataFrame):
         registered custom channels. For example:
         | Linear interpolation will be used for continuous values (Speed, RPM)
         | Forward-fill will be used for discrete values (Gear, DRS, ...)
-
+b
         See :meth:`register_new_channel` for adding custom channels.
         """
         ret = self.copy()
 
-        for ch in self._CHANNELS.keys():
+        for ch in self._CHANNELS:
             if ch not in self.columns:
                 continue
             sig_type = self._CHANNELS[ch]['type']
@@ -1475,7 +1475,7 @@ class Session:
                             "list from timing data.")
 
         df = None
-        for i, driver in enumerate(drivers):
+        for _, driver in enumerate(drivers):
             d1 = data[data['Driver'] == driver]
             d2 = useful[useful['Driver'] == driver]
             if d2.shape[0] != len(d2['Stint'].unique()):
@@ -2065,7 +2065,7 @@ class Session:
                 if prev_lap is not None:
                     # first lap after safety car often has timing issues
                     # (as do all laps under safety car)
-                    check_3 = (prev_lap['TrackStatus'] != '4')
+                    check_3 = prev_lap['TrackStatus'] != '4'
                 else:
                     check_3 = True  # no previous lap, no SC error
 

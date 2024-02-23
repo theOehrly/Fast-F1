@@ -45,8 +45,6 @@ except ImportError:
                   "Plotting of timedelta values will be restricted!",
                   UserWarning)
 
-import warnings
-
 
 with warnings.catch_warnings():
     warnings.filterwarnings('ignore',
@@ -284,7 +282,7 @@ def driver_color(identifier: str) -> str:
 
         # do fuzzy string matching
         key_ratios = list()
-        for existing_key in DRIVER_COLORS.keys():
+        for existing_key in DRIVER_COLORS:
             ratio = fuzz.ratio(identifier, existing_key)
             key_ratios.append((ratio, existing_key))
         key_ratios.sort(reverse=True)
