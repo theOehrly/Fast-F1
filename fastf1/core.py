@@ -79,18 +79,6 @@ from fastf1.utils import to_timedelta
 
 _logger = get_logger(__name__)
 
-D_LOOKUP: List[List] = \
-    [[44, 'HAM', 'Mercedes'], [77, 'BOT', 'Mercedes'],
-     [55, 'SAI', 'Ferrari'], [16, 'LEC', 'Ferrari'],
-     [33, 'VER', 'Red Bull'], [11, 'PER', 'Red Bull'],
-     [3, 'RIC', 'McLaren'], [4, 'NOR', 'McLaren'],
-     [5, 'VET', 'Aston Martin'], [18, 'STR', 'Aston Martin'],
-     [14, 'ALO', 'Alpine'], [31, 'OCO', 'Alpine'],
-     [22, 'TSU', 'AlphaTauri'], [10, 'GAS', 'AlphaTauri'],
-     [47, 'MSC', 'Haas F1 Team'], [9, 'MAZ', 'Haas F1 Team'],
-     [7, 'RAI', 'Alfa Romeo'], [99, 'GIO', 'Alfa Romeo'],
-     [6, 'LAT', 'Williams'], [63, 'RUS', 'Williams']]
-
 _RACE_LIKE_SESSIONS = ('Race', 'Sprint', 'Sprint Qualifying')
 _QUALI_LIKE_SESSIONS = ('Qualifying', 'Sprint Shootout')
 
