@@ -3696,13 +3696,3 @@ class NoLapDataError(Exception):
         super(NoLapDataError, self).__init__("Failed to load session because "
                                              "the API did not provide any "
                                              "usable data.")
-
-
-class InvalidSessionError(Exception):
-    """Raised if no session for the specified event name, type and year
-    can be found."""
-
-    def __init__(self, *args):
-        super(InvalidSessionError, self).__init__(
-            "No matching session can be found."
-        )

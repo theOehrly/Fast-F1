@@ -59,6 +59,3 @@
   **********
 
     .. autoclass:: fastf1.core.NoLapDataError
-
-
-    .. autoclass:: fastf1.core.InvalidSessionError
