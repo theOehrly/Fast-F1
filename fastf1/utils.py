@@ -204,7 +204,7 @@ def to_datetime(x: Union[str, datetime.datetime]) \
     Args:
         x: timestamp
     """
-    if isinstance(x, str):
+    if isinstance(x, str) and x:
         try:
             date, time = x.strip('Z').split('T')
             year, month, day = date.split('-')
