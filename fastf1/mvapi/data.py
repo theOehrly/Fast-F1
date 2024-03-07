@@ -142,7 +142,7 @@ def get_circuit_info(*, year: int, circuit_key: int) -> Optional[CircuitInfo]:
                 int(entry.get('number', 0)),
                 str(entry.get('letter', "")),
                 float(entry.get('angle', 0.0)),
-                np.nan
+                float(entry.get('length',0.0))
             ))
         ret.append(
             pd.DataFrame(
