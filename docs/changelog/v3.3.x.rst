@@ -1,3 +1,21 @@
+What's new in v3.3.1
+--------------------
+
+(released 10/03/2024)
+
+
+Bug Fixes
+^^^^^^^^^
+
+- Fix: correctly handle empty strings when parsing them in
+  :func:`fastf1.utils.to_datetime` (by @erdieee) (#531)
+
+- Fix: gracefully handle empty strings when parsing datetime values in
+  Ergast responses (by @mdsakalu) (#546). This fixes partially missing data
+  in the results Qualifying and Race results for the 2024 Saudi Arabia GP.
+
+
+
 What's new in v3.3.0
 --------------------
 
