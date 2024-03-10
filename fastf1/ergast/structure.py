@@ -17,10 +17,15 @@ _time_string_matcher = re.compile(
 # matches [hh:][mm:]ss[.micros][Z | +-hh:mm] timestring
 
 
-def date_from_ergast(d_str) -> datetime.datetime:
+def date_from_ergast(d_str) -> Optional[datetime.datetime]:
     """Create a ``datetime.datetime`` object from a date stamp formatted
     like 'YYYY-MM-DD'."""
-    return datetime.datetime.strptime(d_str, "%Y-%m-%d")
+    try:
+        return datetime.datetime.strptime(d_str, "%Y-%m-%d")
+    except ValueError:
+        logger.debug(f"Failed to parse date stamp '{d_str}' in Ergast"
+                     f"response.")
+        return None
 
 
 def time_from_ergast(t_str) -> Optional[datetime.time]:
