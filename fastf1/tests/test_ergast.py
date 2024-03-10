@@ -28,6 +28,19 @@ def test_date_from_ergast():
 
 
 @pytest.mark.parametrize(
+    "date_string",
+    (
+        "",
+        "huh?"
+    )
+)
+def test_date_from_ergast_errors(date_string, caplog):
+    caplog.set_level(logging.DEBUG)
+    assert date_from_ergast(date_string) is None
+    assert "Failed to parse" in caplog.text
+
+
+@pytest.mark.parametrize(
     "time_string, expected",
     (
             ("10:30:25.123456+00:00",
