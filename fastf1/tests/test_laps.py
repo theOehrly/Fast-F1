@@ -258,8 +258,8 @@ def test_laps_pick_track_status(reference_laps_data):
     session, laps = reference_laps_data
 
     # equals
-    equals = laps.pick_track_status('2', how="equals")
-    assert equals.shape == (48, 31)
+    equals = laps.pick_track_status('4', how="equals")
+    assert equals.shape == (43, 31)
     ensure_data_type(LAP_DTYPES, equals)
 
     # contains
@@ -274,7 +274,7 @@ def test_laps_pick_track_status(reference_laps_data):
 
     # any
     any_ = laps.pick_track_status('12', how="any")
-    assert any_.shape == (848, 31)
+    assert any_.shape == (866, 31)
     ensure_data_type(LAP_DTYPES, any_)
 
     # none

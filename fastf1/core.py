@@ -1847,48 +1847,52 @@ class Session:
         if track_status is None:
             return
 
-        # first set all laps to green flag as a starting point
-        laps['TrackStatus'] = '1'
+        # ensure track status is not set
+        laps['TrackStatus'] = ''
 
-        def applicator(new_status, current_status):
-            if current_status == '1':
-                return new_status
-            elif new_status not in current_status:
+        def _applicator(new_status, current_status):
+            if new_status not in current_status:
                 return current_status + new_status
             else:
                 return current_status
+
+        # -- Track Status Timeline
+        #           --> (status before) --|--- status ---|-- next_status -->
+        #                                 |              |
+        #                                 t              next_t
+        # -- Lap Timeline ---------------------------------------------------
+        # Case A (end criterion):    ----> Lap --|
+        # Case B (start criterion):                |---- Lap --->
+        #    (matches B and C)               |-- Lap --|
+        # Case C (full overlap):     |---------- Lap ----------|
 
         if len(track_status['Time']) > 0:
             t = track_status['Time'][0]
             status = track_status['Status'][0]
             for next_t, next_status in zip(track_status['Time'][1:],
                                            track_status['Status'][1:]):
-                if status != '1':
-                    # status change partially in lap and partially outside
-                    sel = (((next_t >= laps['LapStartTime'])
-                            & (laps['LapStartTime'] >= t))
-                           | ((t <= laps['Time']) & (laps['Time'] <= next_t)))
 
-                    laps.loc[sel, 'TrackStatus'] \
-                        = laps.loc[sel, 'TrackStatus'].apply(
-                            lambda curr: applicator(status, curr)
-                    )
+                # Case A: The lap ends during the current status
+                sel = ((t <= laps['Time']) & (laps['Time'] <= next_t))
+                # Case B: The lap starts during the current status
+                sel |= ((t <= laps['LapStartTime'])
+                        & (laps['LapStartTime'] <= next_t))
+                # Case C: The lap fully contains the current status
+                sel |= ((laps['LapStartTime'] <= t) & (next_t <= laps['Time']))
 
-                    # status change two times in one lap (short yellow flag)
-                    sel = ((laps['LapStartTime'] <= t)
-                           & (laps['Time'] >= next_t))
-
-                    laps.loc[sel, 'TrackStatus'] \
-                        = laps.loc[sel, 'TrackStatus'].apply(
-                            lambda curr: applicator(status, curr)
-                    )
+                laps.loc[sel, 'TrackStatus'] \
+                    = laps.loc[sel, 'TrackStatus'].apply(
+                        lambda curr: _applicator(status, curr)
+                )
 
                 t = next_t
                 status = next_status
 
-            sel = laps['LapStartTime'] >= t
+            # process the very last status: any lap that ends after this status
+            # started was fully or partially set under this track status
+            sel = (t <= laps['Time'])
             laps.loc[sel, 'TrackStatus'] = laps.loc[sel, 'TrackStatus'].apply(
-                lambda curr: applicator(status, curr)
+                lambda curr: _applicator(status, curr)
             )
 
     @soft_exceptions("first lap time",
@@ -2040,7 +2044,7 @@ class Session:
                            & pd.isnull(lap['PitOutTime'])
                            & (not lap['FastF1Generated'])
                            # slightly paranoid, allow only green + yellow flag
-                           & (lap['TrackStatus'] in ('1', '2'))
+                           & (lap['TrackStatus'] in ('1', '2', '12', '21'))
                            & (not pd.isnull(lap['LapTime']))
                            & (not pd.isnull(lap['Sector1Time']))
                            & (not pd.isnull(lap['Sector2Time']))
