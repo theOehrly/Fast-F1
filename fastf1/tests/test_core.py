@@ -6,6 +6,7 @@ from fastf1.core import (
     DriverResult,
     Lap,
     Laps,
+    Session,
     SessionResults
 )
 from fastf1.ergast import Ergast
@@ -86,3 +87,39 @@ def test_session_results_constructor_sliced():
 
     assert isinstance(results.loc[:, 'A'], pd.Series)
     assert not isinstance(results.loc[:, 'A'], DriverResult)
+
+
+def test_add_lap_status_to_laps():
+    # TODO: It should really be possible to mock a session object instead of
+    #   modifying an existing one like here. This is incredibly hack.
+    session = fastf1.get_session(2020, 'Italy', 'R')
+
+    laps = Laps(
+        [[pd.Timedelta(minutes=1), pd.Timedelta(minutes=2)],
+         [pd.Timedelta(minutes=2), pd.Timedelta(minutes=3)],
+         [pd.Timedelta(minutes=3), pd.Timedelta(minutes=4)],
+         [pd.Timedelta(minutes=4), pd.Timedelta(minutes=5)],
+         [pd.Timedelta(minutes=5), pd.Timedelta(minutes=6)],
+         [pd.Timedelta(minutes=6), pd.Timedelta(minutes=7)],
+         [pd.Timedelta(minutes=7), pd.Timedelta(minutes=8)]],
+        force_default_cols=False,
+        columns=('LapStartTime', 'Time')
+    )
+
+    status = pd.DataFrame(
+        [[pd.Timedelta(minutes=0), '1', 'AllClear'],
+         [pd.Timedelta(minutes=2.5), '2', 'Yellow'],
+         [pd.Timedelta(minutes=3.25), '6', 'VSCDeployed'],
+         [pd.Timedelta(minutes=3.75), '7', 'VSCEnding'],
+         [pd.Timedelta(minutes=4.25), '1', 'AllClear'],
+         [pd.Timedelta(minutes=6.5), '2', 'Yellow']],
+        columns=('Time', 'Status', 'Message')
+    )
+
+    # modify and reuse the existing session (very hacky but ok here)
+    session._track_status = status
+    session._add_track_status_to_laps(laps)
+
+    expected_per_lap_status = ['1', '12', '267', '71', '1', '12', '2']
+
+    assert (laps['TrackStatus'] == expected_per_lap_status).all()
