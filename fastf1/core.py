@@ -1886,7 +1886,7 @@ class Session:
                 t = next_t
                 status = next_status
 
-            sel = ((laps['LapStartTime'] >= t) | 
+            sel = ((laps['LapStartTime'] >= t) |
                    ((t >= laps['LapStartTime']) & (t <= laps['Time'])))
             laps.loc[sel, 'TrackStatus'] = laps.loc[sel, 'TrackStatus'].apply(
                 lambda curr: applicator(status, curr)
