@@ -86,7 +86,7 @@ TEAM_COLORS = __TeamColorsWarnDict({
     'red bull': '#fcd700', 'mclaren': '#ff8700',
     'alpine': '#fe86bc', 'aston martin': '#006f62',
     'sauber': '#00e701', 'visa rb': '#1634cb',
-    'haas': '#ffffff', 'williams': '#00a0dd'
+    'haas': '#ffffff', 'williams': '#00a0dd',
     'alfa romeo': '#00e701', 'alphatauri': '#1634cb'
 })
 """Mapping of team names to team colors (hex color codes).
