@@ -97,7 +97,8 @@ TEAM_TRANSLATE: Dict[str, str] = {
     'RBR': 'red bull', 'MCL': 'mclaren',
     'APN': 'alpine', 'AMR': 'aston martin',
     'SAU': 'sauber', 'VRB': 'visa rb',
-    'HAA': 'haas', 'WIL': 'williams'}
+    'HAA': 'haas', 'WIL': 'williams',
+    'ARR': 'alfa romeo', 'APT': 'alphatauri'}
 """Mapping of team names to theirs respective abbreviations."""
 
 DRIVER_COLORS: Dict[str, str] = {
