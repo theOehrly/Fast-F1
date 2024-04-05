@@ -111,6 +111,7 @@ DRIVER_COLORS: Dict[str, str] = {
     "daniel ricciardo": "#2b4562",
     "liam lawson": "#2b4562",
     "isack hadjar": "#1e6176",
+    "ayumu iwasa": "#1e6176",
 
     "pierre gasly": "#fe86bc",
     "esteban ocon": "#ff117c",
@@ -160,7 +161,7 @@ DRIVER_TRANSLATE: Dict[str, str] = {
     'POU': 'theo pourchaire',
     'DEV': 'nyck de vries', 'TSU': 'yuki tsunoda',
     'RIC': 'daniel ricciardo', 'LAW': 'liam lawson',
-    'HAD': 'isack hadjar',
+    'HAD': 'isack hadjar', 'IWA': 'ayumu iwasa',
     'MAG': 'kevin magnussen', 'HUL': 'nico hulkenberg',
     'BEA': 'oliver bearman',
     'ALO': 'fernando alonso', 'STR': 'lance stroll',
