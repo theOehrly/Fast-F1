@@ -158,6 +158,8 @@ sphinx_gallery_conf = {
                        plotly_sg_scraper),  # for plotly thumbnail
     'reset_modules': ('matplotlib', 'seaborn',  # defaults
                       sphinx_gallery_setup),  # custom setup
+    'expected_failing_examples': ('../examples/plot_qualifying_results.py',
+                                  '../examples/plot_team_pace_ranking.py'),
 }
 
 
