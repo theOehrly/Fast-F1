@@ -631,7 +631,7 @@ class Telemetry(pd.DataFrame):
         registered custom channels. For example:
         | Linear interpolation will be used for continuous values (Speed, RPM)
         | Forward-fill will be used for discrete values (Gear, DRS, ...)
-b
+
         See :meth:`register_new_channel` for adding custom channels.
         """
         ret = self.copy()
