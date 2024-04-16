@@ -147,7 +147,16 @@ def test_event_is_testing(backend, no_testing_support):
 
 @pytest.mark.parametrize('backend', ['fastf1', 'f1timing', 'ergast'])
 def test_event_get_session_name(backend):
+    # conventional event before sprint era
+    event = fastf1.get_event(2019, 1, backend=backend)
+    assert event.EventFormat == 'conventional'
+    assert event.get_session_name(3) == 'Practice 3'
+    assert event.get_session_name('Q') == 'Qualifying'
+    assert event.get_session_name('praCtice 1') == 'Practice 1'
+
+    # conventional event from sprint era
     event = fastf1.get_event(2021, 1, backend=backend)
+    assert event.EventFormat == 'conventional'
     assert event.get_session_name(3) == 'Practice 3'
     assert event.get_session_name('Q') == 'Qualifying'
     assert event.get_session_name('praCtice 1') == 'Practice 1'
@@ -171,15 +180,26 @@ def test_event_get_session_name(backend):
 
     # Sprint Shootout format introduced for 2023
     event = fastf1.get_event(2023, 4, backend=backend)
-    print(event)
     assert event.year == 2023
     assert event.EventFormat == 'sprint_shootout'
     assert event.get_session_name('SS') == 'Sprint Shootout'
-    assert event.get_session_name('SQ') == 'Sprint'
     assert event.get_session_name('S') == 'Sprint'
     assert event.get_session_name('Sprint Shootout') == 'Sprint Shootout'
     assert event.get_session_name('Sprint') == 'Sprint'
-    assert event.get_session_name('Sprint Qualifying') == 'Sprint'
+
+    # Sprint Qualifying format introduced for 2024
+    if ((backend == 'f1timing')
+            and (datetime.datetime.now() < datetime.datetime(2024, 4, 21))):
+        # disables this test until the data should be available
+        # TODO: remove early exit at any time after 2024/04/21
+        return
+    event = fastf1.get_event(2024, 5, backend=backend)
+    assert event.year == 2024
+    assert event.EventFormat == 'sprint_qualifying'
+    assert event.get_session_name('SQ') == 'Sprint Qualifying'
+    assert event.get_session_name('S') == 'Sprint'
+    assert event.get_session_name('Sprint Qualifying') == 'Sprint Qualifying'
+    assert event.get_session_name('Sprint') == 'Sprint'
 
 
 @pytest.mark.parametrize(
