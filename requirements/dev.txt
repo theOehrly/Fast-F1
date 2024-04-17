@@ -9,7 +9,7 @@ pytest-mpl==0.14.0  # logging issues in newer versions
 requests-mock
 ruff
 seaborn>0.13.0
-sphinx>6.0
+sphinx>6.0,<7.3
 sphinx-autodoc-typehints
 sphinx-gallery>=0.10.0
 wheel
