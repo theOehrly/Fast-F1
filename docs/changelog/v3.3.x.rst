@@ -1,3 +1,15 @@
+What's new in v3.3.4
+--------------------
+
+(released 17/04/2024)
+
+
+Bug Fixes
+^^^^^^^^^
+
+- Correctly support the new "Sprint Qualifying"
+
+
 What's new in v3.3.3
 --------------------
 
