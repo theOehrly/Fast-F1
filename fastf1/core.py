@@ -1789,16 +1789,37 @@ class Session:
         msg_pattern = re.compile(
             r"CAR (\d{1,2}) .* TIME (\d:\d\d\.\d\d\d) DELETED - (.*)"
         )
+        msg_pattern_reinstated = re.compile(
+            r"CAR (\d{1,2}) .* TIME (\d:\d\d\.\d\d\d) .*REINSTATED.*"
+        )
         timestamp_pattern = re.compile(r"\d\d:\d\d:\d\d")
 
+        # Do a look-ahead pass to find laps that later were reinstated.
+        # This way, the deletion message can be ignored on the main pass which
+        # means that we do not need to preserve the state of a lap (e.g.
+        # 'IsPersonalBest') in case we'd need to reinstate it again.
+        reinstated_laps = list()
+        for _, row in self._race_control_messages.iterrows():
+            reinstated_match = msg_pattern_reinstated.match(row['Message'])
+            if reinstated_match:
+                drv = reinstated_match[1]
+                deleted_time = to_timedelta(reinstated_match[2])
+                reinstated_laps.append((drv, deleted_time))
+
+        # do the main pass where laps are marked as deleted
         for _, row in self._race_control_messages.iterrows():
             match = msg_pattern.match(row['Message'])
             if match:
                 drv = match[1]
                 deleted_time = to_timedelta(match[2])
+                if (drv, deleted_time) in reinstated_laps:
+                    # ignore this lap because it was reinstated later
+                    continue
+
                 # remove timestamp from reasons because confusingly it is given
                 # as local time at the track
                 reason = timestamp_pattern.sub("", match[3])
+
                 self._laps.loc[
                     (self._laps['DriverNumber'] == drv)
                     & (self._laps['LapTime'] == deleted_time),
