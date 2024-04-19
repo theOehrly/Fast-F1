@@ -1,3 +1,18 @@
+What's new in v3.3.5
+--------------------
+
+(released 19/04/2024)
+
+
+Bug Fixes
+^^^^^^^^^
+
+- Fixed an issue that causes no result data to be available for
+  'Sprint Qualifying' sessions
+
+- Correctly handle reinstated lap times after they were previously deleted
+
+
 What's new in v3.3.4
 --------------------
 
