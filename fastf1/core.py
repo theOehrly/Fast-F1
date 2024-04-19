@@ -79,8 +79,8 @@ from fastf1.utils import to_timedelta
 
 _logger = get_logger(__name__)
 
-_RACE_LIKE_SESSIONS = ('Race', 'Sprint', 'Sprint Qualifying')
-_QUALI_LIKE_SESSIONS = ('Qualifying', 'Sprint Shootout')
+_RACE_LIKE_SESSIONS = ('Race', 'Sprint')
+_QUALI_LIKE_SESSIONS = ('Qualifying', 'Sprint Shootout', 'Sprint Qualifying')
 
 
 class Telemetry(pd.DataFrame):
