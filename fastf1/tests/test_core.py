@@ -123,3 +123,21 @@ def test_add_lap_status_to_laps():
     expected_per_lap_status = ['1', '12', '267', '71', '1', '12', '2']
 
     assert (laps['TrackStatus'] == expected_per_lap_status).all()
+
+
+def test_rcm_parsing_deleted_laps():
+    session = fastf1.get_session(2024, 5, 'SQ')
+    session.load(telemetry=False, weather=False)
+
+    assert session.laps['Deleted'].sum() == 6
+
+    # Norris' lap was deleted and then reinstated
+    # ensure that this is correctly handled
+    q1, q2, q3 = session.laps.split_qualifying_sessions()
+    fastest = q3.pick_fastest()
+    assert fastest['Driver'] == 'NOR'
+    assert (fastest['LapTime']
+            == pd.Timedelta(minutes=1, seconds=57, milliseconds=940))
+    assert not fastest['Deleted']
+    assert fastest['DeletedReason'] == ""
+    assert fastest['IsPersonalBest']
