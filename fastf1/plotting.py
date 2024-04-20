@@ -292,7 +292,7 @@ def driver_color(identifier: str) -> str:
         if key_ratios[0][0] != 100:
             _logger.warning(
                 ("Correcting invalid user input "
-                 f"{identifier} to {key_ratios[0][1]}."
+                 f"'{identifier}' to '{key_ratios[0][1]}'."
                  )
             )
         if ((key_ratios[0][0] < 35)
@@ -373,7 +373,7 @@ def team_color(identifier: str) -> str:
         if key_ratios[0][0] != 100:
             _logger.warning(
                 ("Correcting invalid user input "
-                 f"{identifier} to {key_ratios[0][1]}."
+                 f"'{identifier}' to '{key_ratios[0][1]}'."
                  )
             )
         if ((key_ratios[0][0] < 35)
