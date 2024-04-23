@@ -30,6 +30,8 @@ from typing import (
 import numpy as np
 import pandas as pd
 
+from fastf1.logger import get_logger
+
 
 try:
     import matplotlib
@@ -45,6 +47,7 @@ except ImportError:
                   "Plotting of timedelta values will be restricted!",
                   UserWarning)
 
+_logger = get_logger(__name__)
 
 with warnings.catch_warnings():
     warnings.filterwarnings('ignore',
@@ -287,6 +290,12 @@ def driver_color(identifier: str) -> str:
             ratio = fuzz.ratio(identifier, existing_key)
             key_ratios.append((ratio, existing_key))
         key_ratios.sort(reverse=True)
+        if key_ratios[0][0] != 100:
+            _logger.warning(
+                ("Correcting invalid user input "
+                 f"'{identifier}' to '{key_ratios[0][1]}'."
+                 )
+            )
         if ((key_ratios[0][0] < 35)
                 or (key_ratios[0][0] / key_ratios[1][0] < 1.2)):
             # ensure that the best match has a minimum accuracy (35 out of
@@ -362,6 +371,12 @@ def team_color(identifier: str) -> str:
             ratio = fuzz.ratio(identifier, existing_key)
             key_ratios.append((ratio, existing_key))
         key_ratios.sort(reverse=True)
+        if key_ratios[0][0] != 100:
+            _logger.warning(
+                ("Correcting invalid user input "
+                 f"'{identifier}' to '{key_ratios[0][1]}'."
+                 )
+            )
         if ((key_ratios[0][0] < 35)
                 or (key_ratios[0][0] / key_ratios[1][0] < 1.2)):
             # ensure that the best match has a minimum accuracy (35 out of
