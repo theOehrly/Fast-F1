@@ -3,6 +3,14 @@ import os
 import pytest
 
 
+ERGAST_BACKEND_OVERRIDE = os.environ.get("FASTF1_TEST_ERGAST_BACKEND_OVERRIDE")
+
+if ERGAST_BACKEND_OVERRIDE:
+    import fastf1.ergast
+
+    fastf1.ergast.interface.BASE_URL = ERGAST_BACKEND_OVERRIDE
+
+
 def pytest_addoption(parser):
     parser.addoption(
         "--no-f1-tel-api", action="store_true", default=False,
@@ -101,6 +109,12 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
         terminalreporter.section('Request count', sep='-', blue=True,
                                  bold=True)
         terminalreporter.line(content)
+
+    terminalreporter.ensure_newline()
+    terminalreporter.section('Parameter Overrides', sep='-', blue=True,
+                             bold=True)
+    terminalreporter.line(f"Ergast backend override: "
+                          f"{ERGAST_BACKEND_OVERRIDE}")
 
 # ########## request counter end #########
 

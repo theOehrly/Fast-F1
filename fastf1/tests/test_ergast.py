@@ -6,6 +6,7 @@ import pytest
 
 import fastf1.ergast.structure as API
 from fastf1.ergast.interface import (
+    BASE_URL,
     Ergast,
     ErgastRawResponse,
     ErgastResponseMixin,
@@ -327,76 +328,76 @@ def test_merge_dicts_of_lists(data, expected):
     "endpoint, selectors, expected",
     (
         # "simple" behaviour
-        ['seasons', {}, "https://ergast.com/api/f1/seasons.json"],
+        ['seasons', {}, f"{BASE_URL}/seasons.json"],
 
         ['races', {'season': 2022},
-         "https://ergast.com/api/f1/2022/races.json"],
+         f"{BASE_URL}/2022/races.json"],
 
         ['results', {'season': 2022, 'round': '10'},
-         "https://ergast.com/api/f1/2022/10/results.json"],
+         f"{BASE_URL}/2022/10/results.json"],
 
         ['sprint', {'season': 2022, 'round': '4'},
-         "https://ergast.com/api/f1/2022/4/sprint.json"],
+         f"{BASE_URL}/2022/4/sprint.json"],
 
         ['qualifying', {'season': 2022, 'round': '10'},
-         "https://ergast.com/api/f1/2022/10/qualifying.json"],
+         f"{BASE_URL}/2022/10/qualifying.json"],
 
         # special cases where endpoint name matches selector and the endpoint
         # gets extended with its selection
         ['drivers', {},
-         "https://ergast.com/api/f1/drivers.json"],
+         f"{BASE_URL}/drivers.json"],
 
         ['drivers', {'driver': 'alonso'},
-         "https://ergast.com/api/f1/drivers/alonso.json"],
+         f"{BASE_URL}/drivers/alonso.json"],
 
         ['constructors', {},
-         "https://ergast.com/api/f1/constructors.json"],
+         f"{BASE_URL}/constructors.json"],
 
         ['constructors', {'constructor': 'ferrari'},
-         "https://ergast.com/api/f1/constructors/ferrari.json"],
+         f"{BASE_URL}/constructors/ferrari.json"],
 
         ['circuits', {},
-         "https://ergast.com/api/f1/circuits.json"],
+         f"{BASE_URL}/circuits.json"],
 
         ['circuits', {'circuit': 'monza'},
-         "https://ergast.com/api/f1/circuits/monza.json"],
+         f"{BASE_URL}/circuits/monza.json"],
 
         ['status', {},
-         "https://ergast.com/api/f1/status.json"],
+         f"{BASE_URL}/status.json"],
 
         ['status', {'status': '1'},
-         "https://ergast.com/api/f1/status/1.json"],
+         f"{BASE_URL}/status/1.json"],
 
         ['driverStandings', {'season': 2022},
-         "https://ergast.com/api/f1/2022/driverStandings.json"],
+         f"{BASE_URL}/2022/driverStandings.json"],
 
         ['driverStandings', {'season': 2022, 'standings_position': '1'},
-         "https://ergast.com/api/f1/2022/driverStandings/1.json"],
+         f"{BASE_URL}/2022/driverStandings/1.json"],
 
         ['constructorStandings', {'season': 2022},
-         "https://ergast.com/api/f1/2022/constructorStandings.json"],
+         f"{BASE_URL}/2022/constructorStandings.json"],
 
         ['constructorStandings', {'season': 2022, 'standings_position': '1'},
-         "https://ergast.com/api/f1/2022/constructorStandings/1.json"],
+         f"{BASE_URL}/2022/constructorStandings/1.json"],
 
         ['laps', {'season': 2022, 'round': 10},
-         "https://ergast.com/api/f1/2022/10/laps.json"],
+         f"{BASE_URL}/2022/10/laps.json"],
 
         ['laps', {'season': 2022, 'round': 10, 'lap_number': 1},
-         "https://ergast.com/api/f1/2022/10/laps/1.json"],
+         f"{BASE_URL}/2022/10/laps/1.json"],
 
         ['pitstops', {'season': 2022, 'round': 10},
-         "https://ergast.com/api/f1/2022/10/pitstops.json"],
+         f"{BASE_URL}/2022/10/pitstops.json"],
 
         ['pitstops', {'season': 2022, 'round': 10, 'stop_number': '1'},
-         "https://ergast.com/api/f1/2022/10/pitstops/1.json"],
+         f"{BASE_URL}/2022/10/pitstops/1.json"],
 
         # endpoint/selector combination in other request
         ['pitstops', {'season': 2022, 'round': 10, 'lap_number': 1},
-         "https://ergast.com/api/f1/2022/10/laps/1/pitstops.json"],
+         f"{BASE_URL}/2022/10/laps/1/pitstops.json"],
 
         ['circuits', {'driver': 'alonso', 'constructor': 'alpine'},
-         "https://ergast.com/api/f1/drivers/alonso/"
+         f"{BASE_URL}/drivers/alonso/"
          "constructors/alpine/circuits.json"],
     )
 )
