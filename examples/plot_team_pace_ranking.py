@@ -17,7 +17,7 @@ fastf1.plotting.setup_mpl(mpl_timedelta_support=False, misc_mpl_mods=False)
 # Load the race session.
 # Pick all quick laps (within 107% of fastest lap).
 # For races with mixed conditions, pick_wo_box() is better.
-race = fastf1.get_session(2023, "British Grand Prix", 'R')
+race = fastf1.get_session(2024, 1, 'R')
 race.load()
 laps = race.laps.pick_quicklaps()
 
