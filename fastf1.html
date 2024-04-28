@@ -5,10 +5,10 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Timing and Telemetry Data - fastf1.core" href="core.html" /><link rel="prev" title="Plot driver standings in a heatmap" href="examples_gallery/plot_results_tracker.html" />
 
-    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
-        <title>General Functions - fastf1 - FastF1 3.3.5</title>
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.04.27 -->
+        <title>General Functions - fastf1 - FastF1 3.3.6.dev1</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=437aa6ec" />
     <link rel="stylesheet" type="text/css" href="_static/plot_directive.css?v=7f9a90b1" />
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=61a4c737" />
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -118,6 +118,8 @@
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
 
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
 
 
 <div class="page">
@@ -129,7 +131,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">FastF1 <small>3.3.5</small></div></a>
+      <a href="index.html"><div class="brand">FastF1 <small>3.3.6.dev1</small></div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -152,7 +154,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   
-  <span class="sidebar-brand-text">FastF1 <small>3.3.5</small></span>
+  <span class="sidebar-brand-text">FastF1 <small>3.3.6.dev1</small></span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -248,11 +250,11 @@
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section id="general-functions-fastf1">
-<span id="generalfunctions"></span><span id="module-fastf1"></span><h1>General Functions - <a class="reference internal" href="#module-fastf1" title="fastf1"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1</span></code></a><a class="headerlink" href="#general-functions-fastf1" title="Link to this heading">#</a></h1>
+<span id="generalfunctions"></span><span id="module-fastf1"></span><h1>General Functions - <a class="reference internal" href="#module-fastf1" title="fastf1"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1</span></code></a><a class="headerlink" href="#general-functions-fastf1" title="Link to this heading">¶</a></h1>
 <section id="accessing-events-and-sessions">
-<h2>Accessing Events and Sessions<a class="headerlink" href="#accessing-events-and-sessions" title="Link to this heading">#</a></h2>
+<h2>Accessing Events and Sessions<a class="headerlink" href="#accessing-events-and-sessions" title="Link to this heading">¶</a></h2>
 <p>When using FastF1, you usually start by loading an event or a
 session. This can be done with one of the following functions:</p>
 <div class="table-wrapper autosummary longtable docutils container">
@@ -281,7 +283,7 @@ session. This can be done with one of the following functions:</p>
 </div>
 </section>
 <section id="module-fastf1.req">
-<span id="id1"></span><span id="requests-and-caching"></span><h2>Requests and Caching<a class="headerlink" href="#module-fastf1.req" title="Link to this heading">#</a></h2>
+<span id="id1"></span><span id="requests-and-caching"></span><h2>Requests and Caching<a class="headerlink" href="#module-fastf1.req" title="Link to this heading">¶</a></h2>
 <p>All HTTP requests that are performed by FastF1 go through its caching and
 rate limiting system.</p>
 <p>Caching is enabled by default in FastF1 and most of the time, you do not need
@@ -299,12 +301,12 @@ the limit (soft rate limit)</p></li>
 </ul>
 </section>
 <section id="general-functions-api-reference">
-<h2>General Functions - API Reference<a class="headerlink" href="#general-functions-api-reference" title="Link to this heading">#</a></h2>
+<h2>General Functions - API Reference<a class="headerlink" href="#general-functions-api-reference" title="Link to this heading">¶</a></h2>
 <section id="event-and-session-api">
-<h3>Event and Session API<a class="headerlink" href="#event-and-session-api" title="Link to this heading">#</a></h3>
+<h3>Event and Session API<a class="headerlink" href="#event-and-session-api" title="Link to this heading">¶</a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="fastf1.get_session">
-<span class="sig-prename descclassname"><span class="pre">fastf1.</span></span><span class="sig-name descname"><span class="pre">get_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">identifier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_ergast</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#get_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.get_session" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fastf1.</span></span><span class="sig-name descname"><span class="pre">get_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">identifier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_ergast</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#get_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.get_session" title="Link to this definition">¶</a></dt>
 <dd><p>Create a <a class="reference internal" href="core.html#fastf1.core.Session" title="fastf1.core.Session"><code class="xref py py-class docutils literal notranslate"><span class="pre">Session</span></code></a> object based on year, event name
 and session identifier.</p>
 <div class="admonition note">
@@ -370,7 +372,7 @@ from the ergast database to create the event schedule</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fastf1.get_testing_session">
-<span class="sig-prename descclassname"><span class="pre">fastf1.</span></span><span class="sig-name descname"><span class="pre">get_testing_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_number</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#get_testing_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.get_testing_session" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fastf1.</span></span><span class="sig-name descname"><span class="pre">get_testing_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_number</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#get_testing_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.get_testing_session" title="Link to this definition">¶</a></dt>
 <dd><p>Create a <a class="reference internal" href="core.html#fastf1.core.Session" title="fastf1.core.Session"><code class="xref py py-class docutils literal notranslate"><span class="pre">Session</span></code></a> object for testing sessions
 based on year, test  event number and session number.</p>
 <dl class="field-list simple">
@@ -407,7 +409,7 @@ is not available.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fastf1.get_event">
-<span class="sig-prename descclassname"><span class="pre">fastf1.</span></span><span class="sig-name descname"><span class="pre">get_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gp</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_ergast</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict_search</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#get_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.get_event" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fastf1.</span></span><span class="sig-name descname"><span class="pre">get_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gp</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_ergast</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict_search</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#get_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.get_event" title="Link to this definition">¶</a></dt>
 <dd><p>Create an <a class="reference internal" href="events.html#fastf1.events.Event" title="fastf1.events.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> object for a specific
 season and gp.</p>
 <p>To get a testing event, use <a class="reference internal" href="#fastf1.get_testing_event" title="fastf1.get_testing_event"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_testing_event()</span></code></a>.</p>
@@ -455,7 +457,7 @@ fuzzy search. If no event is found with
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fastf1.get_events_remaining">
-<span class="sig-prename descclassname"><span class="pre">fastf1.</span></span><span class="sig-name descname"><span class="pre">get_events_remaining</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_testing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_ergast</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#get_events_remaining"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.get_events_remaining" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fastf1.</span></span><span class="sig-name descname"><span class="pre">get_events_remaining</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_testing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_ergast</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#get_events_remaining"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.get_events_remaining" title="Link to this definition">¶</a></dt>
 <dd><p>Create an <a class="reference internal" href="events.html#fastf1.events.EventSchedule" title="fastf1.events.EventSchedule"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventSchedule</span></code></a> object for remaining
 season.</p>
 <dl class="field-list simple">
@@ -494,7 +496,7 @@ from the ergast database to create the event schedule</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fastf1.get_testing_event">
-<span class="sig-prename descclassname"><span class="pre">fastf1.</span></span><span class="sig-name descname"><span class="pre">get_testing_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_number</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#get_testing_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.get_testing_event" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fastf1.</span></span><span class="sig-name descname"><span class="pre">get_testing_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_number</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#get_testing_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.get_testing_event" title="Link to this definition">¶</a></dt>
 <dd><p>Create a <a class="reference internal" href="events.html#fastf1.events.Event" title="fastf1.events.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">fastf1.events.Event</span></code></a> object for testing sessions
 based on year and test event number.</p>
 <dl class="field-list simple">
@@ -526,7 +528,7 @@ is not available.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fastf1.get_event_schedule">
-<span class="sig-prename descclassname"><span class="pre">fastf1.</span></span><span class="sig-name descname"><span class="pre">get_event_schedule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">year</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_testing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_ergast</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#get_event_schedule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.get_event_schedule" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fastf1.</span></span><span class="sig-name descname"><span class="pre">get_event_schedule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">year</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_testing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_ergast</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#get_event_schedule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.get_event_schedule" title="Link to this definition">¶</a></dt>
 <dd><p>Create an <a class="reference internal" href="events.html#fastf1.events.EventSchedule" title="fastf1.events.EventSchedule"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventSchedule</span></code></a> object for a specific
 season.</p>
 <dl class="field-list simple">
@@ -565,10 +567,10 @@ from the ergast database to create the event schedule</p></li>
 
 </section>
 <section id="cache-api">
-<h3>Cache API<a class="headerlink" href="#cache-api" title="Link to this heading">#</a></h3>
+<h3>Cache API<a class="headerlink" href="#cache-api" title="Link to this heading">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="fastf1.Cache">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fastf1.</span></span><span class="sig-name descname"><span class="pre">Cache</span></span><a class="reference internal" href="_modules/fastf1/req.html#Cache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.Cache" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fastf1.</span></span><span class="sig-name descname"><span class="pre">Cache</span></span><a class="reference internal" href="_modules/fastf1/req.html#Cache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.Cache" title="Link to this definition">¶</a></dt>
 <dd><p>Pickle and requests based API cache.</p>
 <p>Fast-F1 will per default enable caching. While this can be disabled, it
 should almost always be left enabled to speed up the runtime of your
@@ -674,7 +676,7 @@ need which will lead to reduced performance.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="fastf1.Cache.enable_cache">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enable_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_renew</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_requests_cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/req.html#Cache.enable_cache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.Cache.enable_cache" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enable_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_renew</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_requests_cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/req.html#Cache.enable_cache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.Cache.enable_cache" title="Link to this definition">¶</a></dt>
 <dd><p>Enables the API cache.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -695,7 +697,7 @@ the cache instead.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fastf1.Cache.clear_cache">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">clear_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/req.html#Cache.clear_cache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.Cache.clear_cache" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">clear_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/req.html#Cache.clear_cache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.Cache.clear_cache" title="Link to this definition">¶</a></dt>
 <dd><p>Clear all cached data.</p>
 <p>Deletes all files in the cache directory. By default, it will clear
 the default cache directory. However, if a cache directory is
@@ -722,7 +724,7 @@ cached data.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fastf1.Cache.disabled">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">disabled</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/req.html#Cache.disabled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.Cache.disabled" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">disabled</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/req.html#Cache.disabled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.Cache.disabled" title="Link to this definition">¶</a></dt>
 <dd><p>Returns a context manager object that creates a context within
 which the cache is temporarily disabled.</p>
 <p>Example:</p>
@@ -739,7 +741,7 @@ which the cache is temporarily disabled.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fastf1.Cache.set_disabled">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_disabled</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/req.html#Cache.set_disabled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.Cache.set_disabled" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_disabled</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/req.html#Cache.set_disabled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.Cache.set_disabled" title="Link to this definition">¶</a></dt>
 <dd><p>Disable the cache while keeping the configuration intact.</p>
 <p>This disables stage 1 and stage 2 caching!</p>
 <p>You can enable the cache at any time using <a class="reference internal" href="#fastf1.Cache.set_enabled" title="fastf1.Cache.set_enabled"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_enabled()</span></code></a></p>
@@ -757,7 +759,7 @@ context.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fastf1.Cache.set_enabled">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_enabled</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/req.html#Cache.set_enabled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.Cache.set_enabled" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_enabled</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/req.html#Cache.set_enabled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.Cache.set_enabled" title="Link to this definition">¶</a></dt>
 <dd><p>Enable the cache after it has been disabled with
 <a class="reference internal" href="#fastf1.Cache.set_disabled" title="fastf1.Cache.set_disabled"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_disabled()</span></code></a>.</p>
 <div class="admonition warning">
@@ -776,7 +778,7 @@ should be run without caching.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fastf1.Cache.offline_mode">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">offline_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enabled</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/req.html#Cache.offline_mode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.Cache.offline_mode" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">offline_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enabled</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/req.html#Cache.offline_mode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.Cache.offline_mode" title="Link to this definition">¶</a></dt>
 <dd><p>Enable or disable offline mode.</p>
 <p>In this mode, no actual requests will be sent and only cached data is
 returned. This can be useful for freezing the state of the cache or
@@ -791,7 +793,7 @@ or ‘disabled’ (<code class="docutils literal notranslate"><span class="pre">
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fastf1.Cache.get_cache_info">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_cache_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/req.html#Cache.get_cache_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.Cache.get_cache_info" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_cache_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/req.html#Cache.get_cache_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.Cache.get_cache_info" title="Link to this definition">¶</a></dt>
 <dd><p>Returns information about the cache directory and its size.</p>
 <p>If the cache is not configured, None will be returned for both the
 cache path and the cache size.</p>
@@ -810,13 +812,13 @@ cache path and the cache size.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="fastf1.RateLimitExceededError">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fastf1.</span></span><span class="sig-name descname"><span class="pre">RateLimitExceededError</span></span><a class="reference internal" href="_modules/fastf1/req.html#RateLimitExceededError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.RateLimitExceededError" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fastf1.</span></span><span class="sig-name descname"><span class="pre">RateLimitExceededError</span></span><a class="reference internal" href="_modules/fastf1/req.html#RateLimitExceededError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.RateLimitExceededError" title="Link to this definition">¶</a></dt>
 <dd><p>Raised if a hard rate limit is exceeded.</p>
 </dd></dl>
 
 </section>
 <section id="configure-logging-verbosity">
-<h3>Configure Logging Verbosity<a class="headerlink" href="#configure-logging-verbosity" title="Link to this heading">#</a></h3>
+<h3>Configure Logging Verbosity<a class="headerlink" href="#configure-logging-verbosity" title="Link to this heading">¶</a></h3>
 <p>All parts of FastF1 generally log at the log level ‘INFO’.
 The reason for this is that many data loading processes take multiple
 seconds to complete. Logging is used to give progress information here as well
@@ -833,7 +835,7 @@ as for showing warnings and non-terminal errors.</p>
 WARNING, ERROR and CRITICAL.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="fastf1.set_log_level">
-<span class="sig-prename descclassname"><span class="pre">fastf1.</span></span><span class="sig-name descname"><span class="pre">set_log_level</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/logger.html#set_log_level"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.set_log_level" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fastf1.</span></span><span class="sig-name descname"><span class="pre">set_log_level</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/logger.html#set_log_level"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.set_log_level" title="Link to this definition">¶</a></dt>
 <dd><p>Set the log level for all parts of FastF1.</p>
 <p>When setting the log level for FastF1, only messages with this level or
 with a higher level will be shown.</p>
@@ -952,10 +954,10 @@ or the level as a string (e.g. ‘WARNING’).</p>
 </div>
     <script data-goatcounter="https://ey2kpxm326wjqcsfzewz.goatcounter.com/count"
             async src="//gc.zgo.at/count.js"></script>
-    <script src="_static/documentation_options.js?v=66b10fa0"></script>
+    <script src="_static/documentation_options.js?v=7b8bdb6a"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/scripts/furo.js?v=4e2eecee"></script>
     
 </body>
 </html>

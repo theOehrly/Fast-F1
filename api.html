@@ -5,10 +5,10 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Ergast API Interface" href="ergast.html" /><link rel="prev" title="Event Schedule - fastf1.events" href="events.html" />
 
-    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
-        <title>F1 API - fastf1.api - FastF1 3.3.5</title>
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.04.27 -->
+        <title>F1 API - fastf1.api - FastF1 3.3.6.dev1</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=437aa6ec" />
     <link rel="stylesheet" type="text/css" href="_static/plot_directive.css?v=7f9a90b1" />
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=61a4c737" />
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -118,6 +118,8 @@
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
 
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
 
 
 <div class="page">
@@ -129,7 +131,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">FastF1 <small>3.3.5</small></div></a>
+      <a href="index.html"><div class="brand">FastF1 <small>3.3.6.dev1</small></div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -152,7 +154,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   
-  <span class="sidebar-brand-text">FastF1 <small>3.3.5</small></span>
+  <span class="sidebar-brand-text">FastF1 <small>3.3.6.dev1</small></span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -248,11 +250,11 @@
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section id="f1-api-fastf1-api">
-<h1>F1 API - <a class="reference internal" href="#module-fastf1.api" title="fastf1.api"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.api</span></code></a><a class="headerlink" href="#f1-api-fastf1-api" title="Link to this heading">#</a></h1>
+<h1>F1 API - <a class="reference internal" href="#module-fastf1.api" title="fastf1.api"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.api</span></code></a><a class="headerlink" href="#f1-api-fastf1-api" title="Link to this heading">¶</a></h1>
 <section id="module-fastf1.api">
-<span id="functions"></span><h2>Functions<a class="headerlink" href="#module-fastf1.api" title="Link to this heading">#</a></h2>
+<span id="functions"></span><h2>Functions<a class="headerlink" href="#module-fastf1.api" title="Link to this heading">¶</a></h2>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p><a class="reference internal" href="#module-fastf1.api" title="fastf1.api"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.api</span></code></a> will be considered private in future releases and
@@ -305,7 +307,7 @@ please open an issue on Github with details about what you require and why.</p>
 </div>
 <dl class="py function">
 <dt class="sig sig-object py" id="fastf1.api.make_path">
-<span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">make_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wdate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sdate</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#make_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.make_path" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">make_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wdate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sdate</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#make_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.make_path" title="Link to this definition">¶</a></dt>
 <dd><p>Create the api path base string to append on livetiming.formula1.com for api
 requests.</p>
 <p>The api path base string changes for every session only.</p>
@@ -326,7 +328,7 @@ requests.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fastf1.api.timing_data">
-<span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">timing_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">livedata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#timing_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.timing_data" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">timing_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">livedata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#timing_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.timing_data" title="Link to this definition">¶</a></dt>
 <dd><div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p><a class="reference internal" href="#module-fastf1.api" title="fastf1.api"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.api</span></code></a> will be considered private in future releases and
@@ -417,7 +419,7 @@ sector 1 and 2 respectively; ST maybe a speed trap on the longest straight (?)</
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fastf1.api.timing_app_data">
-<span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">timing_app_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">livedata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#timing_app_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.timing_app_data" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">timing_app_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">livedata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#timing_app_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.timing_app_data" title="Link to this definition">¶</a></dt>
 <dd><div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p><a class="reference internal" href="#module-fastf1.api" title="fastf1.api"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.api</span></code></a> will be considered private in future releases and
@@ -465,7 +467,7 @@ frequently (for example ‘Compound’ only after tire changes).</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fastf1.api.car_data">
-<span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">car_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">livedata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#car_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.car_data" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">car_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">livedata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#car_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.car_data" title="Link to this definition">¶</a></dt>
 <dd><div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p><a class="reference internal" href="#module-fastf1.api" title="fastf1.api"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.api</span></code></a> will be considered private in future releases and
@@ -524,7 +526,7 @@ string (e.g. ‘16’). You should never assume that a number exists!</div>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fastf1.api.position_data">
-<span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">position_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">livedata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#position_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.position_data" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">position_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">livedata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#position_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.position_data" title="Link to this definition">¶</a></dt>
 <dd><div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p><a class="reference internal" href="#module-fastf1.api" title="fastf1.api"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.api</span></code></a> will be considered private in future releases and
@@ -567,7 +569,7 @@ string (e.g. ‘16’). You should never assume that a number exists!</div>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fastf1.api.track_status_data">
-<span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">track_status_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">livedata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#track_status_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.track_status_data" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">track_status_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">livedata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#track_status_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.track_status_data" title="Link to this definition">¶</a></dt>
 <dd><div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p><a class="reference internal" href="#module-fastf1.api" title="fastf1.api"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.api</span></code></a> will be considered private in future releases and
@@ -621,7 +623,7 @@ will mark the actual end)</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fastf1.api.session_status_data">
-<span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">session_status_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">livedata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#session_status_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.session_status_data" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">session_status_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">livedata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#session_status_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.session_status_data" title="Link to this definition">¶</a></dt>
 <dd><div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p><a class="reference internal" href="#module-fastf1.api" title="fastf1.api"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.api</span></code></a> will be considered private in future releases and
@@ -656,7 +658,7 @@ provides the following data channels per sample:</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fastf1.api.race_control_messages">
-<span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">race_control_messages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">livedata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#race_control_messages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.race_control_messages" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">race_control_messages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">livedata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#race_control_messages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.race_control_messages" title="Link to this definition">¶</a></dt>
 <dd><div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p><a class="reference internal" href="#module-fastf1.api" title="fastf1.api"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.api</span></code></a> will be considered private in future releases and
@@ -708,7 +710,7 @@ values per key.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fastf1.api.lap_count">
-<span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">lap_count</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">livedata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#lap_count"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.lap_count" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">lap_count</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">livedata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#lap_count"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.lap_count" title="Link to this definition">¶</a></dt>
 <dd><div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p><a class="reference internal" href="#module-fastf1.api" title="fastf1.api"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.api</span></code></a> will be considered private in future releases and
@@ -749,7 +751,7 @@ values per key.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fastf1.api.driver_info">
-<span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">driver_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">livedata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#driver_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.driver_info" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">driver_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">livedata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#driver_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.driver_info" title="Link to this definition">¶</a></dt>
 <dd><div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p><a class="reference internal" href="#module-fastf1.api" title="fastf1.api"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.api</span></code></a> will be considered private in future releases and
@@ -784,7 +786,7 @@ with the drivers racing number as key</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fastf1.api.weather_data">
-<span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">weather_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">livedata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#weather_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.weather_data" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">weather_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">livedata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#weather_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.weather_data" title="Link to this definition">¶</a></dt>
 <dd><div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p><a class="reference internal" href="#module-fastf1.api" title="fastf1.api"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.api</span></code></a> will be considered private in future releases and
@@ -829,7 +831,7 @@ of values per key.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fastf1.api.fetch_page">
-<span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">fetch_page</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#fetch_page"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.fetch_page" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">fetch_page</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#fetch_page"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.fetch_page" title="Link to this definition">¶</a></dt>
 <dd><div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p><a class="reference internal" href="#module-fastf1.api" title="fastf1.api"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.api</span></code></a> will be considered private in future releases and
@@ -858,7 +860,7 @@ parsed with <a class="reference internal" href="#fastf1.api.parse" title="fastf1
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fastf1.api.parse">
-<span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">parse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zipped</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#parse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.parse" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">parse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zipped</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#parse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.parse" title="Link to this definition">¶</a></dt>
 <dd><div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p><a class="reference internal" href="#module-fastf1.api" title="fastf1.api"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.api</span></code></a> will be considered private in future releases and
@@ -893,10 +895,10 @@ data (e.g. position data)</p></li>
 
 </section>
 <section id="exceptions">
-<h2>Exceptions<a class="headerlink" href="#exceptions" title="Link to this heading">#</a></h2>
+<h2>Exceptions<a class="headerlink" href="#exceptions" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="fastf1.api.SessionNotAvailableError">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">SessionNotAvailableError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#SessionNotAvailableError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.SessionNotAvailableError" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fastf1.api.</span></span><span class="sig-name descname"><span class="pre">SessionNotAvailableError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/_api.html#SessionNotAvailableError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.api.SessionNotAvailableError" title="Link to this definition">¶</a></dt>
 <dd><p>Raised if an api request returned no data for the requested session.
 A likely cause is that the session does not exist because it was cancelled.</p>
 </dd></dl>
@@ -994,10 +996,10 @@ A likely cause is that the session does not exist because it was cancelled.</p>
 </div>
     <script data-goatcounter="https://ey2kpxm326wjqcsfzewz.goatcounter.com/count"
             async src="//gc.zgo.at/count.js"></script>
-    <script src="_static/documentation_options.js?v=66b10fa0"></script>
+    <script src="_static/documentation_options.js?v=7b8bdb6a"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/scripts/furo.js?v=4e2eecee"></script>
     
 </body>
 </html>

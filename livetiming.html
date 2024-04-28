@@ -5,10 +5,10 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Logging - fastf1.logger" href="logging.html" /><link rel="prev" title="Plotting - fastf1.plotting" href="plotting.html" />
 
-    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
-        <title>Live Timing Client - fastf1.livetiming - FastF1 3.3.5</title>
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.04.27 -->
+        <title>Live Timing Client - fastf1.livetiming - FastF1 3.3.6.dev1</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=437aa6ec" />
     <link rel="stylesheet" type="text/css" href="_static/plot_directive.css?v=7f9a90b1" />
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=61a4c737" />
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -118,6 +118,8 @@
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
 
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
 
 
 <div class="page">
@@ -129,7 +131,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">FastF1 <small>3.3.5</small></div></a>
+      <a href="index.html"><div class="brand">FastF1 <small>3.3.6.dev1</small></div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -152,7 +154,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   
-  <span class="sidebar-brand-text">FastF1 <small>3.3.5</small></span>
+  <span class="sidebar-brand-text">FastF1 <small>3.3.6.dev1</small></span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -248,9 +250,9 @@
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section id="live-timing-client-fastf1-livetiming">
-<span id="module-fastf1.livetiming"></span><h1>Live Timing Client - <a class="reference internal" href="#module-fastf1.livetiming" title="fastf1.livetiming"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.livetiming</span></code></a><a class="headerlink" href="#live-timing-client-fastf1-livetiming" title="Link to this heading">#</a></h1>
+<span id="module-fastf1.livetiming"></span><h1>Live Timing Client - <a class="reference internal" href="#module-fastf1.livetiming" title="fastf1.livetiming"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.livetiming</span></code></a><a class="headerlink" href="#live-timing-client-fastf1-livetiming" title="Link to this heading">¶</a></h1>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>The live timing client does only support Python 3.8 or 3.9!</p>
@@ -266,7 +268,7 @@ It is <strong>not</strong> possible to do real-time processing of the data.</p>
 </ul>
 </div></blockquote>
 <section id="usage-example">
-<h2>Usage Example<a class="headerlink" href="#usage-example" title="Link to this heading">#</a></h2>
+<h2>Usage Example<a class="headerlink" href="#usage-example" title="Link to this heading">¶</a></h2>
 <ol class="arabic simple">
 <li><p>Record live timing data during a session</p></li>
 </ol>
@@ -290,7 +292,7 @@ It is <strong>not</strong> possible to do real-time processing of the data.</p>
 </div>
 </section>
 <section id="important-notes">
-<h2>Important Notes<a class="headerlink" href="#important-notes" title="Link to this heading">#</a></h2>
+<h2>Important Notes<a class="headerlink" href="#important-notes" title="Link to this heading">¶</a></h2>
 <ul>
 <li><p>You should try to record a full session whenever possible. Recording should
 start 2-3 minutes before a sessions starts. The api parser may not be able to
@@ -334,7 +336,7 @@ will not be loaded as a duplicate.</p>
 </ul>
 </section>
 <section id="command-line-interface">
-<h2>Command Line Interface<a class="headerlink" href="#command-line-interface" title="Link to this heading">#</a></h2>
+<h2>Command Line Interface<a class="headerlink" href="#command-line-interface" title="Link to this heading">¶</a></h2>
 <p>Available commands and options when calling <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">fastf1.livetiming</span></code></p>
 <p>The module has two main commands</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">{save,extract}</span>
@@ -343,7 +345,7 @@ will not be loaded as a duplicate.</p>
 </pre></div>
 </div>
 <section id="save">
-<h3>Save<a class="headerlink" href="#save" title="Link to this heading">#</a></h3>
+<h3>Save<a class="headerlink" href="#save" title="Link to this heading">¶</a></h3>
 <p><strong>The main command for recording live timing data during a session</strong></p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">usage: python -m fastf1.livetiming save [-h] [--append] [--debug]</span>
 <span class="go">       [--timeout TIMEOUT] file</span>
@@ -363,7 +365,7 @@ will not be loaded as a duplicate.</p>
 </div>
 </section>
 <section id="extract">
-<h3>Extract<a class="headerlink" href="#extract" title="Link to this heading">#</a></h3>
+<h3>Extract<a class="headerlink" href="#extract" title="Link to this heading">¶</a></h3>
 <p><strong>Only for when data was saved with the optional ‘–debug’ argument</strong></p>
 <p>Recording in debug mode saves the full SignalR messages as received. The non
 debug mode saves only the important data part of a message. The data part of
@@ -383,10 +385,10 @@ argument.</p>
 </section>
 </section>
 <section id="module-fastf1.livetiming.client">
-<span id="live-timing-client"></span><h2>Live Timing Client<a class="headerlink" href="#module-fastf1.livetiming.client" title="Link to this heading">#</a></h2>
+<span id="live-timing-client"></span><h2>Live Timing Client<a class="headerlink" href="#module-fastf1.livetiming.client" title="Link to this heading">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="fastf1.livetiming.client.messages_from_raw">
-<span class="sig-prename descclassname"><span class="pre">fastf1.livetiming.client.</span></span><span class="sig-name descname"><span class="pre">messages_from_raw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/livetiming/client.html#messages_from_raw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.livetiming.client.messages_from_raw" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fastf1.livetiming.client.</span></span><span class="sig-name descname"><span class="pre">messages_from_raw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/livetiming/client.html#messages_from_raw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.livetiming.client.messages_from_raw" title="Link to this definition">¶</a></dt>
 <dd><p>Extract data messages from raw recorded SignalR data.</p>
 <p>This function can be used to extract message data from raw SignalR data
 which was saved using <a class="reference internal" href="#fastf1.livetiming.client.SignalRClient" title="fastf1.livetiming.client.SignalRClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">SignalRClient</span></code></a> in debug mode.</p>
@@ -399,7 +401,7 @@ which was saved using <a class="reference internal" href="#fastf1.livetiming.cli
 
 <dl class="py class">
 <dt class="sig sig-object py" id="fastf1.livetiming.client.SignalRClient">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fastf1.livetiming.client.</span></span><span class="sig-name descname"><span class="pre">SignalRClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filemode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'w'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/livetiming/client.html#SignalRClient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.livetiming.client.SignalRClient" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fastf1.livetiming.client.</span></span><span class="sig-name descname"><span class="pre">SignalRClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filemode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'w'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/livetiming/client.html#SignalRClient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.livetiming.client.SignalRClient" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A client for receiving and saving F1 timing data which is streamed
 live over the SignalR protocol.</p>
@@ -431,7 +433,7 @@ customize logging, you can pass an instance of
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="fastf1.livetiming.client.SignalRClient.start">
-<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/livetiming/client.html#SignalRClient.start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.livetiming.client.SignalRClient.start" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/livetiming/client.html#SignalRClient.start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.livetiming.client.SignalRClient.start" title="Link to this definition">¶</a></dt>
 <dd><p>Connect to the data stream and start writing the data to a file.</p>
 </dd></dl>
 
@@ -439,11 +441,11 @@ customize logging, you can pass an instance of
 
 </section>
 <section id="module-fastf1.livetiming.data">
-<span id="live-timing-data-object"></span><h2>Live Timing Data Object<a class="headerlink" href="#module-fastf1.livetiming.data" title="Link to this heading">#</a></h2>
+<span id="live-timing-data-object"></span><h2>Live Timing Data Object<a class="headerlink" href="#module-fastf1.livetiming.data" title="Link to this heading">¶</a></h2>
 <p>Data object for livetiming data</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="fastf1.livetiming.data.LiveTimingData">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fastf1.livetiming.data.</span></span><span class="sig-name descname"><span class="pre">LiveTimingData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_duplicates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/livetiming/data.html#LiveTimingData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.livetiming.data.LiveTimingData" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fastf1.livetiming.data.</span></span><span class="sig-name descname"><span class="pre">LiveTimingData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_duplicates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/livetiming/data.html#LiveTimingData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.livetiming.data.LiveTimingData" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Live timing data object for using saved livetiming data as data source.</p>
 <p>This object is created from data that was recorded using
@@ -474,7 +476,7 @@ disabled if this may cause problems.)</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="fastf1.livetiming.data.LiveTimingData.load">
-<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/livetiming/data.html#LiveTimingData.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.livetiming.data.LiveTimingData.load" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/livetiming/data.html#LiveTimingData.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.livetiming.data.LiveTimingData.load" title="Link to this definition">¶</a></dt>
 <dd><p>Read all files, parse the data and store it by category.</p>
 <p>Should usually not be called manually. This is called
 automatically the first time <a class="reference internal" href="#fastf1.livetiming.data.LiveTimingData.get" title="fastf1.livetiming.data.LiveTimingData.get"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get()</span></code></a>, <a class="reference internal" href="#fastf1.livetiming.data.LiveTimingData.has" title="fastf1.livetiming.data.LiveTimingData.has"><code class="xref py py-meth docutils literal notranslate"><span class="pre">has()</span></code></a>
@@ -483,7 +485,7 @@ or <a class="reference internal" href="#fastf1.livetiming.data.LiveTimingData.li
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fastf1.livetiming.data.LiveTimingData.get">
-<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/livetiming/data.html#LiveTimingData.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.livetiming.data.LiveTimingData.get" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/livetiming/data.html#LiveTimingData.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.livetiming.data.LiveTimingData.get" title="Link to this definition">¶</a></dt>
 <dd><p>Return data for category name.</p>
 <p>Will load data on first call, this will take a bit.</p>
 <dl class="field-list simple">
@@ -495,7 +497,7 @@ or <a class="reference internal" href="#fastf1.livetiming.data.LiveTimingData.li
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fastf1.livetiming.data.LiveTimingData.has">
-<span class="sig-name descname"><span class="pre">has</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/livetiming/data.html#LiveTimingData.has"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.livetiming.data.LiveTimingData.has" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">has</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/livetiming/data.html#LiveTimingData.has"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.livetiming.data.LiveTimingData.has" title="Link to this definition">¶</a></dt>
 <dd><p>Check if data for a category name exists.</p>
 <p>Will load data on first call, this will take a bit.</p>
 <dl class="field-list simple">
@@ -507,7 +509,7 @@ or <a class="reference internal" href="#fastf1.livetiming.data.LiveTimingData.li
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fastf1.livetiming.data.LiveTimingData.list_categories">
-<span class="sig-name descname"><span class="pre">list_categories</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/livetiming/data.html#LiveTimingData.list_categories"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.livetiming.data.LiveTimingData.list_categories" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">list_categories</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/livetiming/data.html#LiveTimingData.list_categories"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.livetiming.data.LiveTimingData.list_categories" title="Link to this definition">¶</a></dt>
 <dd><p>List all available data categories.</p>
 <p>Will load data on first call, this will take a bit.</p>
 <dl class="field-list simple">
@@ -617,10 +619,10 @@ or <a class="reference internal" href="#fastf1.livetiming.data.LiveTimingData.li
 </div>
     <script data-goatcounter="https://ey2kpxm326wjqcsfzewz.goatcounter.com/count"
             async src="//gc.zgo.at/count.js"></script>
-    <script src="_static/documentation_options.js?v=66b10fa0"></script>
+    <script src="_static/documentation_options.js?v=7b8bdb6a"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/scripts/furo.js?v=4e2eecee"></script>
     
 </body>
 </html>

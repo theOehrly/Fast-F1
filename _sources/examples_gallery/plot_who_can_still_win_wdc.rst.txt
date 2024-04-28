@@ -11,7 +11,7 @@
         :class: sphx-glr-download-link-note
 
         :ref:`Go to the end <sphx_glr_download_examples_gallery_plot_who_can_still_win_wdc.py>`
-        to download the full example code
+        to download the full example code.
 
 .. rst-class:: sphx-glr-example-title
 
@@ -209,7 +209,7 @@ can still win.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 4.183 seconds)
+   **Total running time of the script:** (0 minutes 0.836 seconds)
 
 
 .. _sphx_glr_download_examples_gallery_plot_who_can_still_win_wdc.py:

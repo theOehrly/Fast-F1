@@ -5,10 +5,10 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Examples Gallery" href="../examples_gallery/index.html" /><link rel="prev" title="Getting Started" href="index.html" />
 
-    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
-        <title>Getting started with the basics - FastF1 3.3.5</title>
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.04.27 -->
+        <title>Getting started with the basics - FastF1 3.3.6.dev1</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=437aa6ec" />
     <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css?v=7f9a90b1" />
     <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=61a4c737" />
     <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -118,6 +118,8 @@
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
 
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
 
 
 <div class="page">
@@ -129,7 +131,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">FastF1 <small>3.3.5</small></div></a>
+      <a href="../index.html"><div class="brand">FastF1 <small>3.3.6.dev1</small></div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -152,7 +154,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
   
   
-  <span class="sidebar-brand-text">FastF1 <small>3.3.5</small></span>
+  <span class="sidebar-brand-text">FastF1 <small>3.3.6.dev1</small></span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -248,16 +250,16 @@
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section id="getting-started-with-the-basics">
-<h1>Getting started with the basics<a class="headerlink" href="#getting-started-with-the-basics" title="Link to this heading">#</a></h1>
+<h1>Getting started with the basics<a class="headerlink" href="#getting-started-with-the-basics" title="Link to this heading">¶</a></h1>
 <p>FastF1 is built mainly around Pandas DataFrame and Series objects.
 If you are familiar with Pandas you’ll immediately recognize this and working
 with the data will be fairly straightforward. (If you’re
 not familiar with Pandas at all, it might be helpful to check out a short
 tutorial.)</p>
 <section id="loading-a-session-or-an-event">
-<h2>Loading a session or an event<a class="headerlink" href="#loading-a-session-or-an-event" title="Link to this heading">#</a></h2>
+<h2>Loading a session or an event<a class="headerlink" href="#loading-a-session-or-an-event" title="Link to this heading">¶</a></h2>
 <p>The <a class="reference internal" href="../core.html#fastf1.core.Session" title="fastf1.core.Session"><code class="xref py py-class docutils literal notranslate"><span class="pre">fastf1.core.Session</span></code></a> object is an important starting point for
 everything you do with FastF1. Usually, the first thing you want to do
 is load a session. For this, you should use
@@ -348,7 +350,7 @@ provides methods for accessing the individual associated sessions.</p>
 </div>
 </section>
 <section id="loading-a-session-or-an-event-by-name">
-<h2>Loading a session or an event by name<a class="headerlink" href="#loading-a-session-or-an-event-by-name" title="Link to this heading">#</a></h2>
+<h2>Loading a session or an event by name<a class="headerlink" href="#loading-a-session-or-an-event-by-name" title="Link to this heading">¶</a></h2>
 <p>As an alternative to specifying an event number you can also load
 events by using a clearly identifying name.</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">event</span> <span class="o">=</span> <span class="n">fastf1</span><span class="o">.</span><span class="n">get_event</span><span class="p">(</span><span class="mi">2021</span><span class="p">,</span> <span class="s1">&#39;French Grand Prix&#39;</span><span class="p">)</span>
@@ -389,7 +391,7 @@ proper intelligent search engine. So check your results.</p>
 </div>
 </section>
 <section id="working-with-the-event-schedule">
-<h2>Working with the event schedule<a class="headerlink" href="#working-with-the-event-schedule" title="Link to this heading">#</a></h2>
+<h2>Working with the event schedule<a class="headerlink" href="#working-with-the-event-schedule" title="Link to this heading">¶</a></h2>
 <p>Instead of loading a specific session or event, it is possible to load the
 full event schedule for a season. The <a class="reference internal" href="../events.html#fastf1.events.EventSchedule" title="fastf1.events.EventSchedule"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventSchedule</span></code></a>
 is a subclass of a <code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code>. Detailed information about
@@ -444,7 +446,7 @@ the data that is available in the event schedule can be found in
 </div>
 </section>
 <section id="displaying-driver-info-and-session-results">
-<h2>Displaying driver info and session results<a class="headerlink" href="#displaying-driver-info-and-session-results" title="Link to this heading">#</a></h2>
+<h2>Displaying driver info and session results<a class="headerlink" href="#displaying-driver-info-and-session-results" title="Link to this heading">¶</a></h2>
 <p>We have created a session now but everything has been rather boring so far.
 So let’s make it a bit more interesting by taking a look at the results of
 this session. For this, it is first necessary to call
@@ -510,7 +512,7 @@ this is easy.</p>
 </div>
 </section>
 <section id="working-with-laps-and-lap-times">
-<h2>Working with laps and lap times<a class="headerlink" href="#working-with-laps-and-lap-times" title="Link to this heading">#</a></h2>
+<h2>Working with laps and lap times<a class="headerlink" href="#working-with-laps-and-lap-times" title="Link to this heading">¶</a></h2>
 <p>All individual laps of a session can be accessed through the property
 <a class="reference internal" href="../core.html#fastf1.core.Session.laps" title="fastf1.core.Session.laps"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Session.laps</span></code></a>. The laps are represented
 as <a class="reference internal" href="../core.html#fastf1.core.Laps" title="fastf1.core.Laps"><code class="xref py py-class docutils literal notranslate"><span class="pre">Laps</span></code></a> object which again is a subclass of a
@@ -641,10 +643,10 @@ So let’s see what the fastest lap time was and who is on pole.</p>
 </div>
     <script data-goatcounter="https://ey2kpxm326wjqcsfzewz.goatcounter.com/count"
             async src="//gc.zgo.at/count.js"></script>
-    <script src="../_static/documentation_options.js?v=66b10fa0"></script>
+    <script src="../_static/documentation_options.js?v=7b8bdb6a"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/scripts/furo.js?v=4e2eecee"></script>
     
 </body>
 </html>

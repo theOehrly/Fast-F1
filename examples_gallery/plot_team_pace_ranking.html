@@ -5,10 +5,10 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Tyre strategies during a race" href="plot_strategy.html" /><link rel="prev" title="Gear shifts on track" href="plot_gear_shifts_on_track.html" />
 
-    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
-        <title>Team Pace Comparison - FastF1 3.3.5</title>
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.04.27 -->
+        <title>Team Pace Comparison - FastF1 3.3.6.dev1</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=437aa6ec" />
     <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css?v=7f9a90b1" />
     <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=61a4c737" />
     <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -118,6 +118,8 @@
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
 
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
 
 
 <div class="page">
@@ -129,7 +131,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">FastF1 <small>3.3.5</small></div></a>
+      <a href="../index.html"><div class="brand">FastF1 <small>3.3.6.dev1</small></div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -152,7 +154,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
   
   
-  <span class="sidebar-brand-text">FastF1 <small>3.3.5</small></span>
+  <span class="sidebar-brand-text">FastF1 <small>3.3.6.dev1</small></span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -248,14 +250,14 @@
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <div class="sphx-glr-download-link-note admonition note">
 <p class="admonition-title">Note</p>
 <p><a class="reference internal" href="#sphx-glr-download-examples-gallery-plot-team-pace-ranking-py"><span class="std std-ref">Go to the end</span></a>
-to download the full example code</p>
+to download the full example code.</p>
 </div>
 <section class="sphx-glr-example-title" id="team-pace-comparison">
-<span id="sphx-glr-examples-gallery-plot-team-pace-ranking-py"></span><h1>Team Pace Comparison<a class="headerlink" href="#team-pace-comparison" title="Link to this heading">#</a></h1>
+<span id="sphx-glr-examples-gallery-plot-team-pace-ranking-py"></span><h1>Team Pace Comparison<a class="headerlink" href="#team-pace-comparison" title="Link to this heading">¶</a></h1>
 <p>Rank team’s race pace from the fastest to the slowest.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
 <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
@@ -271,7 +273,7 @@ to download the full example code</p>
 <p>Load the race session.
 Pick all quick laps (within 107% of fastest lap).
 For races with mixed conditions, pick_wo_box() is better.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">race</span> <span class="o">=</span> <span class="n">fastf1</span><span class="o">.</span><span class="n">get_session</span><span class="p">(</span><span class="mi">2023</span><span class="p">,</span> <span class="s2">&quot;British Grand Prix&quot;</span><span class="p">,</span> <span class="s1">&#39;R&#39;</span><span class="p">)</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">race</span> <span class="o">=</span> <span class="n">fastf1</span><span class="o">.</span><span class="n">get_session</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;R&#39;</span><span class="p">)</span>
 <span class="n">race</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
 <span class="n">laps</span> <span class="o">=</span> <span class="n">race</span><span class="o">.</span><span class="n">laps</span><span class="o">.</span><span class="n">pick_quicklaps</span><span class="p">()</span>
 </pre></div>
@@ -297,14 +299,9 @@ with plotting.setup_mpl.</p>
 <span class="n">team_palette</span> <span class="o">=</span> <span class="p">{</span><span class="n">team</span><span class="p">:</span> <span class="n">fastf1</span><span class="o">.</span><span class="n">plotting</span><span class="o">.</span><span class="n">team_color</span><span class="p">(</span><span class="n">team</span><span class="p">)</span> <span class="k">for</span> <span class="n">team</span> <span class="ow">in</span> <span class="n">team_order</span><span class="p">}</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-pytb notranslate"><div class="highlight"><pre><span></span><span class="gt">Traceback (most recent call last):</span>
-  File <span class="nb">&quot;/home/runner/work/Fast-F1/Fast-F1/examples/plot_team_pace_ranking.py&quot;</span>, line <span class="m">43</span>, in <span class="n">&lt;module&gt;</span>
-<span class="w">    </span><span class="n">team_palette</span> <span class="o">=</span> <span class="p">{</span><span class="n">team</span><span class="p">:</span> <span class="n">fastf1</span><span class="o">.</span><span class="n">plotting</span><span class="o">.</span><span class="n">team_color</span><span class="p">(</span><span class="n">team</span><span class="p">)</span> <span class="k">for</span> <span class="n">team</span> <span class="ow">in</span> <span class="n">team_order</span><span class="p">}</span>
-  File <span class="nb">&quot;/home/runner/work/Fast-F1/Fast-F1/examples/plot_team_pace_ranking.py&quot;</span>, line <span class="m">43</span>, in <span class="n">&lt;dictcomp&gt;</span>
-<span class="w">    </span><span class="n">team_palette</span> <span class="o">=</span> <span class="p">{</span><span class="n">team</span><span class="p">:</span> <span class="n">fastf1</span><span class="o">.</span><span class="n">plotting</span><span class="o">.</span><span class="n">team_color</span><span class="p">(</span><span class="n">team</span><span class="p">)</span> <span class="k">for</span> <span class="n">team</span> <span class="ow">in</span> <span class="n">team_order</span><span class="p">}</span>
-  File <span class="nb">&quot;/home/runner/work/Fast-F1/Fast-F1/fastf1/plotting.py&quot;</span>, line <span class="m">372</span>, in <span class="n">team_color</span>
-<span class="w">    </span><span class="k">raise</span> <span class="ne">KeyError</span>
-<span class="gr">KeyError</span>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Index([&#39;Red Bull Racing&#39;, &#39;Ferrari&#39;, &#39;McLaren&#39;, &#39;Mercedes&#39;, &#39;Haas F1 Team&#39;,
+       &#39;Aston Martin&#39;, &#39;Kick Sauber&#39;, &#39;Alpine&#39;, &#39;RB&#39;, &#39;Williams&#39;],
+      dtype=&#39;object&#39;, name=&#39;Team&#39;)
 </pre></div>
 </div>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
@@ -330,7 +327,7 @@ with plotting.setup_mpl.</p>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 3.885 seconds)</p>
+<img src="../_images/sphx_glr_plot_team_pace_ranking_001.png" srcset="../_images/sphx_glr_plot_team_pace_ranking_001.png" alt="2023 British Grand Prix" class = "sphx-glr-single-img"/><p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 22.318 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-gallery-plot-team-pace-ranking-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/8fba57e756d751feba8e5bfcb4b78ffb/plot_team_pace_ranking.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_team_pace_ranking.ipynb</span></code></a></p>
@@ -394,10 +391,10 @@ with plotting.setup_mpl.</p>
 </div>
     <script data-goatcounter="https://ey2kpxm326wjqcsfzewz.goatcounter.com/count"
             async src="//gc.zgo.at/count.js"></script>
-    <script src="../_static/documentation_options.js?v=66b10fa0"></script>
+    <script src="../_static/documentation_options.js?v=7b8bdb6a"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/scripts/furo.js?v=4e2eecee"></script>
     
 </body>
 </html>

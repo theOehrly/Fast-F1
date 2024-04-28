@@ -5,10 +5,10 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Testing" href="testing.html" /><link rel="prev" title="Contributing" href="contributing.html" />
 
-    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
-        <title>Setting up FastF1 for development - FastF1 3.3.5</title>
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.04.27 -->
+        <title>Setting up FastF1 for development - FastF1 3.3.6.dev1</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=437aa6ec" />
     <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css?v=7f9a90b1" />
     <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=61a4c737" />
     <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -118,6 +118,8 @@
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
 
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
 
 
 <div class="page">
@@ -129,7 +131,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">FastF1 <small>3.3.5</small></div></a>
+      <a href="../index.html"><div class="brand">FastF1 <small>3.3.6.dev1</small></div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -152,7 +154,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
   
   
-  <span class="sidebar-brand-text">FastF1 <small>3.3.5</small></span>
+  <span class="sidebar-brand-text">FastF1 <small>3.3.6.dev1</small></span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -248,11 +250,11 @@
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section id="setting-up-fastf1-for-development">
-<span id="installing-for-devs"></span><h1>Setting up FastF1 for development<a class="headerlink" href="#setting-up-fastf1-for-development" title="Link to this heading">#</a></h1>
+<span id="installing-for-devs"></span><h1>Setting up FastF1 for development<a class="headerlink" href="#setting-up-fastf1-for-development" title="Link to this heading">¶</a></h1>
 <section id="creating-a-dedicated-environment">
-<span id="dev-environment"></span><h2>Creating a dedicated environment<a class="headerlink" href="#creating-a-dedicated-environment" title="Link to this heading">#</a></h2>
+<span id="dev-environment"></span><h2>Creating a dedicated environment<a class="headerlink" href="#creating-a-dedicated-environment" title="Link to this heading">¶</a></h2>
 <p>You should set up a dedicated environment to decouple your FastF1
 development from other Python and FastF1 installations on your system.
 Here we use python’s virtual environment <a class="reference external" href="https://docs.python.org/3/library/venv.html">venv</a>, but you may also use others
@@ -271,7 +273,7 @@ such as conda.</p>
 environment in your shell.</p>
 </section>
 <section id="retrieving-the-latest-version-of-the-code">
-<h2>Retrieving the latest version of the code<a class="headerlink" href="#retrieving-the-latest-version-of-the-code" title="Link to this heading">#</a></h2>
+<h2>Retrieving the latest version of the code<a class="headerlink" href="#retrieving-the-latest-version-of-the-code" title="Link to this heading">¶</a></h2>
 <p>FastF1 is hosted at <a class="reference external" href="https://github.com/theOehrly/Fast-F1.git">https://github.com/theOehrly/Fast-F1.git</a>.</p>
 <blockquote>
 <div><p>git clone <a class="reference external" href="https://github.com/theOehrly/Fast-F1.git">https://github.com/theOehrly/Fast-F1.git</a></p>
@@ -283,7 +285,7 @@ current working directory.</p>
 if you are using 2-factor authentication.</p>
 </section>
 <section id="installing-fastf1-in-editable-mode">
-<h2>Installing FastF1 in editable mode<a class="headerlink" href="#installing-fastf1-in-editable-mode" title="Link to this heading">#</a></h2>
+<h2>Installing FastF1 in editable mode<a class="headerlink" href="#installing-fastf1-in-editable-mode" title="Link to this heading">¶</a></h2>
 <p>Install FastF1 in editable mode from the <code class="file docutils literal notranslate"><span class="pre">Fast-F1</span></code> directory
 using the command</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">e</span> <span class="o">.</span>
@@ -295,7 +297,7 @@ development source directory. This allows you to import your modified version
 of FastF1 without re-installing after every change.</p>
 </section>
 <section id="installing-additional-dependencies-for-development">
-<span id="install-pre-commit"></span><h2>Installing additional dependencies for development<a class="headerlink" href="#installing-additional-dependencies-for-development" title="Link to this heading">#</a></h2>
+<span id="install-pre-commit"></span><h2>Installing additional dependencies for development<a class="headerlink" href="#installing-additional-dependencies-for-development" title="Link to this heading">¶</a></h2>
 <p>To install additional dependencies for development, testing and building of the
 documentation, run the following command within the <code class="file docutils literal notranslate"><span class="pre">Fast-F1</span></code> directory:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">/</span><span class="n">dev</span><span class="o">.</span><span class="n">txt</span>
@@ -303,7 +305,7 @@ documentation, run the following command within the <code class="file docutils l
 </div>
 </section>
 <section id="installing-pre-commit-hooks">
-<span id="pre-commit-hooks"></span><h2>Installing pre-commit hooks<a class="headerlink" href="#installing-pre-commit-hooks" title="Link to this heading">#</a></h2>
+<span id="pre-commit-hooks"></span><h2>Installing pre-commit hooks<a class="headerlink" href="#installing-pre-commit-hooks" title="Link to this heading">¶</a></h2>
 <p>It is recommended to install <a class="reference external" href="https://pre-commit.com/">pre-commit</a> hooks.
 These will automatically check and partially fix code style issues (using the
 ruff linter and isort) when you run <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">commit</span></code>. The hooks are defined in
@@ -390,10 +392,10 @@ the top level <code class="docutils literal notranslate"><span class="pre">.pre-
 </div>
     <script data-goatcounter="https://ey2kpxm326wjqcsfzewz.goatcounter.com/count"
             async src="//gc.zgo.at/count.js"></script>
-    <script src="../_static/documentation_options.js?v=66b10fa0"></script>
+    <script src="../_static/documentation_options.js?v=7b8bdb6a"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/scripts/furo.js?v=4e2eecee"></script>
     
 </body>
 </html>

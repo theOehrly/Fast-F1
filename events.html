@@ -5,10 +5,10 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="F1 API - fastf1.api" href="api.html" /><link rel="prev" title="Timing and Telemetry Data - fastf1.core" href="core.html" />
 
-    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
-        <title>Event Schedule - fastf1.events - FastF1 3.3.5</title>
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.04.27 -->
+        <title>Event Schedule - fastf1.events - FastF1 3.3.6.dev1</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=437aa6ec" />
     <link rel="stylesheet" type="text/css" href="_static/plot_directive.css?v=7f9a90b1" />
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=61a4c737" />
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -118,6 +118,8 @@
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
 
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
 
 
 <div class="page">
@@ -129,7 +131,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">FastF1 <small>3.3.5</small></div></a>
+      <a href="index.html"><div class="brand">FastF1 <small>3.3.6.dev1</small></div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -152,7 +154,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   
-  <span class="sidebar-brand-text">FastF1 <small>3.3.5</small></span>
+  <span class="sidebar-brand-text">FastF1 <small>3.3.6.dev1</small></span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -248,9 +250,9 @@
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section id="event-schedule-fastf1-events">
-<span id="module-fastf1.events"></span><h1>Event Schedule - <a class="reference internal" href="#module-fastf1.events" title="fastf1.events"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.events</span></code></a><a class="headerlink" href="#event-schedule-fastf1-events" title="Link to this heading">#</a></h1>
+<span id="module-fastf1.events"></span><h1>Event Schedule - <a class="reference internal" href="#module-fastf1.events" title="fastf1.events"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.events</span></code></a><a class="headerlink" href="#event-schedule-fastf1-events" title="Link to this heading">¶</a></h1>
 <p>The <a class="reference internal" href="#fastf1.events.EventSchedule" title="fastf1.events.EventSchedule"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventSchedule</span></code></a> provides information about past and upcoming
 Formula 1 events.</p>
 <p>An <a class="reference internal" href="#fastf1.events.Event" title="fastf1.events.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> can be a race weekend or a testing event. Each event
@@ -260,7 +262,7 @@ consists of multiple <a class="reference internal" href="core.html#fastf1.core.S
 Therefore, the usual methods of these pandas objects can be used in addition
 to the special methods described here.</p>
 <section id="event-schedule-data">
-<h2>Event Schedule Data<a class="headerlink" href="#event-schedule-data" title="Link to this heading">#</a></h2>
+<h2>Event Schedule Data<a class="headerlink" href="#event-schedule-data" title="Link to this heading">¶</a></h2>
 <p>The event schedule and each event provide the following information as
 DataFrame columns or Series values:</p>
 <blockquote>
@@ -305,7 +307,7 @@ Lap timing data and telemetry data can only be loaded if this is true.</p></li>
 </ul>
 </div></blockquote>
 <section id="supported-seasons">
-<h3>Supported Seasons<a class="headerlink" href="#supported-seasons" title="Link to this heading">#</a></h3>
+<h3>Supported Seasons<a class="headerlink" href="#supported-seasons" title="Link to this heading">¶</a></h3>
 <p>FastF1 provides its own event schedule for the 2018 season and all later
 seasons. The schedule for all seasons before 2018 is built using data from
 the Ergast API. Only limited data is available for these seasons. Usage of the
@@ -323,7 +325,7 @@ provided for these. These assumptions will be incorrect for certain events!</p>
 supported if usage of the Ergast API is enforced.</p>
 </section>
 <section id="event-formats">
-<span id="id1"></span><h3>Event Formats<a class="headerlink" href="#event-formats" title="Link to this heading">#</a></h3>
+<span id="id1"></span><h3>Event Formats<a class="headerlink" href="#event-formats" title="Link to this heading">¶</a></h3>
 <ul>
 <li><p><strong>‘conventional’: Practice 1, Practice 2, Practice 3, Qualifying, Race</strong></p></li>
 <li><p><strong>‘sprint’: Practice 1, Qualifying, Practice 2, Sprint, Race</strong></p>
@@ -353,7 +355,7 @@ on saturday then sets the grid for the race on Sunday.</p>
 </section>
 </section>
 <section id="session-identifiers">
-<span id="sessionidentifier"></span><h2>Session identifiers<a class="headerlink" href="#session-identifiers" title="Link to this heading">#</a></h2>
+<span id="sessionidentifier"></span><h2>Session identifiers<a class="headerlink" href="#session-identifiers" title="Link to this heading">¶</a></h2>
 <p>Multiple event (schedule) related functions and methods make use of a session
 identifier to differentiate between the various sessions of one event.
 This identifier can currently be one of the following:</p>
@@ -377,14 +379,14 @@ specific session, FastF1 will also accept the ‘Sprint Qualifying’/’SQ’
 identifier instead of only ‘Sprint’/’S’ for backwards compatibility.</p>
 </section>
 <section id="functions-for-accessing-schedule-data">
-<h2>Functions for accessing schedule data<a class="headerlink" href="#functions-for-accessing-schedule-data" title="Link to this heading">#</a></h2>
+<h2>Functions for accessing schedule data<a class="headerlink" href="#functions-for-accessing-schedule-data" title="Link to this heading">¶</a></h2>
 <p>The functions for accessing event schedule data are documented in
 <a class="reference internal" href="fastf1.html#generalfunctions"><span class="std std-ref">General Functions - fastf1</span></a>.</p>
 </section>
 <section id="data-objects">
-<h2>Data Objects<a class="headerlink" href="#data-objects" title="Link to this heading">#</a></h2>
+<h2>Data Objects<a class="headerlink" href="#data-objects" title="Link to this heading">¶</a></h2>
 <section id="overview">
-<h3>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h3>
+<h3>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h3>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
@@ -399,10 +401,10 @@ identifier instead of only ‘Sprint’/’S’ for backwards compatibility.</p>
 </div>
 </section>
 <section id="api-reference">
-<h3>API Reference<a class="headerlink" href="#api-reference" title="Link to this heading">#</a></h3>
+<h3>API Reference<a class="headerlink" href="#api-reference" title="Link to this heading">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="fastf1.events.EventSchedule">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fastf1.events.</span></span><span class="sig-name descname"><span class="pre">EventSchedule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">year</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_default_cols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#EventSchedule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.EventSchedule" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fastf1.events.</span></span><span class="sig-name descname"><span class="pre">EventSchedule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">year</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_default_cols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#EventSchedule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.EventSchedule" title="Link to this definition">¶</a></dt>
 <dd><p>This class implements a per-season event schedule.</p>
 <p>For detailed information about the information that is available for each
 event, see <a class="reference internal" href="#event-schedule-data">Event Schedule Data</a>.</p>
@@ -442,14 +444,14 @@ the default columns exist</p></li>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="fastf1.events.EventSchedule.is_testing">
-<span class="sig-name descname"><span class="pre">is_testing</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#EventSchedule.is_testing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.EventSchedule.is_testing" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">is_testing</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#EventSchedule.is_testing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.EventSchedule.is_testing" title="Link to this definition">¶</a></dt>
 <dd><p>Return <cite>True</cite> or <cite>False</cite>, depending on whether each event is a
 testing event.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fastf1.events.EventSchedule.get_event_by_round">
-<span class="sig-name descname"><span class="pre">get_event_by_round</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">round</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#EventSchedule.get_event_by_round"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.EventSchedule.get_event_by_round" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_event_by_round</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">round</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#EventSchedule.get_event_by_round"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.EventSchedule.get_event_by_round" title="Link to this definition">¶</a></dt>
 <dd><p>Get an <a class="reference internal" href="#fastf1.events.Event" title="fastf1.events.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> by its round number.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -466,7 +468,7 @@ testing event.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fastf1.events.EventSchedule.get_event_by_name">
-<span class="sig-name descname"><span class="pre">get_event_by_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict_search</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#EventSchedule.get_event_by_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.EventSchedule.get_event_by_name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_event_by_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict_search</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#EventSchedule.get_event_by_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.EventSchedule.get_event_by_name" title="Link to this definition">¶</a></dt>
 <dd><p>Get an <a class="reference internal" href="#fastf1.events.Event" title="fastf1.events.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> by its name.</p>
 <p>A fuzzy match is performed to find the event that best matches the
 given name. Fuzzy matching is performed using the country, location,
@@ -509,7 +511,7 @@ will return <code class="docutils literal notranslate"><span class="pre">None</s
 
 <dl class="py class">
 <dt class="sig sig-object py" id="fastf1.events.Event">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fastf1.events.</span></span><span class="sig-name descname"><span class="pre">Event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">year</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#Event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.Event" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fastf1.events.</span></span><span class="sig-name descname"><span class="pre">Event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">year</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#Event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.Event" title="Link to this definition">¶</a></dt>
 <dd><p>This class represents a single event (race weekend or testing event).</p>
 <p>Each event consists of one or multiple sessions, depending on the type
 of event and depending on the event format.</p>
@@ -561,7 +563,7 @@ event, see <a class="reference internal" href="#event-schedule-data">Event Sched
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="fastf1.events.Event.is_testing">
-<span class="sig-name descname"><span class="pre">is_testing</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#Event.is_testing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.Event.is_testing" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">is_testing</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#Event.is_testing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.Event.is_testing" title="Link to this definition">¶</a></dt>
 <dd><p>Return <cite>True</cite> or <cite>False</cite>, depending on whether this event is a
 testing event.</p>
 <dl class="field-list simple">
@@ -573,7 +575,7 @@ testing event.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fastf1.events.Event.get_session_name">
-<span class="sig-name descname"><span class="pre">get_session_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">identifier</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#Event.get_session_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.Event.get_session_name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_session_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">identifier</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#Event.get_session_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.Event.get_session_name" title="Link to this definition">¶</a></dt>
 <dd><p>Return the full session name of a specific session from this event.</p>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">fastf1</span>
@@ -601,7 +603,7 @@ testing event.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fastf1.events.Event.get_session_date">
-<span class="sig-name descname"><span class="pre">get_session_date</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">identifier</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">utc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#Event.get_session_date"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.Event.get_session_date" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_session_date</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">identifier</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">utc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#Event.get_session_date"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.Event.get_session_date" title="Link to this definition">¶</a></dt>
 <dd><p>Return the date and time (if available) at which a specific session
 of this event is or was held.</p>
 <dl class="field-list simple">
@@ -622,7 +624,7 @@ of this event is or was held.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fastf1.events.Event.get_session">
-<span class="sig-name descname"><span class="pre">get_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">identifier</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#Event.get_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.Event.get_session" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">identifier</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#Event.get_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.Event.get_session" title="Link to this definition">¶</a></dt>
 <dd><p>Return a session from this event.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -639,7 +641,7 @@ of this event is or was held.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fastf1.events.Event.get_race">
-<span class="sig-name descname"><span class="pre">get_race</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#Event.get_race"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.Event.get_race" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_race</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#Event.get_race"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.Event.get_race" title="Link to this definition">¶</a></dt>
 <dd><p>Return the race session.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -650,7 +652,7 @@ of this event is or was held.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fastf1.events.Event.get_qualifying">
-<span class="sig-name descname"><span class="pre">get_qualifying</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#Event.get_qualifying"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.Event.get_qualifying" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_qualifying</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#Event.get_qualifying"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.Event.get_qualifying" title="Link to this definition">¶</a></dt>
 <dd><p>Return the qualifying session.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -661,7 +663,7 @@ of this event is or was held.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fastf1.events.Event.get_sprint">
-<span class="sig-name descname"><span class="pre">get_sprint</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#Event.get_sprint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.Event.get_sprint" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_sprint</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#Event.get_sprint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.Event.get_sprint" title="Link to this definition">¶</a></dt>
 <dd><p>Return the sprint session.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -672,7 +674,7 @@ of this event is or was held.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fastf1.events.Event.get_sprint_shootout">
-<span class="sig-name descname"><span class="pre">get_sprint_shootout</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#Event.get_sprint_shootout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.Event.get_sprint_shootout" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_sprint_shootout</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#Event.get_sprint_shootout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.Event.get_sprint_shootout" title="Link to this definition">¶</a></dt>
 <dd><p>Return the sprint shootout session.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -683,7 +685,7 @@ of this event is or was held.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fastf1.events.Event.get_sprint_qualifying">
-<span class="sig-name descname"><span class="pre">get_sprint_qualifying</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#Event.get_sprint_qualifying"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.Event.get_sprint_qualifying" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_sprint_qualifying</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#Event.get_sprint_qualifying"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.Event.get_sprint_qualifying" title="Link to this definition">¶</a></dt>
 <dd><p>Return the sprint qualifying session.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -694,7 +696,7 @@ of this event is or was held.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fastf1.events.Event.get_practice">
-<span class="sig-name descname"><span class="pre">get_practice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#Event.get_practice"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.Event.get_practice" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_practice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/events.html#Event.get_practice"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.events.Event.get_practice" title="Link to this definition">¶</a></dt>
 <dd><p>Return the specified practice session.
 :type number: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>
 :param number: 1, 2 or 3 - Free practice session number</p>
@@ -814,10 +816,10 @@ of this event is or was held.</p>
 </div>
     <script data-goatcounter="https://ey2kpxm326wjqcsfzewz.goatcounter.com/count"
             async src="//gc.zgo.at/count.js"></script>
-    <script src="_static/documentation_options.js?v=66b10fa0"></script>
+    <script src="_static/documentation_options.js?v=7b8bdb6a"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/scripts/furo.js?v=4e2eecee"></script>
     
 </body>
 </html>

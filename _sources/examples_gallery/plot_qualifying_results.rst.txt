@@ -11,7 +11,7 @@
         :class: sphx-glr-download-link-note
 
         :ref:`Go to the end <sphx_glr_download_examples_gallery_plot_qualifying_results.py>`
-        to download the full example code
+        to download the full example code.
 
 .. rst-class:: sphx-glr-example-title
 
@@ -247,7 +247,7 @@ Finally, give the plot a meaningful title
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 1.721 seconds)
+   **Total running time of the script:** (0 minutes 1.813 seconds)
 
 
 .. _sphx_glr_download_examples_gallery_plot_qualifying_results.py:

@@ -11,7 +11,7 @@
         :class: sphx-glr-download-link-note
 
         :ref:`Go to the end <sphx_glr_download_examples_gallery_plot_team_pace_ranking.py>`
-        to download the full example code
+        to download the full example code.
 
 .. rst-class:: sphx-glr-example-title
 
@@ -53,7 +53,7 @@ For races with mixed conditions, pick_wo_box() is better.
 
 .. code-block:: Python
 
-    race = fastf1.get_session(2023, "British Grand Prix", 'R')
+    race = fastf1.get_session(2024, 1, 'R')
     race.load()
     laps = race.laps.pick_quicklaps()
 
@@ -93,18 +93,15 @@ with plotting.setup_mpl.
 
 
 
+
+
 .. rst-class:: sphx-glr-script-out
 
-.. code-block:: pytb
+ .. code-block:: none
 
-    Traceback (most recent call last):
-      File "/home/runner/work/Fast-F1/Fast-F1/examples/plot_team_pace_ranking.py", line 43, in <module>
-        team_palette = {team: fastf1.plotting.team_color(team) for team in team_order}
-      File "/home/runner/work/Fast-F1/Fast-F1/examples/plot_team_pace_ranking.py", line 43, in <dictcomp>
-        team_palette = {team: fastf1.plotting.team_color(team) for team in team_order}
-      File "/home/runner/work/Fast-F1/Fast-F1/fastf1/plotting.py", line 372, in team_color
-        raise KeyError
-    KeyError
+    Index(['Red Bull Racing', 'Ferrari', 'McLaren', 'Mercedes', 'Haas F1 Team',
+           'Aston Martin', 'Kick Sauber', 'Alpine', 'RB', 'Williams'],
+          dtype='object', name='Team')
 
 
 
@@ -136,9 +133,20 @@ with plotting.setup_mpl.
     plt.show()
 
 
+
+.. image-sg:: /examples_gallery/images/sphx_glr_plot_team_pace_ranking_001.png
+   :alt: 2023 British Grand Prix
+   :srcset: /examples_gallery/images/sphx_glr_plot_team_pace_ranking_001.png
+   :class: sphx-glr-single-img
+
+
+
+
+
+
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 3.885 seconds)
+   **Total running time of the script:** (0 minutes 22.318 seconds)
 
 
 .. _sphx_glr_download_examples_gallery_plot_team_pace_ranking.py:

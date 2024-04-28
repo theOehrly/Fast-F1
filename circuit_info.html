@@ -5,10 +5,10 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Utils module - fastf1.utils" href="utils.html" /><link rel="prev" title="Ergast API Interface" href="ergast.html" />
 
-    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
-        <title>Circuit Information - FastF1 3.3.5</title>
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.04.27 -->
+        <title>Circuit Information - FastF1 3.3.6.dev1</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=437aa6ec" />
     <link rel="stylesheet" type="text/css" href="_static/plot_directive.css?v=7f9a90b1" />
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=61a4c737" />
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -118,6 +118,8 @@
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
 
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
 
 
 <div class="page">
@@ -129,7 +131,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">FastF1 <small>3.3.5</small></div></a>
+      <a href="index.html"><div class="brand">FastF1 <small>3.3.6.dev1</small></div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -152,7 +154,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   
-  <span class="sidebar-brand-text">FastF1 <small>3.3.5</small></span>
+  <span class="sidebar-brand-text">FastF1 <small>3.3.6.dev1</small></span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -248,12 +250,12 @@
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section id="circuit-information">
-<span id="circuit-info"></span><h1>Circuit Information<a class="headerlink" href="#circuit-information" title="Link to this heading">#</a></h1>
+<span id="circuit-info"></span><h1>Circuit Information<a class="headerlink" href="#circuit-information" title="Link to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="fastf1.mvapi.CircuitInfo">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fastf1.mvapi.</span></span><span class="sig-name descname"><span class="pre">CircuitInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corners</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marshal_lights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marshal_sectors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/mvapi/data.html#CircuitInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.mvapi.CircuitInfo" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fastf1.mvapi.</span></span><span class="sig-name descname"><span class="pre">CircuitInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corners</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marshal_lights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marshal_sectors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fastf1/mvapi/data.html#CircuitInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fastf1.mvapi.CircuitInfo" title="Link to this definition">¶</a></dt>
 <dd><p>Holds information about the circuit that is useful for visualizing and
 annotating data.</p>
 <p><code class="docutils literal notranslate"><span class="pre">corners</span></code>, <code class="docutils literal notranslate"><span class="pre">marshal_lights</span></code> and <code class="docutils literal notranslate"><span class="pre">marshal_sectors</span></code> are track markers
@@ -284,28 +286,28 @@ but sufficient for visualization. A big thanks to MultiViewer
 </div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="fastf1.mvapi.CircuitInfo.corners">
-<span class="sig-name descname"><span class="pre">corners</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></em><a class="headerlink" href="#fastf1.mvapi.CircuitInfo.corners" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">corners</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></em><a class="headerlink" href="#fastf1.mvapi.CircuitInfo.corners" title="Link to this definition">¶</a></dt>
 <dd><p>Location of corners.</p>
 <p>(DataFrame format described above)</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="fastf1.mvapi.CircuitInfo.marshal_lights">
-<span class="sig-name descname"><span class="pre">marshal_lights</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></em><a class="headerlink" href="#fastf1.mvapi.CircuitInfo.marshal_lights" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">marshal_lights</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></em><a class="headerlink" href="#fastf1.mvapi.CircuitInfo.marshal_lights" title="Link to this definition">¶</a></dt>
 <dd><p>Location of marshal lights.</p>
 <p>(DataFrame format described above)</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="fastf1.mvapi.CircuitInfo.marshal_sectors">
-<span class="sig-name descname"><span class="pre">marshal_sectors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></em><a class="headerlink" href="#fastf1.mvapi.CircuitInfo.marshal_sectors" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">marshal_sectors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></em><a class="headerlink" href="#fastf1.mvapi.CircuitInfo.marshal_sectors" title="Link to this definition">¶</a></dt>
 <dd><p>Location of marshal sectors.</p>
 <p>(DataFrame format described above)</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="fastf1.mvapi.CircuitInfo.rotation">
-<span class="sig-name descname"><span class="pre">rotation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#fastf1.mvapi.CircuitInfo.rotation" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">rotation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#fastf1.mvapi.CircuitInfo.rotation" title="Link to this definition">¶</a></dt>
 <dd><p>Rotation of the circuit in degrees. This can be used to rotate the
 coordinate system of the telemetry (position) data to match the orientation
 of the official track map.</p>
@@ -392,10 +394,10 @@ of the official track map.</p>
 </div>
     <script data-goatcounter="https://ey2kpxm326wjqcsfzewz.goatcounter.com/count"
             async src="//gc.zgo.at/count.js"></script>
-    <script src="_static/documentation_options.js?v=66b10fa0"></script>
+    <script src="_static/documentation_options.js?v=7b8bdb6a"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/scripts/furo.js?v=4e2eecee"></script>
     
 </body>
 </html>

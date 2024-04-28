@@ -10,6 +10,7 @@ Examples Gallery
 
     <div class="sphx-glr-thumbnails">
 
+.. thumbnail-parent-div-open
 
 .. raw:: html
 
@@ -248,6 +249,8 @@ Examples Gallery
       <div class="sphx-glr-thumbnail-title">Plot driver standings in a heatmap</div>
     </div>
 
+
+.. thumbnail-parent-div-close
 
 .. raw:: html
 

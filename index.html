@@ -5,10 +5,10 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Getting Started" href="examples/index.html" />
 
-    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
-        <title>FastF1 3.3.5</title>
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.04.27 -->
+        <title>FastF1 3.3.6.dev1</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=437aa6ec" />
     <link rel="stylesheet" type="text/css" href="_static/plot_directive.css?v=7f9a90b1" />
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=61a4c737" />
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -118,6 +118,8 @@
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
 
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
 
 
 <div class="page">
@@ -129,7 +131,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="#"><div class="brand">FastF1 <small>3.3.5</small></div></a>
+      <a href="#"><div class="brand">FastF1 <small>3.3.6.dev1</small></div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -152,7 +154,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="#">
   
   
-  <span class="sidebar-brand-text">FastF1 <small>3.3.5</small></span>
+  <span class="sidebar-brand-text">FastF1 <small>3.3.6.dev1</small></span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -248,12 +250,12 @@
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section id="fastf1">
-<h1>FastF1<a class="headerlink" href="#fastf1" title="Link to this heading">#</a></h1>
+<h1>FastF1<a class="headerlink" href="#fastf1" title="Link to this heading">¶</a></h1>
 <p>For the passionate F1 nerds.</p>
 <section id="introduction">
-<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h2>
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
 <p>FastF1 gives you access to F1 lap timing, car telemetry and position,
 tyre data, weather data, the event schedule and session results.</p>
 <p><strong>Main features</strong>:</p>
@@ -277,7 +279,7 @@ desired. For more information see <a class="reference internal" href="fastf1.htm
 <p>Have fun!</p>
 </section>
 <section id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h2>
 <p>It is recommended to install FastF1 using <cite>pip</cite>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>fastf1
 </pre></div>
@@ -289,7 +291,7 @@ desired. For more information see <a class="reference internal" href="fastf1.htm
 </pre></div>
 </div>
 <section id="third-party-packages">
-<h3>Third-party packages<a class="headerlink" href="#third-party-packages" title="Link to this heading">#</a></h3>
+<h3>Third-party packages<a class="headerlink" href="#third-party-packages" title="Link to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>R package that wraps FastF1: <a class="reference external" href="https://cran.r-project.org/package=f1dataR">https://cran.r-project.org/package=f1dataR</a></p></li>
 </ul>
@@ -299,14 +301,14 @@ maintainers.</p>
 </section>
 </section>
 <section id="supporting-the-project">
-<h2>Supporting the Project<a class="headerlink" href="#supporting-the-project" title="Link to this heading">#</a></h2>
+<h2>Supporting the Project<a class="headerlink" href="#supporting-the-project" title="Link to this heading">¶</a></h2>
 <p>If you want to support the continuous development of FastF1, you can sponsor me
 on GitHub or buy me a coffee.</p>
 <iframe src="https://github.com/sponsors/theOehrly/button" title="Sponsor theOehrly" height="32" width="114" style="border: 0; border-radius: 6px; margin: 0 30px 0 0; padding: 0px;"></iframe>
 
 <a href="https://www.buymeacoffee.com/fastf1" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="31"  width="134"></a></section>
 <section id="available-data">
-<h2>Available Data<a class="headerlink" href="#available-data" title="Link to this heading">#</a></h2>
+<h2>Available Data<a class="headerlink" href="#available-data" title="Link to this heading">¶</a></h2>
 <p>The following is a short overview over the available data with some references
 to functions and objects used to work with this data.</p>
 <p>In most cases, the default workflow with FastF1 is to create a
@@ -315,7 +317,7 @@ will then access all data through the session object. One notable exception to
 this pattern is the wrapper for Ergast.</p>
 <div class="table-wrapper colwidths-auto docutils container" id="id2">
 <table class="docutils align-default" id="id2">
-<caption><span class="caption-text">Overview over the available data</span><a class="headerlink" href="#id2" title="Link to this table">#</a></caption>
+<caption><span class="caption-text">Overview over the available data</span><a class="headerlink" href="#id2" title="Link to this table">¶</a></caption>
 <thead>
 <tr class="row-odd"><th class="head"><p>Topic</p></th>
 <th class="head"><p>Data</p></th>
@@ -363,7 +365,7 @@ this pattern is the wrapper for Ergast.</p>
 </table>
 </div>
 <section id="compatibility-and-availability">
-<h3>Compatibility and Availability<a class="headerlink" href="#compatibility-and-availability" title="Link to this heading">#</a></h3>
+<h3>Compatibility and Availability<a class="headerlink" href="#compatibility-and-availability" title="Link to this heading">¶</a></h3>
 <p>Timing data, session information, car telemetry and position data are available
 from 2018 onwards. (This data is usually available within 30-120 minutes after
 the end of a session.)
@@ -378,7 +380,7 @@ well, going back as far as 1950 (limited to data that is available through
 </section>
 </section>
 <section id="contents">
-<h2>Contents<a class="headerlink" href="#contents" title="Link to this heading">#</a></h2>
+<h2>Contents<a class="headerlink" href="#contents" title="Link to this heading">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/theOehrly/Fast-F1">← Back to Github</a></li>
@@ -416,7 +418,7 @@ well, going back as far as 1950 (limited to data that is available through
 </div>
 </section>
 <section id="questions-contacting-the-maintainer-and-code-of-conduct">
-<h2>Questions, Contacting the Maintainer and Code of Conduct<a class="headerlink" href="#questions-contacting-the-maintainer-and-code-of-conduct" title="Link to this heading">#</a></h2>
+<h2>Questions, Contacting the Maintainer and Code of Conduct<a class="headerlink" href="#questions-contacting-the-maintainer-and-code-of-conduct" title="Link to this heading">¶</a></h2>
 <p>For questions that may be of interest to the whole community, please use the
 Github <a class="reference external" href="https://github.com/theOehrly/Fast-F1/discussions">Discussions</a>
 section to ask for help. This includes general support questions.</p>
@@ -433,7 +435,7 @@ for information on how breaches are reported, how the
 Code of Conduct is enforced and what values FastF1 encourages.</p>
 </section>
 <section id="indices-and-tables">
-<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading">#</a></h2>
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
@@ -441,7 +443,7 @@ Code of Conduct is enforced and what values FastF1 encourages.</p>
 </ul>
 </section>
 <section id="notice">
-<h2>Notice<a class="headerlink" href="#notice" title="Link to this heading">#</a></h2>
+<h2>Notice<a class="headerlink" href="#notice" title="Link to this heading">¶</a></h2>
 <p>FastF1 and this website are unofficial and are not associated in any way with
 the Formula 1 companies. F1, FORMULA ONE, FORMULA 1, FIA FORMULA ONE WORLD
 CHAMPIONSHIP, GRAND PRIX and related marks are trade marks of Formula One
@@ -525,10 +527,10 @@ Licensing B.V.</p>
 </div>
     <script data-goatcounter="https://ey2kpxm326wjqcsfzewz.goatcounter.com/count"
             async src="//gc.zgo.at/count.js"></script>
-    <script src="_static/documentation_options.js?v=66b10fa0"></script>
+    <script src="_static/documentation_options.js?v=7b8bdb6a"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/scripts/furo.js?v=4e2eecee"></script>
     
 </body>
 </html>

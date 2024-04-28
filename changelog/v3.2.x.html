@@ -5,10 +5,10 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" />
 
-    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
-        <title>What’s new in v3.2.2 - FastF1 3.3.5</title>
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.04.27 -->
+        <title>What’s new in v3.2.2 - FastF1 3.3.6.dev1</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=437aa6ec" />
     <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css?v=7f9a90b1" />
     <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=61a4c737" />
     <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -118,6 +118,8 @@
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
 
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
 
 
 <div class="page">
@@ -129,7 +131,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">FastF1 <small>3.3.5</small></div></a>
+      <a href="../index.html"><div class="brand">FastF1 <small>3.3.6.dev1</small></div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -152,7 +154,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
   
   
-  <span class="sidebar-brand-text">FastF1 <small>3.3.5</small></span>
+  <span class="sidebar-brand-text">FastF1 <small>3.3.6.dev1</small></span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -248,12 +250,12 @@
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section id="what-s-new-in-v3-2-2">
-<h1>What’s new in v3.2.2<a class="headerlink" href="#what-s-new-in-v3-2-2" title="Link to this heading">#</a></h1>
+<h1>What’s new in v3.2.2<a class="headerlink" href="#what-s-new-in-v3-2-2" title="Link to this heading">¶</a></h1>
 <p>(released 09/02/2024)</p>
 <section id="bug-fixes">
-<h2>Bug Fixes<a class="headerlink" href="#bug-fixes" title="Link to this heading">#</a></h2>
+<h2>Bug Fixes<a class="headerlink" href="#bug-fixes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Fixed another bug that caused <a class="reference internal" href="../core.html#fastf1.core.Session.get_circuit_info" title="fastf1.core.Session.get_circuit_info"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fastf1.core.Session.get_circuit_info()</span></code></a>
 to fail only in some cases if the default resampling frequency for
@@ -262,10 +264,10 @@ telemetry data is changed (#455)</p></li>
 </section>
 </section>
 <section id="what-s-new-in-v3-2-1">
-<h1>What’s new in v3.2.1<a class="headerlink" href="#what-s-new-in-v3-2-1" title="Link to this heading">#</a></h1>
+<h1>What’s new in v3.2.1<a class="headerlink" href="#what-s-new-in-v3-2-1" title="Link to this heading">¶</a></h1>
 <p>(released 05/02/2024)</p>
 <section id="id1">
-<h2>Bug Fixes<a class="headerlink" href="#id1" title="Link to this heading">#</a></h2>
+<h2>Bug Fixes<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Fixed a bug that caused timestamps of telemetry data to have (apparent)
 microseconds precision (even though this is not the case). As a result,
@@ -275,17 +277,17 @@ in combination with recent versions of Pandas.</p></li>
 </ul>
 </section>
 <section id="other">
-<h2>Other<a class="headerlink" href="#other" title="Link to this heading">#</a></h2>
+<h2>Other<a class="headerlink" href="#other" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Various changes to address deprecations in Pandas.</p></li>
 </ul>
 </section>
 </section>
 <section id="what-s-new-in-v3-2-0">
-<h1>What’s new in v3.2.0<a class="headerlink" href="#what-s-new-in-v3-2-0" title="Link to this heading">#</a></h1>
+<h1>What’s new in v3.2.0<a class="headerlink" href="#what-s-new-in-v3-2-0" title="Link to this heading">¶</a></h1>
 <p>(released 07/01/2024)</p>
 <section id="new-features">
-<h2>New Features<a class="headerlink" href="#new-features" title="Link to this heading">#</a></h2>
+<h2>New Features<a class="headerlink" href="#new-features" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Added support for Pandas version v2.1.0 and higher.</p></li>
 <li><p>Methods <a class="reference internal" href="../core.html#fastf1.core.Lap.get_telemetry" title="fastf1.core.Lap.get_telemetry"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fastf1.core.Lap.get_telemetry()</span></code></a> and
@@ -304,7 +306,7 @@ information about the cache path and the cache size</p></li>
 </ul>
 </section>
 <section id="id2">
-<h2>Bug Fixes<a class="headerlink" href="#id2" title="Link to this heading">#</a></h2>
+<h2>Bug Fixes<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Fixed incorrect lap number (zero instead of one) for generated laps that are
 added when a driver crashes on the very first lap</p></li>
@@ -385,10 +387,10 @@ to be missing from <a class="reference internal" href="../core.html#fastf1.core.
 </div>
     <script data-goatcounter="https://ey2kpxm326wjqcsfzewz.goatcounter.com/count"
             async src="//gc.zgo.at/count.js"></script>
-    <script src="../_static/documentation_options.js?v=66b10fa0"></script>
+    <script src="../_static/documentation_options.js?v=7b8bdb6a"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/scripts/furo.js?v=4e2eecee"></script>
     
 </body>
 </html>

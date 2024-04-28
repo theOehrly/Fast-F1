@@ -5,10 +5,10 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Known bugs and caveats" href="known_bugs.html" /><link rel="prev" title="Time, Date and Timing - Explanation" href="time_explanation.html" />
 
-    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
-        <title>How to perform calculations accurately - FastF1 3.3.5</title>
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.04.27 -->
+        <title>How to perform calculations accurately - FastF1 3.3.6.dev1</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=437aa6ec" />
     <link rel="stylesheet" type="text/css" href="_static/plot_directive.css?v=7f9a90b1" />
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=61a4c737" />
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -118,6 +118,8 @@
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
 
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
 
 
 <div class="page">
@@ -129,7 +131,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">FastF1 <small>3.3.5</small></div></a>
+      <a href="index.html"><div class="brand">FastF1 <small>3.3.6.dev1</small></div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -152,7 +154,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   
-  <span class="sidebar-brand-text">FastF1 <small>3.3.5</small></span>
+  <span class="sidebar-brand-text">FastF1 <small>3.3.6.dev1</small></span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -248,15 +250,15 @@
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section id="how-to-perform-calculations-accurately">
-<span id="howto-accurate-calculations"></span><h1>How to perform calculations accurately<a class="headerlink" href="#how-to-perform-calculations-accurately" title="Link to this heading">#</a></h1>
+<span id="howto-accurate-calculations"></span><h1>How to perform calculations accurately<a class="headerlink" href="#how-to-perform-calculations-accurately" title="Link to this heading">¶</a></h1>
 <p>This is intended to be a writeup of my experiences. I discovered all of this when trying to implement new functionality
 or when trying to improve existing calculations. The data that can be received from the F1 API has a very limited
 sample rate of about 4-5 Hz. Furthermore, the data is somewhat jittery. That said, one can still perform accurate
 calculations based on this data. But doing validation and accuracy checks is a must.</p>
 <section id="validating-results">
-<h2>Validating results<a class="headerlink" href="#validating-results" title="Link to this heading">#</a></h2>
+<h2>Validating results<a class="headerlink" href="#validating-results" title="Link to this heading">¶</a></h2>
 <p>It is extremely important to never assume that something is correct just because it looks right on the first glance.
 Often it is possible to validate the data “against itself” or just validate it logically. This may not always give
 absolute certainty that the results are accurate. But it can show when there are errors in the calculations. Or maybe
@@ -285,7 +287,7 @@ car should be the same every time a new lap starts. If it isn’t there has to b
 </div></blockquote>
 </section>
 <section id="working-with-the-available-data">
-<h2>Working with the available data<a class="headerlink" href="#working-with-the-available-data" title="Link to this heading">#</a></h2>
+<h2>Working with the available data<a class="headerlink" href="#working-with-the-available-data" title="Link to this heading">¶</a></h2>
 <p>A few straight forward guidelines can be set.</p>
 <blockquote>
 <div><ul>
@@ -310,7 +312,7 @@ stack up and single outliers will influence all further results of the integrati
 But, by keeping these rules in mind, potential error sources can be reduced.</p>
 </section>
 <section id="slicing-data-by-lap-for-use-in-further-calculations">
-<h2>Slicing data by lap for use in further calculations<a class="headerlink" href="#slicing-data-by-lap-for-use-in-further-calculations" title="Link to this heading">#</a></h2>
+<h2>Slicing data by lap for use in further calculations<a class="headerlink" href="#slicing-data-by-lap-for-use-in-further-calculations" title="Link to this heading">¶</a></h2>
 <p>If you simply wish to visualize existing data, slicing laps is rather straight forward.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">session</span> <span class="o">=</span> <span class="n">fastf1</span><span class="o">.</span><span class="n">get_session</span><span class="p">(</span><span class="mi">2020</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;Q&#39;</span><span class="p">)</span>
 <span class="n">session</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
@@ -343,7 +345,7 @@ To stay away from interpolation before doing any calculations, the following cou
 </div>
 </section>
 <section id="disclaimer">
-<h2>Disclaimer<a class="headerlink" href="#disclaimer" title="Link to this heading">#</a></h2>
+<h2>Disclaimer<a class="headerlink" href="#disclaimer" title="Link to this heading">¶</a></h2>
 <p>The information here is what I have discovered to be most effective. This is probably not perfect. There are just too
 many (time consuming) things that can be tried out. If you have some better ideas or want to discuss accuracy and
 possibilities, feel free to open an issue about it.</p>
@@ -424,10 +426,10 @@ possibilities, feel free to open an issue about it.</p>
 </div>
     <script data-goatcounter="https://ey2kpxm326wjqcsfzewz.goatcounter.com/count"
             async src="//gc.zgo.at/count.js"></script>
-    <script src="_static/documentation_options.js?v=66b10fa0"></script>
+    <script src="_static/documentation_options.js?v=7b8bdb6a"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/scripts/furo.js?v=4e2eecee"></script>
     
 </body>
 </html>
