@@ -14,8 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ '3.8', '3.9', '3.10', '3.11', '3.12']
-    name: Tests on ${{ matrix.python-version }}
+        python-version: [ '3.8-minver', '3.8', '3.9', '3.10', '3.11', '3.12']
+        #
+    name: Persist cache for ${{ matrix.python-version }}
     steps:
       - name: Create cache directory
         run: |

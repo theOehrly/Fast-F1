@@ -17,6 +17,7 @@ jobs:
         include:
           - name-suffix: "(Minimum Versions)"
             python-version: "3.8"
+            cache-suffix: "-minver"
             extra-requirements: "-c requirements/minver.txt"
           - python-version: "3.8"
           - python-version: "3.9"
@@ -59,9 +60,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ./test_cache
-          key: fastf1-${{ matrix.python-version }}-${{ hashFiles('*.*') }}
+          key: fastf1-${{ matrix.python-version }}${{ matrix.cache-suffix }}-${{ hashFiles('*.*') }}
           restore-keys: |
-            fastf1-${{ matrix.python-version }}
+            fastf1-${{ matrix.python-version }}${{ matrix.cache-suffix }}
 
       - name: Run tests
         run: |
