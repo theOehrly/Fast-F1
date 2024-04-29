@@ -361,7 +361,8 @@ def get_event(
         *,
         backend: Optional[Literal['fastf1', 'f1timing', 'ergast']] = None,
         force_ergast: bool = False,
-        strict_search: bool = False
+        strict_search: bool = False,
+        exact_match: bool = False
 ) -> "Event":
     """Create an :class:`~fastf1.events.Event` object for a specific
     season and gp.
@@ -400,9 +401,12 @@ def get_event(
         force_ergast: [Deprecated, use ``backend='ergast'``] Always use data
             from the ergast database to create the event schedule
 
-        strict_search: Match precisely the query, or default to
+        strict_search: This argument is deprecated and planned for removal,
+            use the equivalent ``exact_match`` instead
+
+        exact_match: Match precisely the query, or default to
             fuzzy search. If no event is found with
-            ``strict_search=True``, the function will return None
+            ``exact_match=True``, the function will return None
 
     .. versionadded:: 2.2
     """
@@ -411,7 +415,8 @@ def get_event(
                                   backend=backend)
 
     if isinstance(gp, str):
-        event = schedule.get_event_by_name(gp, strict_search=strict_search)
+        event = schedule.get_event_by_name(
+            gp, strict_search=strict_search, exact_match=exact_match)
     else:
         event = schedule.get_event_by_round(gp)
 
@@ -958,7 +963,8 @@ class EventSchedule(BaseDataFrame):
             self,
             name: str,
             *,
-            strict_search: bool = False
+            strict_search: bool = False,
+            exact_match: bool = False
     ) -> "Event":
         """Get an :class:`Event` by its name.
 
@@ -981,16 +987,21 @@ class EventSchedule(BaseDataFrame):
                 ``.get_event_by_name("british")`` and
                 ``.get_event_by_name("silverstone")`` will both return the
                 event for the British Grand Prix.
-            strict_search: Search only for exact query matches
+            strict_search: This argument is deprecated and planned for removal.
+                Use the equivalent ``exact_match`` instead
+            exact_match: Search only for exact query matches
                 instead of using fuzzy search. For example,
                 ``.get_event_by_name("British Grand Prix",
-                strict_search=True)``
+                exact_match=True)``
                 will return the event for the British Grand Prix, whereas
-                ``.get_event_by_name("British", strict_search=True)``
+                ``.get_event_by_name("British", exact_match=True)``
                 will return ``None``
         """
-
         if strict_search:
+            warnings.warn(("strict_search is deprecated and planned for "
+                           "removal, use the equivalent exact_match instead"),
+                          FutureWarning)
+        if strict_search or exact_match:
             return self._strict_event_search(name)
         else:
             return self._fuzzy_event_search(name)
