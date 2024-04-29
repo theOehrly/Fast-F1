@@ -134,6 +134,13 @@ def reference_laps_data():
 def fastf1_setup():
     import fastf1
     from fastf1.logger import LoggingManager
-    fastf1.Cache.enable_cache('test_cache')  # use specific cache directory
+
+    try:
+        fastf1.Cache.enable_cache('test_cache')  # use specific cache directory
+    except NotADirectoryError:
+        # create the test cache and re-enable
+        os.mkdir('test_cache')
+        fastf1.Cache.enable_cache('test_cache')
+
     fastf1.Cache.ci_mode(True)  # only request uncached data
     LoggingManager.debug = True  # raise all exceptions
