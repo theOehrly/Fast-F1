@@ -132,6 +132,55 @@ def test_event_schedule_get_by_name():
     assert schedule.get_event_by_name('test-test').EventName == 'test_test'
 
 
+def test_event_fuzzy_search():
+    # highest overlap case
+    schedule = fastf1.get_event_schedule(1979)
+    assert schedule.get_event_by_name(
+        "United States").EventName == "United States Grand Prix"
+    assert schedule.get_event_by_name(
+        "United States Grand Prix").EventName == "United States Grand Prix"
+    assert schedule.get_event_by_name(
+        "United States West").EventName == "United States Grand Prix West"
+    assert schedule.get_event_by_name(
+        "United States West Grand Prix").EventName == "United States Grand Prix West"
+    assert schedule.get_event_by_name(
+        "US West").EventName == "United States Grand Prix West"
+
+    # Multiple races are held at the same venue during the 2020 season
+    schedule = fastf1.get_event_schedule(2020)
+    # Prefer Austrian GP over Styrian GP
+    assert schedule.get_event_by_name(
+        "Austria").EventName == "Austrian Grand Prix"
+    # Prefer Bahrain GP over Sakhir GP
+    assert schedule.get_event_by_name(
+        "Bahrain").EventName == "Bahrain Grand Prix"
+
+    # tests for common inputs
+    schedule = fastf1.get_event_schedule(2024)
+    assert schedule.get_event_by_name(
+        "Saudi").EventName == "Saudi Arabian Grand Prix"
+    assert schedule.get_event_by_name(
+        "Saudi GP").EventName == "Saudi Arabian Grand Prix"
+    assert schedule.get_event_by_name(
+        "Saudi Grand Prix").EventName == "Saudi Arabian Grand Prix"
+    assert schedule.get_event_by_name(
+        "Jeddah").EventName == "Saudi Arabian Grand Prix"
+    assert schedule.get_event_by_name(
+        "Saudi Arabia").EventName == "Saudi Arabian Grand Prix"
+
+    # tests agaisnt colloquialisms
+    assert schedule.get_event_by_name(
+        "Imola").EventName == "Emilia Romagna Grand Prix"
+    assert schedule.get_event_by_name(
+        "USGP").EventName == "United States Grand Prix"
+    assert schedule.get_event_by_name(
+        "US GP").EventName == "United States Grand Prix"
+    assert schedule.get_event_by_name(
+        "Mexican GP").EventName == "Mexico City Grand Prix"
+    assert schedule.get_event_by_name(
+        "Brazilian GP").EventName == "São Paulo Grand Prix"
+
+
 @pytest.mark.parametrize(
     'backend, no_testing_support',
     [('fastf1', False), ('f1timing', False), ('ergast', True)],

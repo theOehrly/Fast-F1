@@ -361,7 +361,8 @@ def get_event(
         *,
         backend: Optional[Literal['fastf1', 'f1timing', 'ergast']] = None,
         force_ergast: bool = False,
-        strict_search: bool = False
+        strict_search: bool = False,
+        exact_match: bool = False
 ) -> "Event":
     """Create an :class:`~fastf1.events.Event` object for a specific
     season and gp.
@@ -400,9 +401,12 @@ def get_event(
         force_ergast: [Deprecated, use ``backend='ergast'``] Always use data
             from the ergast database to create the event schedule
 
-        strict_search: Match precisely the query, or default to
+        strict_search: This argument is deprecated and planned for removal,
+            use the equivalent ``exact_match`` instead
+
+        exact_match: Match precisely the query, or default to
             fuzzy search. If no event is found with
-            ``strict_search=True``, the function will return None
+            ``exact_match=True``, the function will return None
 
     .. versionadded:: 2.2
     """
@@ -411,7 +415,8 @@ def get_event(
                                   backend=backend)
 
     if isinstance(gp, str):
-        event = schedule.get_event_by_name(gp, strict_search=strict_search)
+        event = schedule.get_event_by_name(
+            gp, strict_search=strict_search, exact_match=exact_match)
     else:
         event = schedule.get_event_by_round(gp)
 
@@ -927,38 +932,68 @@ class EventSchedule(BaseDataFrame):
 
     def _fuzzy_event_search(self, name: str) -> "Event":
 
+        def _remove_common_words(event_name):
+            common_words = ["formula 1", str(self.year), "grand prix", "gp"]
+            event_name = event_name.casefold()
+
+            for word in common_words:
+                event_name = event_name.replace(word, "")
+
+            return event_name.replace(" ", "")
+
         def _matcher_strings(ev):
             strings = list()
             if 'Location' in ev:
-                strings.append(ev['Location'])
+                strings.append(ev['Location'].casefold())
             if 'Country' in ev:
-                strings.append(ev['Country'])
+                strings.append(ev['Country'].casefold())
             if 'EventName' in ev:
-                strings.append(ev['EventName'].replace("Grand Prix", ""))
+                strings.append(_remove_common_words(ev["EventName"]))
             if 'OfficialEventName' in ev:
-                strings.append(ev['OfficialEventName']
-                               .replace("FORMULA 1", "")
-                               .replace(str(self.year), "")
-                               .replace("GRAND PRIX", ""))
+                strings.append(_remove_common_words(ev["OfficialEventName"]))
             return strings
 
-        max_ratio = 0
-        index = 0
+        user_input = name
+        name = _remove_common_words(name)
+        full_partial_match_indices = []
+
+        # check partial matches first
+        # if there is either zero or multiple 100% matches
+        # fall back to the full ratio
         for i, event in self.iterrows():
+            if any([name in val for val in _matcher_strings(event)]):
+                full_partial_match_indices.append(i)
+
+        if len(full_partial_match_indices) == 1:
+            return self.loc[full_partial_match_indices[0]]
+
+        max_ratio = 0
+        max_index = 0
+
+        for i, event in self.loc[full_partial_match_indices
+                                  or self.index].iterrows():
             ratio = max(
-                [fuzz.ratio(val.casefold(), name.casefold())
+                [fuzz.ratio(val, name)
                  for val in _matcher_strings(event)]
             )
             if ratio > max_ratio:
                 max_ratio = ratio
-                index = i
-        return self.loc[index]
+                max_index = i
+
+        if max_ratio != 100:
+            _logger.warning((
+                "Correcting user input "
+                f"'{user_input}' to'{self.loc[max_index].EventName}'"
+            )
+            )
+        return self.loc[max_index]
 
     def get_event_by_name(
             self,
             name: str,
             *,
-            strict_search: bool = False
+            strict_search: bool = False,
+            exact_match: bool = False
     ) -> "Event":
         """Get an :class:`Event` by its name.
 
@@ -981,16 +1016,21 @@ class EventSchedule(BaseDataFrame):
                 ``.get_event_by_name("british")`` and
                 ``.get_event_by_name("silverstone")`` will both return the
                 event for the British Grand Prix.
-            strict_search: Search only for exact query matches
+            strict_search: This argument is deprecated and planned for removal.
+                Use the equivalent ``exact_match`` instead
+            exact_match: Search only for exact query matches
                 instead of using fuzzy search. For example,
                 ``.get_event_by_name("British Grand Prix",
-                strict_search=True)``
+                exact_match=True)``
                 will return the event for the British Grand Prix, whereas
-                ``.get_event_by_name("British", strict_search=True)``
+                ``.get_event_by_name("British", exact_match=True)``
                 will return ``None``
         """
-
         if strict_search:
+            warnings.warn(("strict_search is deprecated and planned for "
+                           "removal, use the equivalent exact_match instead"),
+                          FutureWarning)
+        if strict_search or exact_match:
             return self._strict_event_search(name)
         else:
             return self._fuzzy_event_search(name)
