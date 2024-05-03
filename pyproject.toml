@@ -22,7 +22,7 @@ dependencies = [
   "requests>=2.28.1",
   "requests-cache>=1.0.0",
   "scipy>=1.7.3,<2.0.0",
-  "thefuzz",
+  "rapidfuzz",
   "timple>=0.1.6",
   "websockets>=10.3",
 ]

@@ -54,7 +54,7 @@ with warnings.catch_warnings():
                             message="Using slow pure-python SequenceMatcher")
     # suppress that warning, it's confusing at best here, we don't need fast
     # sequence matching and the installation (on windows) some effort
-    from thefuzz import fuzz
+    from rapidfuzz import fuzz
 
 
 class __TeamColorsWarnDict(dict):
