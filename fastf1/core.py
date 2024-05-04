@@ -1848,6 +1848,13 @@ class Session:
             # unless force is True
             return
 
+        if self.laps['Deleted'].dtype.name != 'bool':
+            _logger.warning(
+                "Cannot calculate qualifying results: missing information "
+                "about deleted laps. Make sure that race control messages are "
+                "being loaded."
+            )
+
         quali_results = (self._laps.loc[:, ['DriverNumber']].copy()
                          .drop_duplicates()
                          .reset_index(drop=True))
