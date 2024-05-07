@@ -207,7 +207,7 @@ with warnings.catch_warnings():
     )
     # suppress that warning, it's confusing at best here, we don't need fast
     # sequence matching and the installation (on windows) requires some effort
-    from thefuzz import fuzz
+    from rapidfuzz import fuzz
 
 import pandas as pd
 
