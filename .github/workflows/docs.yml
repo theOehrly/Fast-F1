@@ -69,7 +69,9 @@ jobs:
       - name: Build docs
         run: |
           mkdir test_cache  # not really need but pytest setup relies on it 
-          sphinx-build ./docs ./docs/_build/html -a -E -W -n --keep-going
+          cd ./docs
+          make clean
+          make html
 
       - name: Publish docs
         if: (github.event_name == 'release') || inputs.publish
