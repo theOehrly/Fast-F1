@@ -120,6 +120,20 @@ The following module-level attributes are deprecated since version 3.4.0 and
 will be removed in a future release.
 
 
+.. automodule:: fastf1.plotting
+  :noindex:
+  :no-members:
+  :autosummary:
+  :autosummary-members:
+    driver_color,
+    lapnumber_axis,
+    team_color,
+    COMPOUND_COLORS,
+    DRIVER_TRANSLATE,
+    DRIVER_COLORS,
+    TEAM_COLORS,
+    TEAM_TRANSLATE,
+    COLOR_PALETTE
 
 
 
