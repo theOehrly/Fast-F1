@@ -69,6 +69,11 @@ def _get_team(identifier: str, session: Session) -> _Team:
     dtm = _get_driver_team_mapping(session)
     identifier = _normalize_string(identifier).lower()
 
+    # remove common non-unique words
+    for word in ('racing', 'team', 'f1', 'scuderia'):
+        identifier = identifier.replace(word, "")
+    identifier = identifier.replace(" ", "")
+
     # check for an exact team name match
     if identifier in dtm.teams_by_normalized.keys():
         return dtm.teams_by_normalized[identifier]
