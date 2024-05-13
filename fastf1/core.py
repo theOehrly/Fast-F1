@@ -1503,7 +1503,7 @@ class Session:
                     result.reset_index(drop=True, inplace=True)
                     result['Driver'] = [driver, ]
                     result['NumberOfLaps'] = 1
-                    result['Time'] = data['Time'].min()
+                    result['Time'] = pd.NaT
                     result['IsPersonalBest'] = False
                     result['Compound'] = d2['Compound'].iloc[0]
                     result['TyreLife'] = d2['StartLaps'].iloc[0]
@@ -1631,6 +1631,8 @@ class Session:
 
                 # number positions and restore previous order by index
                 laps_eq_n['Position'] = range(1, len(laps_eq_n) + 1)
+                #asign NaN to laps with NaT times
+                laps_eq_n[laps_eq_n['Time'].isnull()]['Position'] = np.NaN
                 laps.loc[laps['LapNumber'] == lap_n, 'Position'] \
                     = laps_eq_n.sort_index()['Position'].to_list()
 
