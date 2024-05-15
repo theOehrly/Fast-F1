@@ -2475,6 +2475,12 @@ class Session:
         See :class:`~fastf1.mvapi.CircuitInfo` for detailed information.
         """
         circuit_key = self.session_info['Meeting']['Circuit']['Key']
+
+        if ((circuit_key == 149)
+                and (self.session_info['Meeting']['Circuit']['ShortName']
+                     == 'Mugello')):
+            circuit_key = 146
+
         circuit_info = get_circuit_info(year=self.event.year,
                                         circuit_key=circuit_key)
         circuit_info.add_marker_distance(
