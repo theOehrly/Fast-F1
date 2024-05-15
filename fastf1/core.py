@@ -1756,6 +1756,8 @@ class Session:
                 'IsAccurate': [False]
             })
 
+            self._add_track_status_to_laps(new_last)
+
             # add generated laps at the end and fix sorting at the end
             self._laps = (pd.concat([self._laps, new_last])
                           .__finalize__(self._laps))
