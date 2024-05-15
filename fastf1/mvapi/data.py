@@ -135,7 +135,8 @@ def get_circuit_info(*, year: int, circuit_key: int) -> Optional[CircuitInfo]:
     ret = list()
     for cat in ('corners', 'marshalLights', 'marshalSectors'):
         rows = list()
-        for entry in data[cat]:
+        array = data.get(cat) or list()
+        for entry in array:
             rows.append((
                 float(entry.get('trackPosition', {}).get('x', 0.0)),
                 float(entry.get('trackPosition', {}).get('y', 0.0)),
