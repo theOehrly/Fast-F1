@@ -93,6 +93,15 @@ class Transport:
         for task in pending:
             task.cancel()
 
+        try:
+            consumer_exception = consumer_task.exception()
+        except asyncio.CancelledError:
+            pass
+        else:
+            if not isinstance(consumer_exception,
+                              websockets.exceptions.ConnectionClosedOK):
+                raise consumer_exception
+
     async def _consumer_handler(self, ws):
         while True:
             message = await ws.recv()

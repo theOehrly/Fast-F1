@@ -101,6 +101,7 @@ class SignalRClient:
                 format="%(asctime)s - %(levelname)s: %(message)s"
             )
             self.logger = logging.getLogger('SignalR')
+            self.logger.setLevel(logging.INFO)
         else:
             self.logger = logger
 
@@ -175,8 +176,12 @@ class SignalRClient:
                     and time.time() - self._t_last_message > self.timeout):
                 self.logger.warning(f"Timeout - received no data for more "
                                     f"than {self.timeout} seconds!")
+
                 self._connection.close()
+                while self._connection.started:
+                    await asyncio.sleep(0.1)
                 return
+
             await asyncio.sleep(1)
 
     async def _async_start(self):
@@ -190,7 +195,49 @@ class SignalRClient:
     def start(self):
         """Connect to the data stream and start writing the data to a file."""
         try:
+            # try to get an already running loop (e.g. in newer IPython)
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            # there is no running loop yet
+            self._start_without_existing_loop()
+            return
+
+        try:
+            __IPYTHON__  # noqa
+            is_ipython = True
+        except NameError:
+            is_ipython = False
+
+        if loop and is_ipython:
+            raise RuntimeError(
+                "Running in an asynchronous IPython session. "
+                "Please use `await SignalRClient().async_start()`"
+            )
+
+        else:
+            raise RuntimeError(
+                "Cannot start because an asynchronous event loop already "
+                "exists. You can try to use the "
+                "`SignalRClient().async_start()` coroutine."
+            )
+
+    async def async_start(self):
+        """
+        Connect to the data stream and start writing the data to a file
+        when running inside an existing event loop.
+
+        In most cases, you want to use :func:`start` instead.
+        """
+        loop = asyncio.get_running_loop()
+        try:
+            task = loop.create_task(self._async_start())
+            while not task.done():
+                await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            self.logger.warning("Async execution cancelled - exiting...")
+
+    def _start_without_existing_loop(self):
+        try:
             asyncio.run(self._async_start())
         except KeyboardInterrupt:
             self.logger.warning("Keyboard interrupt - exiting...")
-            return
