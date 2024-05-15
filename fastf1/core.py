@@ -1472,16 +1472,10 @@ class Session:
             # no driver list, generate from lap data
             drivers = set(data['Driver'].unique()) \
                 .intersection(set(useful['Driver'].unique()))
-
             _nums_df = pd.DataFrame({'DriverNumber': list(drivers)},
                                     index=list(drivers))
-            _info_df = pd.DataFrame(fastf1._DRIVER_TEAM_MAPPING).T
-
-            self._results = SessionResults(_nums_df.join(_info_df),
-                                           force_default_cols=True)
-
-            _logger.warning("Generating minimal driver "
-                            "list from timing data.")
+            self._results = SessionResults(_nums_df, force_default_cols=True)
+            _logger.warning("Generating minimal driver list from timing data.")
 
         df = None
         for _, driver in enumerate(drivers):
@@ -2184,21 +2178,24 @@ class Session:
         # set results from either source or join if both data is available
         # use driver info from F1 as primary source, only fall back to Ergast
         # if unavailable
-        # use results from Ergast, unavailable from F1 API
+        # use results from Ergast, if data is unavailable from F1 API
+
+        no_driver_info_f1 = (driver_info_f1 is None) or driver_info_f1.empty
+        no_driver_info_ergast \
+            = (driver_info_ergast is None) or driver_info_ergast.empty
 
         # no data
-        if (driver_info_f1 is None) and (driver_info_ergast is None):  # LP1
-            _logger.warning("Failed to load driver list and "
-                            "session results!")
+        if no_driver_info_f1 and no_driver_info_ergast:
+            _logger.warning("Failed to load driver list and session results!")
             self._results = SessionResults(force_default_cols=True)
 
         # only Ergast data
-        elif driver_info_f1 is None:  # LP2
+        elif no_driver_info_f1:  # LP2
             self._results = SessionResults(driver_info_ergast,
                                            force_default_cols=True)
 
         # only F1 data
-        elif driver_info_ergast is None:  # LP3
+        elif no_driver_info_ergast:
             self._results = SessionResults(driver_info_f1,
                                            force_default_cols=True)
 
@@ -2244,21 +2241,38 @@ class Session:
             driver_info = {}
         else:
             driver_info = collections.defaultdict(list)
+
             for key1, key2 in {
-                'RacingNumber': 'DriverNumber',
                 'BroadcastName': 'BroadcastName',
-                'Tla': 'Abbreviation', 'TeamName': 'TeamName',
-                'TeamColour': 'TeamColor', 'FirstName': 'FirstName',
-                'LastName': 'LastName', 'HeadshotUrl': 'HeadshotUrl',
+                'Tla': 'Abbreviation',
+                'TeamName': 'TeamName',
+                'TeamColour': 'TeamColor',
+                'FirstName': 'FirstName',
+                'LastName': 'LastName',
+                'HeadshotUrl': 'HeadshotUrl',
                 'CountryCode': 'CountryCode'
             }.items():
                 for entry in f1di.values():
                     driver_info[key2].append(entry.get(key1))
+
+            # special case for driver number which seems to be duplicated and
+            # is used as dictionary key as well; use explicit racing number
+            # property when available, else fallback to using dict key
+            for key, entry in f1di.items():
+                driver_info['DriverNumber'].append(
+                    entry.get('RacingNumber') or key
+                )
+
             if 'FirstName' in driver_info and 'LastName' in driver_info:
                 for first, last in zip(driver_info['FirstName'],
                                        driver_info['LastName']):
                     driver_info['FullName'].append(f"{first} {last}")
-        return pd.DataFrame(driver_info, index=driver_info['DriverNumber'])
+
+        # driver info is required for joining on index (used as index),
+        # therefore drop rows where driver number is unavailable as they have
+        # an invalid index
+        return pd.DataFrame(driver_info, index=driver_info['DriverNumber']) \
+            .dropna(subset=['DriverNumber'])
 
     def _drivers_results_from_ergast(
             self, *, load_drivers=False, load_results=False
