@@ -1469,19 +1469,7 @@ class Session:
 
         drivers = self.drivers
         if not drivers:
-            # no driver list, generate from lap data
-            drivers = set(data['Driver'].unique()) \
-                .intersection(set(useful['Driver'].unique()))
-
-            _nums_df = pd.DataFrame({'DriverNumber': list(drivers)},
-                                    index=list(drivers))
-            _info_df = pd.DataFrame(fastf1._DRIVER_TEAM_MAPPING).T
-
-            self._results = SessionResults(_nums_df.join(_info_df),
-                                           force_default_cols=True)
-
-            _logger.warning("Generating minimal driver "
-                            "list from timing data.")
+            pass
 
         df = None
         for _, driver in enumerate(drivers):
