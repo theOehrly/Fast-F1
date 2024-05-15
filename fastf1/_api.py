@@ -1237,7 +1237,7 @@ def track_status_data(path, response=None, livedata=None):
     if livedata is not None and livedata.has('TrackStatus'):
         # does not need any further processing
         _logger.info("Loading track status data")
-        return livedata.get('TrackStatus')
+        response = livedata.get('TrackStatus')
     elif response is None:
         _logger.info("Fetching track status data...")
         response = fetch_page(path, 'track_status')
@@ -1293,7 +1293,7 @@ def session_status_data(path, response=None, livedata=None):
     if livedata is not None and livedata.has('SessionStatus'):
         # does not need any further processing
         _logger.info("Loading session status data")
-        return livedata.get('SessionStatus')
+        response = livedata.get('SessionStatus')
     elif response is None:
         _logger.info("Fetching session status data...")
         response = fetch_page(path, 'session_status')
@@ -1364,7 +1364,7 @@ def race_control_messages(path, response=None, livedata=None):
     if livedata is not None and livedata.has('RaceControlMessages'):
         # does not need any further processing
         _logger.info("Loading race control messages")
-        return livedata.get('RaceControlMessages')
+        response = livedata.get('RaceControlMessages')
     elif response is None:
         _logger.info("Fetching race control messages...")
         response = fetch_page(path, 'race_control_messages')

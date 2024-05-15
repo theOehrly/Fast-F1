@@ -25,16 +25,18 @@ def test_file_loading():
 def test_duplicate_removal(tmpdir):
     # create a temporary file with two identical lines of data
     tmpfile = os.path.join(tmpdir, 'tmpfile.txt')
+    tmpfile2 = os.path.join(tmpdir, 'tmpfile2.txt')
+
     data = "['TimingAppData', {'Lines': {'22': {'Stints': {'0': {" \
            "'LapFlags': 0, 'Compound': 'UNKNOWN', 'New': 'false'," \
            "'TyresNotChanged': '0', 'TotalLaps': 0, 'StartLaps':" \
            "0}}}}}, '2021-03-27T12:00:32.086Z']\n"
+
     with open(tmpfile, 'w') as fobj:
         fobj.write(data)
+
+    with open(tmpfile2, 'w') as fobj:
         fobj.write(data)
 
-    livedata = LiveTimingData(tmpfile)
+    livedata = LiveTimingData(tmpfile, tmpfile2)
     assert len(livedata.get('TimingAppData')) == 1
-
-    livedata = LiveTimingData(tmpfile, remove_duplicates=False)
-    assert len(livedata.get('TimingAppData')) == 2

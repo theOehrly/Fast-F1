@@ -2,8 +2,8 @@
 Data object for livetiming data
 """
 
-import hashlib
 import json
+import warnings
 from datetime import timedelta
 
 from fastf1.logger import get_logger
@@ -50,27 +50,23 @@ class LiveTimingData:
 
     Args:
         *files (str): One or multiple file names
-        remove_duplicates (bool): Remove duplicate lines. Mainly useful when
-            loading multiple overlapping recordings. (Checking for duplicates
-            is currently very slow for large files. Therefore, it can be
-            disabled if this may cause problems.)
     """
-    def __init__(self, *files, remove_duplicates=True):
+    def __init__(self, *files, **kwargs):
         # file names
         self.files = files
         # parsed data
         self.data = dict()
         # number of json errors
         self.errorcount = 0
-        # flag for auto loading on first access
+        # flag for automatic data loading on first access
         self._files_read = False
         # date when session was started
         self._start_date = None
-        # whether any files were loaded previously, i.e. appending data
-        self._previous_files = False
-        # hash each line, used to skip duplicates from multiple files
-        self._line_hashes = list()
-        self._remove_duplicates = remove_duplicates
+
+        if 'remove_duplicates' in kwargs:
+            warnings.warn("The argument `remove_duplicates` is no longer "
+                          "available. Duplicates caused by overlapping files "
+                          "will now always be removed.")
 
     def load(self):
         """
@@ -82,21 +78,52 @@ class LiveTimingData:
         """
         _logger.info("Reading live timing data from recording. "
                      "This may take a bit.")
-        for fname in self.files:
-            self._load_single_file(fname)
+
+        is_first = True
+        _files = [*self.files, None]
+        current_data, next_data = None, None
+
+        # We always need the current and next file loaded, so we can detect
+        # where they overlap. The "next" file then becomes the "current" file
+        # and the next "next" file is read.
+        for next_file in _files:
+            # make the previous "next" file the "current" file
+            current_data = next_data
+
+            if next_file is None:
+                # reached the end, there is no subsequent data anymore
+                next_data = None
+            else:
+                # read a new file as next file
+                with open(next_file, 'r') as fobj:
+                    next_data = fobj.readlines()
+
+            if current_data is None:
+                # there is no "current" file yet (i.e. first iteration),
+                # skip ahead once right away to read one more file
+                continue
+
+            next_line = next_data[0] if next_data else None
+
+            self._load_single_file(current_data,
+                                   is_first_file=is_first,
+                                   next_line=next_line)
+            is_first = False
+
+        # set flag that all files have been read
         self._files_read = True
 
-    def _load_single_file(self, fname):
-        # read one file, parse its content and add it to the already loaded
+    def _load_single_file(self, data, *, is_first_file, next_line):
+        # parse its content and add it to the already loaded
         # data (if there is data already)
-        with open(fname, 'r') as fobj:
-            data = fobj.readlines()
 
         # try to find the correct start date (only if this is the first file)
-        if not self._previous_files:
+        if is_first_file:
             self._try_set_correct_start_date(data)
 
         for line in data:
+            if line == next_line:
+                break
             self._parse_line(line)
 
         # first file was loaded, others are appended if any more are loaded
@@ -104,14 +131,6 @@ class LiveTimingData:
 
     def _parse_line(self, elem):
         # parse a single line of data
-
-        if self._remove_duplicates:
-            # prevent duplicates when loading data (slow, but it works...)
-            # allows to load data from overlapping recordings
-            lhash = hashlib.md5(elem.encode()).hexdigest()
-            if lhash in self._line_hashes:
-                return
-            self._line_hashes.append(lhash)
 
         # load the three parts of each data element
         elem = self._fix_json(elem)
@@ -136,17 +155,7 @@ class LiveTimingData:
         else:
             td = dt - self._start_date
 
-        self._store_message(cat, td, msg)
-
-    def _store_message(self, cat, td, msg):
-        # stores parsed messages by category
-        # TrackStatus and SessionStatus categories need special handling
-        if cat == 'SessionData':
-            self._parse_session_data(msg)
-        elif cat == 'RaceControlMessages':
-            self._parse_race_control_message(msg)
-        elif cat not in ('TrackStatus', 'SessionStatus'):
-            self._add_to_category(cat, [td, msg])
+        self._add_to_category(cat, [td, msg])
 
     def _fix_json(self, elem):
         # fix F1's not json compliant data
@@ -160,51 +169,6 @@ class LiveTimingData:
             self.data[cat] = [entry, ]
         else:
             self.data[cat].append(entry)
-
-    def _parse_session_data(self, msg):
-        # make sure the categories exist as we want to append to them
-        if 'TrackStatus' not in self.data:
-            self.data['TrackStatus'] = {'Time': [], 'Status': [],
-                                        'Message': []}
-        if 'SessionStatus' not in self.data:
-            self.data['SessionStatus'] = {'Time': [], 'Status': []}
-
-        if ('StatusSeries' in msg) and isinstance(msg['StatusSeries'], dict):
-            for entry in msg['StatusSeries'].values():
-                # convert timestamp to timedelta
-                try:
-                    status_dt = to_datetime(entry['Utc'])
-                except (KeyError, ValueError, TypeError):
-                    self.errorcount += 1
-                    continue
-                status_timedelta = status_dt - self._start_date
-
-                # add data to category
-                if 'TrackStatus' in entry.keys():
-                    status_value = str(entry['TrackStatus'])
-                    # convert to numeric system used by the api
-                    if not status_value.isnumeric():
-                        status_value = _track_status_mapping[status_value]
-                    self.data['TrackStatus']['Time'].append(status_timedelta)
-                    self.data['TrackStatus']['Status'].append(status_value)
-                    self.data['TrackStatus']['Message'].append("")
-
-                elif 'SessionStatus' in entry.keys():
-                    self.data['SessionStatus']['Time'].append(status_timedelta)
-                    self.data['SessionStatus']['Status'].append(entry['SessionStatus'])
-
-    def _parse_race_control_message(self, msg):
-        if 'RaceControlMessages' not in self.data:
-            self.data['RaceControlMessages'] = {
-                'Utc': [], 'Category': [], 'Message': [], 'Status': [],
-                'Flag': [], 'Scope': [], 'Sector': [], 'RacingNumber': []
-            }
-
-        if ('Messages' in msg) and isinstance(msg['Messages'], dict):
-            for data in msg['Messages'].values():
-                for key in ('Utc', 'Category', 'Message', 'Status', 'Flag',
-                            'Scope', 'Sector', 'RacingNumber'):
-                    self.data['RaceControlMessages'][key].append(data.get(key))
 
     def _try_set_correct_start_date(self, data):
         # skim content to find 'Started' session status without actually
