@@ -1,3 +1,25 @@
+What's new in v3.3.6
+--------------------
+
+(released 16/05/2024)
+
+
+Bug Fixes
+^^^^^^^^^
+
+- Laps where a driver crashes and retires on track now contain a correct
+  track status (fixes #575)
+
+- Fixed previously incorrect circuit info for Mugello 2020 (fixes #563)
+
+
+Others
+^^^^^^
+
+- Improved a warning message that informs about missing data when calculating
+  qualification results
+
+
 What's new in v3.3.5
 --------------------
 
