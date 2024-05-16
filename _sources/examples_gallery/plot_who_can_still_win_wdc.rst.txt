@@ -209,7 +209,7 @@ can still win.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 0.836 seconds)
+   **Total running time of the script:** (0 minutes 3.556 seconds)
 
 
 .. _sphx_glr_download_examples_gallery_plot_who_can_still_win_wdc.py:

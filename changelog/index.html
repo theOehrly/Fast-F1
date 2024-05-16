@@ -5,10 +5,10 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="prev" title="Pull request guidelines" href="../contributing/coding_guide.html" />
 
-    <!-- Generated with Sphinx 7.2.6 and Furo 2024.04.27 -->
-        <title>Release Notes - FastF1 3.3.6.dev1</title>
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.05.06 -->
+        <title>Release Notes - FastF1 3.3.6</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=437aa6ec" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=387cc868" />
     <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css?v=7f9a90b1" />
     <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=61a4c737" />
     <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -74,7 +74,7 @@
   <symbol id="svg-sun" viewBox="0 0 24 24">
     <title>Light mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
       <circle cx="12" cy="12" r="5"></circle>
       <line x1="12" y1="1" x2="12" y2="3"></line>
       <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -89,7 +89,7 @@
   <symbol id="svg-moon" viewBox="0 0 24 24">
     <title>Dark mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
       <path stroke="none" d="M0 0h24v24H0z" fill="none" />
       <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
     </svg>
@@ -97,7 +97,7 @@
   <symbol id="svg-sun-half" viewBox="0 0 24 24">
     <title>Auto light/dark mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
       <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
       <circle cx="12" cy="12" r="9" />
       <path d="M13 12h5" />
@@ -105,6 +105,60 @@
       <path d="M13 18h1" />
       <path d="M13 9h4" />
       <path d="M13 6h1" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" /
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
     </svg>
   </symbol>
 </svg>
@@ -131,13 +185,14 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">FastF1 <small>3.3.6.dev1</small></div></a>
+      <a href="../index.html"><div class="brand">FastF1 <small>3.3.6</small></div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
         <button class="theme-toggle">
           <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
           <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
@@ -154,7 +209,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
   
   
-  <span class="sidebar-brand-text">FastF1 <small>3.3.6.dev1</small></span>
+  <span class="sidebar-brand-text">FastF1 <small>3.3.6</small></span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -236,11 +291,17 @@
           <span>Back to top</span>
         </a>
         <div class="content-icon-container">
-          
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/changelog/index.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
 <div class="theme-toggle-container theme-toggle-content">
             <button class="theme-toggle">
               <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
               <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
@@ -254,11 +315,30 @@
           <section id="release-notes">
 <h1>Release Notes<a class="headerlink" href="#release-notes" title="Link to this heading">¶</a></h1>
 <p>Looking for <a class="reference internal" href="previous.html#previous-release-notes"><span class="std std-ref">Release Notes for Older Versions</span></a>?</p>
+<section id="what-s-new-in-v3-3-6">
+<h2>What’s new in v3.3.6<a class="headerlink" href="#what-s-new-in-v3-3-6" title="Link to this heading">¶</a></h2>
+<p>(released 16/05/2024)</p>
+<section id="bug-fixes">
+<h3>Bug Fixes<a class="headerlink" href="#bug-fixes" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Laps where a driver crashes and retires on track now contain a correct
+track status (fixes #575)</p></li>
+<li><p>Fixed previously incorrect circuit info for Mugello 2020 (fixes #563)</p></li>
+</ul>
+</section>
+<section id="others">
+<h3>Others<a class="headerlink" href="#others" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Improved a warning message that informs about missing data when calculating
+qualification results</p></li>
+</ul>
+</section>
+</section>
 <section id="what-s-new-in-v3-3-5">
 <h2>What’s new in v3.3.5<a class="headerlink" href="#what-s-new-in-v3-3-5" title="Link to this heading">¶</a></h2>
 <p>(released 19/04/2024)</p>
-<section id="bug-fixes">
-<h3>Bug Fixes<a class="headerlink" href="#bug-fixes" title="Link to this heading">¶</a></h3>
+<section id="id1">
+<h3>Bug Fixes<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>Fixed an issue that causes no result data to be available for
 ‘Sprint Qualifying’ sessions</p></li>
@@ -269,8 +349,8 @@
 <section id="what-s-new-in-v3-3-4">
 <h2>What’s new in v3.3.4<a class="headerlink" href="#what-s-new-in-v3-3-4" title="Link to this heading">¶</a></h2>
 <p>(released 17/04/2024)</p>
-<section id="id1">
-<h3>Bug Fixes<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<section id="id2">
+<h3>Bug Fixes<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>Correctly support the new “Sprint Qualifying”</p></li>
 </ul>
@@ -289,8 +369,8 @@
 <section id="what-s-new-in-v3-3-2">
 <h2>What’s new in v3.3.2<a class="headerlink" href="#what-s-new-in-v3-3-2" title="Link to this heading">¶</a></h2>
 <p>(released 26/03/2024)</p>
-<section id="id2">
-<h3>Bug Fixes<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<section id="id3">
+<h3>Bug Fixes<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>Fixed a bug that caused the track status values for each lap to be sometimes
 incorrect in the ‘TrackStatus’ column of the <a class="reference internal" href="../core.html#fastf1.core.Laps" title="fastf1.core.Laps"><code class="xref py py-class docutils literal notranslate"><span class="pre">Laps</span></code></a>
@@ -301,8 +381,8 @@ DataFrame (fixes #557 and more).</p></li>
 <section id="what-s-new-in-v3-3-1">
 <h2>What’s new in v3.3.1<a class="headerlink" href="#what-s-new-in-v3-3-1" title="Link to this heading">¶</a></h2>
 <p>(released 10/03/2024)</p>
-<section id="id3">
-<h3>Bug Fixes<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<section id="id4">
+<h3>Bug Fixes<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>Fix: correctly handle empty strings when parsing them in
 <a class="reference internal" href="../utils.html#fastf1.utils.to_datetime" title="fastf1.utils.to_datetime"><code class="xref py py-func docutils literal notranslate"><span class="pre">fastf1.utils.to_datetime()</span></code></a> (by &#64;erdieee) (#531)</p></li>
@@ -315,8 +395,8 @@ in the results Qualifying and Race results for the 2024 Saudi Arabia GP.</p></li
 <section id="what-s-new-in-v3-3-0">
 <h2>What’s new in v3.3.0<a class="headerlink" href="#what-s-new-in-v3-3-0" title="Link to this heading">¶</a></h2>
 <p>(released 19/02/2024)</p>
-<section id="id4">
-<h3>New Features<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<section id="id5">
+<h3>New Features<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>Updated team names and team colors for the 2024 season. (As usual, this means
 that this information is no longer valid for the previous season!)</p></li>
@@ -375,12 +455,17 @@ that this information is no longer valid for the previous season!)</p></li>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Release Notes</a><ul>
-<li><a class="reference internal" href="#what-s-new-in-v3-3-5">What’s new in v3.3.5</a><ul>
+<li><a class="reference internal" href="#what-s-new-in-v3-3-6">What’s new in v3.3.6</a><ul>
 <li><a class="reference internal" href="#bug-fixes">Bug Fixes</a></li>
+<li><a class="reference internal" href="#others">Others</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#what-s-new-in-v3-3-5">What’s new in v3.3.5</a><ul>
+<li><a class="reference internal" href="#id1">Bug Fixes</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#what-s-new-in-v3-3-4">What’s new in v3.3.4</a><ul>
-<li><a class="reference internal" href="#id1">Bug Fixes</a></li>
+<li><a class="reference internal" href="#id2">Bug Fixes</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#what-s-new-in-v3-3-3">What’s new in v3.3.3</a><ul>
@@ -388,15 +473,15 @@ that this information is no longer valid for the previous season!)</p></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#what-s-new-in-v3-3-2">What’s new in v3.3.2</a><ul>
-<li><a class="reference internal" href="#id2">Bug Fixes</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#what-s-new-in-v3-3-1">What’s new in v3.3.1</a><ul>
 <li><a class="reference internal" href="#id3">Bug Fixes</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#what-s-new-in-v3-3-1">What’s new in v3.3.1</a><ul>
+<li><a class="reference internal" href="#id4">Bug Fixes</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#what-s-new-in-v3-3-0">What’s new in v3.3.0</a><ul>
-<li><a class="reference internal" href="#id4">New Features</a></li>
+<li><a class="reference internal" href="#id5">New Features</a></li>
 </ul>
 </li>
 </ul>
@@ -413,7 +498,7 @@ that this information is no longer valid for the previous season!)</p></li>
 </div>
     <script data-goatcounter="https://ey2kpxm326wjqcsfzewz.goatcounter.com/count"
             async src="//gc.zgo.at/count.js"></script>
-    <script src="../_static/documentation_options.js?v=7b8bdb6a"></script>
+    <script src="../_static/documentation_options.js?v=514985ca"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=4e2eecee"></script>

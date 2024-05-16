@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**01:02.089** total execution time for 14 files **from examples_gallery**:
+**01:06.266** total execution time for 14 files **from examples_gallery**:
 
 .. container::
 
@@ -32,44 +32,44 @@ Computation times
    * - Example
      - Time
      - Mem (MB)
-   * - :ref:`sphx_glr_examples_gallery_plot_team_pace_ranking.py` (``plot_team_pace_ranking.py``)
-     - 00:22.318
-     - 0.0
    * - :ref:`sphx_glr_examples_gallery_plot_results_tracker.py` (``plot_results_tracker.py``)
-     - 00:09.320
+     - 00:26.445
      - 0.0
    * - :ref:`sphx_glr_examples_gallery_plot_speed_on_track.py` (``plot_speed_on_track.py``)
-     - 00:04.413
-     - 0.0
-   * - :ref:`sphx_glr_examples_gallery_plot_driver_laptimes.py` (``plot_driver_laptimes.py``)
-     - 00:04.395
+     - 00:04.820
      - 0.0
    * - :ref:`sphx_glr_examples_gallery_plot_strategy.py` (``plot_strategy.py``)
-     - 00:03.586
+     - 00:04.716
      - 0.0
-   * - :ref:`sphx_glr_examples_gallery_plot_laptimes_distribution.py` (``plot_laptimes_distribution.py``)
-     - 00:03.427
+   * - :ref:`sphx_glr_examples_gallery_plot_driver_laptimes.py` (``plot_driver_laptimes.py``)
+     - 00:04.675
      - 0.0
-   * - :ref:`sphx_glr_examples_gallery_plot_annotate_corners.py` (``plot_annotate_corners.py``)
-     - 00:02.891
-     - 0.0
-   * - :ref:`sphx_glr_examples_gallery_plot_gear_shifts_on_track.py` (``plot_gear_shifts_on_track.py``)
-     - 00:02.501
-     - 0.0
-   * - :ref:`sphx_glr_examples_gallery_plot_annotate_speed_trace.py` (``plot_annotate_speed_trace.py``)
-     - 00:02.398
-     - 0.0
-   * - :ref:`sphx_glr_examples_gallery_plot_speed_traces.py` (``plot_speed_traces.py``)
-     - 00:02.224
-     - 0.0
-   * - :ref:`sphx_glr_examples_gallery_plot_position_changes.py` (``plot_position_changes.py``)
-     - 00:01.966
-     - 0.0
-   * - :ref:`sphx_glr_examples_gallery_plot_qualifying_results.py` (``plot_qualifying_results.py``)
-     - 00:01.813
+   * - :ref:`sphx_glr_examples_gallery_plot_team_pace_ranking.py` (``plot_team_pace_ranking.py``)
+     - 00:04.072
      - 0.0
    * - :ref:`sphx_glr_examples_gallery_plot_who_can_still_win_wdc.py` (``plot_who_can_still_win_wdc.py``)
-     - 00:00.836
+     - 00:03.556
+     - 0.0
+   * - :ref:`sphx_glr_examples_gallery_plot_laptimes_distribution.py` (``plot_laptimes_distribution.py``)
+     - 00:03.494
+     - 0.0
+   * - :ref:`sphx_glr_examples_gallery_plot_annotate_corners.py` (``plot_annotate_corners.py``)
+     - 00:03.335
+     - 0.0
+   * - :ref:`sphx_glr_examples_gallery_plot_gear_shifts_on_track.py` (``plot_gear_shifts_on_track.py``)
+     - 00:02.878
+     - 0.0
+   * - :ref:`sphx_glr_examples_gallery_plot_speed_traces.py` (``plot_speed_traces.py``)
+     - 00:02.686
+     - 0.0
+   * - :ref:`sphx_glr_examples_gallery_plot_annotate_speed_trace.py` (``plot_annotate_speed_trace.py``)
+     - 00:02.058
+     - 0.0
+   * - :ref:`sphx_glr_examples_gallery_plot_qualifying_results.py` (``plot_qualifying_results.py``)
+     - 00:01.826
+     - 0.0
+   * - :ref:`sphx_glr_examples_gallery_plot_position_changes.py` (``plot_position_changes.py``)
+     - 00:01.704
      - 0.0
    * - :ref:`sphx_glr_examples_gallery_example_fastf1_signalrclient.py` (``example_fastf1_signalrclient.py``)
      - 00:00.000
