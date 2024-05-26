@@ -1602,7 +1602,6 @@ class Session:
         if df is None:
             raise NoLapDataError
 
-
         laps = df.reset_index(drop=True)  # noqa: F821
 
         # rename some columns
