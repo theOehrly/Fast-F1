@@ -1503,7 +1503,7 @@ class Session:
                     result.reset_index(drop=True, inplace=True)
                     result['Driver'] = [driver, ]
                     result['NumberOfLaps'] = 1
-                    result['Time'] = pd.NaT
+                    result['Time'] = data['Time'].min()
                     result['IsPersonalBest'] = False
                     result['Compound'] = d2['Compound'].iloc[0]
                     result['TyreLife'] = d2['StartLaps'].iloc[0]
@@ -1602,6 +1602,7 @@ class Session:
         if df is None:
             raise NoLapDataError
 
+
         laps = df.reset_index(drop=True)  # noqa: F821
 
         # rename some columns
@@ -1631,10 +1632,15 @@ class Session:
 
                 # number positions and restore previous order by index
                 laps_eq_n['Position'] = range(1, len(laps_eq_n) + 1)
-                #asign NaN to laps with NaT times
-                laps_eq_n[laps_eq_n['Time'].isnull()]['Position'] = np.NaN
                 laps.loc[laps['LapNumber'] == lap_n, 'Position'] \
                     = laps_eq_n.sort_index()['Position'].to_list()
+
+        #assign NaN to drivers who crashed on lap 1
+        lap_counts = laps['Driver'].value_counts()
+        drivers_with_one_lap = lap_counts[lap_counts == 1].index
+        dnf_and_generated = ((laps["FastF1Generated"] == True) &
+                             (laps["Driver"].isin(drivers_with_one_lap)))
+        laps.loc[dnf_and_generated, "Position"] = np.NaN
 
         self._add_track_status_to_laps(laps)
 
