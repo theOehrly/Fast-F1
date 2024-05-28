@@ -423,13 +423,6 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             in_past = True
             continue
 
-        if (lapcnt == 0) and ((drv_data['Time'][lapcnt] - to_timedelta(time)) > pd.Timedelta(5, 'min')):
-            # ignore any data which arrives more than 5 minutes before the end of the first lap, except 'PitOut'
-            if ('InPit' in resp) and (resp['InPit'] is False):
-                drv_data['PitOutTime'][lapcnt] = to_timedelta(time)
-                pitstops = 0  # special here, can be multiple times for no reason therefore set zero instead of +=1
-            continue
-
         # values which are up to five seconds late are still counted towards the previous lap
         # (sector times, speed traps and lap times)
         lap_offset = 0
@@ -705,6 +698,23 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             pass
         else:
             drv_data['IsPersonalBest'][pb_idx] = True
+
+    # fix the number of pit stops; due to potentially multiple laps to the grid
+    # where a car goes through the pit lane before finally taking its place
+    # on the grid, the number of pit stops on the first lap may be already
+    # greater than zero; therefore, apply correction so that we start with zero
+    pitstop_offset = drv_data['NumberOfPitStops'][0]
+    for i in range(len(drv_data['NumberOfPitStops'])):
+        drv_data['NumberOfPitStops'][i] -= pitstop_offset
+
+    # fix first lap PitInTime; same reason as above for pit stops, there may
+    # be an incorrect PitInTime on the first lap. There always is a PitOutTime
+    # for when the car leaves the box for the lap to the grid. There is a
+    # PitInTime if the car drives multiple laps to the grid, discard these.
+    # There is also a PitInTime if the car actually pits at the end of the
+    # first lap, those need to be kept.
+    if drv_data['PitInTime'][0] < drv_data['PitOutTime'][0]:
+        drv_data['PitInTime'][0] = pd.NaT
 
     if integrity_errors:
         _logger.warning(
