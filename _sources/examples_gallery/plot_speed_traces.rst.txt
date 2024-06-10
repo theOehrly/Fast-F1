@@ -127,7 +127,7 @@ We color the individual lines with the driver's team colors.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 2.808 seconds)
+   **Total running time of the script:** (0 minutes 3.207 seconds)
 
 
 .. _sphx_glr_download_examples_gallery_plot_speed_traces.py:

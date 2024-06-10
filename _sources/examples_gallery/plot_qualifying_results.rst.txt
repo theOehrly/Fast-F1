@@ -247,7 +247,7 @@ Finally, give the plot a meaningful title
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 1.768 seconds)
+   **Total running time of the script:** (0 minutes 1.991 seconds)
 
 
 .. _sphx_glr_download_examples_gallery_plot_qualifying_results.py:

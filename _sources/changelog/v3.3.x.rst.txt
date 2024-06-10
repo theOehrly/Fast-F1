@@ -1,3 +1,15 @@
+What's new in v3.3.8
+--------------------
+
+(released 10/06/2024)
+
+Bug Fixes
+^^^^^^^^^
+
+- Resolved an issue where the majority of data was missing from the 2024
+  Sprint Qualifying session results (fixes #597).
+
+
 What's new in v3.3.7
 --------------------
 
