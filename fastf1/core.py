@@ -2291,16 +2291,23 @@ class Session:
                 return self._ergast.get_race_results(
                     self.event.year, self.event.RoundNumber
                 )
+
             elif session_name == 'Qualifying':
                 return self._ergast.get_qualifying_results(
                     self.event.year, self.event.RoundNumber
                 )
-            elif session_name in ('Sprint', 'Sprint Qualifying'):
+
+            # double condition because of reuse of the "Sprint Qualifying" name
+            # for a race-like session in 2018 and a quali-like session in 2024+
+            # Ergast only supports the race-like sprint results.
+            elif ('Sprint' in session_name
+                    and session_name in self._RACE_LIKE_SESSIONS):
                 return self._ergast.get_sprint_results(
                     self.event.year, self.event.RoundNumber
                 )
+
             else:
-                # TODO: Use Ergast when/if it supports sprint shootout sessions
+                # TODO: Use Ergast when it supports quali-like sprint results
                 # return self._ergast.get_sprint_shootout_results(
                 #     self.event.year, self.event.RoundNumber
                 # )
@@ -2309,8 +2316,15 @@ class Session:
         response = _get_data()
 
         if not response or not response.content:
-            _logger.warning("No result data for this session available on "
-                            "Ergast! (This is expected for recent sessions)")
+            if (('Sprint' in session_name)
+                    and (session_name in self._QUALI_LIKE_SESSIONS)):
+                _logger.warning(f"{session_name} is not supported by "
+                                f"Ergast! Limited results are calculated from "
+                                f"timing data.")
+            else:
+                _logger.warning("No result data for this session available on "
+                                "Ergast! (This is expected for recent "
+                                "sessions)")
             return None
 
         data = response.content[0]
