@@ -1628,6 +1628,13 @@ class Session:
                 laps.loc[laps['LapNumber'] == lap_n, 'Position'] \
                     = laps_eq_n.sort_index()['Position'].to_list()
 
+        # assign NaN to drivers who crashed on lap 1
+        lap_counts = laps['Driver'].value_counts()
+        drivers_with_one_lap = lap_counts[lap_counts == 1].index
+        dnf_and_generated = (laps['FastF1Generated'] &
+                             laps['Driver'].isin(drivers_with_one_lap))
+        laps.loc[dnf_and_generated, 'Position'] = np.NaN
+
         self._add_track_status_to_laps(laps)
 
         self._laps = Laps(laps, session=self, force_default_cols=True)
