@@ -150,7 +150,7 @@ class Cache(metaclass=_MetaCache):
 
     Fast-F1 will per default enable caching. While this can be disabled, it
     should almost always be left enabled to speed up the runtime of your
-    0scripts and to prevent exceeding the rate limit of api servers.
+    scripts and to prevent exceeding the rate limit of api servers.
 
     The default cache directory is defined, in order of precedence, in one
     of the following ways:

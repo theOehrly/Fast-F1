@@ -14,7 +14,7 @@ This section offers various examples to get started with FastF1.
 Example Plot
 ============
 
-FastF1 is largely built ontop of Pandas DataFrames and Series. But It adds
+FastF1 is largely built on top of Pandas DataFrames and Series. But It adds
 its own convenient methods for working specifically with F1 data. This makes
 it much easier to get started and work with the data in general. Still, you
 have all the capabilities of Pandas at hand whenever you need them.
