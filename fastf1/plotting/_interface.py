@@ -9,11 +9,12 @@ from typing import (
 import matplotlib.axes
 
 from fastf1.core import Session
+from fastf1.internals.fuzzy import fuzzy_matcher
 from fastf1.plotting._backend import _load_drivers_from_f1_livetiming
 from fastf1.plotting._base import (
     _Driver,
     _DriverTeamMapping,
-    _fuzzy_matcher,
+    _logger,
     _normalize_string,
     _Team
 )
@@ -60,8 +61,19 @@ def _get_driver(identifier: str, session: Session) -> _Driver:
             return dtm.drivers_by_normalized[normalized_driver]
 
     # do fuzzy string matching
-    normalized_driver = _fuzzy_matcher(identifier,
-                                       list(dtm.drivers_by_normalized.keys()))
+    drivers = list(dtm.drivers_by_normalized.values())
+    strings = [[driver.normalized_value.casefold().replace(" ", ""), ]
+               for driver in drivers]
+    query = identifier.casefold().replace(" ", "")
+    index, exact = fuzzy_matcher(query, strings,
+                                 abs_confidence=0.35,
+                                 rel_confidence=0.30)
+    normalized_driver = drivers[index].normalized_value
+
+    if not exact:
+        _logger.warning(f"Correcting user input '{identifier}' to "
+                        f"'{normalized_driver}'")
+
     return dtm.drivers_by_normalized[normalized_driver]
 
 
@@ -85,9 +97,20 @@ def _get_team(identifier: str, session: Session) -> _Team:
             return dtm.teams_by_normalized[normalized]
 
     # do fuzzy string match
-    team_name = _fuzzy_matcher(identifier,
-                               list(dtm.teams_by_normalized.keys()))
-    return dtm.teams_by_normalized[team_name]
+    teams = list(dtm.teams_by_normalized.values())
+    strings = [[team.normalized_value.casefold().replace(" ", ""), ]
+               for team in teams]
+    query = identifier.casefold().replace(" ", "")
+    index, exact = fuzzy_matcher(query, strings,
+                                 abs_confidence=0.35,
+                                 rel_confidence=0.30)
+    normalized_team_name = teams[index].normalized_value
+
+    if not exact:
+        _logger.warning(f"Correcting user input '{identifier}' to "
+                        f"'{normalized_team_name}'")
+
+    return dtm.teams_by_normalized[normalized_team_name]
 
 
 def _get_driver_color(
