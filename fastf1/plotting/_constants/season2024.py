@@ -64,7 +64,7 @@ Teams: Dict[str, Team] = {
             Default='#0600ef'
         )
     ),
-    'sauber': Team(
+    'kick sauber': Team(
         ShortName='Sauber',
         TeamColor=TeamColors(
             Official='#52e252',
