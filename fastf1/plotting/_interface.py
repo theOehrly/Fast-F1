@@ -43,7 +43,15 @@ def _get_driver_team_mapping(
     return _DRIVER_TEAM_MAPPINGS[api_path]
 
 
-def _get_driver(identifier: str, session: Session) -> _Driver:
+def _get_driver(
+        identifier: str, session: Session, *, exact_match: bool = False
+) -> _Driver:
+    if exact_match:
+        return _get_driver_exact(identifier, session)
+    return _get_driver_fuzzy(identifier, session)
+
+
+def _get_driver_fuzzy(identifier: str, session: Session) -> _Driver:
     dtm = _get_driver_team_mapping(session)
     identifier = _normalize_string(identifier).lower()
 
@@ -62,10 +70,9 @@ def _get_driver(identifier: str, session: Session) -> _Driver:
 
     # do fuzzy string matching
     drivers = list(dtm.drivers_by_normalized.values())
-    strings = [[driver.normalized_value.casefold().replace(" ", ""), ]
-               for driver in drivers]
-    query = identifier.casefold().replace(" ", "")
-    index, exact = fuzzy_matcher(query, strings,
+    strings = [[driver.normalized_value, ] for driver in drivers]
+    index, exact = fuzzy_matcher(query=identifier,
+                                 reference=strings,
                                  abs_confidence=0.35,
                                  rel_confidence=0.30)
     normalized_driver = drivers[index].normalized_value
@@ -77,14 +84,36 @@ def _get_driver(identifier: str, session: Session) -> _Driver:
     return dtm.drivers_by_normalized[normalized_driver]
 
 
-def _get_team(identifier: str, session: Session) -> _Team:
+def _get_driver_exact(identifier: str, session: Session) -> _Driver:
+    dtm = _get_driver_team_mapping(session)
+    identifier = _normalize_string(identifier).lower()
+
+    # try driver abbreviation first
+    if (abb := identifier.upper()) in dtm.drivers_by_abbreviation:
+        return dtm.drivers_by_abbreviation[abb]
+
+    # check for an exact driver name match
+    if identifier in dtm.drivers_by_normalized:
+        return dtm.drivers_by_normalized[identifier]
+
+    raise KeyError(f"No driver found for '{identifier}' (exact match only)")
+
+
+def _get_team(
+        identifier: str, session: Session, *, exact_match=False
+) -> _Team:
+    if exact_match:
+        return _get_team_exact(identifier, session)
+    return _get_team_fuzzy(identifier, session)
+
+
+def _get_team_fuzzy(identifier: str, session: Session) -> _Team:
     dtm = _get_driver_team_mapping(session)
     identifier = _normalize_string(identifier).lower()
 
     # remove common non-unique words
     for word in ('racing', 'team', 'f1', 'scuderia'):
         identifier = identifier.replace(word, "")
-    identifier = identifier.replace(" ", "")
 
     # check for an exact team name match
     if identifier in dtm.teams_by_normalized.keys():
@@ -92,16 +121,15 @@ def _get_team(identifier: str, session: Session) -> _Team:
 
     # check full match with full team name or for exact partial string
     # match with normalized team name
-    for normalized, full in dtm.teams_by_normalized.items():
-        if (identifier == full) or (identifier in normalized):
+    for normalized, team in dtm.teams_by_normalized.items():
+        if (identifier == team.value.casefold()) or (identifier in normalized):
             return dtm.teams_by_normalized[normalized]
 
     # do fuzzy string match
     teams = list(dtm.teams_by_normalized.values())
-    strings = [[team.normalized_value.casefold().replace(" ", ""), ]
-               for team in teams]
-    query = identifier.casefold().replace(" ", "")
-    index, exact = fuzzy_matcher(query, strings,
+    strings = [[team.normalized_value, ] for team in teams]
+    index, exact = fuzzy_matcher(query=identifier,
+                                 reference=strings,
                                  abs_confidence=0.35,
                                  rel_confidence=0.30)
     normalized_team_name = teams[index].normalized_value
@@ -113,31 +141,53 @@ def _get_team(identifier: str, session: Session) -> _Team:
     return dtm.teams_by_normalized[normalized_team_name]
 
 
+def _get_team_exact(identifier: str, session: Session) -> _Team:
+    dtm = _get_driver_team_mapping(session)
+    identifier = _normalize_string(identifier).lower()
+
+    # check for an exact normalized team name match
+    if identifier in dtm.teams_by_normalized.keys():
+        return dtm.teams_by_normalized[identifier]
+
+    # check full match with full team name
+    for normalized, full in dtm.teams_by_normalized.items():
+        if identifier == full.value.casefold():
+            return dtm.teams_by_normalized[normalized]
+
+    raise KeyError(f"No team found for '{identifier}' (exact match only)")
+
+
 def _get_driver_color(
         identifier: str,
         session: Session,
         *,
         colormap: str = 'default',
+        exact_match: bool = False,
         _variants: bool = False
 ) -> str:
-    driver = _get_driver(identifier, session)
+    driver = _get_driver(identifier, session, exact_match=exact_match)
     team_name = driver.team.normalized_value
 
-    return _get_team_color(team_name, session, colormap=colormap)
+    return _get_team_color(team_name, session, colormap=colormap,
+                           exact_match=True)
 
 
 def _get_team_color(
-            identifier: str,
-            session: Session,
-            *,
-            colormap: str = 'default',
+        identifier: str,
+        session: Session,
+        *,
+        colormap: str = 'default',
+        exact_match: bool = False
 ) -> str:
     dtm = _get_driver_team_mapping(session)
 
     if dtm.year not in Constants.keys():
         raise ValueError(f"No team colors for year '{dtm.year}'")
 
-    team_name = _get_team(identifier, session).normalized_value
+    team_name = _get_team(
+        identifier, session, exact_match=exact_match
+    ).normalized_value
+
     team_consts = Constants[dtm.year].Teams[team_name]
 
     if colormap == 'default':
@@ -152,7 +202,8 @@ def get_team_name(
         identifier: str,
         session: Session,
         *,
-        short: bool = False
+        short: bool = False,
+        exact_match: bool = False
 ) -> str:
     """
     Get a full team name based on a recognizable and identifiable part of
@@ -167,8 +218,10 @@ def get_team_name(
         identifier: a recognizable part of the team name
         session: the session for which the data should be obtained
         short: if True, a shortened version of the team name will be returned
+        exact_match: match the identifier exactly (case-insensitive, special
+            characters are converted to their nearest ASCII equivalent)
     """
-    team = _get_team(identifier, session)
+    team = _get_team(identifier, session, exact_match=exact_match)
 
     if short:
         dtm = _get_driver_team_mapping(session)
@@ -183,6 +236,7 @@ def get_team_name_by_driver(
         session: Session,
         *,
         short: bool = False,
+        exact_match: bool = False
 ) -> str:
     """
     Get a full team name based on a driver's abbreviation or based on a
@@ -196,8 +250,10 @@ def get_team_name_by_driver(
         identifier: driver abbreviation or recognizable part of the driver name
         session: the session for which the data should be obtained
         short: if True, a shortened version of the team name will be returned
+        exact_match: match the identifier exactly (case-insensitive, special
+            characters are converted to their nearest ASCII equivalent)
     """
-    driver = _get_driver(identifier, session)
+    driver = _get_driver(identifier, session, exact_match=exact_match)
     team = driver.team
 
     if short:
@@ -213,6 +269,7 @@ def get_team_color(
         session: Session,
         *,
         colormap: str = 'default',
+        exact_match: bool = False
 ) -> str:
     """
     Get a team color based on a recognizable and identifiable part of
@@ -224,14 +281,20 @@ def get_team_color(
         identifier: a recognizable part of the team name
         session: the session for which the data should be obtained
         colormap: one of ``'default'`` or ``'official'``
+        exact_match: match the identifier exactly (case-insensitive, special
+            characters are converted to their nearest ASCII equivalent)
 
     Returns:
         A hexadecimal RGB color code
     """
-    return _get_team_color(identifier, session, colormap=colormap)
+    return _get_team_color(identifier, session,
+                           colormap=colormap,
+                           exact_match=exact_match)
 
 
-def get_driver_name(identifier: str, session: Session) -> str:
+def get_driver_name(
+        identifier: str, session: Session, *, exact_match: bool = False
+) -> str:
     """
     Get a full driver name based on the driver's abbreviation or based on
     a recognizable and identifiable part of the driver's name.
@@ -239,12 +302,16 @@ def get_driver_name(identifier: str, session: Session) -> str:
     Args:
         identifier: driver abbreviation or recognizable part of the driver name
         session: the session for which the data should be obtained
+        exact_match: match the identifier exactly (case-insensitive, special
+            characters are converted to their nearest ASCII equivalent)
     """
-    driver = _get_driver(identifier, session)
+    driver = _get_driver(identifier, session, exact_match=exact_match)
     return driver.value
 
 
-def get_driver_abbreviation(identifier, session: Session) -> str:
+def get_driver_abbreviation(
+        identifier: str, session: Session, *, exact_match: bool = False
+) -> str:
     """
     Get a driver's abbreviation based on a recognizable and identifiable
     part of the driver's name.
@@ -257,12 +324,16 @@ def get_driver_abbreviation(identifier, session: Session) -> str:
         identifier: recognizable part of the driver's name (or the
             driver's abbreviation)
         session: the session for which the data should be obtained
+        exact_match: match the identifier exactly (case-insensitive, special
+            characters are converted to their nearest ASCII equivalent)
     """
-    driver = _get_driver(identifier, session)
+    driver = _get_driver(identifier, session, exact_match=exact_match)
     return driver.abbreviation
 
 
-def get_driver_names_by_team(identifier: str, session: Session) -> List[str]:
+def get_driver_names_by_team(
+        identifier: str, session: Session, *, exact_match: bool = False
+) -> List[str]:
     """
     Get a list of full names of all drivers that drove for a team in a given
     session based on a recognizable and identifiable part of the team name.
@@ -270,13 +341,15 @@ def get_driver_names_by_team(identifier: str, session: Session) -> List[str]:
     Args:
         identifier: a recognizable part of the team name
         session: the session for which the data should be obtained
+        exact_match: match the identifier exactly (case-insensitive, special
+            characters are converted to their nearest ASCII equivalent)
     """
-    team = _get_team(identifier, session)
+    team = _get_team(identifier, session, exact_match=exact_match)
     return [driver.value for driver in team.drivers]
 
 
 def get_driver_abbreviations_by_team(
-        identifier: str, session: Session
+        identifier: str, session: Session, *, exact_match: bool = False
 ) -> List[str]:
     """
     Get a list of abbreviations of all drivers that drove for a team in a given
@@ -285,8 +358,10 @@ def get_driver_abbreviations_by_team(
     Args:
         identifier: a recognizable part of the team name
         session: the session for which the data should be obtained
+        exact_match: match the identifier exactly (case-insensitive, special
+            characters are converted to their nearest ASCII equivalent)
     """
-    team = _get_team(identifier, session)
+    team = _get_team(identifier, session, exact_match=exact_match)
     return [driver.abbreviation for driver in team.drivers]
 
 
@@ -295,6 +370,7 @@ def get_driver_color(
         session: Session,
         *,
         colormap: str = 'default',
+        exact_match: bool = False
 ) -> str:
     """
     Get the color that is associated with a driver based on the driver's
@@ -315,6 +391,8 @@ def get_driver_color(
         identifier: driver abbreviation or recognizable part of the driver name
         session: the session for which the data should be obtained
         colormap: one of ``'default'`` or ``'official'``
+        exact_match: match the identifier exactly (case-insensitive, special
+            characters are converted to their nearest ASCII equivalent)
 
     Returns:
         A hexadecimal RGB color code
@@ -329,7 +407,8 @@ def get_driver_style(
         session: Session,
         *,
         colormap: str = 'default',
-        additional_color_kws: Union[list, tuple] = ()
+        additional_color_kws: Union[list, tuple] = (),
+        exact_match: bool = False
 ) -> Dict[str, Any]:
     """
     Get a plotting style that is unique for a driver based on the driver's
@@ -434,6 +513,8 @@ def get_driver_style(
         additional_color_kws: A list of keys that should additionally be
             treated as colors. This is most usefull for making the magic
             ``'auto'`` color work with custom styling options.
+        exact_match: match the identifier exactly (case-insensitive, special
+            characters are converted to their nearest ASCII equivalent)
 
     Returns: a dictionary of plot style arguments that can be directly passed
         to a matplotlib plot function using the ``**`` expansion operator
@@ -466,7 +547,7 @@ def get_driver_style(
         *additional_color_kws
     )
 
-    driver = _get_driver(identifier, session)
+    driver = _get_driver(identifier, session, exact_match=exact_match)
     team = driver.team
     idx = team.drivers.index(driver)
 
@@ -486,7 +567,8 @@ def get_driver_style(
             if opt in color_kwargs:
                 value = _get_team_color(team.normalized_value,
                                         session,
-                                        colormap=colormap)
+                                        colormap=colormap,
+                                        exact_match=True)
             elif opt in stylers:
                 value = stylers[opt][idx]
             else:
@@ -512,7 +594,8 @@ def get_driver_style(
             if plot_style.get(kwarg, None) == 'auto':
                 color = _get_team_color(team.normalized_value,
                                         session,
-                                        colormap=colormap)
+                                        colormap=colormap,
+                                        exact_match=True)
                 plot_style[kwarg] = color
 
     return plot_style
