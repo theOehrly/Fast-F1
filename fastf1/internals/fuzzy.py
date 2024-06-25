@@ -1,5 +1,5 @@
 import warnings
-from typing import Sequence
+from typing import List
 
 import numpy as np
 
@@ -15,30 +15,31 @@ with warnings.catch_warnings():
 
 def fuzzy_matcher(
         query: str,
-        reference: Sequence[Sequence[str]],
+        reference: List[List[str]],
         abs_confidence: float = 0.0,
         rel_confidence: float = 0.0
 ) -> (int, bool):
     """
-    Match a query string to a reference list of tuples of strings using fuzzy
+    Match a query string to a reference list of lists of strings using fuzzy
     string matching.
 
-    The reference is a list of tuples where each tuple is one element. The
-    tuples contain one or multiple feature strings. The idea is that each
-    element can be described by multiple feature strings. The function tries to
-    find the best matching element in the reference list for the query string.
+    The reference is a list of sub-lists where each sub-list represents one
+    element. The sub-lists contain one or multiple feature strings. The idea is
+    that each element can be described by multiple feature strings. The
+    function tries to find the best matching element in the reference list
+    for the given query string.
 
     The function first checks for exact substring matches with the individual
-    feature strings. If there is exactly one reference tuple, where the query
-    is a substring of a feature string, this index is returned as accurate an
+    feature strings. If there is exactly one sub-list, where the query
+    is a substring of a feature string, this index is returned as an
     "accurate match". Else, the function uses fuzzy string matching to find the
     best match in the reference list. The index of the best matching element is
-    returned as an "inaccurate match".
+    then returned as an "inaccurate match".
 
     Args:
         query: The query string to match.
-        reference: A list of tuples where each tuple contains one or multiple
-            feature strings.
+        reference: A list of lists where each sub-list contains one or multiple
+            feature strings describing an element.
         abs_confidence: The minimum absolute confidence that the match must
             have when fuzzy matched. Must be a value between 0.0 and 1.0, where
               1.0 is equivalent to a perfect match. Set to 0.0 to disable.
@@ -51,10 +52,17 @@ def fuzzy_matcher(
             raised.
 
     Returns:
-        (int, bool): Index of the best matching element in the reference list
-            and a boolean indicating if the match is accurate or not.
+        (int, bool): Index of the best matching element in the
+            reference (outer) list and a boolean indicating if the match is
+            accurate or not.
 
     """
+    # Preprocess the query and reference strings
+    query = query.casefold().replace(" ", "")
+    for i in range(len(reference)):
+        for j in range(len(reference[i])):
+            reference[i][j] = reference[i][j].casefold().replace(" ", "")
+
     # Check for exact substring matches with the individual feature strings
     # first. If there is exactly one reference tuple, where the query is a
     # substring of a feature string, return this index as accurate match.
@@ -103,13 +111,15 @@ def fuzzy_matcher(
 
     # optional confidence checks
     if abs_confidence and (max_ratio < (abs_confidence * 100)):
-        raise KeyError
+        raise KeyError(f"Found no match for '{query}' with sufficient "
+                       f"absolute confidence")
 
     if rel_confidence and (max_ratio / np.partition(ratios.flatten(), -2)[-2]
                            < (1 + rel_confidence)):
         # max ratio divided by second-largest ratio is less
         # than 1 + rel_confidence
-        raise KeyError
+        raise KeyError(f"Found no match for '{query}' with sufficient "
+                       f"relative confidence")
 
     # return index as inaccurate match
     return max_index, False

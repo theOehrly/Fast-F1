@@ -930,7 +930,7 @@ class EventSchedule(BaseDataFrame):
             for word in common_words:
                 event_name = event_name.replace(word, "")
 
-            return event_name.replace(" ", "")
+            return event_name
 
         def _matcher_strings(ev):
             strings = list()

@@ -14,41 +14,69 @@ DEFAULT_RB_COLOR = season2023.Teams['red bull'].TeamColor.Default
 
 
 @pytest.mark.parametrize(
-    "identifier, expected",
+    "use_exact", (True, False)
+)
+@pytest.mark.parametrize(
+    "identifier, expected, can_match_exact",
     (
-            ('VER', 'max verstappen'),  # test abbreviation
-            ('HAM', 'lewis hamilton'),
-            ('max verstappen', 'max verstappen'),  # exact name match
-            ('lewis hamilton', 'lewis hamilton'),
-            ('verstappen', 'max verstappen'),  # exact partial name match
-            ('hamilton', 'lewis hamilton'),
-            ('verstaapen', 'max verstappen'),  # test fuzzy (typos)
-            ('hamiltime', 'lewis hamilton'),
+            ('VER', 'max verstappen', True),  # test abbreviation
+            ('HAM', 'lewis hamilton', True),
+            ('max verstappen', 'max verstappen', True),  # exact name match
+            ('lewis hamilton', 'lewis hamilton', True),
+            ('verstappen', 'max verstappen', False),  # partial name match
+            ('hamilton', 'lewis hamilton', False),
+            ('verstaapen', 'max verstappen', False),  # test fuzzy (typos)
+            ('hamiltime', 'lewis hamilton', False),
     )
 )
-def test_internal_get_driver(identifier, expected):
+def test_internal_get_driver(identifier, expected, can_match_exact, use_exact):
     session = fastf1.get_session(2023, 10, 'R')
-    driver = fastf1.plotting._interface._get_driver(identifier, session)
-    assert driver.normalized_value == expected
+
+    if use_exact and not can_match_exact:
+        with pytest.raises(KeyError, match="No driver found"):
+            _ = fastf1.plotting._interface._get_driver(
+                identifier, session, exact_match=use_exact
+            )
+            return
+
+    else:
+        driver = fastf1.plotting._interface._get_driver(
+            identifier, session, exact_match=use_exact
+        )
+        assert driver.normalized_value == expected
 
 
 @pytest.mark.parametrize(
-    "identifier, expected",
+    "use_exact", (True, False)
+)
+@pytest.mark.parametrize(
+    "identifier, expected, can_match_exact",
     (
-            ('red bull', 'red bull'),  # exact name match
-            ('mercedes', 'mercedes'),
-            ('bull', 'red bull'),  # exact partial name match
-            ('haas', 'haas'),
-            ('Red Bull Racing', 'red bull'),  # exact match with full name
-            ('Haas F1 Team', 'haas'),
-            ('merciless', 'mercedes'),  # test fuzzy (typos)
-            ('alfadauri', 'alphatauri'),
+            ('red bull', 'red bull', True),  # exact name match
+            ('mercedes', 'mercedes', True),
+            ('bull', 'red bull', False),  # partial name match
+            ('haas', 'haas', True),
+            ('Red Bull Racing', 'red bull', True),  # exact match with full name
+            ('Haas F1 Team', 'haas', True),
+            ('merciless', 'mercedes', False),  # test fuzzy (typos)
+            ('alfadauri', 'alphatauri', False),
     )
 )
-def test_internal_get_team(identifier, expected):
+def test_internal_get_team(identifier, expected, can_match_exact, use_exact):
     session = fastf1.get_session(2023, 10, 'R')
-    team = fastf1.plotting._interface._get_team(identifier, session)
-    assert team.normalized_value == expected
+
+    if use_exact and not can_match_exact:
+        with pytest.raises(KeyError, match="No team found"):
+            _ = fastf1.plotting._interface._get_team(
+                identifier, session, exact_match=use_exact
+            )
+        return
+
+    else:
+        team = fastf1.plotting._interface._get_team(
+            identifier, session, exact_match=use_exact
+        )
+        assert team.normalized_value == expected
 
 
 def test_fuzzy_driver_team_key_error():
