@@ -452,7 +452,10 @@ def get_driver_style(
     color. But both drivers get assigned a different marker style, so they can
     be uniquely identified in the plot.
 
-    Example::
+    Example:
+
+    .. doctest::
+
         >>> from fastf1 import get_session
         >>> from fastf1.plotting import get_driver_style
         >>> session = get_session(2023, 10, 'R')
@@ -491,14 +494,17 @@ def get_driver_style(
     3. Each style dictionary can contain arbitrary keys and value. Therefore,
     you are not limited to any particular plotting library.
 
-    Example::
+    Example:
+
+    .. doctest::
+
         >>> from fastf1 import get_session
         >>> from fastf1.plotting import get_driver_style
         >>> session = get_session(2023, 10, 'R')
-        >>> my_styles = [ \
-                {'linestyle': 'solid', 'color': 'auto', 'custom_arg': True}, \
-                {'linestyle': 'dotted', 'color': '#FF0060', 'other_arg': 10} \
-            ]
+        >>> my_styles = [
+        ...     {'linestyle': 'solid', 'color': 'auto', 'custom_arg': True},
+        ...     {'linestyle': 'dotted', 'color': '#FF0060', 'other_arg': 10}
+        ... ]
         >>> get_driver_style('ALO', my_styles, session)
         {'linestyle': 'solid', 'color': '#00665e', 'custom_arg': True}
         >>> get_driver_style('STR', my_styles, session)
