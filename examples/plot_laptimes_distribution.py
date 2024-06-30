@@ -10,8 +10,11 @@ import fastf1
 import fastf1.plotting
 
 
-# enabling misc_mpl_mods will turn on minor grid lines that clutters the plot
-fastf1.plotting.setup_mpl(mpl_timedelta_support=False, misc_mpl_mods=False)
+# Enable Matplotlib patches for plotting timedelta values and load
+# FastF1's dark color scheme
+fastf1.plotting.setup_mpl(mpl_timedelta_support=True, misc_mpl_mods=False,
+                          color_scheme='fastf1')
+
 
 ###############################################################################
 # Load the race session
@@ -35,22 +38,13 @@ finishing_order = [race.get_driver(i)["Abbreviation"] for i in point_finishers]
 print(finishing_order)
 
 ###############################################################################
-# We need to modify the DRIVER_COLORS palette.
-# Its keys are the driver's full names but we need the keys to be the drivers'
-# three-letter abbreviations.
-# We can do this with the DRIVER_TRANSLATE mapping.
-driver_colors = {abv: fastf1.plotting.DRIVER_COLORS[driver] for abv,
-                 driver in fastf1.plotting.DRIVER_TRANSLATE.items()}
-print(driver_colors)
-
-###############################################################################
 # First create the violin plots to show the distributions.
 # Then use the swarm plot to show the actual laptimes.
 
 # create the figure
 fig, ax = plt.subplots(figsize=(10, 5))
 
-# Seaborn doesn't have proper timedelta support
+# Seaborn doesn't have proper timedelta support,
 # so we have to convert timedelta to float (in seconds)
 driver_laps["LapTime(s)"] = driver_laps["LapTime"].dt.total_seconds()
 
@@ -61,7 +55,7 @@ sns.violinplot(data=driver_laps,
                inner=None,
                density_norm="area",
                order=finishing_order,
-               palette=driver_colors
+               palette=fastf1.plotting.get_driver_color_mapping(session=race)
                )
 
 sns.swarmplot(data=driver_laps,
@@ -69,7 +63,7 @@ sns.swarmplot(data=driver_laps,
               y="LapTime(s)",
               order=finishing_order,
               hue="Compound",
-              palette=fastf1.plotting.COMPOUND_COLORS,
+              palette=fastf1.plotting.get_compound_mapping(session=race),
               hue_order=["SOFT", "MEDIUM", "HARD"],
               linewidth=0,
               size=4,

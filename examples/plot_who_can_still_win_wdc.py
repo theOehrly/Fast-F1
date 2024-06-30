@@ -24,7 +24,7 @@ ROUND = 15
 
 ##############################################################################
 # Get the current driver standings from Ergast.
-# Reference https://theoehrly.github.io/Fast-F1-Pre-Release-Documentation/ergast.html#fastf1.ergast.Ergast.get_driver_standings
+# Reference https://docs.fastf1.dev/ergast.html#fastf1.ergast.Ergast.get_driver_standings
 def get_drivers_standings():
     ergast = Ergast()
     standings = ergast.get_driver_standings(season=SEASON, round=ROUND)

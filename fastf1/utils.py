@@ -50,7 +50,7 @@ def delta_time(
         from fastf1 import utils
         from matplotlib import pyplot as plt
 
-        plotting.setup_mpl()
+        plotting.setup_mpl(misc_mpl_mods=False, color_scheme='fastf1')
 
         session = ff1.get_session(2021, 'Emilia Romagna', 'Q')
         session.load()
@@ -62,11 +62,11 @@ def delta_time(
 
         fig, ax = plt.subplots()
         # use telemetry returned by .delta_time for best accuracy,
-        # this ensure the same applied interpolation and resampling
+        # this ensures the same applied interpolation and resampling
         ax.plot(ref_tel['Distance'], ref_tel['Speed'],
-                color=plotting.team_color(ham['Team']))
+                color=plotting.get_team_color(ham['Team'], session))
         ax.plot(compare_tel['Distance'], compare_tel['Speed'],
-                color=plotting.team_color(lec['Team']))
+                color=plotting.get_team_color(lec['Team'], session))
 
         twin = ax.twinx()
         twin.plot(ref_tel['Distance'], delta_time, '--', color='white')

@@ -22,7 +22,7 @@ versions can be used.
     import numpy as np
     import matplotlib.pyplot as plt
 
-    fastf1.plotting.setup_mpl()
+    fastf1.plotting.setup_mpl(misc_mpl_mods=False, color_scheme='fastf1')
 
     session = fastf1.get_session(2020, 'Italy', 'R')
     session.load()
