@@ -196,7 +196,7 @@ def _get_team_color(
         colormap = _DEFAULT_COLOR_MAP
 
     if colormap == 'fastf1':
-        return team_consts.TeamColor.Default
+        return team_consts.TeamColor.FastF1
     elif colormap == 'official':
         return team_consts.TeamColor.Official
     else:
@@ -672,7 +672,7 @@ def get_driver_color_mapping(
         colors = {
             abb: (Constants[dtm.year]
                   .Teams[driver.team.normalized_value]
-                  .TeamColor.Default)
+                  .TeamColor.FastF1)
             for abb, driver in dtm.drivers_by_abbreviation.items()
         }
     elif colormap == 'official':
