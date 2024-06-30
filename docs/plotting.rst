@@ -22,9 +22,11 @@ Team Colormaps
 Currently, two team colormaps are supported. Each colormap provides one color
 for each team. Colors are constant over the course of a season. All functions
 that return colors for teams or drivers accept an optional ``colormap``
-argument.
+argument. If this argument is not provided, the default colormap is used.
+The default colormap can be changed by using
+:func:`~fastf1.plotting.set_default_colormap`.
 
-The ``'default'`` colormap is FastF1's default colormap. These colors are teams'
+The ``'fastf1'`` colormap is FastF1's default colormap. These colors are teams'
 primary colors or accent colors as they are used by the teams on their website
 or in promotional material. The colors are chosen to maximize readability in
 plots by creating a stronger contrast while still being associated with the
