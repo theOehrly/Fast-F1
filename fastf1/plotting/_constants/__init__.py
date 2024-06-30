@@ -9,15 +9,17 @@ from fastf1.plotting._constants import (  # noqa: F401, unused import used throu
     season2023,
     season2024
 )
-from fastf1.plotting._constants.base import BaseSeason
+from fastf1.plotting._constants.base import BaseSeasonConst
 
 
-Constants: Dict[str, BaseSeason] = dict()
+Constants: Dict[str, BaseSeasonConst] = dict()
 
 for year in range(2018, 2025):
     season = globals()[f"season{year}"]
-    Constants[str(year)] = BaseSeason(CompoundColors=season.CompoundColors,
-                                      Teams=season.Teams)
+    Constants[str(year)] = BaseSeasonConst(
+        CompoundColors=season.CompoundColors,
+        Teams=season.Teams
+    )
 
 
 # Deprecated, will be removed for 2025

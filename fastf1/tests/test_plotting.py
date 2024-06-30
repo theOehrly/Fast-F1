@@ -4,7 +4,7 @@ import pytest
 import fastf1
 import fastf1.plotting
 from fastf1.plotting._constants import season2023
-from fastf1.plotting._constants.base import Compounds
+from fastf1.plotting._constants.base import CompoundsConst
 
 
 OFFICIAL_MERC_COLOR = season2023.Teams['mercedes'].TeamColor.Official
@@ -325,10 +325,10 @@ def test_get_driver_style_custom_style():
 def test_get_compound_color():
     session = fastf1.get_session(2023, 10, 'R')
     assert (fastf1.plotting.get_compound_color('HARD', session)
-            == season2023.CompoundColors[Compounds.Hard])
+            == season2023.CompoundColors[CompoundsConst.Hard])
 
     assert (fastf1.plotting.get_compound_color('sOfT', session)
-            == season2023.CompoundColors[Compounds.Soft])
+            == season2023.CompoundColors[CompoundsConst.Soft])
 
     with pytest.raises(KeyError):
         fastf1.plotting.get_compound_color('HYPERSOFT', session)

@@ -9,6 +9,7 @@ from typing import (
 from rapidfuzz import fuzz
 
 from fastf1.logger import get_logger
+from fastf1.plotting._constants.base import TeamConst
 
 
 _logger = get_logger(__package__)
@@ -24,6 +25,7 @@ class _Driver:
 class _Team:
     value: str = ''
     normalized_value: str = ''
+    constants: TeamConst = None
 
     def __init__(self):
         super().__init__()

@@ -19,7 +19,6 @@ from fastf1.plotting._base import (
     _normalize_string,
     _Team
 )
-from fastf1.plotting._constants import Constants
 from fastf1.plotting._constants import Constants as _Constants
 
 
@@ -183,22 +182,20 @@ def _get_team_color(
 ) -> str:
     dtm = _get_driver_team_mapping(session)
 
-    if dtm.year not in Constants.keys():
+    if dtm.year not in _Constants.keys():
         raise ValueError(f"No team colors for year '{dtm.year}'")
 
-    team_name = _get_team(
+    team = _get_team(
         identifier, session, exact_match=exact_match
-    ).normalized_value
-
-    team_consts = Constants[dtm.year].Teams[team_name]
+    )
 
     if colormap == 'default':
         colormap = _DEFAULT_COLOR_MAP
 
     if colormap == 'fastf1':
-        return team_consts.TeamColor.FastF1
+        return team.constants.TeamColor.FastF1
     elif colormap == 'official':
-        return team_consts.TeamColor.Official
+        return team.constants.TeamColor.Official
     else:
         raise ValueError(f"Invalid colormap '{colormap}'")
 
@@ -229,9 +226,7 @@ def get_team_name(
     team = _get_team(identifier, session, exact_match=exact_match)
 
     if short:
-        dtm = _get_driver_team_mapping(session)
-        team_consts = Constants[dtm.year].Teams[team.normalized_value]
-        return team_consts.ShortName
+        return team.constants.ShortName
 
     return team.value
 
@@ -262,9 +257,7 @@ def get_team_name_by_driver(
     team = driver.team
 
     if short:
-        dtm = _get_driver_team_mapping(session)
-        team_consts = Constants[dtm.year].Teams[team.normalized_value]
-        return team_consts.ShortName
+        return team.constants.ShortName
 
     return team.value
 
@@ -645,7 +638,7 @@ def get_compound_mapping(session: Session) -> Dict[str, str]:
         dictionary mapping compound names to RGB hex colors
     """
     year = str(session.event['EventDate'].year)
-    return Constants[year].CompoundColors.copy()
+    return _Constants[year].CompoundColors.copy()
 
 
 def get_driver_color_mapping(
@@ -670,16 +663,12 @@ def get_driver_color_mapping(
 
     if colormap == 'fastf1':
         colors = {
-            abb: (Constants[dtm.year]
-                  .Teams[driver.team.normalized_value]
-                  .TeamColor.FastF1)
+            abb: driver.team.constants.TeamColor.FastF1
             for abb, driver in dtm.drivers_by_abbreviation.items()
         }
     elif colormap == 'official':
         colors = {
-            abb: (Constants[dtm.year]
-                  .Teams[driver.team.normalized_value]
-                  .TeamColor.Official)
+            abb: driver.team.constants.TeamColor.Official
             for abb, driver in dtm.drivers_by_abbreviation.items()
         }
     else:
@@ -697,8 +686,8 @@ def list_team_names(session: Session) -> List[str]:
 def list_short_team_names(session: Session) -> List[str]:
     """Returns a list of short team names of all teams in the ``session``."""
     dtm = _get_driver_team_mapping(session)
-    return list(Constants[dtm.year].Teams[team].ShortName
-                for team in dtm.teams_by_normalized.keys())
+    return list(team.constants.ShortName
+                for team in dtm.teams_by_normalized.values())
 
 
 def list_driver_abbreviations(session: Session) -> List[str]:
@@ -716,7 +705,7 @@ def list_driver_names(session: Session) -> List[str]:
 def list_compounds(session: Session) -> List[str]:
     """Returns a list of all compound names for this season (not session)."""
     year = str(session.event['EventDate'].year)
-    return list(Constants[year].CompoundColors.keys())
+    return list(_Constants[year].CompoundColors.keys())
 
 
 def add_sorted_driver_legend(ax: matplotlib.axes.Axes, session: Session):

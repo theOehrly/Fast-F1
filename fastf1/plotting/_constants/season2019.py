@@ -1,91 +1,95 @@
 from typing import Dict
 
 from fastf1.plotting._constants.base import (
-    Compounds,
-    Team,
-    TeamColors
+    CompoundsConst,
+    TeamColorsConst,
+    TeamConst
 )
 
 
-Teams: Dict[str, Team] = {
-    'alfa romeo': Team(
+# NOTE: the team constants are copied when loading the driver-team-mapping
+# and values may be modified there, it the used API provides different values
+
+
+Teams: Dict[str, TeamConst] = {
+    'alfa romeo': TeamConst(
         ShortName='Alfa Romeo',
-        TeamColor=TeamColors(
+        TeamColor=TeamColorsConst(
             Official='#9b0000',
             FastF1='#900000'
         )
     ),
-    'haas': Team(
+    'haas': TeamConst(
         ShortName='Haas',
-        TeamColor=TeamColors(
+        TeamColor=TeamColorsConst(
             Official='#bd9e57',
             FastF1='#bd9e57'
         )
     ),
-    'ferrari': Team(
+    'ferrari': TeamConst(
         ShortName='Ferrari',
-        TeamColor=TeamColors(
+        TeamColor=TeamColorsConst(
             Official='#dc0000',
             FastF1='#da291c'
         )
     ),
-    'mclaren': Team(
+    'mclaren': TeamConst(
         ShortName='McLaren',
-        TeamColor=TeamColors(
+        TeamColor=TeamColorsConst(
             Official='#ff8700',
             FastF1='#ff8000'
         )
     ),
-    'mercedes': Team(
+    'mercedes': TeamConst(
         ShortName='Mercedes',
-        TeamColor=TeamColors(
+        TeamColor=TeamColorsConst(
             Official='#00d2be',
             FastF1='#00d2be'
         )
     ),
-    'racing point': Team(
+    'racing point': TeamConst(
         ShortName='Racing Point',
-        TeamColor=TeamColors(
+        TeamColor=TeamColorsConst(
             Official='#f596c8',
             FastF1='#ff87bc'
         )
     ),
-    'red bull': Team(
+    'red bull': TeamConst(
         ShortName='Red Bull',
-        TeamColor=TeamColors(
+        TeamColor=TeamColorsConst(
             Official='#1e41ff',
             FastF1='#1e41ff'
         )
     ),
-    'renault': Team(
+    'renault': TeamConst(
         ShortName='Renault',
-        TeamColor=TeamColors(
+        TeamColor=TeamColorsConst(
             Official='#fff500',
             FastF1='#fff500'
         )
     ),
-    'toro rosso': Team(
+    'toro rosso': TeamConst(
         ShortName='Toro Rosso',
-        TeamColor=TeamColors(
+        TeamColor=TeamColorsConst(
             Official='#469bff',
             FastF1='#2b4562'
         )
     ),
-    'williams': Team(
+    'williams': TeamConst(
         ShortName='Williams',
-        TeamColor=TeamColors(
+        TeamColor=TeamColorsConst(
             Official='#ffffff',
             FastF1='#00a0dd'
         )
     )
 }
 
-CompoundColors: Dict[Compounds, str] = {
-    Compounds.Soft: "#da291c",
-    Compounds.Medium: "#ffd12e",
-    Compounds.Hard: "#f0f0ec",
-    Compounds.Intermediate: "#43b02a",
-    Compounds.Wet: "#0067ad",
-    Compounds.Unknown: "#00ffff",
-    Compounds.TestUnknown: "#434649"
+CompoundColors: Dict[CompoundsConst, str] = {
+    CompoundsConst.Soft: "#da291c",
+    CompoundsConst.Medium: "#ffd12e",
+    CompoundsConst.Hard: "#f0f0ec",
+    CompoundsConst.Intermediate: "#43b02a",
+    CompoundsConst.Wet: "#0067ad",
+    CompoundsConst.Unknown: "#00ffff",
+    CompoundsConst.TestUnknown: "#434649"
 }
