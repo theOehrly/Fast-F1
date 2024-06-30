@@ -2,6 +2,7 @@ from typing import (
     Any,
     Dict,
     List,
+    Literal,
     Sequence,
     Union
 )
@@ -22,6 +23,7 @@ from fastf1.plotting._constants import Constants
 from fastf1.plotting._constants import Constants as _Constants
 
 
+_DEFAULT_COLOR_MAP: Literal['fastf1', 'official'] = 'fastf1'
 _DRIVER_TEAM_MAPPINGS = dict()
 
 
@@ -191,6 +193,9 @@ def _get_team_color(
     team_consts = Constants[dtm.year].Teams[team_name]
 
     if colormap == 'default':
+        colormap = _DEFAULT_COLOR_MAP
+
+    if colormap == 'fastf1':
         return team_consts.TeamColor.Default
     elif colormap == 'official':
         return team_consts.TeamColor.Official
@@ -280,7 +285,9 @@ def get_team_color(
     Args:
         identifier: a recognizable part of the team name
         session: the session for which the data should be obtained
-        colormap: one of ``'default'`` or ``'official'``
+        colormap: one of ``'default'``, ``'fastf1'`` or ``'official'``.
+            The default colormap is ``'fastf1'``. Use
+            :func:`~fastf1.plotting.set_default_colormap` to change it.
         exact_match: match the identifier exactly (case-insensitive, special
             characters are converted to their nearest ASCII equivalent)
 
@@ -390,7 +397,9 @@ def get_driver_color(
     Args:
         identifier: driver abbreviation or recognizable part of the driver name
         session: the session for which the data should be obtained
-        colormap: one of ``'default'`` or ``'official'``
+        colormap: one of ``'default'``, ``'fastf1'`` or ``'official'``.
+            The default colormap is ``'fastf1'``. Use
+            :func:`~fastf1.plotting.set_default_colormap` to change it.
         exact_match: match the identifier exactly (case-insensitive, special
             characters are converted to their nearest ASCII equivalent)
 
@@ -515,7 +524,9 @@ def get_driver_style(
         style: list of matplotlib plot arguments that should be used for
             styling or a list of custom style dictionaries
         session: the session for which the data should be obtained
-        colormap: one of ``'default'`` or ``'official'``
+        colormap: one of ``'default'``, ``'fastf1'`` or ``'official'``.
+            The default colormap is ``'fastf1'``. Use
+            :func:`~fastf1.plotting.set_default_colormap` to change it.
         additional_color_kws: A list of keys that should additionally be
             treated as colors. This is most usefull for making the magic
             ``'auto'`` color work with custom styling options.
@@ -646,14 +657,18 @@ def get_driver_color_mapping(
 
     Args:
         session: the session for which the data should be obtained
-        colormap: one of ``'default'`` or ``'official'``
-
+        colormap: one of ``'default'``, ``'fastf1'`` or ``'official'``.
+            The default colormap is ``'fastf1'``. Use
+            :func:`~fastf1.plotting.set_default_colormap` to change it.
     Returns:
         dictionary mapping driver abbreviations to RGB hex colors
     """
     dtm = _get_driver_team_mapping(session)
 
     if colormap == 'default':
+        colormap = _DEFAULT_COLOR_MAP
+
+    if colormap == 'fastf1':
         colors = {
             abb: (Constants[dtm.year]
                   .Teams[driver.team.normalized_value]
@@ -758,3 +773,16 @@ def add_sorted_driver_legend(ax: matplotlib.axes.Axes, session: Session):
         labels_new.append(elem[3])
 
     return ax.legend(handles_new, labels_new)
+
+
+def set_default_colormap(colormap: str):
+    """
+    Set the default colormap that is used for color lookups.
+
+    Args:
+        colormap: one of ``'fastf1'`` or ``'official'``
+    """
+    global _DEFAULT_COLOR_MAP
+    if colormap not in ('fastf1', 'official'):
+        raise ValueError(f"Invalid colormap '{colormap}'")
+    _DEFAULT_COLOR_MAP = colormap
