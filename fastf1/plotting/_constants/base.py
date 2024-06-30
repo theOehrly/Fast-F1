@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Dict
 
 
-class Compounds:
+class CompoundsConst:
     HyperSoft = "HYPERSOFT"
     UltraSoft = "ULTRASOFT"
     SuperSoft = "SUPERSOFT"
@@ -17,18 +17,18 @@ class Compounds:
 
 
 @dataclass(frozen=True)
-class TeamColors:
+class TeamColorsConst:
     Official: str
     FastF1: str
 
 
 @dataclass(frozen=True)
-class Team:
+class TeamConst:
     ShortName: str
-    TeamColor: TeamColors
+    TeamColor: TeamColorsConst
 
 
 @dataclass(frozen=True)
-class BaseSeason:
+class BaseSeasonConst:
     CompoundColors: Dict[str, str]
-    Teams: Dict[str, Team]
+    Teams: Dict[str, TeamConst]
