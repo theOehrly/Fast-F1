@@ -19,7 +19,7 @@ class Compounds:
 @dataclass(frozen=True)
 class TeamColors:
     Official: str
-    Default: str
+    FastF1: str
 
 
 @dataclass(frozen=True)

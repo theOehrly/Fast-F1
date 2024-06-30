@@ -12,77 +12,77 @@ Teams: Dict[str, Team] = {
         ShortName='Ferrari',
         TeamColor=TeamColors(
             Official='#dc0000',
-            Default='#dc0000'
+            FastF1='#dc0000'
         )
     ),
     'force india': Team(
         ShortName='Force India',
         TeamColor=TeamColors(
             Official='#f596c8',
-            Default='#ff87bc'
+            FastF1='#ff87bc'
         )
     ),
     'haas': Team(
         ShortName='Haas',
         TeamColor=TeamColors(
             Official='#828282',
-            Default='#b6babd'
+            FastF1='#b6babd'
         )
     ),
     'mclaren': Team(
         ShortName='McLaren',
         TeamColor=TeamColors(
             Official='#ff8000',
-            Default='#ff8000'
+            FastF1='#ff8000'
         )
     ),
     'mercedes': Team(
         ShortName='Mercedes',
         TeamColor=TeamColors(
             Official='#00d2be',
-            Default='#00f5d0'
+            FastF1='#00f5d0'
         )
     ),
     'racing point': Team(
         ShortName='Racing Point',
         TeamColor=TeamColors(
             Official='#f596c8',
-            Default='#ff87bc'
+            FastF1='#ff87bc'
         )
     ),
     'red bull': Team(
         ShortName='Red Bull',
         TeamColor=TeamColors(
             Official='#1e41ff',
-            Default='#1e41ff'
+            FastF1='#1e41ff'
         )
     ),
     'renault': Team(
         ShortName='Renault',
         TeamColor=TeamColors(
             Official='#fff500',
-            Default='#fff500'
+            FastF1='#fff500'
         )
     ),
     'sauber': Team(
         ShortName='Sauber',
         TeamColor=TeamColors(
             Official='#9b0000',
-            Default='#900000'
+            FastF1='#900000'
         )
     ),
     'toro rosso': Team(
         ShortName='Toro Rosso',
         TeamColor=TeamColors(
             Official='#469bff',
-            Default='#2b4562'
+            FastF1='#2b4562'
         )
     ),
     'williams': Team(
         ShortName='Williams',
         TeamColor=TeamColors(
             Official='#ffffff',
-            Default='#00a0dd'
+            FastF1='#00a0dd'
         )
     )
 }

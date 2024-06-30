@@ -141,7 +141,7 @@ Mapping of driver names to theirs respective abbreviations.
 _DEPR_TEAM_COLORS: Dict[str, str] = {
     # str(key.value): val for key, val
     # in _Constants['2024'].Colormaps[_Colormaps.Default].items()
-    name.replace("kick ", ""): team.TeamColor.Default for name, team
+    name.replace("kick ", ""): team.TeamColor.FastF1 for name, team
     in _Constants['2024'].Teams.items()
 }
 TEAM_COLORS: Dict[str, str]

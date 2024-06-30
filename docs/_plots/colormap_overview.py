@@ -26,7 +26,7 @@ for i, year in enumerate(years_sorted):
 
     for j, (name, team) in enumerate(teams.items()):
         x_labels.append(team.ShortName)
-        default_colors.append(team.TeamColor.Default)
+        default_colors.append(team.TeamColor.FastF1)
         official_colors.append(team.TeamColor.Official)
 
         x_ranges.append((j + 0.5, 1))

@@ -12,70 +12,70 @@ Teams: Dict[str, Team] = {
         ShortName='Alfa Romeo',
         TeamColor=TeamColors(
             Official='#C92D4B',
-            Default='#900000'
+            FastF1='#900000'
         )
     ),
     'alphatauri': Team(
         ShortName='AlphaTauri',
         TeamColor=TeamColors(
             Official='#5E8FAA',
-            Default='#2b4562'
+            FastF1='#2b4562'
         )
     ),
     'alpine': Team(
         ShortName='Alpine',
         TeamColor=TeamColors(
             Official='#2293D1',
-            Default='#fe86bc'
+            FastF1='#fe86bc'
         )
     ),
     'aston martin': Team(
         ShortName='Aston Martin',
         TeamColor=TeamColors(
             Official='#358C75',
-            Default='#00665e'
+            FastF1='#00665e'
         )
     ),
     'ferrari': Team(
         ShortName='Ferrari',
         TeamColor=TeamColors(
             Official='#F91536',
-            Default='#da291c'
+            FastF1='#da291c'
         )
     ),
     'haas': Team(
         ShortName='Haas',
         TeamColor=TeamColors(
             Official='#b6babd',
-            Default='#b6babd'
+            FastF1='#b6babd'
         )
     ),
     'mclaren': Team(
         ShortName='McLaren',
         TeamColor=TeamColors(
             Official='#F58020',
-            Default='#ff8000'
+            FastF1='#ff8000'
         )
     ),
     'mercedes': Team(
         ShortName='Mercedes',
         TeamColor=TeamColors(
             Official='#6CD3BF',
-            Default='#00f5d0'
+            FastF1='#00f5d0'
         )
     ),
     'red bull': Team(
         ShortName='Red Bull',
         TeamColor=TeamColors(
             Official='#3671C6',
-            Default='#0600ef'
+            FastF1='#0600ef'
         )
     ),
     'williams': Team(
         ShortName='Williams',
         TeamColor=TeamColors(
             Official='#37BEDD',
-            Default='#00a0dd'
+            FastF1='#00a0dd'
         )
     )
 }

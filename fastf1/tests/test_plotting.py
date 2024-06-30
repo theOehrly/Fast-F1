@@ -9,8 +9,8 @@ from fastf1.plotting._constants.base import Compounds
 
 OFFICIAL_MERC_COLOR = season2023.Teams['mercedes'].TeamColor.Official
 OFFICIAL_RB_COLOR = season2023.Teams['red bull'].TeamColor.Official
-DEFAULT_MERC_COLOR = season2023.Teams['mercedes'].TeamColor.Default
-DEFAULT_RB_COLOR = season2023.Teams['red bull'].TeamColor.Default
+DEFAULT_MERC_COLOR = season2023.Teams['mercedes'].TeamColor.FastF1
+DEFAULT_RB_COLOR = season2023.Teams['red bull'].TeamColor.FastF1
 
 
 @pytest.mark.parametrize(
