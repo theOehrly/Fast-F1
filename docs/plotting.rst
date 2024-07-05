@@ -98,6 +98,7 @@ List all Names and Abbreviations for Drivers/Teams in a Session
   :autosummary-members:
     get_compound_mapping,
     get_driver_color_mapping,
+    list_compounds,
     list_driver_abbreviations,
     list_driver_names,
     list_short_team_names,
@@ -112,7 +113,19 @@ Plot Styling
   :no-members:
   :autosummary:
   :autosummary-members:
-    add_sorted_driver_legend
+    add_sorted_driver_legend,
+    set_default_colormap
+
+
+Advanced Functionality
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: fastf1.plotting
+  :noindex:
+  :no-members:
+  :autosummary:
+  :autosummary-members:
+    override_team_constants
 
 
 Deprecated Functionality
