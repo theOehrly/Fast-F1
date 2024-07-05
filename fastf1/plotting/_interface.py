@@ -215,8 +215,8 @@ def get_team_name(
 
     Alternatively, a shortened version of the team name can be returned. The
     short version is intended for saving space when annotating plots and may
-    skip parts of the official team name, for example "Scuderia Ferrari"
-    becomes just "Ferrari".
+    skip parts of the official team name, for example "Haas F1 Team"
+    becomes just "Haas".
 
     Args:
         identifier: a recognizable part of the team name
