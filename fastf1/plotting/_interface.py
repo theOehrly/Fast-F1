@@ -210,13 +210,12 @@ def get_team_name(
         exact_match: bool = False
 ) -> str:
     """
-    Get a full team name based on a recognizable and identifiable part of
-    the team name.
+    Get a full or shortened team name based on a recognizable and identifiable
+    part of the team name.
 
-    Alternatively, a shortened version of the team name can be returned. The
-    short version is intended for saving space when annotating plots and may
-    skip parts of the official team name, for example "Haas F1 Team"
-    becomes just "Haas".
+    The short version of the team name is intended for saving space when
+    annotating plots and may skip parts of the official team name, for example
+    "Haas F1 Team" becomes just "Haas".
 
     Args:
         identifier: a recognizable part of the team name
@@ -679,17 +678,26 @@ def get_driver_color_mapping(
     return colors
 
 
-def list_team_names(session: Session) -> List[str]:
-    """Returns a list of full team names of all teams in the ``session``."""
+def list_team_names(session: Session, *, short: bool = False) -> List[str]:
+    """Returns a list of team names of all teams in the ``session``.
+
+    By default, the full team names are returned. Use the ``short`` argument
+    to get shortened versions of the team names instead.
+
+    Args:
+        session: the session for which the data should be obtained
+        short: if True, a list of the shortened team names is returned
+
+    Returns:
+        a list of team names
+    """
     dtm = _get_driver_team_mapping(session)
+
+    if short:
+        return list(team.constants.ShortName
+                    for team in dtm.teams_by_normalized.values())
+
     return list(team.value for team in dtm.teams_by_normalized.values())
-
-
-def list_short_team_names(session: Session) -> List[str]:
-    """Returns a list of short team names of all teams in the ``session``."""
-    dtm = _get_driver_team_mapping(session)
-    return list(team.constants.ShortName
-                for team in dtm.teams_by_normalized.values())
 
 
 def list_driver_abbreviations(session: Session) -> List[str]:
