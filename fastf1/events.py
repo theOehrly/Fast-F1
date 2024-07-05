@@ -882,7 +882,7 @@ class EventSchedule(BaseDataFrame):
             if self[col].isna().all():
                 if _type == 'datetime64[ns]':
                     self[col] = pd.NaT
-                elif _type == object:
+                elif _type == object:  # noqa: E721, type comparison with ==
                     self[col] = None
                 else:
                     self[col] = _type()
