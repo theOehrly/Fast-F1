@@ -31,6 +31,7 @@ from fastf1.plotting._interface import (  # noqa: F401
     list_driver_names,
     list_short_team_names,
     list_team_names,
+    override_team_constants,
     set_default_colormap
 )
 from fastf1.plotting._plotting import (  # noqa: F401
@@ -62,6 +63,7 @@ __all__ = [
     'list_driver_names',
     'list_team_names',
     'list_short_team_names',
+    'override_team_constants',
     'set_default_colormap',
     'setup_mpl',
 
