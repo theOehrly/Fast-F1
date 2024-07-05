@@ -141,7 +141,6 @@ DRIVER_COLORS: Dict[str, str] = {
     "max verstappen": "#fcd700",
     "sergio perez": "#ffec7b",
     "jake dennis": "#907400",
-    "isack hadjar": "#fff5b5",
 
     "alexander albon": "#005aff",
     "logan sargeant": "#012564",
@@ -155,7 +154,7 @@ DRIVER_TRANSLATE: Dict[str, str] = {
     'LEC': 'charles leclerc', 'SAI': 'carlos sainz',
     'SHW': 'robert shwartzman',
     'VER': 'max verstappen', 'PER': 'sergio perez',
-    'DEN': 'jake dennis', 'HAD': 'isack hadjar',
+    'DEN': 'jake dennis',
     'PIA': 'oscar piastri', 'NOR': 'lando norris',
     'OWA': 'pato oward',
     'GAS': 'pierre gasly', 'OCO': 'esteban ocon',
