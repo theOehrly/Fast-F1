@@ -1,8 +1,10 @@
+import dataclasses
 from typing import (
     Any,
     Dict,
     List,
     Literal,
+    Optional,
     Sequence,
     Union
 )
@@ -775,3 +777,44 @@ def set_default_colormap(colormap: str):
     if colormap not in ('fastf1', 'official'):
         raise ValueError(f"Invalid colormap '{colormap}'")
     _DEFAULT_COLOR_MAP = colormap
+
+
+def override_team_constants(
+        identifier: str,
+        session: Session,
+        *,
+        short_name: Optional[str] = None,
+        official_color: Optional[str] = None,
+        fastf1_color: Optional[str] = None
+):
+    """
+    Override the default team constants for a specific team.
+
+    This function is intended for advanced users who want to customize the
+    default team constants. The changes are only applied for the current
+    session and do not persist.
+
+    Args:
+        identifier: A part of the team name. Note that this function does
+            not support fuzzy matching and will raise a ``KeyError`` if no
+            exact and unambiguous match is found!
+        session: The session for which the override should be applied
+        short_name: New value for the short name of the team
+        official_color: New value for the team color in the "official"
+            color map; must be a hexadecimal RGB color code
+        fastf1_color: New value for the team color in the "fastf1" color map;
+            must be a hexadecimal RGB color code
+    """
+    team = _get_team(identifier, session, exact_match=True)
+
+    colors = team.constants.TeamColor
+    if official_color is not None:
+        colors = dataclasses.replace(colors, Official=official_color)
+    if fastf1_color is not None:
+        colors = dataclasses.replace(colors, FastF1=fastf1_color)
+    if (official_color is not None) or (fastf1_color is not None):
+        team.constants = dataclasses.replace(team.constants, TeamColor=colors)
+
+    if short_name is not None:
+        team.constants = dataclasses.replace(team.constants,
+                                             ShortName=short_name)

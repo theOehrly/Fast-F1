@@ -424,3 +424,31 @@ def test_add_sorted_lapnumber_axis():
     # within Mercedes, Hamilton has the lower number
     assert ([txt.get_text() for txt in legend.texts]
             == ['VER', 'PER', 'HAM', 'RUS'])
+
+
+def test_override_team_constants():
+    session = fastf1.get_session(2023, 10, 'R')
+    fastf1.plotting.override_team_constants(
+        'Haas', session,
+        short_name='Gene',
+        fastf1_color='#badbad',
+        official_color='#bada55'
+    )
+
+    assert fastf1.plotting.get_team_name('Haas', session) == 'Haas F1 Team'
+    assert fastf1.plotting.get_team_name('Haas', session, short=True) == 'Gene'
+
+    assert fastf1.plotting.get_team_color(
+        'Haas', session, colormap='fastf1'
+    ) == '#badbad'
+
+    assert fastf1.plotting.get_team_color(
+        'Haas', session, colormap='official'
+    ) == '#bada55'
+
+    # cleanup: explicitly clear the driver-team-mapping to avoid side effects
+    # in other tests
+    fastf1.plotting._interface._DRIVER_TEAM_MAPPINGS = dict()
+
+    if fastf1.plotting.get_team_name('Haas', session, short=True) != 'Haas':
+        raise RuntimeError("Test cleanup failed!")
