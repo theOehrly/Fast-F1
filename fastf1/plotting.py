@@ -141,10 +141,12 @@ DRIVER_COLORS: Dict[str, str] = {
     "max verstappen": "#fcd700",
     "sergio perez": "#ffec7b",
     "jake dennis": "#907400",
+    "isack hadjar": "#fff5b5",
 
     "alexander albon": "#005aff",
     "logan sargeant": "#012564",
     "zak osullivan": "#1b3d97",
+    "franco colapinto": "#639aff"
 }
 """Mapping of driver names to driver colors (hex color codes).
 (current season only)"""
@@ -153,7 +155,7 @@ DRIVER_TRANSLATE: Dict[str, str] = {
     'LEC': 'charles leclerc', 'SAI': 'carlos sainz',
     'SHW': 'robert shwartzman',
     'VER': 'max verstappen', 'PER': 'sergio perez',
-    'DEN': 'jake dennis',
+    'DEN': 'jake dennis', 'HAD': 'isack hadjar',
     'PIA': 'oscar piastri', 'NOR': 'lando norris',
     'OWA': 'pato oward',
     'GAS': 'pierre gasly', 'OCO': 'esteban ocon',
@@ -170,7 +172,7 @@ DRIVER_TRANSLATE: Dict[str, str] = {
     'HAM': 'lewis hamilton', 'RUS': 'george russell',
     'VES': 'frederik vesti',
     'ALB': 'alexander albon', 'SAR': 'logan sargeant',
-    'OSU': 'zak osullivan'}
+    'OSU': 'zak osullivan', 'COL': 'franco colapinto'}
 """Mapping of driver names to theirs respective abbreviations."""
 
 COMPOUND_COLORS: Dict[str, str] = {
