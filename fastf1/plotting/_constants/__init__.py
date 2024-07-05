@@ -89,6 +89,7 @@ LEGACY_DRIVER_COLORS: Dict[str, str] = {
     "alexander albon": "#005aff",
     "logan sargeant": "#012564",
     "zak osullivan": "#1b3d97",
+    "franco colapinto": "#639aff"
 }
 
 
@@ -113,4 +114,4 @@ LEGACY_DRIVER_TRANSLATE: Dict[str, str] = {
     'HAM': 'lewis hamilton', 'RUS': 'george russell',
     'VES': 'frederik vesti',
     'ALB': 'alexander albon', 'SAR': 'logan sargeant',
-    'OSU': 'zak osullivan'}
+    'OSU': 'zak osullivan', 'COL': 'franco colapinto'}
