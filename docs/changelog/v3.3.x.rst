@@ -1,3 +1,14 @@
+What's new in v3.3.9
+--------------------
+
+(released 05/07/2024)
+
+New Features
+^^^^^^^^^^^^
+
+- Added support for driver Franco Colapinto (COL) (by @grahamjwhite) (#609)
+
+
 What's new in v3.3.8
 --------------------
 
