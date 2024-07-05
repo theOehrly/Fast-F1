@@ -368,7 +368,7 @@ def test_list_team_names():
 
 def test_list_short_team_names():
     session = fastf1.get_session(2023, 10, 'R')
-    names = fastf1.plotting.list_short_team_names(session)
+    names = fastf1.plotting.list_team_names(session, short=True)
 
     assert 'Red Bull' in names
     assert 'Haas' in names
