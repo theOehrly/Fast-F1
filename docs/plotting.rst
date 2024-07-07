@@ -101,7 +101,6 @@ List all Names and Abbreviations for Drivers/Teams in a Session
     list_compounds,
     list_driver_abbreviations,
     list_driver_names,
-    list_short_team_names,
     list_team_names
 
 
