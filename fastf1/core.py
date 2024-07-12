@@ -1614,7 +1614,7 @@ class Session:
         laps['Driver'] = laps['DriverNumber'].map(d_map)
 
         # add Position based on lap timing
-        laps['Position'] = np.NaN  # create empty column
+        laps['Position'] = np.nan  # create empty column
         if self.name in self._RACE_LIKE_SESSIONS:
             for lap_n in laps['LapNumber'].unique():
                 # get each drivers lap for the current lap number, sorted by
@@ -1633,7 +1633,7 @@ class Session:
         drivers_with_one_lap = lap_counts[lap_counts == 1].index
         dnf_and_generated = (laps['FastF1Generated'] &
                              laps['Driver'].isin(drivers_with_one_lap))
-        laps.loc[dnf_and_generated, 'Position'] = np.NaN
+        laps.loc[dnf_and_generated, 'Position'] = np.nan
 
         self._add_track_status_to_laps(laps)
 
@@ -1745,7 +1745,7 @@ class Session:
                 'Compound': [drv_laps['Compound'].iloc[-1]],
                 'TyreLife': [drv_laps['TyreLife'].iloc[-1] + 1],
                 'FreshTyre': [drv_laps['FreshTyre'].iloc[-1]],
-                'Position': [np.NaN],
+                'Position': [np.nan],
                 'FastF1Generated': [True],
                 'IsAccurate': [False]
             })
@@ -2229,7 +2229,7 @@ class Session:
                 # set (Grid)Position to NaN instead of default last or zero to
                 # make the DNS more obvious
                 self._results.loc[missing_drivers,
-                                  ('Position', 'GridPosition')] = np.NaN
+                                  ('Position', 'GridPosition')] = np.nan
 
         if (dupl_mask := self._results.index.duplicated()).any():
             dupl_drv = list(self._results.index[dupl_mask])

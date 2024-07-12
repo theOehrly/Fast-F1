@@ -84,16 +84,16 @@ def make_path(wname, wdate, sname, sdate):
 
 # define all empty columns for timing data
 EMPTY_LAPS = {'Time': pd.NaT, 'Driver': str(), 'LapTime': pd.NaT,
-              'NumberOfLaps': np.NaN, 'NumberOfPitStops': np.NaN,
+              'NumberOfLaps': np.nan, 'NumberOfPitStops': np.nan,
               'PitOutTime': pd.NaT, 'PitInTime': pd.NaT,
               'Sector1Time': pd.NaT, 'Sector2Time': pd.NaT,
               'Sector3Time': pd.NaT, 'Sector1SessionTime': pd.NaT,
               'Sector2SessionTime': pd.NaT, 'Sector3SessionTime': pd.NaT,
-              'SpeedI1': np.NaN, 'SpeedI2': np.NaN, 'SpeedFL': np.NaN,
-              'SpeedST': np.NaN, 'IsPersonalBest': False}
+              'SpeedI1': np.nan, 'SpeedI2': np.nan, 'SpeedFL': np.nan,
+              'SpeedST': np.nan, 'IsPersonalBest': False}
 
-EMPTY_STREAM = {'Time': pd.NaT, 'Driver': str(), 'Position': np.NaN,
-                'GapToLeader': np.NaN, 'IntervalToPositionAhead': np.NaN}
+EMPTY_STREAM = {'Time': pd.NaT, 'Driver': str(), 'Position': np.nan,
+                'GapToLeader': np.nan, 'IntervalToPositionAhead': np.nan}
 
 
 def timing_data(path: str,
