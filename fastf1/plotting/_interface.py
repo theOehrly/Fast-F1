@@ -1,11 +1,9 @@
 import dataclasses
+from collections.abc import Sequence
 from typing import (
     Any,
-    Dict,
-    List,
     Literal,
     Optional,
-    Sequence,
     Union
 )
 
@@ -334,7 +332,7 @@ def get_driver_abbreviation(
 
 def get_driver_names_by_team(
         identifier: str, session: Session, *, exact_match: bool = False
-) -> List[str]:
+) -> list[str]:
     """
     Get a list of full names of all drivers that drove for a team in a given
     session based on a recognizable and identifiable part of the team name.
@@ -351,7 +349,7 @@ def get_driver_names_by_team(
 
 def get_driver_abbreviations_by_team(
         identifier: str, session: Session, *, exact_match: bool = False
-) -> List[str]:
+) -> list[str]:
     """
     Get a list of abbreviations of all drivers that drove for a team in a given
     session based on a recognizable and identifiable part of the team name.
@@ -411,7 +409,7 @@ def get_driver_style(
         colormap: str = 'default',
         additional_color_kws: Union[list, tuple] = (),
         exact_match: bool = False
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get a plotting style that is unique for a driver based on the driver's
     abbreviation or based on a recognizable and identifiable part of the
@@ -626,7 +624,7 @@ def get_compound_color(compound: str, session: Session) -> str:
     return _Constants[year].CompoundColors[compound.upper()]
 
 
-def get_compound_mapping(session: Session) -> Dict[str, str]:
+def get_compound_mapping(session: Session) -> dict[str, str]:
     """
     Returns a dictionary that maps compound names to their associated
     colors. The colors are given as hexadecimal RGB color codes.
@@ -643,7 +641,7 @@ def get_compound_mapping(session: Session) -> Dict[str, str]:
 
 def get_driver_color_mapping(
         session: Session, *, colormap: str = 'default',
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """
     Returns a dictionary that maps driver abbreviations to their associated
     colors. The colors are given as hexadecimal RGB color codes.
@@ -677,7 +675,7 @@ def get_driver_color_mapping(
     return colors
 
 
-def list_team_names(session: Session, *, short: bool = False) -> List[str]:
+def list_team_names(session: Session, *, short: bool = False) -> list[str]:
     """Returns a list of team names of all teams in the ``session``.
 
     By default, the full team names are returned. Use the ``short`` argument
@@ -699,19 +697,19 @@ def list_team_names(session: Session, *, short: bool = False) -> List[str]:
     return list(team.value for team in dtm.teams_by_normalized.values())
 
 
-def list_driver_abbreviations(session: Session) -> List[str]:
+def list_driver_abbreviations(session: Session) -> list[str]:
     """Returns a list of abbreviations of all drivers in the ``session``."""
     dtm = _get_driver_team_mapping(session)
     return list(dtm.drivers_by_abbreviation.keys())
 
 
-def list_driver_names(session: Session) -> List[str]:
+def list_driver_names(session: Session) -> list[str]:
     """Returns a list of full names of all drivers in the ``session``."""
     dtm = _get_driver_team_mapping(session)
     return list(driver.value for driver in dtm.drivers_by_normalized.values())
 
 
-def list_compounds(session: Session) -> List[str]:
+def list_compounds(session: Session) -> list[str]:
     """Returns a list of all compound names for this season (not session)."""
     year = str(session.event['EventDate'].year)
     return list(_Constants[year].CompoundColors.keys())

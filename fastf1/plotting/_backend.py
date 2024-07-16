@@ -1,8 +1,4 @@
 import dataclasses
-from typing import (
-    Dict,
-    List
-)
 
 import fastf1._api
 from fastf1.plotting._base import (
@@ -16,12 +12,12 @@ from fastf1.plotting._constants import Constants
 
 def _load_drivers_from_f1_livetiming(
         *, api_path: str, year: str
-) -> List[_Team]:
+) -> list[_Team]:
     # load the driver information for the determined session
     driver_info = fastf1._api.driver_info(api_path)
 
     # parse the data into the required format
-    teams: Dict[str, _Team] = dict()
+    teams: dict[str, _Team] = dict()
 
     # Sorting by driver number here will directly guarantee that drivers
     # are sorted by driver number within each team. This has two advantages:

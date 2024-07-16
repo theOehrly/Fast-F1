@@ -4,7 +4,6 @@ import datetime
 import json
 import zlib
 from typing import (
-    Dict,
     Optional,
     Union
 )
@@ -29,7 +28,7 @@ _logger = get_logger('api')
 
 base_url = 'https://livetiming.formula1.com'
 
-headers: Dict[str, str] = {
+headers: dict[str, str] = {
     'Host': 'livetiming.formula1.com',
     'Connection': 'close',
     'TE': 'identity',
@@ -37,7 +36,7 @@ headers: Dict[str, str] = {
     'Accept-Encoding': 'gzip, identity',
 }
 
-pages: Dict[str, str] = {
+pages: dict[str, str] = {
     'session_data': 'SessionData.json',  # track + session status + lap count
     'session_info': 'SessionInfo.jsonStream',  # more rnd
     'archive_status': 'ArchiveStatus.json',  # rnd=1880327548
@@ -83,7 +82,7 @@ def make_path(wname, wdate, sname, sdate):
 
 
 # define all empty columns for timing data
-EMPTY_LAPS = {'Time': pd.NaT, 'Driver': str(), 'LapTime': pd.NaT,
+EMPTY_LAPS = {'Time': pd.NaT, 'Driver': '', 'LapTime': pd.NaT,
               'NumberOfLaps': np.nan, 'NumberOfPitStops': np.nan,
               'PitOutTime': pd.NaT, 'PitInTime': pd.NaT,
               'Sector1Time': pd.NaT, 'Sector2Time': pd.NaT,
@@ -92,7 +91,7 @@ EMPTY_LAPS = {'Time': pd.NaT, 'Driver': str(), 'LapTime': pd.NaT,
               'SpeedI1': np.nan, 'SpeedI2': np.nan, 'SpeedFL': np.nan,
               'SpeedST': np.nan, 'IsPersonalBest': False}
 
-EMPTY_STREAM = {'Time': pd.NaT, 'Driver': str(), 'Position': np.nan,
+EMPTY_STREAM = {'Time': pd.NaT, 'Driver': '', 'Position': np.nan,
                 'GapToLeader': np.nan, 'IntervalToPositionAhead': np.nan}
 
 

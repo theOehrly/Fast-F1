@@ -29,10 +29,7 @@ import pickle
 import re
 import sys
 import time
-from typing import (
-    Optional,
-    Tuple
-)
+from typing import Optional
 
 import requests
 from requests_cache import CacheMixin
@@ -524,8 +521,8 @@ class Cache(metaclass=_MetaCache):
                     try:
                         os.mkdir(cache_dir, mode=0o0700)
                     except Exception as err:
-                        _logger.error("Failed to create cache directory {0}. "
-                                      "Error {1}".format(cache_dir, err))
+                        _logger.error(f"Failed to create cache directory "
+                                      f"{cache_dir}. Error {err}")
                         raise
 
                 # Enable cache with default
@@ -632,7 +629,7 @@ class Cache(metaclass=_MetaCache):
         cls._ci_mode = enabled
 
     @classmethod
-    def get_cache_info(cls) -> Tuple[Optional[str], Optional[int]]:
+    def get_cache_info(cls) -> tuple[Optional[str], Optional[int]]:
         """Returns information about the cache directory and its size.
 
         If the cache is not configured, None will be returned for both the
@@ -658,7 +655,7 @@ class Cache(metaclass=_MetaCache):
         i = int(math.floor(math.log(size_bytes, 1024)))
         p = math.pow(1024, i)
         s = round(size_bytes / p, 2)
-        return "%s %s" % (s, size_name[i])
+        return f"{s} {size_name[i]}"
 
     @classmethod
     def _get_size(cls, start_path='.'):  # https://stackoverflow.com/questions/1392413/calculating-a-directorys-size-using-python # noqa: E501

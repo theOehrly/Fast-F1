@@ -1,10 +1,8 @@
 import copy
 import json
 from typing import (
-    List,
     Literal,
     Optional,
-    Type,
     Union
 )
 
@@ -252,7 +250,7 @@ class ErgastSimpleResponse(ErgastResponseMixin, ErgastResultFrame):
     _internal_names_set = set(_internal_names)
 
     @property
-    def _constructor(self) -> Type["ErgastResultFrame"]:
+    def _constructor(self) -> type["ErgastResultFrame"]:
         # drop from ErgastSimpleResponse to ErgastResultFrame, removing the
         # ErgastResponseMixin because a slice of the data is no longer a full
         # response and pagination, ... is therefore not supported anymore
@@ -363,7 +361,7 @@ class ErgastMultiResponse(ErgastResponseMixin):
         return self._description
 
     @property
-    def content(self) -> List[ErgastResultFrame]:
+    def content(self) -> list[ErgastResultFrame]:
         """A ``list`` of :class:`ErgastResultFrame` that contain the main
         response data.
 

@@ -194,7 +194,6 @@ import warnings
 from typing import (
     Literal,
     Optional,
-    Type,
     Union
 )
 
@@ -624,7 +623,7 @@ def _get_schedule_ff1(year):
             data[f'session{j+1}_date'][i] = pd.Timestamp(date)
             data[f'session{j+1}_date_Utc'][i] = pd.Timestamp(date_utc)
 
-    str().capitalize()
+    ''.capitalize()
 
     df = pd.DataFrame(data)
     # change column names from snake_case to UpperCamelCase
@@ -885,7 +884,7 @@ class EventSchedule(BaseDataFrame):
             self[col] = self[col].astype(_type)
 
     @property
-    def _constructor_sliced_horizontal(self) -> Type["Event"]:
+    def _constructor_sliced_horizontal(self) -> type["Event"]:
         return Event
 
     def is_testing(self):

@@ -3,9 +3,7 @@ import datetime
 import warnings
 from functools import reduce
 from typing import (
-    Dict,
     Optional,
-    Tuple,
     Union
 )
 
@@ -22,7 +20,7 @@ _logger = get_logger(__name__)
 def delta_time(
         reference_lap: "fastf1.core.Lap",
         compare_lap: "fastf1.core.Lap"
-) -> Tuple[pd.Series, "fastf1.core.Telemetry", "fastf1.core.Telemetry"]:
+) -> tuple[pd.Series, "fastf1.core.Telemetry", "fastf1.core.Telemetry"]:
     """Calculates the delta time of a given lap, along the 'Distance' axis
     of the reference lap.
 
@@ -114,7 +112,7 @@ def delta_time(
     return delta, ref, comp
 
 
-def recursive_dict_get(d: Dict, *keys: str, default_none: bool = False):
+def recursive_dict_get(d: dict, *keys: str, default_none: bool = False):
     """Recursive dict get. Can take an arbitrary number of keys and returns an
     empty dict if any key does not exist.
     https://stackoverflow.com/a/28225747"""

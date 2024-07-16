@@ -1,8 +1,5 @@
 import warnings
-from typing import (
-    List,
-    Optional
-)
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -37,7 +34,7 @@ from fastf1.plotting._constants import (
 _logger = get_logger(__package__)
 
 
-_COLOR_PALETTE: List[str] = ['#FF79C6', '#50FA7B', '#8BE9FD', '#BD93F9',
+_COLOR_PALETTE: list[str] = ['#FF79C6', '#50FA7B', '#8BE9FD', '#BD93F9',
                              '#FFB86C', '#FF5555', '#F1FA8C']
 # The default color palette for matplotlib plot lines in fastf1's color scheme
 
@@ -181,9 +178,9 @@ def driver_color(identifier: str) -> str:
         key_ratios.sort(reverse=True)
         if key_ratios[0][0] != 100:
             _logger.warning(
-                ("Correcting invalid user input "
+                "Correcting invalid user input "
                  f"'{identifier}' to '{key_ratios[0][1]}'."
-                 )
+
             )
         if ((key_ratios[0][0] < 35)
                 or (key_ratios[0][0] / key_ratios[1][0] < 1.2)):
@@ -268,9 +265,9 @@ def team_color(identifier: str) -> str:
         key_ratios.sort(reverse=True)
         if key_ratios[0][0] != 100:
             _logger.warning(
-                ("Correcting invalid user input "
+                "Correcting invalid user input "
                  f"'{identifier}' to '{key_ratios[0][1]}'."
-                 )
+
             )
         if ((key_ratios[0][0] < 35)
                 or (key_ratios[0][0] / key_ratios[1][0] < 1.2)):

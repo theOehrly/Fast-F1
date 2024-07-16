@@ -43,15 +43,13 @@ import collections
 import re
 import typing
 import warnings
+from collections.abc import Iterable
 from functools import cached_property
 from typing import (
     Any,
     Callable,
-    Iterable,
-    List,
     Literal,
     Optional,
-    Tuple,
     Union
 )
 
@@ -925,8 +923,8 @@ class Telemetry(pd.DataFrame):
         )
 
         if ((d['Date'].shape != dtd['Date'].shape)
-                or np.any((d['Date'].values
-                           != dtd['Date'].values))):
+                or np.any(d['Date'].values
+                          != dtd['Date'].values)):
             dtd = dtd.resample_channels(new_date_ref=d["Date"])
 
         # indices need to match as .join works index-on-index
@@ -1510,7 +1508,7 @@ class Session:
             elif not len(d2):
                 result = d1.copy()
                 result.reset_index(drop=True, inplace=True)
-                result['Compound'] = str()
+                result['Compound'] = ''
                 result['TyreLife'] = np.nan
                 result['Stint'] = 0
                 result['New'] = False
@@ -3295,7 +3293,7 @@ class Laps(BaseDataFrame):
         """
         return self[self['IsAccurate']]
 
-    def split_qualifying_sessions(self) -> List[Optional["Laps"]]:
+    def split_qualifying_sessions(self) -> list[Optional["Laps"]]:
         """Splits a lap object into individual laps objects for each
         qualifying session.
 
@@ -3354,7 +3352,7 @@ class Laps(BaseDataFrame):
         return laps
 
     def iterlaps(self, require: Optional[Iterable] = None) \
-            -> Iterable[Tuple[int, "Lap"]]:
+            -> Iterable[tuple[int, "Lap"]]:
         """Iterator for iterating over all laps in self.
 
         This method wraps :meth:`pandas.DataFrame.iterrows`.
@@ -3762,9 +3760,8 @@ class NoLapDataError(Exception):
     after processing the result.
     """
     def __init__(self, *args):
-        super(NoLapDataError, self).__init__("Failed to load session because "
-                                             "the API did not provide any "
-                                             "usable data.")
+        super().__init__("Failed to load session because the API did not "
+                         "provide any usable data.")
 
 
 class InvalidSessionError(Exception):
@@ -3772,6 +3769,4 @@ class InvalidSessionError(Exception):
     can be found."""
 
     def __init__(self, *args):
-        super(InvalidSessionError, self).__init__(
-            "No matching session can be found."
-        )
+        super().__init__("No matching session can be found.")

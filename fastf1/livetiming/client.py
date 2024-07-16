@@ -3,10 +3,8 @@ import concurrent.futures
 import json
 import logging
 import time
-from typing import (
-    Iterable,
-    Optional
-)
+from collections.abc import Iterable
+from typing import Optional
 
 import requests
 

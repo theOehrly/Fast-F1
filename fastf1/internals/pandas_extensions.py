@@ -1,5 +1,3 @@
-from typing import List
-
 import numpy as np
 from pandas import (
     DataFrame,
@@ -35,7 +33,7 @@ else:
 
 def create_df_fast(
         *,
-        arrays: List[np.ndarray],
+        arrays: list[np.ndarray],
         columns: list,
         fallback: bool = True
 ) -> DataFrame:
@@ -71,7 +69,7 @@ def create_df_fast(
 
 
 def _fallback_create_df(
-        arrays: List[np.ndarray],
+        arrays: list[np.ndarray],
         columns: list
 ) -> DataFrame:
     data = {col: arr for col, arr in zip(columns, arrays)}
@@ -87,7 +85,7 @@ def _fallback_if_unsupported(func):
 
 @_fallback_if_unsupported
 def _unsafe_create_df_fast(
-        arrays: List[np.ndarray],
+        arrays: list[np.ndarray],
         columns: list
 ) -> DataFrame:
     # Implements parts of pandas' internal DataFrame creation mechanics

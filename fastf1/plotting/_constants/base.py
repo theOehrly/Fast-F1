@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Dict
 
 
 class CompoundsConst:
@@ -30,5 +29,5 @@ class TeamConst:
 
 @dataclass(frozen=True)
 class BaseSeasonConst:
-    CompoundColors: Dict[str, str]
-    Teams: Dict[str, TeamConst]
+    CompoundColors: dict[str, str]
+    Teams: dict[str, TeamConst]
