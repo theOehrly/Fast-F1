@@ -2243,7 +2243,7 @@ class Session:
         except Exception as exc:
             _logger.warning("Failed to load extended driver information!")
             _logger.debug("Exception while loading driver list", exc_info=exc)
-            driver_info = {}
+            return None
         else:
             driver_info = collections.defaultdict(list)
 
@@ -2273,11 +2273,12 @@ class Session:
                                        driver_info['LastName']):
                     driver_info['FullName'].append(f"{first} {last}")
 
-        # driver info is required for joining on index (used as index),
-        # therefore drop rows where driver number is unavailable as they have
-        # an invalid index
-        return pd.DataFrame(driver_info, index=driver_info['DriverNumber']) \
-            .dropna(subset=['DriverNumber'])
+            # driver info is required for joining on index (used as index),
+            # therefore drop rows where driver number is unavailable as they
+            # have an invalid index
+            return pd.DataFrame(
+                driver_info, index=driver_info['DriverNumber']
+            ).dropna(subset=['DriverNumber'])
 
     def _drivers_results_from_ergast(
             self, *, load_drivers=False, load_results=False
