@@ -27,9 +27,9 @@ from fastf1.utils import (
 _logger = get_logger('api')
 
 base_url = 'https://livetiming.formula1.com'
+base_url_mirror = 'https://livetiming-mirror.fastf1.dev'
 
 headers: dict[str, str] = {
-    'Host': 'livetiming.formula1.com',
     'Connection': 'close',
     'TE': 'identity',
     'User-Agent': 'BestHTTP',
@@ -1698,7 +1698,14 @@ def fetch_page(path, name):
     page = pages[name]
     is_stream = 'jsonStream' in page
     is_z = '.z.' in page
+
     r = Cache.requests_get(base_url + path + pages[name], headers=headers)
+
+    if r.status_code >= 400:
+        _logger.debug(f"Falling back to livetiming mirror ({base_url_mirror})")
+        r = Cache.requests_get(base_url_mirror + path + pages[name],
+                               headers=headers)
+
     if r.status_code == 200:
         raw = r.content.decode('utf-8-sig')
         if is_stream:
