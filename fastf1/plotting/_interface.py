@@ -717,7 +717,7 @@ def list_compounds(session: Session) -> List[str]:
     return list(_Constants[year].CompoundColors.keys())
 
 
-def add_sorted_driver_legend(ax: matplotlib.axes.Axes, session: Session):
+def add_sorted_driver_legend(ax: matplotlib.axes.Axes, session: Session, *args, **kwargs):
     """
     Adds a legend to the axis where drivers are grouped by team and within each
     team they are shown in the same order that is used for selecting plot
@@ -767,11 +767,14 @@ def add_sorted_driver_legend(ax: matplotlib.axes.Axes, session: Session):
 
     handles_new = list()
     labels_new = list()
+    seen_labels = set()
     for elem in ref:
-        handles_new.append(elem[2])
-        labels_new.append(elem[3])
+        if elem[3] not in seen_labels:
+            handles_new.append(elem[2])
+            labels_new.append(elem[3])
+            seen_labels.add(elem[3])
 
-    return ax.legend(handles_new, labels_new)
+    return ax.legend(handles_new, labels_new, *args, **kwargs)
 
 
 def set_default_colormap(colormap: str):
