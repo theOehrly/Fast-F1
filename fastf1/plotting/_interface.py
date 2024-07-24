@@ -735,6 +735,8 @@ def add_sorted_driver_legend(
     Args:
         ax: An instance of a Matplotlib ``Axes`` object
         session: the session for which the data should be obtained
+        *args: Matplotlib legend args
+        **kwargs: Matplotlib legend kwargs
 
      Returns:
         ``matplotlib.legend.Legend``
