@@ -199,21 +199,12 @@ from typing import (
 )
 
 import dateutil.parser
-
-
-with warnings.catch_warnings():
-    warnings.filterwarnings(
-        'ignore', message="Using slow pure-python SequenceMatcher"
-    )
-    # suppress that warning, it's confusing at best here, we don't need fast
-    # sequence matching and the installation (on windows) requires some effort
-    from rapidfuzz import fuzz
-
 import pandas as pd
 
 import fastf1._api
 import fastf1.ergast
 from fastf1.core import Session
+from fastf1.internals.fuzzy import fuzzy_matcher
 from fastf1.internals.pandas_base import (
     BaseDataFrame,
     BaseSeries
@@ -939,54 +930,33 @@ class EventSchedule(BaseDataFrame):
             for word in common_words:
                 event_name = event_name.replace(word, "")
 
-            return event_name.replace(" ", "")
+            return event_name
 
         def _matcher_strings(ev):
             strings = list()
-            if 'Location' in ev:
+            if ('Location' in ev) and ev['Location']:
                 strings.append(ev['Location'].casefold())
-            if 'Country' in ev:
+            if ('Country' in ev) and ev['Country']:
                 strings.append(ev['Country'].casefold())
-            if 'EventName' in ev:
+            if ('EventName' in ev) and ev['EventName']:
                 strings.append(_remove_common_words(ev["EventName"]))
-            if 'OfficialEventName' in ev:
+            if ('OfficialEventName' in ev) and ev['OfficialEventName']:
                 strings.append(_remove_common_words(ev["OfficialEventName"]))
             return strings
 
         user_input = name
         name = _remove_common_words(name)
-        full_partial_match_indices = []
 
-        # check partial matches first
-        # if there is either zero or multiple 100% matches
-        # fall back to the full ratio
-        for i, event in self.iterrows():
-            if any([name in val for val in _matcher_strings(event)]):
-                full_partial_match_indices.append(i)
+        reference = [_matcher_strings(event) for _, event in self.iterrows()]
 
-        if len(full_partial_match_indices) == 1:
-            return self.loc[full_partial_match_indices[0]]
+        index, exact = fuzzy_matcher(name, reference)
+        event = self.iloc[index]
 
-        max_ratio = 0
-        max_index = 0
+        if not exact:
+            _logger.warning(f"Correcting user input '{user_input}' to "
+                            f"'{event.EventName}'")
 
-        for i, event in self.loc[full_partial_match_indices
-                                  or self.index].iterrows():
-            ratio = max(
-                [fuzz.ratio(val, name)
-                 for val in _matcher_strings(event)]
-            )
-            if ratio > max_ratio:
-                max_ratio = ratio
-                max_index = i
-
-        if max_ratio != 100:
-            _logger.warning((
-                "Correcting user input "
-                f"'{user_input}' to'{self.loc[max_index].EventName}'"
-            )
-            )
-        return self.loc[max_index]
+        return event
 
     def get_event_by_name(
             self,

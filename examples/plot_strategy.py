@@ -55,11 +55,13 @@ for driver in drivers:
     for idx, row in driver_stints.iterrows():
         # each row contains the compound name and stint length
         # we can use these information to draw horizontal bars
+        compound_color = fastf1.plotting.get_compound_color(row["Compound"],
+                                                            session=session)
         plt.barh(
             y=driver,
             width=row["StintLength"],
             left=previous_stint_end,
-            color=fastf1.plotting.COMPOUND_COLORS[row["Compound"]],
+            color=compound_color,
             edgecolor="black",
             fill=True
         )

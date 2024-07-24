@@ -10,8 +10,10 @@ import fastf1
 import fastf1.plotting
 
 
-# activate the fastf1 color scheme (and no other modifications)
-fastf1.plotting.setup_mpl(mpl_timedelta_support=False, misc_mpl_mods=False)
+# Load FastF1's dark color scheme
+fastf1.plotting.setup_mpl(mpl_timedelta_support=False, misc_mpl_mods=False,
+                          color_scheme='fastf1')
+
 
 ###############################################################################
 # Load the race session.
@@ -40,7 +42,8 @@ team_order = (
 print(team_order)
 
 # make a color palette associating team names to hex codes
-team_palette = {team: fastf1.plotting.team_color(team) for team in team_order}
+team_palette = {team: fastf1.plotting.get_team_color(team, session=race)
+                for team in team_order}
 
 ###############################################################################
 fig, ax = plt.subplots(figsize=(15, 10))

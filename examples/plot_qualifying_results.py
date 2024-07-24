@@ -14,9 +14,10 @@ import fastf1.plotting
 from fastf1.core import Laps
 
 
-# we only want support for timedelta plotting in this example
-fastf1.plotting.setup_mpl(mpl_timedelta_support=True, color_scheme=None,
-                          misc_mpl_mods=False)
+# Enable Matplotlib patches for plotting timedelta values
+fastf1.plotting.setup_mpl(mpl_timedelta_support=True, misc_mpl_mods=False,
+                          color_scheme=None)
+
 
 session = fastf1.get_session(2021, 'Spanish Grand Prix', 'Q')
 session.load()
@@ -30,7 +31,7 @@ print(drivers)
 
 
 ##############################################################################
-# After that we'll get each drivers fastest lap, create a new laps object
+# After that we'll get each driver's fastest lap, create a new laps object
 # from these laps, sort them by lap time and have pandas reindex them to
 # number them nicely by starting position.
 
@@ -45,7 +46,7 @@ fastest_laps = Laps(list_fastest_laps) \
 
 ##############################################################################
 # The plot is nicer to look at and more easily understandable if we just plot
-# the time differences. Therefore we subtract the fastest lap time from all
+# the time differences. Therefore, we subtract the fastest lap time from all
 # other lap times.
 
 pole_lap = fastest_laps.pick_fastest()
@@ -64,7 +65,7 @@ print(fastest_laps[['Driver', 'LapTime', 'LapTimeDelta']])
 # Finally, we'll create a list of team colors per lap to color our plot.
 team_colors = list()
 for index, lap in fastest_laps.iterlaps():
-    color = fastf1.plotting.team_color(lap['Team'])
+    color = fastf1.plotting.get_team_color(lap['Team'], session=session)
     team_colors.append(color)
 
 

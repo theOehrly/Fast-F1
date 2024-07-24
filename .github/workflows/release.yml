@@ -2,7 +2,7 @@ name: Create Release
 
 on:
   release:
-    types: [released]
+    types: [released, prereleased]
   workflow_dispatch:
 
 jobs:
