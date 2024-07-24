@@ -391,7 +391,7 @@ def lapnumber_axis(ax, axis='xaxis'):
     Set axis to integer ticks only.
 
     .. deprecated:: 3.4.0
-        The function ``lapnumber_axis`` is deprecated and will ber removed in a
+        The function ``lapnumber_axis`` is deprecated and will be removed in a
         future version without replacement.
 
     Args:

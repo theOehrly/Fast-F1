@@ -380,10 +380,8 @@ def get_driver_color(
 
     .. note:: This will simply return the team color of the team that the
         driver participated for in this session. Contrary to older versions
-        of FastF1, there are no separate colors for each driver. This was
-        changed, because the small differences in color between drivers of
-        the same team can be barely distinguished in a plot. You should use
-        styling options apart from color if you need to differentiate drivers
+        of FastF1, there are no separate colors for each driver. You should use
+        styling options other than color if you need to differentiate drivers
         of the same team. The function
         :func:`~fastf1.plotting.get_driver_style` can help you to customize
         the plot styling for each driver.
@@ -617,7 +615,7 @@ def get_compound_color(compound: str, session: Session) -> str:
     Get the compound color as hexadecimal RGB color code for a given compound.
 
     Args:
-        compound: The name of the compound
+        compound: the name of the compound
         session: the session for which the data should be obtained
 
     Returns:
@@ -720,10 +718,11 @@ def list_compounds(session: Session) -> List[str]:
 
 def add_sorted_driver_legend(ax: matplotlib.axes.Axes, session: Session):
     """
-    Adds a legend to the axis where drivers are ordered by team and within a
-    team in the same order that is used for selecting plot styles.
+    Adds a legend to the axis where drivers are grouped by team and within each
+    team they are shown in the same order that is used for selecting plot
+    styles.
 
-    This function is a drop in replacement for calling Matplotlib's
+    This function is a drop-in replacement for calling Matplotlib's
     ``ax.legend()`` method. It can only be used when driver names or driver
     abbreviations are used as labels for the legend.
 
