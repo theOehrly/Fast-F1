@@ -1,5 +1,4 @@
 import dataclasses
-import warnings
 from typing import (
     Dict,
     List
@@ -8,6 +7,7 @@ from typing import (
 import fastf1._api
 from fastf1.plotting._base import (
     _Driver,
+    _logger,
     _normalize_string,
     _Team
 )
@@ -73,9 +73,8 @@ def _load_drivers_from_f1_livetiming(
 
                     break
             else:
-                warnings.warn(f"Encountered unknown team '{team_name}' while "
-                              f"loading driver-team mapping.",
-                              UserWarning)
+                _logger.warning(f"Encountered unknown team '{team_name}' "
+                                f"while loading driver-team mapping.")
                 continue
 
             teams[team_name] = team

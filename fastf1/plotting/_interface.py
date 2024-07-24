@@ -399,7 +399,8 @@ def get_driver_color(
         A hexadecimal RGB color code
 
     """
-    return _get_driver_color(identifier, session, colormap=colormap)
+    return _get_driver_color(identifier, session, colormap=colormap,
+                             exact_match=exact_match)
 
 
 def get_driver_style(

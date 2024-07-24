@@ -8,7 +8,7 @@ from fastf1.plotting._constants.base import (
 
 
 # NOTE: the team constants are copied when loading the driver-team-mapping
-# and values may be modified there, it the used API provides different values
+# and values may be modified there, if the used API provides different values
 
 
 Teams: Dict[str, TeamConst] = {
@@ -84,7 +84,6 @@ Teams: Dict[str, TeamConst] = {
     )
 }
 
-# TODO: future proofing?
 CompoundColors: Dict[CompoundsConst, str] = {
     CompoundsConst.Soft: "#da291c",
     CompoundsConst.Medium: "#ffd12e",
