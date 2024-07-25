@@ -2,16 +2,72 @@
 What's new in v3.4.0
 --------------------
 
-(released dd/mm/yyyy)
+(released 26/07/2024)
 
 
 New Features
 ^^^^^^^^^^^^
 
+- Completely reimplemented the :mod:`fastf1.plotting` module. The new module
+  provides a more flexible and powerful API for creating custom plots. This
+  is an overview of the relevant new features and changes:
+
+    - Driver and team names, abbreviations and colors are now supported for
+      all seasons since 2018 instead of only for the most recent season.
+
+    - Driver changes and test drivers running in free practice session are now
+      supported automatically and do no longer require an update of FastF1.
+
+    - Users can now choose between the "offcial" F1 color map and the color map
+      that was already used previously by FastF1.
+
+    - Driver specific colors are deprecated. Users are encouraged to use more
+      visually distinct plot styling options instead to differentiate between
+      drivers of the same team. The new
+      :func:`~fastf1.plotting.get_driver_style` function can be used to easily
+      get driver specific styling options.
+
+    - Users can override team colors and short name constants on a per-session
+      basis.
+
+    - The API has been improved to be more consistent and easier to use.
+
+- Added support for a fallback mirror for the F1 livetiming API. If the primary
+  API is unavailable, FastF1 will automatically switch to the fallback mirror
+  and continue to work without any user intervention.
+  This feature is experimental and for now provided without any guarantees.
+
+- Added a warning that informs users when event, driver or team names are
+  fuzzy matched. (by @Casper-Guo) (#574)
+
+- Improved fuzzy matching of event names to give better matching results. (by
+  @Casper-Guo) (#579)
+
+- Added support for Numpy v2.0.
+
+- The SignalRClient can now be started when an async event loop is already
+  running by awaiting the new
+  :func:`fastf1.livetiming.client.SignalRClient.async_start` coroutine. This
+  enables usage in newer versions of Juypter Notebooks, for example.
+
+- Set a default connection timeout of five seconds for all requests to the
+  Ergast API. This should prevent long data loading times when the API is
+  unresponsive.
 
 
 Bug Fixes
 ^^^^^^^^^
+
+- Drivers that crashed on the very first lap are now assigned ``NaN`` as their
+  position, ensuring correct positions throughout the field at then end of the
+  first lap. (by @AND2797) (#595)
+
+- Fixed a bug that prevented loading of any data when driver information was
+  unavailable from the F1 livetiming API.
+
+- Fixed a bug in the client side rate limiting that allowed higher rates than
+  intended. This may have caused the client to be temporarily blocked by the
+  server.
 
 
 Deprecations
@@ -20,6 +76,7 @@ Deprecations
 - The following module level properties of :mod:`fastf1.plotting` have been
   deprecated:
   :attr:`~fastf1.plotting.COMPOUND_COLORS`,
+  :attr:`~fastf1.plotting.DRIVER_COLORS`,
   :attr:`~fastf1.plotting.DRIVER_TRANSLATE`,
   :attr:`~fastf1.plotting.TEAM_COLORS`,
   :attr:`~fastf1.plotting.TEAM_TRANSLATE`,
@@ -28,10 +85,23 @@ Deprecations
 
 - The following functions in :mod:`fastf1.plotting` have been deprecated:
   :func:`~fastf1.plotting.driver_color`,
-  :func:`~fastf1.plotting.team_color`
+  :func:`~fastf1.plotting.team_color`,
+  :func:`~fastf1.plotting.lapnumber_axis`
+
+- The argument ``misc_mpl_mods`` of function :func:`~fastf1.plotting.setup_mpl`
+  is deprecated and will be removed in the future without replacement for its
+  functionality.
+
+- The argument ``color_scheme`` of function :func:`~fastf1.plotting.setup_mpl`
+  will default to ``None`` in the future, meaning that FastF1's default color
+  scheme will need to be enabled explicitly.
 
 
-Removals
-^^^^^^^^
+Increased minimum versions for dependencies
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- ``fastf1.plotting.lapnumber_axis`` has been removed
+- The new minimum version of Python is 3.9. Support for Python 3.8 is dropped.
+- The minimum versions for the following dependencies have been increased:
+
+  - numpy to >=1.23.1
+  - scipy to >=1.8.1
