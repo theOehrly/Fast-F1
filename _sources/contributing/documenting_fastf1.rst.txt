@@ -59,7 +59,7 @@ In general, the style guidelines and formatting conventions described in
 https://matplotlib.org/stable/devel/documenting_mpl.html should be applied to
 FastF1 as well.
 
-One noteable exception is that FastF1 uses the `google docstring standard
+One notable exception is that FastF1 uses the `google docstring standard
 <https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html>`_
 instead of the numpydoc format.
 

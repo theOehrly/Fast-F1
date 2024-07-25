@@ -1,0 +1,1246 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.07.18 -->
+        <title>fastf1.plotting._interface - FastF1 3.4.0.dev54</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=613ab9ff" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css?v=7f9a90b1" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=302659d7" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=ce641c91" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../../index.html"><div class="brand">FastF1 <small>3.4.0.dev54</small></div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../../index.html">
+  
+  
+  <span class="sidebar-brand-text">FastF1 <small>3.4.0.dev54</small></span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/theOehrly/Fast-F1">← Back to Github</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../examples/index.html">Getting Started</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/basics.html">Getting started with the basics</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../gen_modules/examples_gallery/index.html">Examples Gallery</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Examples Gallery</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../gen_modules/examples_gallery/example_fastf1_signalrclient.html">Using the Fast-F1 signalr client?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../gen_modules/examples_gallery/plot_position_changes.html">Position changes during a race</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../gen_modules/examples_gallery/plot_speed_traces.html">Overlaying speed traces of two laps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../gen_modules/examples_gallery/plot_driver_laptimes.html">Driver Laptimes Scatterplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../gen_modules/examples_gallery/plot_gear_shifts_on_track.html">Gear shifts on track</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../gen_modules/examples_gallery/plot_team_pace_ranking.html">Team Pace Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../gen_modules/examples_gallery/plot_strategy.html">Tyre strategies during a race</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../gen_modules/examples_gallery/plot_qualifying_results.html">Qualifying results overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../gen_modules/examples_gallery/plot_laptimes_distribution.html">Driver Laptimes Distribution Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../gen_modules/examples_gallery/plot_annotate_speed_trace.html">Plot speed traces with corner annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../gen_modules/examples_gallery/plot_who_can_still_win_wdc.html">Who can still win the drivers WDC?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../gen_modules/examples_gallery/plot_speed_on_track.html">Speed visualization on track map</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../gen_modules/examples_gallery/plot_driver_styling.html">Driver specific plot styling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../gen_modules/examples_gallery/plot_annotate_corners.html">Draw a track map with numbered corners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../gen_modules/examples_gallery/plot_results_tracker.html">Plot driver standings in a heatmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../fastf1.html">General Functions - <code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../core.html">Timing and Telemetry Data - <code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.core</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../core.html#api-reference">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../events.html">Event Schedule - <code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.events</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">F1 API - <code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.api</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ergast.html">Ergast API Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../circuit_info.html">Circuit Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utils.html">Utils module - <code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.utils</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../plotting.html">Plotting - <code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.plotting</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../livetiming.html">Live Timing Client - <code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.livetiming</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../logging.html">Logging - <code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.logger</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../legacy.html">Legacy Functionality - <code class="xref py py-mod docutils literal notranslate"><span class="pre">fastf1.legacy</span></code></a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Information:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../time_explanation.html">Time, Date and Timing - Explanation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../howto_accurate_calculations.html">How to perform calculations accurately</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../known_bugs.html">Known bugs and caveats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../contributing/index.html">Contributing</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Contributing</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../contributing/contributing.html">Contributing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../contributing/devenv_setup.html">Setting up FastF1 for development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../contributing/testing.html">Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../contributing/testing.html#linting-code-style-tests">Linting - Code style tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../contributing/documenting_fastf1.html">Writing documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../contributing/coding_guide.html">Pull request guidelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog/index.html">Release Notes</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <h1>Source code for fastf1.plotting._interface</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">dataclasses</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Sequence</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Any</span><span class="p">,</span>
+    <span class="n">Literal</span><span class="p">,</span>
+    <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">Union</span>
+<span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.axes</span>
+<span class="kn">import</span> <span class="nn">matplotlib.legend</span>
+
+<span class="kn">from</span> <span class="nn">fastf1.core</span> <span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span> <span class="nn">fastf1.internals.fuzzy</span> <span class="kn">import</span> <span class="n">fuzzy_matcher</span>
+<span class="kn">from</span> <span class="nn">fastf1.plotting._backend</span> <span class="kn">import</span> <span class="n">_load_drivers_from_f1_livetiming</span>
+<span class="kn">from</span> <span class="nn">fastf1.plotting._base</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_Driver</span><span class="p">,</span>
+    <span class="n">_DriverTeamMapping</span><span class="p">,</span>
+    <span class="n">_logger</span><span class="p">,</span>
+    <span class="n">_normalize_string</span><span class="p">,</span>
+    <span class="n">_Team</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">fastf1.plotting._constants</span> <span class="kn">import</span> <span class="n">Constants</span> <span class="k">as</span> <span class="n">_Constants</span>
+
+
+<span class="n">_DEFAULT_COLOR_MAP</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;fastf1&#39;</span><span class="p">,</span> <span class="s1">&#39;official&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;fastf1&#39;</span>
+<span class="n">_DRIVER_TEAM_MAPPINGS</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">_get_driver_team_mapping</span><span class="p">(</span>
+        <span class="n">session</span><span class="p">:</span> <span class="n">Session</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;_DriverTeamMapping&quot;</span><span class="p">:</span>
+    <span class="c1"># driver-team mappings are generated once for each session and then reused</span>
+    <span class="c1"># on future calls</span>
+    <span class="n">api_path</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">api_path</span>
+    <span class="n">year</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">event</span><span class="p">[</span><span class="s1">&#39;EventDate&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">year</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">api_path</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_DRIVER_TEAM_MAPPINGS</span><span class="p">:</span>
+        <span class="n">teams</span> <span class="o">=</span> <span class="n">_load_drivers_from_f1_livetiming</span><span class="p">(</span>
+            <span class="n">api_path</span><span class="o">=</span><span class="n">api_path</span><span class="p">,</span> <span class="n">year</span><span class="o">=</span><span class="n">year</span>
+        <span class="p">)</span>
+        <span class="n">mapping</span> <span class="o">=</span> <span class="n">_DriverTeamMapping</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="n">teams</span><span class="p">)</span>
+        <span class="n">_DRIVER_TEAM_MAPPINGS</span><span class="p">[</span><span class="n">api_path</span><span class="p">]</span> <span class="o">=</span> <span class="n">mapping</span>
+
+    <span class="k">return</span> <span class="n">_DRIVER_TEAM_MAPPINGS</span><span class="p">[</span><span class="n">api_path</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_get_driver</span><span class="p">(</span>
+        <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">exact_match</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Driver</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">exact_match</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_get_driver_exact</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">session</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_get_driver_fuzzy</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">session</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_driver_fuzzy</span><span class="p">(</span><span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Driver</span><span class="p">:</span>
+    <span class="n">dtm</span> <span class="o">=</span> <span class="n">_get_driver_team_mapping</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+    <span class="n">identifier</span> <span class="o">=</span> <span class="n">_normalize_string</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="c1"># try driver abbreviation first</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">abb</span> <span class="o">:=</span> <span class="n">identifier</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span> <span class="ow">in</span> <span class="n">dtm</span><span class="o">.</span><span class="n">drivers_by_abbreviation</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dtm</span><span class="o">.</span><span class="n">drivers_by_abbreviation</span><span class="p">[</span><span class="n">abb</span><span class="p">]</span>
+
+    <span class="c1"># check for an exact driver name match</span>
+    <span class="k">if</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="n">dtm</span><span class="o">.</span><span class="n">drivers_by_normalized</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dtm</span><span class="o">.</span><span class="n">drivers_by_normalized</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span>
+
+    <span class="c1"># check for exact partial string match</span>
+    <span class="k">for</span> <span class="n">normalized_driver</span> <span class="ow">in</span> <span class="n">dtm</span><span class="o">.</span><span class="n">drivers_by_normalized</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="n">normalized_driver</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">dtm</span><span class="o">.</span><span class="n">drivers_by_normalized</span><span class="p">[</span><span class="n">normalized_driver</span><span class="p">]</span>
+
+    <span class="c1"># do fuzzy string matching</span>
+    <span class="n">drivers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dtm</span><span class="o">.</span><span class="n">drivers_by_normalized</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="n">strings</span> <span class="o">=</span> <span class="p">[[</span><span class="n">driver</span><span class="o">.</span><span class="n">normalized_value</span><span class="p">,</span> <span class="p">]</span> <span class="k">for</span> <span class="n">driver</span> <span class="ow">in</span> <span class="n">drivers</span><span class="p">]</span>
+    <span class="n">index</span><span class="p">,</span> <span class="n">exact</span> <span class="o">=</span> <span class="n">fuzzy_matcher</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="n">identifier</span><span class="p">,</span>
+                                 <span class="n">reference</span><span class="o">=</span><span class="n">strings</span><span class="p">,</span>
+                                 <span class="n">abs_confidence</span><span class="o">=</span><span class="mf">0.35</span><span class="p">,</span>
+                                 <span class="n">rel_confidence</span><span class="o">=</span><span class="mf">0.30</span><span class="p">)</span>
+    <span class="n">normalized_driver</span> <span class="o">=</span> <span class="n">drivers</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">normalized_value</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">exact</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Correcting user input &#39;</span><span class="si">{</span><span class="n">identifier</span><span class="si">}</span><span class="s2">&#39; to &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">normalized_driver</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dtm</span><span class="o">.</span><span class="n">drivers_by_normalized</span><span class="p">[</span><span class="n">normalized_driver</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_get_driver_exact</span><span class="p">(</span><span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Driver</span><span class="p">:</span>
+    <span class="n">dtm</span> <span class="o">=</span> <span class="n">_get_driver_team_mapping</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+    <span class="n">identifier</span> <span class="o">=</span> <span class="n">_normalize_string</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="c1"># try driver abbreviation first</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">abb</span> <span class="o">:=</span> <span class="n">identifier</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span> <span class="ow">in</span> <span class="n">dtm</span><span class="o">.</span><span class="n">drivers_by_abbreviation</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dtm</span><span class="o">.</span><span class="n">drivers_by_abbreviation</span><span class="p">[</span><span class="n">abb</span><span class="p">]</span>
+
+    <span class="c1"># check for an exact driver name match</span>
+    <span class="k">if</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="n">dtm</span><span class="o">.</span><span class="n">drivers_by_normalized</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dtm</span><span class="o">.</span><span class="n">drivers_by_normalized</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span>
+
+    <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No driver found for &#39;</span><span class="si">{</span><span class="n">identifier</span><span class="si">}</span><span class="s2">&#39; (exact match only)&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_team</span><span class="p">(</span>
+        <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">exact_match</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Team</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">exact_match</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_get_team_exact</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">session</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_get_team_fuzzy</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">session</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_team_fuzzy</span><span class="p">(</span><span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Team</span><span class="p">:</span>
+    <span class="n">dtm</span> <span class="o">=</span> <span class="n">_get_driver_team_mapping</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+    <span class="n">identifier</span> <span class="o">=</span> <span class="n">_normalize_string</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="c1"># remove common non-unique words</span>
+    <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;racing&#39;</span><span class="p">,</span> <span class="s1">&#39;team&#39;</span><span class="p">,</span> <span class="s1">&#39;f1&#39;</span><span class="p">,</span> <span class="s1">&#39;scuderia&#39;</span><span class="p">):</span>
+        <span class="n">identifier</span> <span class="o">=</span> <span class="n">identifier</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">word</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="c1"># check for an exact team name match</span>
+    <span class="k">if</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="n">dtm</span><span class="o">.</span><span class="n">teams_by_normalized</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">dtm</span><span class="o">.</span><span class="n">teams_by_normalized</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span>
+
+    <span class="c1"># check full match with full team name or for exact partial string</span>
+    <span class="c1"># match with normalized team name</span>
+    <span class="k">for</span> <span class="n">normalized</span><span class="p">,</span> <span class="n">team</span> <span class="ow">in</span> <span class="n">dtm</span><span class="o">.</span><span class="n">teams_by_normalized</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">identifier</span> <span class="o">==</span> <span class="n">team</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">casefold</span><span class="p">())</span> <span class="ow">or</span> <span class="p">(</span><span class="n">identifier</span> <span class="ow">in</span> <span class="n">normalized</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">dtm</span><span class="o">.</span><span class="n">teams_by_normalized</span><span class="p">[</span><span class="n">normalized</span><span class="p">]</span>
+
+    <span class="c1"># do fuzzy string match</span>
+    <span class="n">teams</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dtm</span><span class="o">.</span><span class="n">teams_by_normalized</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="n">strings</span> <span class="o">=</span> <span class="p">[[</span><span class="n">team</span><span class="o">.</span><span class="n">normalized_value</span><span class="p">,</span> <span class="p">]</span> <span class="k">for</span> <span class="n">team</span> <span class="ow">in</span> <span class="n">teams</span><span class="p">]</span>
+    <span class="n">index</span><span class="p">,</span> <span class="n">exact</span> <span class="o">=</span> <span class="n">fuzzy_matcher</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="n">identifier</span><span class="p">,</span>
+                                 <span class="n">reference</span><span class="o">=</span><span class="n">strings</span><span class="p">,</span>
+                                 <span class="n">abs_confidence</span><span class="o">=</span><span class="mf">0.35</span><span class="p">,</span>
+                                 <span class="n">rel_confidence</span><span class="o">=</span><span class="mf">0.30</span><span class="p">)</span>
+    <span class="n">normalized_team_name</span> <span class="o">=</span> <span class="n">teams</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">normalized_value</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">exact</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Correcting user input &#39;</span><span class="si">{</span><span class="n">identifier</span><span class="si">}</span><span class="s2">&#39; to &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">normalized_team_name</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dtm</span><span class="o">.</span><span class="n">teams_by_normalized</span><span class="p">[</span><span class="n">normalized_team_name</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_get_team_exact</span><span class="p">(</span><span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Team</span><span class="p">:</span>
+    <span class="n">dtm</span> <span class="o">=</span> <span class="n">_get_driver_team_mapping</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+    <span class="n">identifier</span> <span class="o">=</span> <span class="n">_normalize_string</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="c1"># check for an exact normalized team name match</span>
+    <span class="k">if</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="n">dtm</span><span class="o">.</span><span class="n">teams_by_normalized</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">dtm</span><span class="o">.</span><span class="n">teams_by_normalized</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span>
+
+    <span class="c1"># check full match with full team name</span>
+    <span class="k">for</span> <span class="n">normalized</span><span class="p">,</span> <span class="n">full</span> <span class="ow">in</span> <span class="n">dtm</span><span class="o">.</span><span class="n">teams_by_normalized</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">identifier</span> <span class="o">==</span> <span class="n">full</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">casefold</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">dtm</span><span class="o">.</span><span class="n">teams_by_normalized</span><span class="p">[</span><span class="n">normalized</span><span class="p">]</span>
+
+    <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No team found for &#39;</span><span class="si">{</span><span class="n">identifier</span><span class="si">}</span><span class="s2">&#39; (exact match only)&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_driver_color</span><span class="p">(</span>
+        <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">colormap</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span>
+        <span class="n">exact_match</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">_variants</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">driver</span> <span class="o">=</span> <span class="n">_get_driver</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">exact_match</span><span class="o">=</span><span class="n">exact_match</span><span class="p">)</span>
+    <span class="n">team_name</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">team</span><span class="o">.</span><span class="n">normalized_value</span>
+
+    <span class="k">return</span> <span class="n">_get_team_color</span><span class="p">(</span><span class="n">team_name</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">colormap</span><span class="o">=</span><span class="n">colormap</span><span class="p">,</span>
+                           <span class="n">exact_match</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_team_color</span><span class="p">(</span>
+        <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">colormap</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span>
+        <span class="n">exact_match</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">dtm</span> <span class="o">=</span> <span class="n">_get_driver_team_mapping</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">dtm</span><span class="o">.</span><span class="n">year</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_Constants</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No team colors for year &#39;</span><span class="si">{</span><span class="n">dtm</span><span class="o">.</span><span class="n">year</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+    <span class="n">team</span> <span class="o">=</span> <span class="n">_get_team</span><span class="p">(</span>
+        <span class="n">identifier</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">exact_match</span><span class="o">=</span><span class="n">exact_match</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">colormap</span> <span class="o">==</span> <span class="s1">&#39;default&#39;</span><span class="p">:</span>
+        <span class="n">colormap</span> <span class="o">=</span> <span class="n">_DEFAULT_COLOR_MAP</span>
+
+    <span class="k">if</span> <span class="n">colormap</span> <span class="o">==</span> <span class="s1">&#39;fastf1&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">team</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">TeamColor</span><span class="o">.</span><span class="n">FastF1</span>
+    <span class="k">elif</span> <span class="n">colormap</span> <span class="o">==</span> <span class="s1">&#39;official&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">team</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">TeamColor</span><span class="o">.</span><span class="n">Official</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid colormap &#39;</span><span class="si">{</span><span class="n">colormap</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_team_name">
+<a class="viewcode-back" href="../../../plotting.html#fastf1.plotting.get_team_name">[docs]</a>
+<span class="k">def</span> <span class="nf">get_team_name</span><span class="p">(</span>
+        <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">short</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">exact_match</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get a full or shortened team name based on a recognizable and identifiable</span>
+<span class="sd">    part of the team name.</span>
+
+<span class="sd">    The short version of the team name is intended for saving space when</span>
+<span class="sd">    annotating plots and may skip parts of the official team name, for example</span>
+<span class="sd">    &quot;Haas F1 Team&quot; becomes just &quot;Haas&quot;.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        identifier: a recognizable part of the team name</span>
+<span class="sd">        session: the session for which the data should be obtained</span>
+<span class="sd">        short: if True, a shortened version of the team name will be returned</span>
+<span class="sd">        exact_match: match the identifier exactly (case-insensitive, special</span>
+<span class="sd">            characters are converted to their nearest ASCII equivalent)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">team</span> <span class="o">=</span> <span class="n">_get_team</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">exact_match</span><span class="o">=</span><span class="n">exact_match</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">short</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">team</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">ShortName</span>
+
+    <span class="k">return</span> <span class="n">team</span><span class="o">.</span><span class="n">value</span></div>
+
+
+
+<div class="viewcode-block" id="get_team_name_by_driver">
+<a class="viewcode-back" href="../../../plotting.html#fastf1.plotting.get_team_name_by_driver">[docs]</a>
+<span class="k">def</span> <span class="nf">get_team_name_by_driver</span><span class="p">(</span>
+        <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">short</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">exact_match</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get a full team name based on a driver&#39;s abbreviation or based on a</span>
+<span class="sd">    recognizable and identifiable part of a driver&#39;s name.</span>
+
+<span class="sd">    Alternatively, a shortened version of the team name can be returned. The</span>
+<span class="sd">    short version is intended for saving as much space as possible when</span>
+<span class="sd">    annotating plots and may skip parts of the official team name.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        identifier: driver abbreviation or recognizable part of the driver name</span>
+<span class="sd">        session: the session for which the data should be obtained</span>
+<span class="sd">        short: if True, a shortened version of the team name will be returned</span>
+<span class="sd">        exact_match: match the identifier exactly (case-insensitive, special</span>
+<span class="sd">            characters are converted to their nearest ASCII equivalent)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">driver</span> <span class="o">=</span> <span class="n">_get_driver</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">exact_match</span><span class="o">=</span><span class="n">exact_match</span><span class="p">)</span>
+    <span class="n">team</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">team</span>
+
+    <span class="k">if</span> <span class="n">short</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">team</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">ShortName</span>
+
+    <span class="k">return</span> <span class="n">team</span><span class="o">.</span><span class="n">value</span></div>
+
+
+
+<div class="viewcode-block" id="get_team_color">
+<a class="viewcode-back" href="../../../plotting.html#fastf1.plotting.get_team_color">[docs]</a>
+<span class="k">def</span> <span class="nf">get_team_color</span><span class="p">(</span>
+        <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">colormap</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span>
+        <span class="n">exact_match</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get a team color based on a recognizable and identifiable part of</span>
+<span class="sd">    the team name.</span>
+
+<span class="sd">    The team color is returned as a hexadecimal RGB color code.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        identifier: a recognizable part of the team name</span>
+<span class="sd">        session: the session for which the data should be obtained</span>
+<span class="sd">        colormap: one of ``&#39;default&#39;``, ``&#39;fastf1&#39;`` or ``&#39;official&#39;``.</span>
+<span class="sd">            The default colormap is ``&#39;fastf1&#39;``. Use</span>
+<span class="sd">            :func:`~fastf1.plotting.set_default_colormap` to change it.</span>
+<span class="sd">        exact_match: match the identifier exactly (case-insensitive, special</span>
+<span class="sd">            characters are converted to their nearest ASCII equivalent)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A hexadecimal RGB color code</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_get_team_color</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span>
+                           <span class="n">colormap</span><span class="o">=</span><span class="n">colormap</span><span class="p">,</span>
+                           <span class="n">exact_match</span><span class="o">=</span><span class="n">exact_match</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_driver_name">
+<a class="viewcode-back" href="../../../plotting.html#fastf1.plotting.get_driver_name">[docs]</a>
+<span class="k">def</span> <span class="nf">get_driver_name</span><span class="p">(</span>
+        <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">exact_match</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get a full driver name based on the driver&#39;s abbreviation or based on</span>
+<span class="sd">    a recognizable and identifiable part of the driver&#39;s name.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        identifier: driver abbreviation or recognizable part of the driver name</span>
+<span class="sd">        session: the session for which the data should be obtained</span>
+<span class="sd">        exact_match: match the identifier exactly (case-insensitive, special</span>
+<span class="sd">            characters are converted to their nearest ASCII equivalent)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">driver</span> <span class="o">=</span> <span class="n">_get_driver</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">exact_match</span><span class="o">=</span><span class="n">exact_match</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">driver</span><span class="o">.</span><span class="n">value</span></div>
+
+
+
+<div class="viewcode-block" id="get_driver_abbreviation">
+<a class="viewcode-back" href="../../../plotting.html#fastf1.plotting.get_driver_abbreviation">[docs]</a>
+<span class="k">def</span> <span class="nf">get_driver_abbreviation</span><span class="p">(</span>
+        <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">exact_match</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get a driver&#39;s abbreviation based on a recognizable and identifiable</span>
+<span class="sd">    part of the driver&#39;s name.</span>
+
+<span class="sd">    Note that the driver&#39;s abbreviation, if given exactly, is also a valid</span>
+<span class="sd">    identifier. In this case the same value is returned as was given as the</span>
+<span class="sd">    identifier.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        identifier: recognizable part of the driver&#39;s name (or the</span>
+<span class="sd">            driver&#39;s abbreviation)</span>
+<span class="sd">        session: the session for which the data should be obtained</span>
+<span class="sd">        exact_match: match the identifier exactly (case-insensitive, special</span>
+<span class="sd">            characters are converted to their nearest ASCII equivalent)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">driver</span> <span class="o">=</span> <span class="n">_get_driver</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">exact_match</span><span class="o">=</span><span class="n">exact_match</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">driver</span><span class="o">.</span><span class="n">abbreviation</span></div>
+
+
+
+<div class="viewcode-block" id="get_driver_names_by_team">
+<a class="viewcode-back" href="../../../plotting.html#fastf1.plotting.get_driver_names_by_team">[docs]</a>
+<span class="k">def</span> <span class="nf">get_driver_names_by_team</span><span class="p">(</span>
+        <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">exact_match</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get a list of full names of all drivers that drove for a team in a given</span>
+<span class="sd">    session based on a recognizable and identifiable part of the team name.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        identifier: a recognizable part of the team name</span>
+<span class="sd">        session: the session for which the data should be obtained</span>
+<span class="sd">        exact_match: match the identifier exactly (case-insensitive, special</span>
+<span class="sd">            characters are converted to their nearest ASCII equivalent)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">team</span> <span class="o">=</span> <span class="n">_get_team</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">exact_match</span><span class="o">=</span><span class="n">exact_match</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">driver</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">driver</span> <span class="ow">in</span> <span class="n">team</span><span class="o">.</span><span class="n">drivers</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="get_driver_abbreviations_by_team">
+<a class="viewcode-back" href="../../../plotting.html#fastf1.plotting.get_driver_abbreviations_by_team">[docs]</a>
+<span class="k">def</span> <span class="nf">get_driver_abbreviations_by_team</span><span class="p">(</span>
+        <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">exact_match</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get a list of abbreviations of all drivers that drove for a team in a given</span>
+<span class="sd">    session based on a recognizable and identifiable part of the team name.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        identifier: a recognizable part of the team name</span>
+<span class="sd">        session: the session for which the data should be obtained</span>
+<span class="sd">        exact_match: match the identifier exactly (case-insensitive, special</span>
+<span class="sd">            characters are converted to their nearest ASCII equivalent)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">team</span> <span class="o">=</span> <span class="n">_get_team</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">exact_match</span><span class="o">=</span><span class="n">exact_match</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">driver</span><span class="o">.</span><span class="n">abbreviation</span> <span class="k">for</span> <span class="n">driver</span> <span class="ow">in</span> <span class="n">team</span><span class="o">.</span><span class="n">drivers</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="get_driver_color">
+<a class="viewcode-back" href="../../../plotting.html#fastf1.plotting.get_driver_color">[docs]</a>
+<span class="k">def</span> <span class="nf">get_driver_color</span><span class="p">(</span>
+        <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">colormap</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span>
+        <span class="n">exact_match</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the color that is associated with a driver based on the driver&#39;s</span>
+<span class="sd">    abbreviation or based on a recognizable and identifiable part of the</span>
+<span class="sd">    driver&#39;s name.</span>
+
+<span class="sd">    .. note:: This will simply return the team color of the team that the</span>
+<span class="sd">        driver participated for in this session. Contrary to older versions</span>
+<span class="sd">        of FastF1, there are no separate colors for each driver. You should use</span>
+<span class="sd">        styling options other than color if you need to differentiate drivers</span>
+<span class="sd">        of the same team. The function</span>
+<span class="sd">        :func:`~fastf1.plotting.get_driver_style` can help you to customize</span>
+<span class="sd">        the plot styling for each driver.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        identifier: driver abbreviation or recognizable part of the driver name</span>
+<span class="sd">        session: the session for which the data should be obtained</span>
+<span class="sd">        colormap: one of ``&#39;default&#39;``, ``&#39;fastf1&#39;`` or ``&#39;official&#39;``.</span>
+<span class="sd">            The default colormap is ``&#39;fastf1&#39;``. Use</span>
+<span class="sd">            :func:`~fastf1.plotting.set_default_colormap` to change it.</span>
+<span class="sd">        exact_match: match the identifier exactly (case-insensitive, special</span>
+<span class="sd">            characters are converted to their nearest ASCII equivalent)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A hexadecimal RGB color code</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_get_driver_color</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">colormap</span><span class="o">=</span><span class="n">colormap</span><span class="p">,</span>
+                             <span class="n">exact_match</span><span class="o">=</span><span class="n">exact_match</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_driver_style">
+<a class="viewcode-back" href="../../../plotting.html#fastf1.plotting.get_driver_style">[docs]</a>
+<span class="k">def</span> <span class="nf">get_driver_style</span><span class="p">(</span>
+        <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">style</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">dict</span><span class="p">]],</span>
+        <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">colormap</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span>
+        <span class="n">additional_color_kws</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+        <span class="n">exact_match</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get a plotting style that is unique for a driver based on the driver&#39;s</span>
+<span class="sd">    abbreviation or based on a recognizable and identifiable part of the</span>
+<span class="sd">    driver&#39;s name.</span>
+
+<span class="sd">    This function simplifies the task of generating unique and easily</span>
+<span class="sd">    distinguishable visual styles for multiple drivers in a plot.</span>
+<span class="sd">    Primarily, the focus is on plotting with Matplotlib, but it is possible</span>
+<span class="sd">    to customize the behaviour for compatibility with other plotting libraries.</span>
+
+<span class="sd">    The general idea for creating visual styles is as follows:</span>
+
+<span class="sd">    1. Set the primary color of the style to the color of the team for</span>
+<span class="sd">       which a driver is driving. This may be the line color in a line plot,</span>
+<span class="sd">       the marker color in a scatter plot, and so on.</span>
+
+<span class="sd">    2. Use one or multiple other styling options (line style, markers, ...)</span>
+<span class="sd">       to differentiate drivers in the same team.</span>
+
+<span class="sd">    .. note:: It cannot be guaranteed that the styles are consistent throughout</span>
+<span class="sd">        a full season, especially in case of driver changes within a team.</span>
+
+
+<span class="sd">    **Option 1**: Rely on built-in styling options</span>
+
+<span class="sd">    By default, this function supports the following Matplotlib plot arguments:</span>
+<span class="sd">    ``linestyle``, ``marker``, ``color``, ``facecolor``, ``edgecolor`` as well</span>
+<span class="sd">    as almost all other color-related arguments.</span>
+
+<span class="sd">    The styling options include one color for each team and up to four</span>
+<span class="sd">    different line styles and marker styles within a team. That means that no</span>
+<span class="sd">    more than four different drivers are supported for a team in a single</span>
+<span class="sd">    session. This should be sufficent in almost all scenarios.</span>
+
+<span class="sd">    The following example obtains the driver style for Alonso and Stroll in a</span>
+<span class="sd">    race in the 2023 season. The drivers should be represented using the</span>
+<span class="sd">    ``color`` and ``marker`` arguments, as may be useful in a scatter plot.</span>
+<span class="sd">    Both drivers were driving for the Aston Martin team, therefore, both</span>
+<span class="sd">    automatically get assigned the same color, which is the Aston Martin team</span>
+<span class="sd">    color. But both drivers get assigned a different marker style, so they can</span>
+<span class="sd">    be uniquely identified in the plot.</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">    .. doctest::</span>
+
+<span class="sd">        &gt;&gt;&gt; from fastf1 import get_session</span>
+<span class="sd">        &gt;&gt;&gt; from fastf1.plotting import get_driver_style</span>
+<span class="sd">        &gt;&gt;&gt; session = get_session(2023, 10, &#39;R&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; get_driver_style(&#39;ALO&#39;, [&#39;color&#39;, &#39;marker&#39;], session)</span>
+<span class="sd">        {&#39;color&#39;: &#39;#00665e&#39;, &#39;marker&#39;: &#39;x&#39;}</span>
+<span class="sd">        &gt;&gt;&gt; get_driver_style(&#39;STR&#39;, [&#39;color&#39;, &#39;marker&#39;], session)</span>
+<span class="sd">        {&#39;color&#39;: &#39;#00665e&#39;, &#39;marker&#39;: &#39;o&#39;}</span>
+
+<span class="sd">    **Option 2**: Provide a custom list of styling variants</span>
+
+<span class="sd">    To allow for almost unlimited styling options, it is possible to specify</span>
+<span class="sd">    custom styling variants. These are not tied to any specific plotting</span>
+<span class="sd">    library.</span>
+
+<span class="sd">    In the following example, a list with two custom stlyes is defined that are</span>
+<span class="sd">    then used to generate driver specific styles. Each style is represented by</span>
+<span class="sd">    a dictionary of keywords and values.</span>
+
+<span class="sd">    The first driver in a team gets assigned the first style, the second driver</span>
+<span class="sd">    the second style and so on (if there are more than two drivers). It is</span>
+<span class="sd">    necessary to define at least as many styles as there are drivers in a team.</span>
+
+<span class="sd">    The following things need to be noted:</span>
+
+<span class="sd">    1. The notion of first or second driver does not refer to any particular</span>
+<span class="sd">    reference and no specific order for drivers within a team is intended or</span>
+<span class="sd">    guranteed.</span>
+
+<span class="sd">    2. Any color-related key can make use of the &quot;magic&quot; ``&#39;auto&#39;`` value as</span>
+<span class="sd">    shown with Alonso in this example. When the color value is set to</span>
+<span class="sd">    ``&#39;auto&#39;`` it will automatically be replaced with the team color for this</span>
+<span class="sd">    driver. All color keywords that are used in Matplotlib should be recognized</span>
+<span class="sd">    automatically. You can define custom arguments as color arguments through</span>
+<span class="sd">    the ``additional_color_kws`` argument.</span>
+
+<span class="sd">    3. Each style dictionary can contain arbitrary keys and value. Therefore,</span>
+<span class="sd">    you are not limited to any particular plotting library.</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">    .. doctest::</span>
+
+<span class="sd">        &gt;&gt;&gt; from fastf1 import get_session</span>
+<span class="sd">        &gt;&gt;&gt; from fastf1.plotting import get_driver_style</span>
+<span class="sd">        &gt;&gt;&gt; session = get_session(2023, 10, &#39;R&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; my_styles = [</span>
+<span class="sd">        ...     {&#39;linestyle&#39;: &#39;solid&#39;, &#39;color&#39;: &#39;auto&#39;, &#39;custom_arg&#39;: True},</span>
+<span class="sd">        ...     {&#39;linestyle&#39;: &#39;dotted&#39;, &#39;color&#39;: &#39;#FF0060&#39;, &#39;other_arg&#39;: 10}</span>
+<span class="sd">        ... ]</span>
+<span class="sd">        &gt;&gt;&gt; get_driver_style(&#39;ALO&#39;, my_styles, session)</span>
+<span class="sd">        {&#39;linestyle&#39;: &#39;solid&#39;, &#39;color&#39;: &#39;#00665e&#39;, &#39;custom_arg&#39;: True}</span>
+<span class="sd">        &gt;&gt;&gt; get_driver_style(&#39;STR&#39;, my_styles, session)</span>
+<span class="sd">        {&#39;linestyle&#39;: &#39;dotted&#39;, &#39;color&#39;: &#39;#FF0060&#39;, &#39;other_arg&#39;: 10}</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        identifier: driver abbreviation or recognizable part of the driver name</span>
+<span class="sd">        style: list of matplotlib plot arguments that should be used for</span>
+<span class="sd">            styling or a list of custom style dictionaries</span>
+<span class="sd">        session: the session for which the data should be obtained</span>
+<span class="sd">        colormap: one of ``&#39;default&#39;``, ``&#39;fastf1&#39;`` or ``&#39;official&#39;``.</span>
+<span class="sd">            The default colormap is ``&#39;fastf1&#39;``. Use</span>
+<span class="sd">            :func:`~fastf1.plotting.set_default_colormap` to change it.</span>
+<span class="sd">        additional_color_kws: A list of keys that should additionally be</span>
+<span class="sd">            treated as colors. This is most usefull for making the magic</span>
+<span class="sd">            ``&#39;auto&#39;`` color work with custom styling options.</span>
+<span class="sd">        exact_match: match the identifier exactly (case-insensitive, special</span>
+<span class="sd">            characters are converted to their nearest ASCII equivalent)</span>
+
+<span class="sd">    Returns: a dictionary of plot style arguments that can be directly passed</span>
+<span class="sd">        to a matplotlib plot function using the ``**`` expansion operator</span>
+
+
+<span class="sd">    .. minigallery:: fastf1.plotting.get_driver_style</span>
+<span class="sd">        :add-heading:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">stylers</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;linestyle&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;solid&#39;</span><span class="p">,</span> <span class="s1">&#39;dashed&#39;</span><span class="p">,</span> <span class="s1">&#39;dashdot&#39;</span><span class="p">,</span> <span class="s1">&#39;dotted&#39;</span><span class="p">],</span>
+        <span class="s1">&#39;marker&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="s1">&#39;^&#39;</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">]</span>
+    <span class="p">}</span>
+
+    <span class="c1"># color keyword arguments that are supported by various matplotlib</span>
+    <span class="c1"># functions</span>
+    <span class="n">color_kwargs</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="c1"># generic</span>
+        <span class="s1">&#39;color&#39;</span><span class="p">,</span> <span class="s1">&#39;colors&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span>
+        <span class="c1"># .plot</span>
+        <span class="s1">&#39;gapcolor&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;markeredgecolor&#39;</span><span class="p">,</span> <span class="s1">&#39;mec&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;markerfacecolor&#39;</span><span class="p">,</span> <span class="s1">&#39;mfc&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;markerfacecoloralt&#39;</span><span class="p">,</span> <span class="s1">&#39;mfcalt&#39;</span><span class="p">,</span>
+        <span class="c1"># .scatter</span>
+        <span class="s1">&#39;facecolor&#39;</span><span class="p">,</span> <span class="s1">&#39;facecolors&#39;</span><span class="p">,</span> <span class="s1">&#39;fc&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;edgecolor&#39;</span><span class="p">,</span> <span class="s1">&#39;edgecolors&#39;</span><span class="p">,</span> <span class="s1">&#39;ec&#39;</span><span class="p">,</span>
+        <span class="c1"># .errorbar</span>
+        <span class="s1">&#39;ecolor&#39;</span><span class="p">,</span>
+        <span class="c1"># add user defined color keyword arguments</span>
+        <span class="o">*</span><span class="n">additional_color_kws</span>
+    <span class="p">)</span>
+
+    <span class="n">driver</span> <span class="o">=</span> <span class="n">_get_driver</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">exact_match</span><span class="o">=</span><span class="n">exact_match</span><span class="p">)</span>
+    <span class="n">team</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">team</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">team</span><span class="o">.</span><span class="n">drivers</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">driver</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">style</span><span class="p">:</span>
+        <span class="c1"># catches empty list, tuple, str</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The provided style info is empty!&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">style</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">style</span> <span class="o">=</span> <span class="p">[</span><span class="n">style</span><span class="p">]</span>
+
+    <span class="n">plot_style</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">style</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="c1"># generate the plot style based on the provided keyword</span>
+        <span class="c1"># arguments</span>
+        <span class="k">for</span> <span class="n">opt</span> <span class="ow">in</span> <span class="n">style</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">opt</span> <span class="ow">in</span> <span class="n">color_kwargs</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">_get_team_color</span><span class="p">(</span><span class="n">team</span><span class="o">.</span><span class="n">normalized_value</span><span class="p">,</span>
+                                        <span class="n">session</span><span class="p">,</span>
+                                        <span class="n">colormap</span><span class="o">=</span><span class="n">colormap</span><span class="p">,</span>
+                                        <span class="n">exact_match</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">opt</span> <span class="ow">in</span> <span class="n">stylers</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">stylers</span><span class="p">[</span><span class="n">opt</span><span class="p">][</span><span class="n">idx</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">opt</span><span class="si">}</span><span class="s2">&#39; is not a supported styling &quot;</span>
+                                 <span class="sa">f</span><span class="s2">&quot;option&quot;</span><span class="p">)</span>
+            <span class="n">plot_style</span><span class="p">[</span><span class="n">opt</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">custom_style</span> <span class="o">=</span> <span class="n">style</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The provided custom style info does not &quot;</span>
+                             <span class="sa">f</span><span class="s2">&quot;contain enough variants! (Has: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">style</span><span class="p">)</span><span class="si">}</span><span class="s2">, &quot;</span>
+                             <span class="sa">f</span><span class="s2">&quot;Required: </span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">custom_style</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The provided style info has an invalid format!&quot;</span><span class="p">)</span>
+
+        <span class="c1"># copy the correct user provided style and replace any &#39;auto&#39;</span>
+        <span class="c1"># colors with the correct color value</span>
+        <span class="n">plot_style</span> <span class="o">=</span> <span class="n">custom_style</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">kwarg</span> <span class="ow">in</span> <span class="n">color_kwargs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">plot_style</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">kwarg</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;auto&#39;</span><span class="p">:</span>
+                <span class="n">color</span> <span class="o">=</span> <span class="n">_get_team_color</span><span class="p">(</span><span class="n">team</span><span class="o">.</span><span class="n">normalized_value</span><span class="p">,</span>
+                                        <span class="n">session</span><span class="p">,</span>
+                                        <span class="n">colormap</span><span class="o">=</span><span class="n">colormap</span><span class="p">,</span>
+                                        <span class="n">exact_match</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">plot_style</span><span class="p">[</span><span class="n">kwarg</span><span class="p">]</span> <span class="o">=</span> <span class="n">color</span>
+
+    <span class="k">return</span> <span class="n">plot_style</span></div>
+
+
+
+<div class="viewcode-block" id="get_compound_color">
+<a class="viewcode-back" href="../../../plotting.html#fastf1.plotting.get_compound_color">[docs]</a>
+<span class="k">def</span> <span class="nf">get_compound_color</span><span class="p">(</span><span class="n">compound</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the compound color as hexadecimal RGB color code for a given compound.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        compound: the name of the compound</span>
+<span class="sd">        session: the session for which the data should be obtained</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A hexadecimal RGB color code</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">year</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">event</span><span class="p">[</span><span class="s1">&#39;EventDate&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">year</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_Constants</span><span class="p">[</span><span class="n">year</span><span class="p">]</span><span class="o">.</span><span class="n">CompoundColors</span><span class="p">[</span><span class="n">compound</span><span class="o">.</span><span class="n">upper</span><span class="p">()]</span></div>
+
+
+
+<div class="viewcode-block" id="get_compound_mapping">
+<a class="viewcode-back" href="../../../plotting.html#fastf1.plotting.get_compound_mapping">[docs]</a>
+<span class="k">def</span> <span class="nf">get_compound_mapping</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a dictionary that maps compound names to their associated</span>
+<span class="sd">    colors. The colors are given as hexadecimal RGB color codes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        session: the session for which the data should be obtained</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dictionary mapping compound names to RGB hex colors</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">year</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">event</span><span class="p">[</span><span class="s1">&#39;EventDate&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">year</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_Constants</span><span class="p">[</span><span class="n">year</span><span class="p">]</span><span class="o">.</span><span class="n">CompoundColors</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="get_driver_color_mapping">
+<a class="viewcode-back" href="../../../plotting.html#fastf1.plotting.get_driver_color_mapping">[docs]</a>
+<span class="k">def</span> <span class="nf">get_driver_color_mapping</span><span class="p">(</span>
+        <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">colormap</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a dictionary that maps driver abbreviations to their associated</span>
+<span class="sd">    colors. The colors are given as hexadecimal RGB color codes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        session: the session for which the data should be obtained</span>
+<span class="sd">        colormap: one of ``&#39;default&#39;``, ``&#39;fastf1&#39;`` or ``&#39;official&#39;``.</span>
+<span class="sd">            The default colormap is ``&#39;fastf1&#39;``. Use</span>
+<span class="sd">            :func:`~fastf1.plotting.set_default_colormap` to change it.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        dictionary mapping driver abbreviations to RGB hex colors</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dtm</span> <span class="o">=</span> <span class="n">_get_driver_team_mapping</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">colormap</span> <span class="o">==</span> <span class="s1">&#39;default&#39;</span><span class="p">:</span>
+        <span class="n">colormap</span> <span class="o">=</span> <span class="n">_DEFAULT_COLOR_MAP</span>
+
+    <span class="k">if</span> <span class="n">colormap</span> <span class="o">==</span> <span class="s1">&#39;fastf1&#39;</span><span class="p">:</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">abb</span><span class="p">:</span> <span class="n">driver</span><span class="o">.</span><span class="n">team</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">TeamColor</span><span class="o">.</span><span class="n">FastF1</span>
+            <span class="k">for</span> <span class="n">abb</span><span class="p">,</span> <span class="n">driver</span> <span class="ow">in</span> <span class="n">dtm</span><span class="o">.</span><span class="n">drivers_by_abbreviation</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+    <span class="k">elif</span> <span class="n">colormap</span> <span class="o">==</span> <span class="s1">&#39;official&#39;</span><span class="p">:</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">abb</span><span class="p">:</span> <span class="n">driver</span><span class="o">.</span><span class="n">team</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">TeamColor</span><span class="o">.</span><span class="n">Official</span>
+            <span class="k">for</span> <span class="n">abb</span><span class="p">,</span> <span class="n">driver</span> <span class="ow">in</span> <span class="n">dtm</span><span class="o">.</span><span class="n">drivers_by_abbreviation</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid colormap &#39;</span><span class="si">{</span><span class="n">colormap</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">colors</span></div>
+
+
+
+<div class="viewcode-block" id="list_team_names">
+<a class="viewcode-back" href="../../../plotting.html#fastf1.plotting.list_team_names">[docs]</a>
+<span class="k">def</span> <span class="nf">list_team_names</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">short</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a list of team names of all teams in the ``session``.</span>
+
+<span class="sd">    By default, the full team names are returned. Use the ``short`` argument</span>
+<span class="sd">    to get shortened versions of the team names instead.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        session: the session for which the data should be obtained</span>
+<span class="sd">        short: if True, a list of the shortened team names is returned</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        a list of team names</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dtm</span> <span class="o">=</span> <span class="n">_get_driver_team_mapping</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">short</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">team</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">ShortName</span>
+                    <span class="k">for</span> <span class="n">team</span> <span class="ow">in</span> <span class="n">dtm</span><span class="o">.</span><span class="n">teams_by_normalized</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">team</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">team</span> <span class="ow">in</span> <span class="n">dtm</span><span class="o">.</span><span class="n">teams_by_normalized</span><span class="o">.</span><span class="n">values</span><span class="p">())</span></div>
+
+
+
+<div class="viewcode-block" id="list_driver_abbreviations">
+<a class="viewcode-back" href="../../../plotting.html#fastf1.plotting.list_driver_abbreviations">[docs]</a>
+<span class="k">def</span> <span class="nf">list_driver_abbreviations</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a list of abbreviations of all drivers in the ``session``.&quot;&quot;&quot;</span>
+    <span class="n">dtm</span> <span class="o">=</span> <span class="n">_get_driver_team_mapping</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">dtm</span><span class="o">.</span><span class="n">drivers_by_abbreviation</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
+
+
+
+<div class="viewcode-block" id="list_driver_names">
+<a class="viewcode-back" href="../../../plotting.html#fastf1.plotting.list_driver_names">[docs]</a>
+<span class="k">def</span> <span class="nf">list_driver_names</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a list of full names of all drivers in the ``session``.&quot;&quot;&quot;</span>
+    <span class="n">dtm</span> <span class="o">=</span> <span class="n">_get_driver_team_mapping</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">driver</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">driver</span> <span class="ow">in</span> <span class="n">dtm</span><span class="o">.</span><span class="n">drivers_by_normalized</span><span class="o">.</span><span class="n">values</span><span class="p">())</span></div>
+
+
+
+<div class="viewcode-block" id="list_compounds">
+<a class="viewcode-back" href="../../../plotting.html#fastf1.plotting.list_compounds">[docs]</a>
+<span class="k">def</span> <span class="nf">list_compounds</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a list of all compound names for this season (not session).&quot;&quot;&quot;</span>
+    <span class="n">year</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">event</span><span class="p">[</span><span class="s1">&#39;EventDate&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">year</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">_Constants</span><span class="p">[</span><span class="n">year</span><span class="p">]</span><span class="o">.</span><span class="n">CompoundColors</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
+
+
+
+<div class="viewcode-block" id="add_sorted_driver_legend">
+<a class="viewcode-back" href="../../../plotting.html#fastf1.plotting.add_sorted_driver_legend">[docs]</a>
+<span class="k">def</span> <span class="nf">add_sorted_driver_legend</span><span class="p">(</span>
+    <span class="n">ax</span><span class="p">:</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">Axes</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adds a legend to the axis where drivers are grouped by team and within each</span>
+<span class="sd">    team they are shown in the same order that is used for selecting plot</span>
+<span class="sd">    styles.</span>
+
+<span class="sd">    This function is a drop-in replacement for calling Matplotlib&#39;s</span>
+<span class="sd">    ``ax.legend()`` method. It can only be used when driver names or driver</span>
+<span class="sd">    abbreviations are used as labels for the legend.</span>
+
+<span class="sd">    This function supports the same ``*args`` and ``**kwargs`` as</span>
+<span class="sd">    Matplotlib&#39;s ``ax.legend()``, including the ``handles`` and ``labels``</span>
+<span class="sd">    arguments. Check the Matplotlib documentation for more information.</span>
+
+<span class="sd">    There is no particular need to use this function except to make the</span>
+<span class="sd">    legend more visually pleasing.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ax: An instance of a Matplotlib ``Axes`` object</span>
+<span class="sd">        session: the session for which the data should be obtained</span>
+<span class="sd">        *args: Matplotlib legend args</span>
+<span class="sd">        **kwargs: Matplotlib legend kwargs</span>
+
+<span class="sd">     Returns:</span>
+<span class="sd">        ``matplotlib.legend.Legend``</span>
+
+<span class="sd">    .. minigallery:: fastf1.plotting.add_sorted_driver_legend</span>
+<span class="sd">        :add-heading:</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dtm</span> <span class="o">=</span> <span class="n">_get_driver_team_mapping</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">_parse_legend_args</span><span class="p">([</span><span class="n">ax</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">handles</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">kwargs</span> <span class="o">=</span> <span class="n">ret</span>
+            <span class="n">extra_args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">handles</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">extra_args</span><span class="p">,</span> <span class="n">kwargs</span> <span class="o">=</span> <span class="n">ret</span>
+
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Failed to parse optional legend arguments correctly.&quot;</span><span class="p">,</span>
+                      <span class="ne">UserWarning</span><span class="p">)</span>
+        <span class="n">extra_args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;handles&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;labels&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">handles</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_legend_handles_labels</span><span class="p">()</span>
+
+    <span class="n">teams_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dtm</span><span class="o">.</span><span class="n">teams_by_normalized</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="n">driver_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dtm</span><span class="o">.</span><span class="n">drivers_by_normalized</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+    <span class="c1"># create an intermediary list where each element is a tuple that</span>
+    <span class="c1"># contains (team_idx, driver_idx, handle, label). Then sort this list</span>
+    <span class="c1"># based on the team_idx and driver_idx. As a result, drivers from the</span>
+    <span class="c1"># same team will be next to each other and in the same order as their</span>
+    <span class="c1"># styles are cycled.</span>
+    <span class="n">ref</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">hdl</span><span class="p">,</span> <span class="n">lbl</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">handles</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+        <span class="n">driver</span> <span class="o">=</span> <span class="n">_get_driver</span><span class="p">(</span><span class="n">lbl</span><span class="p">,</span> <span class="n">session</span><span class="p">)</span>
+        <span class="n">team</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">team</span>
+
+        <span class="n">team_idx</span> <span class="o">=</span> <span class="n">teams_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">team</span><span class="p">)</span>
+        <span class="n">driver_idx</span> <span class="o">=</span> <span class="n">driver_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">driver</span><span class="p">)</span>
+
+        <span class="n">ref</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">team_idx</span><span class="p">,</span> <span class="n">driver_idx</span><span class="p">,</span> <span class="n">hdl</span><span class="p">,</span> <span class="n">lbl</span><span class="p">))</span>
+
+    <span class="c1"># sort based only on team_idx and driver_idx (i.e. first two entries)</span>
+    <span class="n">ref</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="n">e</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
+
+    <span class="n">handles_new</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">labels_new</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">ref</span><span class="p">:</span>
+        <span class="n">handles_new</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">labels_new</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">handles_new</span><span class="p">,</span> <span class="n">labels_new</span><span class="p">,</span> <span class="o">*</span><span class="n">extra_args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="set_default_colormap">
+<a class="viewcode-back" href="../../../plotting.html#fastf1.plotting.set_default_colormap">[docs]</a>
+<span class="k">def</span> <span class="nf">set_default_colormap</span><span class="p">(</span><span class="n">colormap</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Set the default colormap that is used for color lookups.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        colormap: one of ``&#39;fastf1&#39;`` or ``&#39;official&#39;``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">_DEFAULT_COLOR_MAP</span>
+    <span class="k">if</span> <span class="n">colormap</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;fastf1&#39;</span><span class="p">,</span> <span class="s1">&#39;official&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid colormap &#39;</span><span class="si">{</span><span class="n">colormap</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+    <span class="n">_DEFAULT_COLOR_MAP</span> <span class="o">=</span> <span class="n">colormap</span></div>
+
+
+
+<div class="viewcode-block" id="override_team_constants">
+<a class="viewcode-back" href="../../../plotting.html#fastf1.plotting.override_team_constants">[docs]</a>
+<span class="k">def</span> <span class="nf">override_team_constants</span><span class="p">(</span>
+        <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">short_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">official_color</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">fastf1_color</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Override the default team constants for a specific team.</span>
+
+<span class="sd">    This function is intended for advanced users who want to customize the</span>
+<span class="sd">    default team constants. The changes are only applied for the current</span>
+<span class="sd">    session and do not persist.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        identifier: A part of the team name. Note that this function does</span>
+<span class="sd">            not support fuzzy matching and will raise a ``KeyError`` if no</span>
+<span class="sd">            exact and unambiguous match is found!</span>
+<span class="sd">        session: The session for which the override should be applied</span>
+<span class="sd">        short_name: New value for the short name of the team</span>
+<span class="sd">        official_color: New value for the team color in the &quot;official&quot;</span>
+<span class="sd">            color map; must be a hexadecimal RGB color code</span>
+<span class="sd">        fastf1_color: New value for the team color in the &quot;fastf1&quot; color map;</span>
+<span class="sd">            must be a hexadecimal RGB color code</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">team</span> <span class="o">=</span> <span class="n">_get_team</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">exact_match</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">colors</span> <span class="o">=</span> <span class="n">team</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">TeamColor</span>
+    <span class="k">if</span> <span class="n">official_color</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">colors</span><span class="p">,</span> <span class="n">Official</span><span class="o">=</span><span class="n">official_color</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fastf1_color</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">colors</span><span class="p">,</span> <span class="n">FastF1</span><span class="o">=</span><span class="n">fastf1_color</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">official_color</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">fastf1_color</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">team</span><span class="o">.</span><span class="n">constants</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">team</span><span class="o">.</span><span class="n">constants</span><span class="p">,</span> <span class="n">TeamColor</span><span class="o">=</span><span class="n">colors</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">short_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">team</span><span class="o">.</span><span class="n">constants</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">team</span><span class="o">.</span><span class="n">constants</span><span class="p">,</span>
+                                             <span class="n">ShortName</span><span class="o">=</span><span class="n">short_name</span><span class="p">)</span></div>
+
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2024, theOehrly
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div>
+    <script data-goatcounter="https://ey2kpxm326wjqcsfzewz.goatcounter.com/count"
+            async src="//gc.zgo.at/count.js"></script>
+    <script src="../../../_static/documentation_options.js?v=aa923c92"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/scripts/furo.js?v=5fa4622c"></script>
+    
+</body>
+</html>

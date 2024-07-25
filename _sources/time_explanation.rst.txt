@@ -98,7 +98,7 @@ Next, the data is sliced to only include a subset of the full session.
 zero is now the first sample of this set of data.
 If this subset of data was sliced again, `Time` would change again so as to start at zero on the first sample.
 
-All three of these values have a use for different reasons. Here are some exmaples.
+All three of these values have a use for different reasons. Here are some examples.
 
 To check which other cars are on track while one driver is on a fast lap `SessionTime` is useful.
 

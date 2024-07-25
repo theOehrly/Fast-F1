@@ -206,9 +206,11 @@ response. When 'pandas' is selected as result type, these endpoints return a
 :class:`~fastf1.ergast.interface.ErgastMultiResponse`. One such endpoint is
 the constructor standings endpoint.
 
+.. TODO: the following doctests are skipped because of the broken Ergast API
+
 .. doctest::
 
-  >>> standings = ergast.get_constructor_standings()
+  >>> standings = ergast.get_constructor_standings()  # doctest: +SKIP
 
 Called without any 'season' specifier, it returns standings for multiple
 seasons. An overview over the returned data is available as a ``.description``
@@ -216,7 +218,7 @@ of the response:
 
 .. doctest::
 
-  >>> standings.description
+  >>> standings.description  # doctest: +SKIP
      season  round
   0    1958     11
   1    1959      9
@@ -237,7 +239,7 @@ The first element in ``.content`` is associated with the first row of the
 
 .. doctest::
 
-  >>> standings.content[0]
+  >>> standings.content[0]  # doctest: +SKIP
      position positionText  ...  constructorName  constructorNationality
   0         1            1  ...          Vanwall                 British
   1         2            2  ...          Ferrari                 Italian

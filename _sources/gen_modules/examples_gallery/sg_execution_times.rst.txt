@@ -1,0 +1,79 @@
+
+:orphan:
+
+.. _sphx_glr_gen_modules_examples_gallery_sg_execution_times:
+
+
+Computation times
+=================
+**01:28.447** total execution time for 15 files **from gen_modules\examples_gallery**:
+
+.. container::
+
+  .. raw:: html
+
+    <style scoped>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+    </style>
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script type="text/javascript" class="init">
+    $(document).ready( function () {
+        $('table.sg-datatable').DataTable({order: [[1, 'desc']]});
+    } );
+    </script>
+
+  .. list-table::
+   :header-rows: 1
+   :class: table table-striped sg-datatable
+
+   * - Example
+     - Time
+     - Mem (MB)
+   * - :ref:`sphx_glr_gen_modules_examples_gallery_plot_results_tracker.py` (``plot_results_tracker.py``)
+     - 00:51.663
+     - 0.0
+   * - :ref:`sphx_glr_gen_modules_examples_gallery_plot_speed_on_track.py` (``plot_speed_on_track.py``)
+     - 00:04.969
+     - 0.0
+   * - :ref:`sphx_glr_gen_modules_examples_gallery_plot_driver_laptimes.py` (``plot_driver_laptimes.py``)
+     - 00:04.959
+     - 0.0
+   * - :ref:`sphx_glr_gen_modules_examples_gallery_plot_strategy.py` (``plot_strategy.py``)
+     - 00:04.647
+     - 0.0
+   * - :ref:`sphx_glr_gen_modules_examples_gallery_plot_who_can_still_win_wdc.py` (``plot_who_can_still_win_wdc.py``)
+     - 00:03.442
+     - 0.0
+   * - :ref:`sphx_glr_gen_modules_examples_gallery_plot_team_pace_ranking.py` (``plot_team_pace_ranking.py``)
+     - 00:02.698
+     - 0.0
+   * - :ref:`sphx_glr_gen_modules_examples_gallery_plot_position_changes.py` (``plot_position_changes.py``)
+     - 00:02.646
+     - 0.0
+   * - :ref:`sphx_glr_gen_modules_examples_gallery_plot_annotate_corners.py` (``plot_annotate_corners.py``)
+     - 00:02.300
+     - 0.0
+   * - :ref:`sphx_glr_gen_modules_examples_gallery_plot_laptimes_distribution.py` (``plot_laptimes_distribution.py``)
+     - 00:02.223
+     - 0.0
+   * - :ref:`sphx_glr_gen_modules_examples_gallery_plot_gear_shifts_on_track.py` (``plot_gear_shifts_on_track.py``)
+     - 00:02.177
+     - 0.0
+   * - :ref:`sphx_glr_gen_modules_examples_gallery_plot_driver_styling.py` (``plot_driver_styling.py``)
+     - 00:02.016
+     - 0.0
+   * - :ref:`sphx_glr_gen_modules_examples_gallery_plot_speed_traces.py` (``plot_speed_traces.py``)
+     - 00:01.791
+     - 0.0
+   * - :ref:`sphx_glr_gen_modules_examples_gallery_plot_annotate_speed_trace.py` (``plot_annotate_speed_trace.py``)
+     - 00:01.625
+     - 0.0
+   * - :ref:`sphx_glr_gen_modules_examples_gallery_plot_qualifying_results.py` (``plot_qualifying_results.py``)
+     - 00:01.290
+     - 0.0
+   * - :ref:`sphx_glr_gen_modules_examples_gallery_example_fastf1_signalrclient.py` (``example_fastf1_signalrclient.py``)
+     - 00:00.000
+     - 0.0
