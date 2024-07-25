@@ -1,10 +1,8 @@
 import copy
 import json
 from typing import (
-    List,
     Literal,
     Optional,
-    Type,
     Union
 )
 
@@ -18,6 +16,7 @@ from fastf1.req import Cache
 
 
 BASE_URL = 'https://ergast.com/api/f1'
+TIMEOUT = 5.0
 HEADERS = {'User-Agent': f'FastF1/{__version_short__}'}
 
 
@@ -252,7 +251,7 @@ class ErgastSimpleResponse(ErgastResponseMixin, ErgastResultFrame):
     _internal_names_set = set(_internal_names)
 
     @property
-    def _constructor(self) -> Type["ErgastResultFrame"]:
+    def _constructor(self) -> type["ErgastResultFrame"]:
         # drop from ErgastSimpleResponse to ErgastResultFrame, removing the
         # ErgastResponseMixin because a slice of the data is no longer a full
         # response and pagination, ... is therefore not supported anymore
@@ -363,7 +362,7 @@ class ErgastMultiResponse(ErgastResponseMixin):
         return self._description
 
     @property
-    def content(self) -> List[ErgastResultFrame]:
+    def content(self) -> list[ErgastResultFrame]:
         """A ``list`` of :class:`ErgastResultFrame` that contain the main
         response data.
 
@@ -489,7 +488,8 @@ class Ergast:
     @classmethod
     def _get(cls, url: str, params: dict) -> Union[dict, list]:
         # request data from ergast and load the returned json data.
-        r = Cache.requests_get(url, headers=HEADERS, params=params)
+        r = Cache.requests_get(url, headers=HEADERS, params=params,
+                               timeout=TIMEOUT)
         if r.status_code == 200:
             try:
                 return json.loads(r.content.decode('utf-8'))

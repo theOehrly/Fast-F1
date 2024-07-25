@@ -15,7 +15,7 @@ def save(args):
 
 
 def convert(args):
-    with open(args.input, 'r') as infile:
+    with open(args.input) as infile:
         messages = infile.readlines()
     data, ec = messages_from_raw(messages)
     with open(args.output, 'w') as outfile:

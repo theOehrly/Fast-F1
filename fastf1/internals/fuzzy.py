@@ -1,5 +1,4 @@
 import warnings
-from typing import List
 
 import numpy as np
 
@@ -15,7 +14,7 @@ with warnings.catch_warnings():
 
 def fuzzy_matcher(
         query: str,
-        reference: List[List[str]],
+        reference: list[list[str]],
         abs_confidence: float = 0.0,
         rel_confidence: float = 0.0
 ) -> (int, bool):

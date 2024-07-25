@@ -22,6 +22,14 @@ import fastf1
 sys.path.append(os.path.abspath('extensions'))
 
 
+ERGAST_BACKEND_OVERRIDE = os.environ.get("FASTF1_DOCS_ERGAST_BACKEND_OVERRIDE")
+
+if ERGAST_BACKEND_OVERRIDE:
+    import fastf1.ergast
+
+    fastf1.ergast.interface.BASE_URL = ERGAST_BACKEND_OVERRIDE
+
+
 # -- FastF1 specific config --------------------------------------------------
 # ignore warning on import of fastf1.api
 warnings.filterwarnings(action='ignore',

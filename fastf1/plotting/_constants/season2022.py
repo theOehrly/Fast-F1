@@ -1,4 +1,3 @@
-from typing import Dict
 
 from fastf1.plotting._constants.base import (
     CompoundsConst,
@@ -11,7 +10,7 @@ from fastf1.plotting._constants.base import (
 # and values may be modified there, it the used API provides different values
 
 
-Teams: Dict[str, TeamConst] = {
+Teams: dict[str, TeamConst] = {
     'alfa romeo': TeamConst(
         ShortName='Alfa Romeo',
         TeamColor=TeamColorsConst(
@@ -84,7 +83,7 @@ Teams: Dict[str, TeamConst] = {
     )
 }
 
-CompoundColors: Dict[CompoundsConst, str] = {
+CompoundColors: dict[CompoundsConst, str] = {
     CompoundsConst.Soft: "#da291c",
     CompoundsConst.Medium: "#ffd12e",
     CompoundsConst.Hard: "#f0f0ec",

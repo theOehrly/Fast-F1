@@ -29,10 +29,7 @@ import pickle
 import re
 import sys
 import time
-from typing import (
-    Optional,
-    Tuple
-)
+from typing import Optional
 
 import requests
 from requests_cache import CacheMixin
@@ -80,6 +77,7 @@ class _MinIntervalLimitDelay:
         t_now = time.time()
         if (delta := (t_now - self._t_last)) < self._interval:
             time.sleep(self._interval - delta)
+            t_now += self._interval - delta
         self._t_last = t_now
 
 
@@ -112,7 +110,14 @@ class _SessionWithRateLimiting(requests.Session):
             # soft limit 4 calls/sec
             _CallsPerIntervalLimitRaise(200, 60*60, "ergast.com: 200 calls/h")
             # hard limit 200 calls/h
-        ]
+        ],
+        # general limits on all other APIs
+        re.compile(r"^https?://.+\..+"): [
+            _MinIntervalLimitDelay(0.25),
+            # soft limit 4 calls/sec
+            _CallsPerIntervalLimitRaise(500, 60 * 60, "any API: 500 calls/h")
+            # hard limit 200 calls/h
+        ],
     }
 
     def send(self, request, **kwargs):
@@ -524,8 +529,8 @@ class Cache(metaclass=_MetaCache):
                     try:
                         os.mkdir(cache_dir, mode=0o0700)
                     except Exception as err:
-                        _logger.error("Failed to create cache directory {0}. "
-                                      "Error {1}".format(cache_dir, err))
+                        _logger.error(f"Failed to create cache directory "
+                                      f"{cache_dir}. Error {err}")
                         raise
 
                 # Enable cache with default
@@ -632,7 +637,7 @@ class Cache(metaclass=_MetaCache):
         cls._ci_mode = enabled
 
     @classmethod
-    def get_cache_info(cls) -> Tuple[Optional[str], Optional[int]]:
+    def get_cache_info(cls) -> tuple[Optional[str], Optional[int]]:
         """Returns information about the cache directory and its size.
 
         If the cache is not configured, None will be returned for both the
@@ -658,7 +663,7 @@ class Cache(metaclass=_MetaCache):
         i = int(math.floor(math.log(size_bytes, 1024)))
         p = math.pow(1024, i)
         s = round(size_bytes / p, 2)
-        return "%s %s" % (s, size_name[i])
+        return f"{s} {size_name[i]}"
 
     @classmethod
     def _get_size(cls, start_path='.'):  # https://stackoverflow.com/questions/1392413/calculating-a-directorys-size-using-python # noqa: E501

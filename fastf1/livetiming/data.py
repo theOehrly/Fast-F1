@@ -95,7 +95,7 @@ class LiveTimingData:
                 next_data = None
             else:
                 # read a new file as next file
-                with open(next_file, 'r') as fobj:
+                with open(next_file) as fobj:
                     next_data = fobj.readlines()
 
             if current_data is None:

@@ -1,5 +1,3 @@
-from typing import Dict
-
 from fastf1.plotting._constants import (  # noqa: F401, unused import used through globals()
     season2018,
     season2019,
@@ -12,7 +10,7 @@ from fastf1.plotting._constants import (  # noqa: F401, unused import used throu
 from fastf1.plotting._constants.base import BaseSeasonConst
 
 
-Constants: Dict[str, BaseSeasonConst] = dict()
+Constants: dict[str, BaseSeasonConst] = dict()
 
 for year in range(2018, 2025):
     season = globals()[f"season{year}"]
@@ -32,7 +30,7 @@ LEGACY_TEAM_COLORS = {
 }
 
 
-LEGACY_TEAM_TRANSLATE: Dict[str, str] = {
+LEGACY_TEAM_TRANSLATE: dict[str, str] = {
     'MER': 'mercedes',
     'FER': 'ferrari',
     'RBR': 'red bull',
@@ -46,7 +44,7 @@ LEGACY_TEAM_TRANSLATE: Dict[str, str] = {
 }
 
 
-LEGACY_DRIVER_COLORS: Dict[str, str] = {
+LEGACY_DRIVER_COLORS: dict[str, str] = {
     "valtteri bottas": "#00e701",
     "zhou guanyu": "#008d01",
     "theo pourchaire": "#004601",
@@ -93,7 +91,7 @@ LEGACY_DRIVER_COLORS: Dict[str, str] = {
 }
 
 
-LEGACY_DRIVER_TRANSLATE: Dict[str, str] = {
+LEGACY_DRIVER_TRANSLATE: dict[str, str] = {
     'LEC': 'charles leclerc', 'SAI': 'carlos sainz',
     'SHW': 'robert shwartzman',
     'VER': 'max verstappen', 'PER': 'sergio perez',

@@ -1,8 +1,4 @@
 import warnings
-from typing import (
-    Dict,
-    List
-)
 
 from fastf1.plotting._constants import \
     LEGACY_DRIVER_COLORS as _LEGACY_DRIVER_COLORS
@@ -91,11 +87,11 @@ def __getattr__(name):
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
-_DEPR_COMPOUND_COLORS: Dict[str, str] = {
+_DEPR_COMPOUND_COLORS: dict[str, str] = {
     key: val for key, val
     in _Constants['2024'].CompoundColors.items()
 }
-COMPOUND_COLORS: Dict[str, str]
+COMPOUND_COLORS: dict[str, str]
 """
 Mapping of tyre compound names to compound colors (hex color codes).
 (current season only)
@@ -107,8 +103,8 @@ Mapping of tyre compound names to compound colors (hex color codes).
 """
 
 
-_DEPR_DRIVER_COLORS: Dict[str, str] = _LEGACY_DRIVER_COLORS.copy()
-DRIVER_COLORS: Dict[str, str]
+_DEPR_DRIVER_COLORS: dict[str, str] = _LEGACY_DRIVER_COLORS.copy()
+DRIVER_COLORS: dict[str, str]
 """
 Mapping of driver names to driver colors (hex color codes).
 
@@ -123,8 +119,8 @@ Mapping of driver names to driver colors (hex color codes).
 """
 
 
-_DEPR_DRIVER_TRANSLATE: Dict[str, str] = _LEGACY_DRIVER_TRANSLATE.copy()
-DRIVER_TRANSLATE: Dict[str, str]
+_DEPR_DRIVER_TRANSLATE: dict[str, str] = _LEGACY_DRIVER_TRANSLATE.copy()
+DRIVER_TRANSLATE: dict[str, str]
 """
 Mapping of driver names to theirs respective abbreviations.
 
@@ -138,13 +134,13 @@ Mapping of driver names to theirs respective abbreviations.
     future version. Use :func:`~fastf1.plotting.get_driver_name` instead.
 """
 
-_DEPR_TEAM_COLORS: Dict[str, str] = {
+_DEPR_TEAM_COLORS: dict[str, str] = {
     # str(key.value): val for key, val
     # in _Constants['2024'].Colormaps[_Colormaps.Default].items()
     name.replace("kick ", ""): team.TeamColor.FastF1 for name, team
     in _Constants['2024'].Teams.items()
 }
-TEAM_COLORS: Dict[str, str]
+TEAM_COLORS: dict[str, str]
 """
 Mapping of team names to team colors (hex color codes).
 (current season only)
@@ -154,8 +150,8 @@ Mapping of team names to team colors (hex color codes).
     future version. Use :func:`~fastf1.plotting.get_team_color` instead.
 """
 
-_DEPR_TEAM_TRANSLATE: Dict[str, str] = _LEGACY_TEAM_TRANSLATE.copy()
-TEAM_TRANSLATE: Dict[str, str]
+_DEPR_TEAM_TRANSLATE: dict[str, str] = _LEGACY_TEAM_TRANSLATE.copy()
+TEAM_TRANSLATE: dict[str, str]
 """
 Mapping of team names to theirs respective abbreviations.
 
@@ -164,8 +160,8 @@ Mapping of team names to theirs respective abbreviations.
     future version. Use :func:`~fastf1.plotting.get_team_name` instead.
 """
 
-_DEPR_COLOR_PALETTE: List[str] = _COLOR_PALETTE.copy()
-COLOR_PALETTE: List[str]
+_DEPR_COLOR_PALETTE: list[str] = _COLOR_PALETTE.copy()
+COLOR_PALETTE: list[str]
 """
 The default color palette for matplotlib plot lines in fastf1's color scheme.
 

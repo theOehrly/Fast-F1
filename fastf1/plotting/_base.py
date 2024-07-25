@@ -1,8 +1,4 @@
 import unicodedata
-from typing import (
-    Dict,
-    List
-)
 
 from fastf1.logger import get_logger
 from fastf1.plotting._constants.base import TeamConst
@@ -25,21 +21,21 @@ class _Team:
 
     def __init__(self):
         super().__init__()
-        self.drivers: List["_Driver"] = list()
+        self.drivers: list[_Driver] = list()
 
 
 class _DriverTeamMapping:
     def __init__(
             self,
             year: str,
-            teams: List[_Team],
+            teams: list[_Team],
     ):
         self.year = year
         self.teams = teams
 
-        self.drivers_by_normalized: Dict[str, _Driver] = dict()
-        self.drivers_by_abbreviation: Dict[str, _Driver] = dict()
-        self.teams_by_normalized: Dict[str, _Team] = dict()
+        self.drivers_by_normalized: dict[str, _Driver] = dict()
+        self.drivers_by_abbreviation: dict[str, _Driver] = dict()
+        self.teams_by_normalized: dict[str, _Team] = dict()
 
         for team in teams:
             for driver in team.drivers:

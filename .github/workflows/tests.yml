@@ -8,6 +8,11 @@ on:
   pull_request:
 
 
+env:
+  # Set environment variable with value from configuration variable
+  FASTF1_TEST_ERGAST_BACKEND_OVERRIDE: ${{ vars.FASTF1_TEST_ERGAST_BACKEND_OVERRIDE }}
+
+
 jobs:
   run-code-tests:
     runs-on: ubuntu-latest
@@ -16,10 +21,9 @@ jobs:
       matrix:
         include:
           - name-suffix: "(Minimum Versions)"
-            python-version: "3.8"
+            python-version: "3.9"
             cache-suffix: "-minver"
             extra-requirements: "-c requirements/minver.txt"
-          - python-version: "3.8"
           - python-version: "3.9"
           - python-version: "3.10"
           - python-version: "3.11"
