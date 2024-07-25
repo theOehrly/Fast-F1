@@ -16,6 +16,7 @@ from fastf1.req import Cache
 
 
 BASE_URL = 'https://ergast.com/api/f1'
+TIMEOUT = 5.0
 HEADERS = {'User-Agent': f'FastF1/{__version_short__}'}
 
 
@@ -487,7 +488,8 @@ class Ergast:
     @classmethod
     def _get(cls, url: str, params: dict) -> Union[dict, list]:
         # request data from ergast and load the returned json data.
-        r = Cache.requests_get(url, headers=HEADERS, params=params)
+        r = Cache.requests_get(url, headers=HEADERS, params=params,
+                               timeout=TIMEOUT)
         if r.status_code == 200:
             try:
                 return json.loads(r.content.decode('utf-8'))
