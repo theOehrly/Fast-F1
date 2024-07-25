@@ -2,6 +2,7 @@ import logging
 import os
 
 import fastf1._api
+import fastf1.ergast.interface
 import fastf1.testing
 from fastf1 import Cache
 from fastf1.logger import LoggingManager
@@ -56,13 +57,13 @@ def _test_cache_used_and_clear(tmpdir):
         with open('fastf1/testing/reference_data/2020_05_FP2/'
                   'ergast_race.raw', 'rb') as fobj:
             content = fobj.read()
-        mocker.get('https://ergast.com/api/f1/2020/5.json',
+        mocker.get(f'{fastf1.ergast.interface.BASE_URL}/2020/5.json',
                    content=content, status_code=200)
 
         with open('fastf1/testing/reference_data/2020_05_FP2/'
                   'ergast_race_result.raw', 'rb') as fobj:
             content = fobj.read()
-        mocker.get('https://ergast.com/api/f1/2020/5/results.json',
+        mocker.get(f'{fastf1.ergast.interface.BASE_URL}/2020/5/results.json',
                    content=content, status_code=200)
 
         # rainy and short session, good for fast test/quick loading

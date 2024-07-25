@@ -110,7 +110,14 @@ class _SessionWithRateLimiting(requests.Session):
             # soft limit 4 calls/sec
             _CallsPerIntervalLimitRaise(200, 60*60, "ergast.com: 200 calls/h")
             # hard limit 200 calls/h
-        ]
+        ],
+        # general limits on all other APIs
+        re.compile(r"^https?://.+\..+"): [
+            _MinIntervalLimitDelay(0.25),
+            # soft limit 4 calls/sec
+            _CallsPerIntervalLimitRaise(500, 60 * 60, "any API: 500 calls/h")
+            # hard limit 200 calls/h
+        ],
     }
 
     def send(self, request, **kwargs):

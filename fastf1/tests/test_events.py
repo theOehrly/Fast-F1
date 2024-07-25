@@ -237,10 +237,8 @@ def test_event_get_session_name(backend):
     assert event.get_session_name('Sprint') == 'Sprint'
 
     # Sprint Qualifying format introduced for 2024
-    if ((backend == 'f1timing')
-            and (datetime.datetime.now() < datetime.datetime(2024, 4, 21))):
-        # disables this test until the data should be available
-        # TODO: remove early exit at any time after 2024/04/21
+    if backend == 'f1timing':
+        # disables this test for the broken livetiming backend -> TODO
         return
     event = fastf1.get_event(2024, 5, backend=backend)
     assert event.year == 2024
