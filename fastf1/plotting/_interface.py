@@ -752,11 +752,17 @@ def add_sorted_driver_legend(
     dtm = _get_driver_team_mapping(session)
 
     try:
-        handles, labels, kwargs \
-            = matplotlib.legend._parse_legend_args([ax], *args, **kwargs)
+        ret = matplotlib.legend._parse_legend_args([ax], *args, **kwargs)
+        if len(ret) == 3:
+            handles, labels, kwargs = ret
+            extra_args = []
+        else:
+            handles, labels, extra_args, kwargs = ret
+
     except AttributeError:
         warnings.warn("Failed to parse optional legend arguments correctly.",
                       UserWarning)
+        extra_args = []
         kwargs.pop('handles', None)
         kwargs.pop('labels', None)
         handles, labels = ax.get_legend_handles_labels()
@@ -788,7 +794,7 @@ def add_sorted_driver_legend(
         handles_new.append(elem[2])
         labels_new.append(elem[3])
 
-    return ax.legend(handles_new, labels_new, **kwargs)
+    return ax.legend(handles_new, labels_new, *extra_args, **kwargs)
 
 
 def set_default_colormap(colormap: str):
