@@ -77,6 +77,7 @@ class _MinIntervalLimitDelay:
         t_now = time.time()
         if (delta := (t_now - self._t_last)) < self._interval:
             time.sleep(self._interval - delta)
+            t_now += self._interval - delta
         self._t_last = t_now
 
 
