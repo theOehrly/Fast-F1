@@ -452,3 +452,12 @@ def test_override_team_constants():
 
     if fastf1.plotting.get_team_name('Haas', session, short=True) != 'Haas':
         raise RuntimeError("Test cleanup failed!")
+
+
+def test_import_internal_mpl_lgend_arg_kwarg_parser():
+    # Import the module and just try to access the internal function to see
+    # if it is available. This is not a test of the function itself but rather
+    # serves as an early warning if the function is removed or renamed by
+    # causing a test failure.
+    import matplotlib.legend
+    _ = matplotlib.legend._parse_legend_args

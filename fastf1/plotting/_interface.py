@@ -1,4 +1,5 @@
 import dataclasses
+import warnings
 from collections.abc import Sequence
 from typing import (
     Any,
@@ -8,6 +9,7 @@ from typing import (
 )
 
 import matplotlib.axes
+import matplotlib.legend
 
 from fastf1.core import Session
 from fastf1.internals.fuzzy import fuzzy_matcher
@@ -715,7 +717,9 @@ def list_compounds(session: Session) -> list[str]:
     return list(_Constants[year].CompoundColors.keys())
 
 
-def add_sorted_driver_legend(ax: matplotlib.axes.Axes, session: Session):
+def add_sorted_driver_legend(
+    ax: matplotlib.axes.Axes, session: Session, *args, **kwargs
+):
     """
     Adds a legend to the axis where drivers are grouped by team and within each
     team they are shown in the same order that is used for selecting plot
@@ -725,12 +729,18 @@ def add_sorted_driver_legend(ax: matplotlib.axes.Axes, session: Session):
     ``ax.legend()`` method. It can only be used when driver names or driver
     abbreviations are used as labels for the legend.
 
+    This function supports the same ``*args`` and ``**kwargs`` as
+    Matplotlib's ``ax.legend()``, including the ``handles`` and ``labels``
+    arguments. Check the Matplotlib documentation for more information.
+
     There is no particular need to use this function except to make the
     legend more visually pleasing.
 
     Args:
         ax: An instance of a Matplotlib ``Axes`` object
         session: the session for which the data should be obtained
+        *args: Matplotlib legend args
+        **kwargs: Matplotlib legend kwargs
 
      Returns:
         ``matplotlib.legend.Legend``
@@ -740,7 +750,22 @@ def add_sorted_driver_legend(ax: matplotlib.axes.Axes, session: Session):
 
     """
     dtm = _get_driver_team_mapping(session)
-    handles, labels = ax.get_legend_handles_labels()
+
+    try:
+        ret = matplotlib.legend._parse_legend_args([ax], *args, **kwargs)
+        if len(ret) == 3:
+            handles, labels, kwargs = ret
+            extra_args = []
+        else:
+            handles, labels, extra_args, kwargs = ret
+
+    except AttributeError:
+        warnings.warn("Failed to parse optional legend arguments correctly.",
+                      UserWarning)
+        extra_args = []
+        kwargs.pop('handles', None)
+        kwargs.pop('labels', None)
+        handles, labels = ax.get_legend_handles_labels()
 
     teams_list = list(dtm.teams_by_normalized.values())
     driver_list = list(dtm.drivers_by_normalized.values())
@@ -769,7 +794,7 @@ def add_sorted_driver_legend(ax: matplotlib.axes.Axes, session: Session):
         handles_new.append(elem[2])
         labels_new.append(elem[3])
 
-    return ax.legend(handles_new, labels_new)
+    return ax.legend(handles_new, labels_new, *extra_args, **kwargs)
 
 
 def set_default_colormap(colormap: str):
