@@ -91,6 +91,7 @@ exclude_patterns = [
 nitpicky = True
 
 nitpick_ignore_regex = [
+    (r'py:class', r'collections.abc\..*'),
     (r'py:data', r'typing\..*'),
     (r'py:.*', r'datetime\..*'),
     (r'py:.*', r'pandas\..*'),
