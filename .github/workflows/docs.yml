@@ -11,6 +11,11 @@ on:
     types: [ released ]
 
 
+env:
+  # Set environment variable with value from configuration variable
+  FASTF1_DOCS_ERGAST_BACKEND_OVERRIDE: ${{ vars.FASTF1_DOCS_ERGAST_BACKEND_OVERRIDE }}
+
+
 jobs:
   build_docs:
     name: Build Documentation
