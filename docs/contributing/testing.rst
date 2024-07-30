@@ -53,9 +53,8 @@ not need to be installed, but FastF1 should be)::
 .. _command-line parameters: http://doc.pytest.org/en/latest/usage.html
 
 
-==========================
 Linting - Code style tests
-==========================
+--------------------------
 
 FastF1 uses Ruff_ and isort_ to ensure that the code has a consistent style and
 is easily readable. All code should conform to the guidelines that are defined
@@ -77,3 +76,20 @@ these commands will also be run automatically before each commit.
 .. _Ruff: https://docs.astral.sh/ruff/
 .. _isort: https://pycqa.github.io/isort/
 .. _PEP8: https://pep8.org/
+
+
+Github Actions CI Tests
+-----------------------
+
+FastF1 uses Github Actions to run the tests on every push to the repository and
+when updating a pull request. Usually, you should just let all tests run and
+make sure that they are passing.
+
+In rare cases, it may be usefull to skip some tests. You can do this by adding
+a specific comment to the commit message. The following comments are supported:
+
+- ``[skip-pytest]``: Skip pytest runs on all Python versions
+- ``[skip-ruff]``: Skip Ruff code style checks
+- ``[skip-isort]``: Skip isort import order checks
+- ``[skip-doc-build]``: Skip building the documentation
+- ``[skip-readme-test]``: Skip the README render test for PyPI

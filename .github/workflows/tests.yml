@@ -15,6 +15,7 @@ env:
 
 jobs:
   run-code-tests:
+    if: (!contains(github.event.head_commit.message, '[skip-pytest]'))
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -75,6 +76,7 @@ jobs:
 
 
   run-lint-checks:
+    if: (!contains(github.event.head_commit.message, '[skip-ruff]'))
     runs-on: ubuntu-latest
     name: Linting (Ruff)
     steps:
@@ -111,6 +113,7 @@ jobs:
 
 
   run-isort-test:
+    if: (!contains(github.event.head_commit.message, '[skip-isort]'))
     name: Test import order (isort)
     runs-on: ubuntu-latest
 
@@ -141,6 +144,7 @@ jobs:
           python -m isort . --check-only
 
   run-readme-render-test:
+    if: (!contains(github.event.head_commit.message, '[skip-readme-test]'))
     name: Test readme renders on PyPi
     runs-on: ubuntu-latest
 
