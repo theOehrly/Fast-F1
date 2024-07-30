@@ -22,9 +22,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.12'
 
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -32,7 +32,7 @@ jobs:
           fetch-depth: 0  # fetch the complete repo history (for setuptools-scm)
 
       - name: Cache pip
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: pip-cache-${{ hashFiles('requirements/*.txt') }}
@@ -50,8 +50,9 @@ jobs:
           mkdir doc_cache  # make sure cache dir exists
 
       - name: Cache FastF1
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
+          save-always: true
           path: ./doc_cache
           key: fastf1-doc-cache-${{ hashFiles('*.*') }}
           restore-keys: |
@@ -66,7 +67,7 @@ jobs:
           mkdir -p docs/_build/html
 
       - name: Checkout current docs
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: gh-pages
           path: docs/_build/html
@@ -89,7 +90,7 @@ jobs:
           git push origin gh-pages --force
 
       - name: Upload docs as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: github.event_name != 'release'
         with:
           name: Documentation Build

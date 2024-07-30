@@ -23,7 +23,7 @@ jobs:
           mkdir test_cache  # make sure cache dir exists
 
       - name: Cache FastF1
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ./test_cache
           key: fastf1-${{ matrix.python-version }}-${{ hashFiles('*.*') }}
