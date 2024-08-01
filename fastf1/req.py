@@ -29,7 +29,11 @@ import pickle
 import re
 import sys
 import time
-from typing import Optional
+import warnings
+from typing import (
+    Literal,
+    Optional
+)
 
 import requests
 from requests_cache import CacheMixin
@@ -274,7 +278,7 @@ class Cache(metaclass=_MetaCache):
                 cls._requests_session_cached.cache.clear()
 
     @classmethod
-    def requests_get(cls, *args, **kwargs):
+    def requests_get(cls, url: str, **kwargs):
         """Wraps `requests.Session().get()` with caching if enabled.
 
         All GET requests that require caching should be performed through this
@@ -285,21 +289,21 @@ class Cache(metaclass=_MetaCache):
         cls._enable_default_cache()
         if (cls._requests_session_cached is None) or cls._tmp_disabled:
             cls._request_counter += 1
-            return cls._requests_session.get(*args, **kwargs)
+            return cls._requests_session.get(url, **kwargs)
 
         if cls._ci_mode:
             # try to return a cached response first
-            resp = cls._requests_session_cached.get(
-                *args, only_if_cached=True, **kwargs)
+            resp = cls._cached_request(
+                'GET', url, only_if_cached=True, **kwargs)
             # 504 indicates that no cached response was found
             if resp.status_code != 504:
                 return resp
 
         cls._request_counter += 1
-        return cls._requests_session_cached.get(*args, **kwargs)
+        return cls._cached_request('GET', url, **kwargs)
 
     @classmethod
-    def requests_post(cls, *args, **kwargs):
+    def requests_post(cls, url: str, **kwargs):
         """Wraps `requests.Session().post()` with caching if enabled.
 
         All POST requests that require caching should be performed through this
@@ -310,18 +314,43 @@ class Cache(metaclass=_MetaCache):
         cls._enable_default_cache()
         if (cls._requests_session_cached is None) or cls._tmp_disabled:
             cls._request_counter += 1
-            return cls._requests_session.post(*args, **kwargs)
+            return cls._requests_session.post(url, **kwargs)
 
         if cls._ci_mode:
             # try to return a cached response first
-            resp = cls._requests_session_cached.post(
-                *args, only_if_cached=True, **kwargs)
+            resp = cls._cached_request(
+                'POST', url, only_if_cached=True, **kwargs)
             # 504 indicates that no cached response was found
             if resp.status_code != 504:
                 return resp
 
         cls._request_counter += 1
-        return cls._requests_session_cached.post(*args, **kwargs)
+        return cls._cached_request('POST', url, **kwargs)
+
+    @classmethod
+    def _cached_request(cls,
+                        method: Literal['GET', 'POST'],
+                        url: str,
+                        **kwargs):
+
+        if method == 'GET':
+            func = cls._requests_session_cached.get
+        elif method == 'POST':
+            func = cls._requests_session_cached.post
+        else:
+            raise ValueError("Invalid method. Must be 'GET' or 'POST'.")
+
+        # catch TypeError raised by outdated requests-cache version if the
+        # cache was created with a newer version
+        # github.com/requests-cache/requests-cache/issues/973
+        try:
+            response = func(url, **kwargs)
+        except TypeError:
+            warnings.warn("You are using an outdated version of "
+                          "requests-cache. Consider upgrading.", UserWarning)
+            cls._requests_session_cached.cache.delete(urls=[url])
+            response = func(url, **kwargs)
+        return response
 
     @classmethod
     def delete_response(cls, url):
