@@ -2159,7 +2159,7 @@ class Session:
                     f"Driver {drv: >2}: Lap timing integrity check "
                     f"failed for {integrity_errors} lap(s)")
 
-    # @soft_exceptions("results", "Failed to load results data!", _logger)
+    @soft_exceptions("results", "Failed to load results data!", _logger)
     def _load_drivers_results(self, *, livedata=None):
         # get list of drivers and results
 
