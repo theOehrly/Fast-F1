@@ -623,8 +623,6 @@ def _get_schedule_ff1(year):
             data[f'session{j+1}_date'][i] = pd.Timestamp(date)
             data[f'session{j+1}_date_Utc'][i] = pd.Timestamp(date_utc)
 
-    ''.capitalize()
-
     df = pd.DataFrame(data)
     # change column names from snake_case to UpperCamelCase
     col_renames = {col: ''.join([s.capitalize() for s in col.split('_')])
