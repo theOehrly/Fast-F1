@@ -2591,8 +2591,7 @@ class Laps(BaseDataFrame):
         - **Driver** (string): Three letter driver identifier
         - **DriverNumber** (str): Driver number
         - **LapTime** (pandas.Timedelta): Recorded lap time.
-          Officially deleted lap times will *not* be deleted here.
-          Deleting laps is currently not supported.
+          To see if a lap time was deleted, check the **Deleted** column.
         - **LapNumber** (float): Recorded lap number
         - **Stint** (float): Stint number
         - **PitOutTime** (pandas.Timedelta): Session time when car exited
