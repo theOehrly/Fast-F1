@@ -3349,7 +3349,58 @@ class Laps(BaseDataFrame):
                            & (self['LapStartTime'] < split_times[i + 1])]
             if laps[i].empty:
                 laps[i] = None
+
         return laps
+
+    def correct_lap_placement(self, laps, split_times) -> list[pd.DataFrame]:
+        column_order = laps[0].columns
+
+        # Loop to correct lap placement
+        for i in range(len(laps) - 1):
+            indices_to_drop = []
+            for index, lap in laps[i].iterrows():
+                # Identify if this lap ends in the pits
+                if lap['PitInTime'] != "NaT":
+                    # Check if the driver leaves the pits on the next lap,
+                    # and the lap is part of the next qualifying session.
+                    next_lap = self.loc[index + 1]
+                    if next_lap['PitOutTime'] != "NaT" and \
+                    next_lap['LapStartTime'] > split_times[i + 1]:
+                        # Reassign this lap from the initial qualifying session
+                        # to the subsequent one.
+                        lap_df = lap.to_frame().T
+                        if not lap_df.empty and not lap_df.isna().all().all():
+                            if laps[i + 1] is None:
+                                # Initialize laps[i + 1] with this lap if
+                                # it has not been populated yet
+                                laps[i + 1] = lap_df
+                            else:
+                                # Exclude empty or all-NA entries
+                                # before concatenating
+                                lap_df = lap_df.dropna(how='all', axis=1)
+                                laps[i + 1] = pd.concat([lap_df, laps[i + 1]],\
+                                                         ignore_index=False).sort_index()
+
+                            indices_to_drop.append(index)
+
+            # Drop laps held in the index from
+            # the misclassified qualifying sessions
+            laps[i] = laps[i].drop(indices_to_drop)
+
+            # Reorder columns to match the initial column order
+            if laps[i + 1] is not None:
+                laps[i + 1] = laps[i + 1][column_order]
+
+            if laps[i].empty:
+                laps[i] = None
+
+        # Reorder columns for the final laps
+        for i in range(len(laps)):
+            if laps[i] is not None:
+                laps[i] = laps[i][column_order]
+
+        return laps
+
 
     def iterlaps(self, require: Optional[Iterable] = None) \
             -> Iterable[tuple[int, "Lap"]]:
