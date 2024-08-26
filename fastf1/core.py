@@ -3349,7 +3349,7 @@ class Laps(BaseDataFrame):
                            & (self['LapStartTime'] < split_times[i + 1])]
             if laps[i].empty:
                 laps[i] = None
-
+        self.correct_lap_placement(laps, split_times)
         return laps
 
     def correct_lap_placement(self, laps, split_times) -> list[pd.DataFrame]:
