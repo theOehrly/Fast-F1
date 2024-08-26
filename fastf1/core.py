@@ -3353,6 +3353,33 @@ class Laps(BaseDataFrame):
         return laps
 
     def correct_lap_placement(self, laps, split_times) -> list[pd.DataFrame]:
+        """Corrects the placement of misclassified laps in list of DataFrames.
+
+        Reassigns laps that were incorrectly classified into earlier
+        qualifying sessions due to the driver entering the pits
+        and passing the timing beam before the start of
+        the next qualifying session.
+
+        It checks if the next lap starts after the
+        split time for the next qualifying session and
+        reassigns the lap to the correct session.
+
+        Args:
+            self (self)
+            laps (list of pd.DataFrame): A list of DataFrames,
+                each representing laps from a qualifying session.
+            split_times (list of datetime): A list of split times
+                representing the start of each qualifying session.
+
+        Returns:
+            list of pd.DataFrame: A list of corrected DataFrames
+                where misclassified laps have been reassigned
+                to the correct qualifying session.
+
+        Example:
+            >>> corrected_laps = correct_lap_placement(laps, split_times)
+        """
+        
         column_order = laps[0].columns
 
         # Loop to correct lap placement
