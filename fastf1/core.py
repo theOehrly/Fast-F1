@@ -3339,119 +3339,52 @@ class Laps(BaseDataFrame):
 
         # add the very last timestamp, to get an end for the last interval
         split_times.append(self.session.session_status['Time'].iloc[-1])
-        laps = [None, None, None]
-
-        self['NextLapStartTime'] = self['LapStartTime'].shift(-1)
-        self['LapEndTime'] = self[['LapStartTime', 'NextLapStartTime', 'Time']].apply(
-            lambda row: min(row['LapStartTime'] + row['Time'], row['NextLapStartTime']) if pd.notna(row['NextLapStartTime']) else row['LapStartTime'] + row['Time'], 
-            axis=1
-            )
-        
-        
-        self.drop(columns=['NextLapStartTime'], inplace=True)
-
+        laps = [None, None, None]  # Initialize with empty DataFrames
+        print(split_times)
         for i in range(len(split_times) - 1):
             # split by start time instead of end time, because the split times
             # that are generated from timing data may not account for crashed
             # cars being returned or having a generated lap time that results
             # in a late 'Time' value!
+
+            # Find all of the appropriate laps for the current session and
+            # assign them to current_laps
             current_session = (
                 (self['LapStartTime'] > split_times[i]) &
-                (self['LapStartTime'] < split_times[i + 1]) &
-                (self['LapEndTime'] < split_times[i + 1])
+                (self['LapStartTime'] < split_times[i + 1])
             )
-            laps[i] = self[current_session]
+            current_laps = self[current_session]
 
-            if i < len(split_times) - 1 and i + 1 < len(laps):
-                next_session = (
-                    (self['LapStartTime'] < split_times[i + 1]) &
-                    (self['LapEndTime'] > split_times[i + 1])
-                )
-                laps[i + 1] = self[next_session]
+            # Find all of the laps that have been added to the
+            # wrong qualifying session
+            next_session_criteria = (
+                (~pd.isna(self['PitInTime'].shift(1))) &
+                (~pd.isna(self['PitOutTime'])) &
+                (self['LapStartTime'].shift(-1) > split_times[i + 1]) &
+                # Verify session starts before Q3
+                (self['LapStartTime'] < split_times[2])
+            )
+            # Align indices to avoid reindexing warnings
+            next_session_criteria = \
+                next_session_criteria.reindex(current_laps.index,\
+                                              fill_value=False)
+            next_session_laps = current_laps[next_session_criteria]
 
-                if not laps[i + 1].empty:
-                    print(f"Laps added to Q{i + 2}: {laps[i + 1]['LapNumber'].to_list()}")
+            current_laps = current_laps[~next_session_criteria]
 
-                
-            if laps[i].empty:
-                laps[i] = None
-        #self.correct_lap_placement(laps, split_times)
-        return laps
+            # Accumulate laps in the current session
+            laps[i] = pd.concat([laps[i], current_laps],\
+                                 ignore_index=False).sort_index()
 
-    def correct_lap_placement(self, laps, split_times) -> list[pd.DataFrame]:
-        """Corrects the placement of misclassified laps in list of DataFrames.
+            if not next_session_laps.empty:
+                # Always concatenate to the next session
+                if i + 1 < len(laps):
+                    laps[i + 1] = pd.concat([laps[i + 1], next_session_laps],\
+                                            ignore_index=False).sort_index()
 
-        Reassigns laps that were incorrectly classified into earlier
-        qualifying sessions due to the driver entering the pits
-        and passing the timing beam before the start of
-        the next qualifying session.
-
-        It checks if the next lap starts after the
-        split time for the next qualifying session and
-        reassigns the lap to the correct session.
-
-        Args:
-            self (self)
-            laps (list of pd.DataFrame): A list of DataFrames,
-                each representing laps from a qualifying session.
-            split_times (list of datetime): A list of split times
-                representing the start of each qualifying session.
-
-        Returns:
-            list of pd.DataFrame: A list of corrected DataFrames
-                where misclassified laps have been reassigned
-                to the correct qualifying session.
-
-        Example:
-            >>> corrected_laps = correct_lap_placement(laps, split_times)
-        """
-        
-        column_order = laps[0].columns
-
-        # Loop to correct lap placement
-        for i in range(len(laps) - 1):
-            indices_to_drop = []
-            for index, lap in laps[i].iterrows():
-                # Identify if this lap ends in the pits
-                if lap['PitInTime'] != "NaT":
-                    # Check if the driver leaves the pits on the next lap,
-                    # and the lap is part of the next qualifying session.
-                    next_lap = self.loc[index + 1]
-                    if next_lap['PitOutTime'] != "NaT" and \
-                    next_lap['LapStartTime'] > split_times[i + 1]:
-                        # Reassign this lap from the initial qualifying session
-                        # to the subsequent one.
-                        lap_df = lap.to_frame().T
-                        if not lap_df.empty and not lap_df.isna().all().all():
-                            if laps[i + 1] is None:
-                                # Initialize laps[i + 1] with this lap if
-                                # it has not been populated yet
-                                laps[i + 1] = lap_df
-                            else:
-                                # Exclude empty or all-NA entries
-                                # before concatenating
-                                lap_df = lap_df.dropna(how='all', axis=1)
-                                laps[i + 1] = pd.concat([lap_df, laps[i + 1]],\
-                                                         ignore_index=False).sort_index()
-
-                            indices_to_drop.append(index)
-
-            # Drop laps held in the index from
-            # the misclassified qualifying sessions
-            laps[i] = laps[i].drop(indices_to_drop)
-
-            # Reorder columns to match the initial column order
-            if laps[i + 1] is not None:
-                laps[i + 1] = laps[i + 1][column_order]
-
-            if laps[i].empty:
-                laps[i] = None
-
-        # Reorder columns for the final laps
-        for i in range(len(laps)):
-            if laps[i] is not None:
-                laps[i] = laps[i][column_order]
-
+        # Remove any empty DataFrames
+        laps = [session_laps if not session_laps.empty else \
+                None for session_laps in laps]
         return laps
 
 
