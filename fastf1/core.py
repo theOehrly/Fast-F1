@@ -3357,6 +3357,8 @@ class Laps(BaseDataFrame):
 
             # Find all of the laps that have been added to the
             # wrong qualifying session
+            #(i.e. car passes timing beam in pits, initializing a new lap
+            # but not finish said lap until the next session)
             next_session_criteria = (
                 (~pd.isna(self['PitInTime'].shift(1))) &
                 (~pd.isna(self['PitOutTime'])) &
@@ -3368,14 +3370,17 @@ class Laps(BaseDataFrame):
             next_session_criteria = \
                 next_session_criteria.reindex(current_laps.index,\
                                               fill_value=False)
+            # Grab all the laps in current_laps that fit the criteria
             next_session_laps = current_laps[next_session_criteria]
 
+            # Remove laps that fit criteria from current_laps
             current_laps = current_laps[~next_session_criteria]
 
             # Accumulate laps in the current session
             laps[i] = pd.concat([laps[i], current_laps],\
                                  ignore_index=False).sort_index()
 
+            # Assuming at least one lap meet criteria:
             if not next_session_laps.empty:
                 # Always concatenate to the next session
                 if i + 1 < len(laps):
