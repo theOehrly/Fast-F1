@@ -3340,7 +3340,6 @@ class Laps(BaseDataFrame):
         # add the very last timestamp, to get an end for the last interval
         split_times.append(self.session.session_status['Time'].iloc[-1])
         laps = [None, None, None]  # Initialize with empty DataFrames
-        print(split_times)
         for i in range(len(split_times) - 1):
             # split by start time instead of end time, because the split times
             # that are generated from timing data may not account for crashed
