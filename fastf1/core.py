@@ -3340,16 +3340,42 @@ class Laps(BaseDataFrame):
         # add the very last timestamp, to get an end for the last interval
         split_times.append(self.session.session_status['Time'].iloc[-1])
         laps = [None, None, None]
+
+        self['NextLapStartTime'] = self['LapStartTime'].shift(-1)
+        self['LapEndTime'] = self[['LapStartTime', 'NextLapStartTime', 'Time']].apply(
+            lambda row: min(row['LapStartTime'] + row['Time'], row['NextLapStartTime']) if pd.notna(row['NextLapStartTime']) else row['LapStartTime'] + row['Time'], 
+            axis=1
+            )
+        
+        
+        self.drop(columns=['NextLapStartTime'], inplace=True)
+
         for i in range(len(split_times) - 1):
             # split by start time instead of end time, because the split times
             # that are generated from timing data may not account for crashed
             # cars being returned or having a generated lap time that results
             # in a late 'Time' value!
-            laps[i] = self[(self['LapStartTime'] > split_times[i])
-                           & (self['LapStartTime'] < split_times[i + 1])]
+            current_session = (
+                (self['LapStartTime'] > split_times[i]) &
+                (self['LapStartTime'] < split_times[i + 1]) &
+                (self['LapEndTime'] < split_times[i + 1])
+            )
+            laps[i] = self[current_session]
+
+            if i < len(split_times) - 1 and i + 1 < len(laps):
+                next_session = (
+                    (self['LapStartTime'] < split_times[i + 1]) &
+                    (self['LapEndTime'] > split_times[i + 1])
+                )
+                laps[i + 1] = self[next_session]
+
+                if not laps[i + 1].empty:
+                    print(f"Laps added to Q{i + 2}: {laps[i + 1]['LapNumber'].to_list()}")
+
+                
             if laps[i].empty:
                 laps[i] = None
-        self.correct_lap_placement(laps, split_times)
+        #self.correct_lap_placement(laps, split_times)
         return laps
 
     def correct_lap_placement(self, laps, split_times) -> list[pd.DataFrame]:
