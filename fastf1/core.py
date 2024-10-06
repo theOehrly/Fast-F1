@@ -3340,13 +3340,32 @@ class Laps(BaseDataFrame):
         # add the very last timestamp, to get an end for the last interval
         split_times.append(self.session.session_status['Time'].iloc[-1])
         laps = [None, None, None]
+        prev_early = None
         for i in range(len(split_times) - 1):
             # split by start time instead of end time, because the split times
             # that are generated from timing data may not account for crashed
             # cars being returned or having a generated lap time that results
             # in a late 'Time' value!
-            laps[i] = self[(self['LapStartTime'] > split_times[i])
-                           & (self['LapStartTime'] < split_times[i + 1])]
+            cond = ((self['LapStartTime'] > split_times[i])
+                    & (self['LapStartTime'] < split_times[i + 1]))
+
+            # if this is Q2 or Q3 and there are left over "early" laps from the
+            # last session, add them to the current session
+            if prev_early is not None:
+                cond |= prev_early
+
+            # find laps that "start" early, this happens when cars cross the
+            # timing beam in the pits before the next quali session starts:
+            # lap is pit out, starts in current session, ends in next session
+            is_early = ((self['LapStartTime'] < split_times[i + 1])
+                        & (self['Time'] > split_times[i + 1])
+                        & ~pd.isna(self['PitOutTime']))
+
+            # select the laps for the current session, excluding the early laps
+            laps[i] = self[cond & ~is_early]
+
+            prev_early = is_early
+
             if laps[i].empty:
                 laps[i] = None
         return laps

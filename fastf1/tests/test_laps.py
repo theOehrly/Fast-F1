@@ -286,7 +286,7 @@ def test_laps_pick_track_status(reference_laps_data):
 @pytest.mark.f1telapi
 @pytest.mark.parametrize("source", ["session_status", "timing_data"])
 def test_split_quali_laps(source):
-    session = fastf1.get_session(2023, 2, 'Q')
+    session = fastf1.get_session(2024, 10, 'Q')
     session.load(telemetry=False, weather=False)
 
     if source == "session_status":
@@ -295,9 +295,16 @@ def test_split_quali_laps(source):
 
     q1, q2, q3 = session.laps.split_qualifying_sessions()
 
+    # verify correct number of drivers per session
     assert len(q1['DriverNumber'].unique()) == 20
     assert len(q2['DriverNumber'].unique()) == 15
     assert len(q3['DriverNumber'].unique()) == 10
+
+    # verify that the last lap of q1 and q2 session is within the session time
+    # check for "early lap starts" (car crosses timing beam in pits before next
+    # session starts) being handled correctly, see #605
+    assert q1['Time'].max() < pd.Timedelta(hours=0, minutes=40)
+    assert q2['Time'].max() < pd.Timedelta(hours=1, minutes=3)
 
 
 @pytest.mark.f1telapi
