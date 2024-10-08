@@ -54,6 +54,18 @@ environment so that Python will be able to import FastF1 from your
 development source directory. This allows you to import your modified version
 of FastF1 without re-installing after every change.
 
+Remember, in order to package the library you need to have the C and C++ binaries on your SO:
+
+- For Windows, install `Microsoft C++ Build Tools <https://visualstudio.microsoft.com/visual-cpp-build-tools/>`_ with Visual Studio.
+
+- For Linux (Debian-based distributions) install ``build-essentials``::
+
+    sudo apt-get install build-essential
+
+- For MacOS, install Xcode development tools::
+
+    xcode-select --install
+
 .. _install_pre_commit:
 
 Installing additional dependencies for development
