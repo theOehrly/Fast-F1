@@ -1463,7 +1463,6 @@ class Session:
         data.drop(columns=['NumberOfPitStops'], inplace=True)
         useful = app_data[['Driver', 'Time', 'Compound', 'StartLaps', 'New',
                            'Stint']]
-        useful = useful[~useful['Compound'].isnull()]
 
         drivers = self.drivers
         if not drivers:
