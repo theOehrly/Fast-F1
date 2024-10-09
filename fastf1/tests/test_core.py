@@ -141,3 +141,30 @@ def test_rcm_parsing_deleted_laps():
     assert not fastest['Deleted']
     assert fastest['DeletedReason'] == ""
     assert fastest['IsPersonalBest']
+
+
+def test_tyre_data_parsing():
+    session = fastf1.get_session(2024, 'Silverstone', 'FP1')
+    session.load(telemetry=False)
+
+    ver = session.laps.pick_drivers('VER')
+
+    ref = pd.DataFrame(
+        [[1.0, 'HARD', True, 1.0], [1.0, 'HARD', True, 2.0],
+         [1.0, 'HARD', True, 3.0], [1.0, 'HARD', True, 4.0],
+         [1.0, 'HARD', True, 5.0], [2.0, 'HARD', False, 6.0],
+         [2.0, 'HARD', False, 7.0], [2.0, 'HARD', False, 8.0],
+         [3.0, 'MEDIUM', True, 1.0], [3.0, 'MEDIUM', True, 2.0],
+         [3.0, 'MEDIUM', True, 3.0], [3.0, 'MEDIUM', True, 4.0],
+         [3.0, 'MEDIUM', True, 5.0], [4.0, 'HARD', False, 9.0],
+         [4.0, 'HARD', False, 10.0], [4.0, 'HARD', False, 11.0],
+         [4.0, 'HARD', False, 12.0], [4.0, 'HARD', False, 13.0],
+         [4.0, 'HARD', False, 14.0], [4.0, 'HARD', False, 15.0],
+         [4.0, 'HARD', False, 16.0], [4.0, 'HARD', False, 17.0],
+         [4.0, 'HARD', False, 18.0], [4.0, 'HARD', False, 19.0],
+         [4.0, 'HARD', False, 20.0]],
+        columns=['Stint', 'Compound', 'FreshTyre', 'TyreLife']
+    )
+
+    compare = ver[['Stint', 'Compound', 'FreshTyre', 'TyreLife']]
+    assert compare.equals(ref)
