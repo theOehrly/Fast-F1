@@ -860,11 +860,7 @@ def timing_app_data(path, response=None, livedata=None):
                     data['Driver'][-1] = driver_number
                     data['Stint'][-1] = stint_number
 
-    df = pd.DataFrame(data)
-    # pandas doesn't correctly infer bool dtype columns, set type explicitly
-    df[['New', 'TyresNotChanged']] \
-        = df[['New', 'TyresNotChanged']].astype(bool)
-    return df
+    return pd.DataFrame(data)
 
 
 @Cache.api_request_wrapper
