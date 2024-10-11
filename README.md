@@ -1,7 +1,6 @@
 <h1 align="center">
-<img src="docs/_static/banner.png" width="300">
+<img src="docs/_static/banner.png" width="400">
 </h1><br>
-
 A python package for accessing and analyzing Formula 1 results,
 schedules, timing data and telemetry.
 
