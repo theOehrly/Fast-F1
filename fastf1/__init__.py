@@ -14,12 +14,12 @@ When using FastF1, you usually start by loading an event or a
 session. This can be done with one of the following functions:
 
 .. autosummary::
-    fastf1.get_session
-    fastf1.get_testing_session
-    fastf1.get_event
-    fastf1.get_events_remaining
-    fastf1.get_testing_session
-    fastf1.get_event_schedule
+    get_session
+    get_testing_session
+    get_event
+    get_events_remaining
+    get_testing_session
+    get_event_schedule
 
 
 .. _requests-and-caching:
