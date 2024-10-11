@@ -12,7 +12,7 @@ ruff
 seaborn>0.13.0
 sphinx-autodoc-typehints
 sphinx-gallery>=0.10.0
-sphinx>6.0,<7.3
+sphinx>=8.0
 websockets>=10.3,<14
 wheel
 xdoctest
