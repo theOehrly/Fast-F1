@@ -1,10 +1,9 @@
-# FastF1
+<h1 align="center">
+<img src="docs/_static/banner.png" width="300">
+</h1><br>
 
-FastF1 is a python package for accessing and analyzing Formula 1 results,
+A python package for accessing and analyzing Formula 1 results,
 schedules, timing data and telemetry.
-
-![](docs/_static/readme.png "banner")
-
 
 ## Main Features
 
