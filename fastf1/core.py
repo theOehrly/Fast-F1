@@ -2975,7 +2975,7 @@ class Laps(BaseDataFrame):
         """
         warnings.warn(("pick_lap is deprecated and will be removed in a "
                        "future release. Use pick_laps instead."),
-                      DeprecationWarning)
+                      FutureWarning)
         return self[self['LapNumber'] == lap_number]
 
     def pick_laps(self, lap_numbers: Union[int, Iterable[int]]) -> "Laps":
@@ -3021,7 +3021,7 @@ class Laps(BaseDataFrame):
         """
         warnings.warn(("pick_driver is deprecated and will be removed"
                        " in a future release. Use pick_drivers instead."),
-                      DeprecationWarning)
+                      FutureWarning)
         identifier = str(identifier)
         if identifier.isdigit():
             return self[self['DriverNumber'] == identifier]
@@ -3072,7 +3072,7 @@ class Laps(BaseDataFrame):
         """
         warnings.warn(("pick_team is deprecated and will be removed"
                        " in a future release. Use pick_teams instead."),
-                      DeprecationWarning)
+                      FutureWarning)
         return self[self['Team'] == name]
 
     def pick_teams(self, names: Union[str, Iterable[str]]) -> "Laps":
@@ -3180,7 +3180,7 @@ class Laps(BaseDataFrame):
         """
         warnings.warn(("pick_tyre is deprecated and will be removed"
                        " in a future release. Use pick_compound instead."),
-                      DeprecationWarning)
+                      FutureWarning)
         return self[self['Compound'] == compound.upper()]
 
     def pick_compounds(self, compounds: Union[str, Iterable[str]]) -> "Laps":
