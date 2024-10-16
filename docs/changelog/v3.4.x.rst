@@ -1,3 +1,30 @@
+What's new in v3.4.1
+--------------------
+
+(released 16/10/2024)
+
+Bug Fixes
+^^^^^^^^^
+
+- Fixed a bug that caused qualifying laps to be split incorrectly into Q1, Q2
+  and Q3 laps. Mainly outlaps were incorrectly assigned to the previous
+  session. (closes #605)
+
+- Fixed errors in tyre data (compound, tyre age, ...). (Massive thanks to
+  user "TheBobba" on the MultiViewer Discord for noticing and helping me with
+  this!)
+
+- Added error handling for a rare error caused by downgrading the
+  ``requests-cache`` dependency or by reusing the cache with various versions
+  of the dependency.
+
+
+Other Changes
+^^^^^^^^^^^^^
+
+- Bumped some DeprecationWarnings to FutureWarnings to make them more visible
+  to users.
+
 
 What's new in v3.4.0
 --------------------
