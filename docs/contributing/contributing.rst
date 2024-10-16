@@ -265,8 +265,8 @@ much time as possible to adapt.
 Rules
 ~~~~~
 
-- Deprecations are targeted at the next point release (e.g. 3.x)
-- Deprecated API is generally removed two point-releases
+- Deprecations are targeted at the next minor release (e.g. 3.x)
+- Deprecated API is generally removed two minor releases
   after introduction of the deprecation. Longer deprecations can be imposed by
   core developers on a case-by-case basis to give more time for the transition
 - The old API must remain fully functional during the deprecation period
@@ -279,9 +279,15 @@ Introducing
 
 1. Announce the deprecation in the changelog
    :file:`docs/changelog.rst` (reference your pull request as well)
-2. If possible, issue a `DeprecationWarning` when the deprecated
-   API is used, using the python `warnings` module.
-
+2. If possible, issue a warning when the deprecated
+   API is used, using the python `warnings` module. The correct warning levels
+   are:
+    - `DeprecationWarning` for the first minor release where the deprecation is
+      announced. These warnings are mostly not shown to end users by default
+      (depending on how a function is called) but are shown to developers.
+    - `FutureWarning` starting from the second minor release where the
+      deprecation is announced. These warnings are always shown to end users
+      and developers.
 
 Expiring
 ~~~~~~~~
