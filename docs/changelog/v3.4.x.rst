@@ -1,3 +1,18 @@
+What's new in v3.4.2
+--------------------
+
+(released 27/10/2024)
+
+Bug Fixes
+^^^^^^^^^
+
+- Fixed a bug that prevented getting the team color for "RB" in some
+  situations. (by @Casper-Guo) (#645)
+
+- Improved some warning messages related to team name matching in the plotting
+  submodule. (by @Casper-Guo) (#645)
+
+
 What's new in v3.4.1
 --------------------
 
