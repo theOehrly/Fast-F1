@@ -102,11 +102,20 @@ def test_driver_color():
 
 def test_team_color():
     with pytest.warns(FutureWarning, match="is deprecated"):
-        color = fastf1.plotting.team_color('ferrari')
+        color_ferrari = fastf1.plotting.team_color('ferrari')
 
-    assert color.startswith('#')
-    assert len(color) == 7
-    _ = int(color[1:], base=16)  # ensure that it's a valid hex color
+    assert color_ferrari.startswith('#')
+    assert len(color_ferrari) == 7
+    _ = int(color_ferrari[1:], base=16)  # ensure that it's a valid hex color
+
+    with pytest.warns(FutureWarning, match="is deprecated"):
+        color_visa = fastf1.plotting.team_color("visa")
+        color_rb = fastf1.plotting.team_color("rb")
+        color_visa_rb = fastf1.plotting.team_color("visa rb")
+        color_rbr = fastf1.plotting.team_color("RBR")
+    
+    assert color_visa == color_rb == color_visa_rb
+    assert color_visa_rb != color_rbr
 
 
 def test_lapnumber_axis():

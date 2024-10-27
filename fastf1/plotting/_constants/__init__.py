@@ -38,7 +38,7 @@ LEGACY_TEAM_TRANSLATE: dict[str, str] = {
     'APN': 'alpine',
     'AMR': 'aston martin',
     'SAU': 'sauber',
-    'RB': 'rb',
+    'RB' : 'visa rb',
     'HAA': 'haas',
     'WIL': 'williams'
 }
