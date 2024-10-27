@@ -61,18 +61,30 @@ jobs:
         run: |
           mkdir test_cache  # make sure cache dir exists
 
-      - name: Cache FastF1
+      - name: Restore cache for FastF1
+        id: cache-fastf1-restore
         uses: actions/cache@v4
         with:
-          save-always: true
           path: ./test_cache
-          key: fastf1-${{ matrix.python-version }}${{ matrix.cache-suffix }}-${{ hashFiles('*.*') }}
+          # Restore any matching cache independent of hash suffix. We cannot
+          # know if anything has changed at this stage.
+          key: fastf1-${{ matrix.python-version }}${{ matrix.cache-suffix }}-${{ hashFiles('./test_cache/**/*.*') }}
           restore-keys: |
             fastf1-${{ matrix.python-version }}${{ matrix.cache-suffix }}
 
       - name: Run tests
         run: |
           pytest -ra
+
+      - name: Save cache for FastF1
+        id: cache-fastf1-save
+        # Save the cache even in case of a failure but only if the content of
+        # the cached directory has changed.
+        if: always() && steps.cache-fastf1-restore.outputs.cache-matched-key != hashFiles('./test_cache/**/*.*')
+        uses: actions/cache/save@v4
+        with:
+          key: fastf1-${{ matrix.python-version }}${{ matrix.cache-suffix }}-${{ hashFiles('./test_cache/**/*.*') }}
+          path: ./test_cache
 
 
   run-lint-checks:
