@@ -5,6 +5,8 @@ from fastf1.plotting._constants import \
 from fastf1.plotting._constants import \
     LEGACY_DRIVER_TRANSLATE as _LEGACY_DRIVER_TRANSLATE
 from fastf1.plotting._constants import \
+    LEGACY_TEAM_COLORS as _LEGACY_TEAM_COLORS
+from fastf1.plotting._constants import \
     LEGACY_TEAM_TRANSLATE as _LEGACY_TEAM_TRANSLATE
 from fastf1.plotting._constants import Constants as _Constants
 from fastf1.plotting._interface import (  # noqa: F401
@@ -134,12 +136,7 @@ Mapping of driver names to theirs respective abbreviations.
     future version. Use :func:`~fastf1.plotting.get_driver_name` instead.
 """
 
-_DEPR_TEAM_COLORS: dict[str, str] = {
-    # str(key.value): val for key, val
-    # in _Constants['2024'].Colormaps[_Colormaps.Default].items()
-    name.replace("kick ", ""): team.TeamColor.FastF1 for name, team
-    in _Constants['2024'].Teams.items()
-}
+_DEPR_TEAM_COLORS: dict[str, str] = _LEGACY_TEAM_COLORS.copy()
 TEAM_COLORS: dict[str, str]
 """
 Mapping of team names to team colors (hex color codes).

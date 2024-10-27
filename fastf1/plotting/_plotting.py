@@ -176,18 +176,23 @@ def driver_color(identifier: str) -> str:
             ratio = fuzz.ratio(identifier, existing_key)
             key_ratios.append((ratio, existing_key))
         key_ratios.sort(reverse=True)
-        if key_ratios[0][0] != 100:
-            _logger.warning(
-                "Correcting invalid user input "
-                 f"'{identifier}' to '{key_ratios[0][1]}'."
 
-            )
-        if ((key_ratios[0][0] < 35)
-                or (key_ratios[0][0] / key_ratios[1][0] < 1.2)):
+        if (key_ratios[0][0] < 35) or (
+            key_ratios[0][0] / key_ratios[1][0] < 1.2
+        ):
             # ensure that the best match has a minimum accuracy (35 out of
             # 100) and that it has a minimum confidence (at least 20% better
             # than second best)
-            raise KeyError
+            raise KeyError(
+                f"Cannot find a good match for user input: {identifier}"
+            )
+
+        if key_ratios[0][0] != 100:
+            _logger.warning(
+                "Correcting invalid user input "
+                f"'{identifier}' to '{key_ratios[0][1]}'."
+            )
+
         best_matched_key = key_ratios[0][1]
         return LEGACY_DRIVER_COLORS[best_matched_key]
 
@@ -263,18 +268,22 @@ def team_color(identifier: str) -> str:
             ratio = fuzz.ratio(identifier, existing_key)
             key_ratios.append((ratio, existing_key))
         key_ratios.sort(reverse=True)
-        if key_ratios[0][0] != 100:
-            _logger.warning(
-                "Correcting invalid user input "
-                 f"'{identifier}' to '{key_ratios[0][1]}'."
 
-            )
-        if ((key_ratios[0][0] < 35)
-                or (key_ratios[0][0] / key_ratios[1][0] < 1.2)):
+        if (key_ratios[0][0] < 35) or (
+            key_ratios[0][0] / key_ratios[1][0] < 1.2
+        ):
             # ensure that the best match has a minimum accuracy (35 out of
             # 100) and that it has a minimum confidence (at least 20% better
             # than second best)
-            raise KeyError
+            raise KeyError(
+                f"Cannot find a good match for user input: {identifier}"
+            )
+
+        if key_ratios[0][0] != 100:
+            _logger.warning(
+                "Correcting invalid user input "
+                f"'{identifier}' to '{key_ratios[0][1]}'."
+            )
         best_matched_key = key_ratios[0][1]
         return LEGACY_TEAM_COLORS[best_matched_key]
 
