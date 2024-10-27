@@ -27,7 +27,7 @@ env:
 
 
 jobs:
-  build_docs:
+  build:
     if: (!contains(github.event.head_commit.message, '[skip-doc-build]')) || inputs.publish
     name: Build Documentation
     runs-on: ubuntu-latest
@@ -83,46 +83,40 @@ jobs:
         run: |
           git checkout ${{ github.sha }}
 
-      - name: Create doc build dir
-        run: |
-          mkdir -p docs/_build/html
-
-      - name: Checkout current docs
-        uses: actions/checkout@v4
-        with:
-          ref: gh-pages
-          path: docs/_build/html
-
       - name: Build docs
         run: |
           mkdir test_cache  # not really need but pytest setup relies on it 
-          
-          # delete all files in build directory, will be replaced with new 
-          # build (don't use "make clean" as it deletes the .git folder)
-          # need to go to nested git repository in build directory
-          cd ./docs/_build/html
-          git rm -r *  
-          
-          # go back to docs folder in main repository
-          cd ../..
+          cd docs
           make html
 
-      - name: Prepare docs for publishing
-        run: |
-          cd docs/_build/html
-          git add .
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git commit -m "$GITHUB_REF_NAME ($GITHUB_JOB) ci release"
-
-      - name: Publish docs
-        if: (github.event_name == 'release') || inputs.publish
-        run: |
-          git push origin gh-pages --force
-
       - name: Upload docs as artifact
-        uses: actions/upload-artifact@v4
-        if: github.event_name != 'release'
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: Documentation Build
-          path: docs/_build/html
+          path: docs/_build/html/
+
+
+  deploy:
+    if: (github.event_name == 'release') || inputs.publish
+    name: Deploy Documentation
+
+    # Add a dependency to the build job
+    needs: build
+
+    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+    permissions:
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
+
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    # Specify runner + deployment step
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4 # or specific "vX.X.X" version tag for this action
+
+
