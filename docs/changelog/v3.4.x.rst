@@ -1,3 +1,15 @@
+What's new in v3.4.3
+--------------------
+
+(released 03/11/2024)
+
+Bug Fixes
+^^^^^^^^^
+
+- Added a workaround to fix an issue that made it impossible to load any data
+  for the Qualifying of the 2024 Sao Paulo Grand Prix (closes #652).
+
+
 What's new in v3.4.2
 --------------------
 
