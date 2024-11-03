@@ -78,7 +78,10 @@ def make_path(wname, wdate, sname, sdate):
         relative url path
     """
     smooth_operator = f'{wdate[:4]}/{wdate} {wname}/{sdate} {sname}/'
-    return '/static/' + smooth_operator.replace(' ', '_')
+    path = '/static/' + smooth_operator.replace(' ', '_')
+    # Workaround for Brazil Qualifying on sunday (#652), TODO: fix properly
+    path = path.replace("2024-11-03_Qualifying", "2024-11-02_Qualifying")
+    return path
 
 
 # define all empty columns for timing data
