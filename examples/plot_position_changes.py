@@ -28,7 +28,7 @@ fig, ax = plt.subplots(figsize=(8.0, 4.9))
 # using the value of the first lap, get their color and then plot their
 # position over the number of laps.
 for drv in session.drivers:
-    drv_laps = session.laps.pick_drivers([drv])
+    drv_laps = session.laps.pick_drivers(drv)
 
     abb = drv_laps['Driver'].iloc[0]
     style = fastf1.plotting.get_driver_style(identifier=abb,

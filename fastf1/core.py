@@ -2574,7 +2574,7 @@ class Laps(BaseDataFrame):
 
         session = fastf1.get_session(2019, 'Bahrain', 'Q')
         session.load()
-        best_bottas = session.laps.pick_drivers(['BOT']).pick_fastest()
+        best_bottas = session.laps.pick_drivers('BOT').pick_fastest()
 
         print(best_bottas['LapTime'])
         # Timedelta('0 days 00:01:28.256000')
@@ -3009,9 +3009,9 @@ class Laps(BaseDataFrame):
             pick_driver is deprecated and will be removed in a future release.
             Use :func:`pick_drivers` instead.
 
-            perez_laps = session_laps.pick_drivers(['PER'])
-            bottas_laps = session_laps.pick_drivers([77])
-            kimi_laps = session_laps.pick_drivers(['RAI'])
+            perez_laps = session_laps.pick_drivers('PER')
+            bottas_laps = session_laps.pick_drivers(77)
+            kimi_laps = session_laps.pick_drivers('RAI')
 
         Args:
             identifier (str or int): Driver abbreviation or number

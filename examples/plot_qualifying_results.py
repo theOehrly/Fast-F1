@@ -37,7 +37,7 @@ print(drivers)
 
 list_fastest_laps = list()
 for drv in drivers:
-    drvs_fastest_lap = session.laps.pick_drivers([drv]).pick_fastest()
+    drvs_fastest_lap = session.laps.pick_drivers(drv).pick_fastest()
     list_fastest_laps.append(drvs_fastest_lap)
 fastest_laps = Laps(list_fastest_laps) \
     .sort_values(by='LapTime') \

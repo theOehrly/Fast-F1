@@ -52,8 +52,8 @@ def delta_time(
 
         session = ff1.get_session(2021, 'Emilia Romagna', 'Q')
         session.load()
-        lec = session.laps.pick_drivers(['LEC']).pick_fastest()
-        ham = session.laps.pick_drivers(['HAM']).pick_fastest()
+        lec = session.laps.pick_drivers('LEC').pick_fastest()
+        ham = session.laps.pick_drivers('HAM').pick_fastest()
 
         delta_time, ref_tel, compare_tel = utils.delta_time(ham, lec)
         # ham is reference, lec is compared
