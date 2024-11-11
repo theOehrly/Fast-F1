@@ -1,6 +1,6 @@
 """Driver Laptimes Distribution Visualization
 =============================================
-Visualizae different drivers' laptime distributions.
+Visualize different drivers' laptime distributions.
 """
 
 import seaborn as sns

@@ -22,8 +22,8 @@ session.load()
 ##############################################################################
 # First, we select the two laps that we want to compare
 
-ver_lap = session.laps.pick_driver('VER').pick_fastest()
-ham_lap = session.laps.pick_driver('HAM').pick_fastest()
+ver_lap = session.laps.pick_drivers('VER').pick_fastest()
+ham_lap = session.laps.pick_drivers('HAM').pick_fastest()
 
 ##############################################################################
 # Next we get the telemetry data for each lap. We also add a 'Distance' column

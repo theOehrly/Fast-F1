@@ -27,7 +27,7 @@ race.load()
 # Get all the laps for a single driver.
 # Filter out slow laps as they distort the graph axis.
 
-driver_laps = race.laps.pick_driver("ALO").pick_quicklaps().reset_index()
+driver_laps = race.laps.pick_drivers("ALO").pick_quicklaps().reset_index()
 
 ###############################################################################
 # Make the scattterplot using lap number as x-axis and lap time as y-axis.

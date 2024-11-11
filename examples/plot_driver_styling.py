@@ -33,7 +33,7 @@ race.load()
 fig, ax = plt.subplots(figsize=(8, 5))
 
 for driver in ('HAM', 'PER', 'VER', 'RUS'):
-    laps = race.laps.pick_driver(driver).pick_quicklaps().reset_index()
+    laps = race.laps.pick_drivers(driver).pick_quicklaps().reset_index()
     style = plotting.get_driver_style(identifier=driver,
                                       style=['color', 'linestyle'],
                                       session=race)
@@ -56,7 +56,7 @@ ax.legend()
 fig, ax = plt.subplots(figsize=(8, 5))
 
 for driver in ('HAM', 'PER', 'VER', 'RUS'):
-    laps = race.laps.pick_driver(driver).pick_quicklaps().reset_index()
+    laps = race.laps.pick_drivers(driver).pick_quicklaps().reset_index()
     style = plotting.get_driver_style(identifier=driver,
                                       style=['color', 'linestyle'],
                                       session=race)
@@ -92,7 +92,7 @@ my_styles = [
 fig, ax = plt.subplots(figsize=(8, 5))
 
 for driver in ('HAM', 'PER', 'VER', 'RUS'):
-    laps = race.laps.pick_driver(driver).pick_quicklaps().reset_index()
+    laps = race.laps.pick_drivers(driver).pick_quicklaps().reset_index()
 
     # here, we now use ``style=my_style`` to use the custom styling
     style = plotting.get_driver_style(identifier=driver,

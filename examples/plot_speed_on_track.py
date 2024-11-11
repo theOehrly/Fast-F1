@@ -26,7 +26,7 @@ colormap = mpl.cm.plasma
 session = ff1.get_session(year, wknd, ses)
 weekend = session.event
 session.load()
-lap = session.laps.pick_driver(driver).pick_fastest()
+lap = session.laps.pick_drivers(driver).pick_fastest()
 
 # Get telemetry data
 x = lap.telemetry['X']              # values for x-axis
