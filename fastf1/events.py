@@ -202,6 +202,7 @@ import pandas as pd
 
 import fastf1._api
 import fastf1.ergast
+from fastf1 import __version_short__
 from fastf1.core import Session
 from fastf1.internals.fuzzy import fuzzy_matcher
 from fastf1.internals.pandas_base import (
@@ -235,6 +236,7 @@ _SESSION_TYPE_ABBREVIATIONS = {
 
 _SCHEDULE_BASE_URL = "https://raw.githubusercontent.com/" \
                      "theOehrly/f1schedule/master/"
+_HEADERS = {'User-Agent': f'FastF1/{__version_short__}'}
 
 
 def get_session(
@@ -580,7 +582,8 @@ def get_events_remaining(
                  _logger)
 def _get_schedule_ff1(year):
     response = Cache.requests_get(
-        _SCHEDULE_BASE_URL + f"schedule_{year}.json"
+        _SCHEDULE_BASE_URL + f"schedule_{year}.json",
+        headers=_HEADERS
     )
 
     data = dict()
