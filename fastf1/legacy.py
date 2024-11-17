@@ -31,7 +31,7 @@ versions can be used.
     DRIVER_NUMBER = '33'
     LAP_N = 10  # which lap number to plot
 
-    drv_laps = session.laps.pick_driver(DRIVER)
+    drv_laps = session.laps.pick_drivers(DRIVER)
     drv_lap = drv_laps[(drv_laps['LapNumber'] == LAP_N)]  # select the lap
 
     # create a matplotlib figure
@@ -191,7 +191,7 @@ def _make_trajectory(session, ref_lap):
         time = session.pos_data[drivers_list[0]]['Time']
         pit_mask = np.zeros((stream_length, len(drivers_list)), dtype=bool)
         for driver_index, driver_number in enumerate(drivers_list):
-            laps = session.laps.pick_driver(driver_number)
+            laps = session.laps.pick_drivers(driver_number)
             in_pit = True
             times = [[], []]
             for lap_index in laps.index:
