@@ -1,3 +1,15 @@
+What's new in v3.4.4
+--------------------
+
+(released 17/11/2024)
+
+Bug Fixes
+^^^^^^^^^
+
+- Use a custom user agent when requesting event schedule data from Github to
+  prevent the request from being blocked in some environments. (see #656)
+
+
 What's new in v3.4.3
 --------------------
 
