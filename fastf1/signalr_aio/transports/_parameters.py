@@ -19,7 +19,6 @@ class WebSocketParameters:
         self.session = connection.session
         self.headers = None
         self.socket_conf = None
-        self._negotiate()
         self.socket_url = self._get_socket_url()
 
     @staticmethod

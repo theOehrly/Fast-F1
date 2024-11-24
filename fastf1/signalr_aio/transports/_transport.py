@@ -42,18 +42,21 @@ except ModuleNotFoundError:
 class Transport:
     def __init__(self, connection):
         self._connection = connection
-        self._ws_params = None
+        self._ws_params = WebSocketParameters(self._connection)
         self._conn_handler = None
-        self.ws_loop = None
-        self.invoke_queue = None
         self.ws = None
-        self._set_loop_and_queue()
+        try:
+            self.ws_loop = asyncio.get_event_loop()
+        except RuntimeError:
+            self.ws_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.ws_loop)
+        self.invoke_queue = asyncio.Queue()
 
     # ===================================
     # Public Methods
 
     def start(self):
-        self._ws_params = WebSocketParameters(self._connection)
+        self._ws_params._negotiate()
         self._connect()
         if not self.ws_loop.is_running():
             self.ws_loop.run_forever()
@@ -66,14 +69,6 @@ class Transport:
 
     # -----------------------------------
     # Private Methods
-
-    def _set_loop_and_queue(self):
-        try:
-            self.ws_loop = asyncio.get_event_loop()
-        except RuntimeError:
-            self.ws_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.ws_loop)
-        self.invoke_queue = asyncio.Queue()
 
     def _connect(self):
         self._conn_handler = asyncio.ensure_future(self._socket(self.ws_loop), loop=self.ws_loop)
