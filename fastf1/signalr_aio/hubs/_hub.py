@@ -1,15 +1,22 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from fastf1.signalr_aio._connection import Connection
+
+
 class Hub:
-    def __init__(self, name, connection):
+    def __init__(self, name: str, connection: Connection):
         self.name = name
         self.server = HubServer(name, connection, self)
         self.client = HubClient(name, connection)
 
 
 class HubServer:
-    def __init__(self, name, connection, hub):
+    def __init__(self, name: str, connection: Connection, hub: Hub):
         self.name = name
         self.__connection = connection
         self.__hub = hub
@@ -25,7 +32,7 @@ class HubServer:
 
 
 class HubClient(object):
-    def __init__(self, name, connection):
+    def __init__(self, name: str, connection: Connection):
         self.name = name
         self.__handlers = {}
 

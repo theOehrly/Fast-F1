@@ -1,13 +1,17 @@
 import warnings
 
-from fastf1.plotting._constants import \
-    LEGACY_DRIVER_COLORS as _LEGACY_DRIVER_COLORS
-from fastf1.plotting._constants import \
-    LEGACY_DRIVER_TRANSLATE as _LEGACY_DRIVER_TRANSLATE
-from fastf1.plotting._constants import \
-    LEGACY_TEAM_COLORS as _LEGACY_TEAM_COLORS
-from fastf1.plotting._constants import \
-    LEGACY_TEAM_TRANSLATE as _LEGACY_TEAM_TRANSLATE
+from fastf1.plotting._constants import (
+    LEGACY_DRIVER_COLORS as _LEGACY_DRIVER_COLORS,
+)
+from fastf1.plotting._constants import (
+    LEGACY_DRIVER_TRANSLATE as _LEGACY_DRIVER_TRANSLATE,
+)
+from fastf1.plotting._constants import (
+    LEGACY_TEAM_COLORS as _LEGACY_TEAM_COLORS,
+)
+from fastf1.plotting._constants import (
+    LEGACY_TEAM_TRANSLATE as _LEGACY_TEAM_TRANSLATE,
+)
 from fastf1.plotting._constants import Constants as _Constants
 from fastf1.plotting._interface import (  # noqa: F401
     _get_driver_team_mapping,
@@ -29,60 +33,66 @@ from fastf1.plotting._interface import (  # noqa: F401
     list_driver_names,
     list_team_names,
     override_team_constants,
-    set_default_colormap
+    set_default_colormap,
 )
 from fastf1.plotting._plotting import (  # noqa: F401
     _COLOR_PALETTE,
     driver_color,
     lapnumber_axis,
     setup_mpl,
-    team_color
+    team_color,
 )
-
 
 __all__ = [
     # imported, current
-    'add_sorted_driver_legend',
-    'get_compound_color',
-    'get_compound_mapping',
-    'get_driver_abbreviation',
-    'get_driver_abbreviations_by_team',
-    'get_driver_color',
-    'get_driver_color_mapping',
-    'get_driver_name',
-    'get_driver_names_by_team',
-    'get_driver_style',
-    'get_team_color',
-    'get_team_name',
-    'get_team_name_by_driver',
-    'list_compounds',
-    'list_driver_abbreviations',
-    'list_driver_names',
-    'list_team_names',
-    'override_team_constants',
-    'set_default_colormap',
-    'setup_mpl',
-
+    "add_sorted_driver_legend",
+    "get_compound_color",
+    "get_compound_mapping",
+    "get_driver_abbreviation",
+    "get_driver_abbreviations_by_team",
+    "get_driver_color",
+    "get_driver_color_mapping",
+    "get_driver_name",
+    "get_driver_names_by_team",
+    "get_driver_style",
+    "get_team_color",
+    "get_team_name",
+    "get_team_name_by_driver",
+    "list_compounds",
+    "list_driver_abbreviations",
+    "list_driver_names",
+    "list_team_names",
+    "override_team_constants",
+    "set_default_colormap",
+    "setup_mpl",
     # imported, legacy
-    'driver_color',
-    'lapnumber_axis',
-    'team_color',
-
+    "driver_color",
+    "lapnumber_axis",
+    "team_color",
     # legacy
-    'COMPOUND_COLORS',
-    'DRIVER_COLORS',
-    'DRIVER_TRANSLATE',
-    'TEAM_COLORS',
-    'TEAM_TRANSLATE',
-    'COLOR_PALETTE'
+    "COMPOUND_COLORS",
+    "DRIVER_COLORS",
+    "DRIVER_TRANSLATE",
+    "TEAM_COLORS",
+    "TEAM_TRANSLATE",
+    "COLOR_PALETTE",
 ]
 
 
 def __getattr__(name):
-    if name in ('COMPOUND_COLORS', 'DRIVER_TRANSLATE', 'DRIVER_COLORS',
-                'TEAM_COLORS', 'TEAM_TRANSLATE', 'COLOR_PALETTE'):
-        warnings.warn(f"{name} is deprecated and will be removed in a future "
-                      f"version.", FutureWarning)
+    if name in (
+        "COMPOUND_COLORS",
+        "DRIVER_TRANSLATE",
+        "DRIVER_COLORS",
+        "TEAM_COLORS",
+        "TEAM_TRANSLATE",
+        "COLOR_PALETTE",
+    ):
+        warnings.warn(
+            f"{name} is deprecated and will be removed in a future "
+            f"version.",
+            FutureWarning,
+        )
 
         return globals()[f"_DEPR_{name}"]
 
@@ -90,8 +100,7 @@ def __getattr__(name):
 
 
 _DEPR_COMPOUND_COLORS: dict[str, str] = {
-    key: val for key, val
-    in _Constants['2024'].CompoundColors.items()
+    key: val for key, val in _Constants["2024"].CompoundColors.items()
 }
 COMPOUND_COLORS: dict[str, str]
 """

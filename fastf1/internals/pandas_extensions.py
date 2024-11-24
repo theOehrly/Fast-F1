@@ -1,12 +1,7 @@
 import numpy as np
-from pandas import (
-    DataFrame,
-    Index,
-    RangeIndex
-)
+from pandas import DataFrame, Index, RangeIndex
 
 from fastf1.internals import internals_logger as logger
-
 
 try:
     # import internal pandas functions and objects
@@ -14,17 +9,18 @@ try:
         BlockPlacement,
         _get_axes,
         create_block_manager_from_blocks,
-        new_block_2d
+        new_block_2d,
     )
     from pandas.core.internals.managers import _consolidate
 
     # verify existence of non-public methods of public objects
-    if not hasattr(Index, '_with_infer'):
+    if not hasattr(Index, "_with_infer"):
         raise AttributeError
 
 except (AttributeError, ImportError) as import_exc:
-    logger.warning("Import of pandas internals failed. Performance will be "
-                   "reduced.")
+    logger.warning(
+        "Import of pandas internals failed. Performance will be " "reduced."
+    )
     logger.debug("Traceback for import failure", exc_info=import_exc)
     CREATE_DF_FAST = False
 else:
@@ -32,10 +28,7 @@ else:
 
 
 def create_df_fast(
-        *,
-        arrays: list[np.ndarray],
-        columns: list,
-        fallback: bool = True
+    *, arrays: list[np.ndarray], columns: list, fallback: bool = True
 ) -> DataFrame:
     """Implements fast creation of DataFrames.
 
@@ -68,10 +61,7 @@ def create_df_fast(
         return _fallback_create_df(arrays, columns)
 
 
-def _fallback_create_df(
-        arrays: list[np.ndarray],
-        columns: list
-) -> DataFrame:
+def _fallback_create_df(arrays: list[np.ndarray], columns: list) -> DataFrame:
     data = {col: arr for col, arr in zip(columns, arrays)}
     return DataFrame(data)
 
@@ -85,8 +75,7 @@ def _fallback_if_unsupported(func):
 
 @_fallback_if_unsupported
 def _unsafe_create_df_fast(
-        arrays: list[np.ndarray],
-        columns: list
+    arrays: list[np.ndarray], columns: list
 ) -> DataFrame:
     # Implements parts of pandas' internal DataFrame creation mechanics
     # but skipping unnecessary tests and most importantly sanitization and
@@ -97,9 +86,7 @@ def _unsafe_create_df_fast(
     # performed. Always use this method through `create_df_fast`, so that there
     # is a fallback to safe DataFrame creation in case of an error.
     index = RangeIndex(0, len(arrays[0]))
-    columns = Index._with_infer(
-        list(columns), copy=False, tupleize_cols=False
-    )
+    columns = Index._with_infer(list(columns), copy=False, tupleize_cols=False)
 
     index, columns = _get_axes(
         len(index), len(columns), index=index, columns=columns
@@ -114,7 +101,7 @@ def _unsafe_create_df_fast(
     block_values = list(_consolidate(tuple(block_values)))
 
     mgr = create_block_manager_from_blocks(
-            block_values, [columns, index], verify_integrity=False
+        block_values, [columns, index], verify_integrity=False
     )
 
     df = DataFrame(mgr)

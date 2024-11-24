@@ -75,32 +75,36 @@ class CircuitInfo:
         # get merged reference telemetry and limit to data source 'pos' so that
         # only position values are used that are not interpolated
         try:
-            tel = reference_lap.get_telemetry(frequency='original')
+            tel = reference_lap.get_telemetry(frequency="original")
         except fastf1.core.DataNotLoadedError:
-            _logger.warning("Failed to generate marker distance information: "
-                            "telemetry data has not been loaded")
+            _logger.warning(
+                "Failed to generate marker distance information: "
+                "telemetry data has not been loaded"
+            )
             return
 
         if tel.empty:
-            _logger.warning("Failed to generate marker distance information: "
-                            "telemetry data is empty")
+            _logger.warning(
+                "Failed to generate marker distance information: "
+                "telemetry data is empty"
+            )
             return
 
-        tel = tel[tel['Source'] == 'pos']
+        tel = tel[tel["Source"] == "pos"]
         # create a numpy array of xy track coordinates
-        xy_ref_array = tel.loc[:, ('X', 'Y')].to_numpy()
+        xy_ref_array = tel.loc[:, ("X", "Y")].to_numpy()
 
         for df in (self.corners, self.marshal_sectors, self.marshal_lights):
             # create a numpy array of xy marker arrays
-            marker_xy_array = df.loc[:, ('X', 'Y')].to_numpy()
+            marker_xy_array = df.loc[:, ("X", "Y")].to_numpy()
 
             n_markers = marker_xy_array.shape[0]
 
             # create an array of xy track coordinates with an additional
             # dimension that has the size of the number of markers
-            xy_array = xy_ref_array \
-                .reshape((1, -1, 2)) \
-                .repeat(n_markers, axis=0)
+            xy_array = xy_ref_array.reshape((1, -1, 2)).repeat(
+                n_markers, axis=0
+            )
 
             # subtract each marker position from a full set of track
             # coordinates and calculate the squared xy error
@@ -113,8 +117,8 @@ class CircuitInfo:
 
             # get the best distance value for each marker from the telemetry
             # data and add them to the marker data frame
-            distances = tel.iloc[indices]['Distance'].to_list()
-            df['Distance'] = distances
+            distances = tel.iloc[indices]["Distance"].to_list()
+            df["Distance"] = distances
 
 
 def get_circuit_info(*, year: int, circuit_key: int) -> Optional[CircuitInfo]:
@@ -133,32 +137,34 @@ def get_circuit_info(*, year: int, circuit_key: int) -> Optional[CircuitInfo]:
         return None
 
     ret = list()
-    for cat in ('corners', 'marshalLights', 'marshalSectors'):
+    for cat in ("corners", "marshalLights", "marshalSectors"):
         rows = list()
         array = data.get(cat) or list()
         for entry in array:
-            rows.append((
-                float(entry.get('trackPosition', {}).get('x', 0.0)),
-                float(entry.get('trackPosition', {}).get('y', 0.0)),
-                int(entry.get('number', 0)),
-                str(entry.get('letter', "")),
-                float(entry.get('angle', 0.0)),
-                np.nan
-            ))
+            rows.append(
+                (
+                    float(entry.get("trackPosition", {}).get("x", 0.0)),
+                    float(entry.get("trackPosition", {}).get("y", 0.0)),
+                    int(entry.get("number", 0)),
+                    str(entry.get("letter", "")),
+                    float(entry.get("angle", 0.0)),
+                    np.nan,
+                )
+            )
         ret.append(
             pd.DataFrame(
                 rows,
-                columns=['X', 'Y', 'Number', 'Letter', 'Angle', 'Distance']
+                columns=["X", "Y", "Number", "Letter", "Angle", "Distance"],
             )
         )
 
-    rotation = float(data.get('rotation', 0.0))
+    rotation = float(data.get("rotation", 0.0))
 
     circuit_info = CircuitInfo(
         corners=ret[0],
         marshal_lights=ret[1],
         marshal_sectors=ret[2],
-        rotation=rotation
+        rotation=rotation,
     )
 
     return circuit_info

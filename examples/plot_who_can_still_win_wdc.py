@@ -10,6 +10,7 @@ its result.
 """
 
 import fastf1
+import fastf1.events
 from fastf1.ergast import Ergast
 
 
@@ -39,11 +40,13 @@ def calculate_max_points_for_remaining_season():
     POINTS_FOR_SPRINT = 8 + 25 + 1  # Winning the sprint, race and fastest lap
     POINTS_FOR_CONVENTIONAL = 25 + 1  # Winning the race and fastest lap
 
-    events = fastf1.events.get_event_schedule(SEASON, backend='ergast')
-    events = events[events['RoundNumber'] > ROUND]
+    events = fastf1.events.get_event_schedule(SEASON, backend="ergast")
+    events = events[events["RoundNumber"] > ROUND]
     # Count how many sprints and conventional races are left
     sprint_events = len(events.loc[events["EventFormat"] == "sprint_shootout"])
-    conventional_events = len(events.loc[events["EventFormat"] == "conventional"])
+    conventional_events = len(
+        events.loc[events["EventFormat"] == "conventional"]
+    )
 
     # Calculate points for each
     sprint_points = sprint_events * POINTS_FOR_SPRINT
@@ -60,17 +63,19 @@ def calculate_max_points_for_remaining_season():
 # We currently don't consider the case of two drivers getting equal points
 # since its more complicated and would require comparing positions.
 def calculate_who_can_win(driver_standings, max_points):
-    LEADER_POINTS = int(driver_standings.loc[0]['points'])
+    LEADER_POINTS = int(driver_standings.loc[0]["points"])
 
     for i, _ in enumerate(driver_standings.iterrows()):
         driver = driver_standings.loc[i]
         driver_max_points = int(driver["points"]) + max_points
-        can_win = 'No' if driver_max_points < LEADER_POINTS else 'Yes'
+        can_win = "No" if driver_max_points < LEADER_POINTS else "Yes"
 
-        print(f"{driver['position']}: {driver['givenName'] + ' ' + driver['familyName']}, "
-              f"Current points: {driver['points']}, "
-              f"Theoretical max points: {driver_max_points}, "
-              f"Can win: {can_win}")
+        print(
+            f"{driver['position']}: {driver['givenName'] + ' ' + driver['familyName']}, "
+            f"Current points: {driver['points']}, "
+            f"Theoretical max points: {driver_max_points}, "
+            f"Can win: {can_win}"
+        )
 
 
 ##############################################################################

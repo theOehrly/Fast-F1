@@ -4,21 +4,24 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
-
 try:
-    import matplotlib
-    from matplotlib import cycler
-    from matplotlib import pyplot as plt
+    import matplotlib  # noqa
+    from matplotlib import cycler  # noqa
+    from matplotlib import pyplot as plt  # noqa
 except ImportError:
-    warnings.warn("Failed to import optional dependency 'matplotlib'!"
-                  "Plotting functionality will be unavailable!",
-                  RuntimeWarning)
+    warnings.warn(
+        "Failed to import optional dependency 'matplotlib'!"
+        "Plotting functionality will be unavailable!",
+        RuntimeWarning,
+    )
 try:
-    import timple
+    import timple  # noqa
 except ImportError:
-    warnings.warn("Failed to import optional dependency 'timple'!"
-                  "Plotting of timedelta values will be restricted!",
-                  RuntimeWarning)
+    warnings.warn(
+        "Failed to import optional dependency 'timple'!"
+        "Plotting of timedelta values will be restricted!",
+        RuntimeWarning,
+    )
 
 from rapidfuzz import fuzz
 
@@ -27,15 +30,21 @@ from fastf1.plotting._constants import (
     LEGACY_DRIVER_COLORS,
     LEGACY_DRIVER_TRANSLATE,
     LEGACY_TEAM_COLORS,
-    LEGACY_TEAM_TRANSLATE
+    LEGACY_TEAM_TRANSLATE,
 )
-
 
 _logger = get_logger(__package__)
 
 
-_COLOR_PALETTE: list[str] = ['#FF79C6', '#50FA7B', '#8BE9FD', '#BD93F9',
-                             '#FFB86C', '#FF5555', '#F1FA8C']
+_COLOR_PALETTE: list[str] = [
+    "#FF79C6",
+    "#50FA7B",
+    "#8BE9FD",
+    "#BD93F9",
+    "#FFB86C",
+    "#FF5555",
+    "#F1FA8C",
+]
 # The default color palette for matplotlib plot lines in fastf1's color scheme
 
 
@@ -43,13 +52,14 @@ class __DefaultStringArgType(str):
     pass
 
 
-__color_scheme_default_arg = __DefaultStringArgType('fastf1')
+__color_scheme_default_arg = __DefaultStringArgType("fastf1")
 
 
 def setup_mpl(
-        mpl_timedelta_support: bool = True,
-        color_scheme: Optional[str] = __color_scheme_default_arg,
-        misc_mpl_mods: bool = True):
+    mpl_timedelta_support: bool = True,
+    color_scheme: Optional[str] = __color_scheme_default_arg,
+    misc_mpl_mods: bool = True,
+):
     """Setup matplotlib for use with fastf1.
 
     This is optional but, at least partly, highly recommended.
@@ -91,7 +101,8 @@ def setup_mpl(
             "FastF1 will no longer silently modify the default Matplotlib "
             "colors in the future.\nTo remove this warning, explicitly set "
             "`color_scheme=None` or `color_scheme='fastf1'` when calling "
-            "`.setup_mpl()`.", FutureWarning
+            "`.setup_mpl()`.",
+            FutureWarning,
         )
 
     if misc_mpl_mods:
@@ -99,12 +110,13 @@ def setup_mpl(
             "FastF1 will stop modifying the default Matplotlib settings in "
             "the future.\nTo opt-in to the new behaviour and remove this "
             "warning, explicitly set `misc_mpl_mods=False` when calling "
-            "`.setup_mpl()`.", FutureWarning
+            "`.setup_mpl()`.",
+            FutureWarning,
         )
 
     if mpl_timedelta_support:
         _enable_timple()
-    if color_scheme == 'fastf1':
+    if color_scheme == "fastf1":
         _enable_fastf1_color_scheme()
     if misc_mpl_mods:
         _enable_misc_mpl_mods()
@@ -148,10 +160,12 @@ def driver_color(identifier: str) -> str:
     Returns:
         str: hex color code
     """
-    warnings.warn("The function `driver_color` is deprecated and will be "
-                  "removed in a future version. Use "
-                  "`fastf1.plotting.get_driver_color` instead.",
-                  FutureWarning)
+    warnings.warn(
+        "The function `driver_color` is deprecated and will be "
+        "removed in a future version. Use "
+        "`fastf1.plotting.get_driver_color` instead.",
+        FutureWarning,
+    )
 
     if identifier.upper() in LEGACY_DRIVER_TRANSLATE:
         # try short team abbreviations first
@@ -239,10 +253,12 @@ def team_color(identifier: str) -> str:
     Returns:
         str: hex color code
     """
-    warnings.warn("The function `team_color` is deprecated and will be "
-                  "removed in a future version. Use "
-                  "`fastf1.plotting.get_team_color` instead.",
-                  FutureWarning)
+    warnings.warn(
+        "The function `team_color` is deprecated and will be "
+        "removed in a future version. Use "
+        "`fastf1.plotting.get_team_color` instead.",
+        FutureWarning,
+    )
 
     if identifier.upper() in LEGACY_TEAM_TRANSLATE:
         # try short team abbreviations first
@@ -250,7 +266,7 @@ def team_color(identifier: str) -> str:
     else:
         identifier = identifier.lower()
         # remove common non-unique words
-        for word in ('racing', 'team', 'f1', 'scuderia'):
+        for word in ("racing", "team", "f1", "scuderia"):
             identifier = identifier.replace(word, "")
 
         # check for an exact team name match
@@ -292,33 +308,30 @@ def _enable_timple():
     # use external package timple to patch matplotlib
     # this adds converters, locators and formatters for
     # plotting timedelta values
-    tick_formats = [
-        "%d %day",
-        "%H:00",
-        "%H:%m",
-        "%M:%s.0",
-        "%M:%s.%ms"
-    ]
-    tmpl = timple.Timple(converter='concise',
-                         formatter_args={'show_offset_zero': False,
-                                         'formats': tick_formats})
+    tick_formats = ["%d %day", "%H:00", "%H:%m", "%M:%s.0", "%M:%s.%ms"]
+    tmpl = timple.Timple(
+        converter="concise",
+        formatter_args={"show_offset_zero": False, "formats": tick_formats},
+    )
     tmpl.enable()
 
 
 def _enable_misc_mpl_mods():
     def _bar_sorted(bar):
         def _bar_sorted_decorator(*args, **kwargs):
-            if 'edgecolor' not in kwargs:
-                kwargs['edgecolor'] = 'none'
-            if 'sort' in kwargs and len(val := args[-1]):
-                s = kwargs['sort']
-                if s == 'increasing' or s == 1:
+            if "edgecolor" not in kwargs:
+                kwargs["edgecolor"] = "none"
+            if "sort" in kwargs and len(val := args[-1]):
+                s = kwargs["sort"]
+                if s == "increasing" or s == 1:
                     s = False
-                if s == 'decreasing' or s == -1:
+                if s == "decreasing" or s == -1:
                     s = True
                 _ids = [list(val).index(a) for a in sorted(val, reverse=s)]
-                _args = [[args[-2][i] for i in _ids],
-                         [args[-1][i] for i in _ids]]
+                _args = [
+                    [args[-2][i] for i in _ids],
+                    [args[-1][i] for i in _ids],
+                ]
                 if len(args) > 2:
                     _args.insert(0, args[0])
                 args = _args
@@ -327,7 +340,7 @@ def _enable_misc_mpl_mods():
                         kwargs[key] = kwargs[key].to_numpy()
                     if isinstance(kwargs[key], (list, np.ndarray)):
                         kwargs[key] = [kwargs[key][i] for i in _ids]
-                kwargs.pop('sort', None)
+                kwargs.pop("sort", None)
             return bar(*args, **kwargs)
 
         return _bar_sorted_decorator
@@ -342,11 +355,21 @@ def _enable_misc_mpl_mods():
             [_nice_grid(_ax) for _ax in ax]
         else:
             ax.minorticks_on()
-            grid = getattr(ax, 'grid')
-            grid(visible=True, which='major', color='#4f4845',
-                 linestyle='-', linewidth=1)
-            grid(visible=True, which='minor', color='#3f3a38',
-                 linestyle='--', linewidth=0.5)
+            grid = ax.grid
+            grid(
+                visible=True,
+                which="major",
+                color="#4f4845",
+                linestyle="-",
+                linewidth=1,
+            )
+            grid(
+                visible=True,
+                which="minor",
+                color="#3f3a38",
+                linestyle="--",
+                linewidth=0.5,
+            )
 
     _subplots_placeholder = plt.subplots
 
@@ -360,39 +383,39 @@ def _enable_misc_mpl_mods():
     _savefig_placeholder = matplotlib.figure.Figure.savefig
 
     def _save(*args, **kwargs):
-        if 'facecolor' not in kwargs:
-            kwargs['facecolor'] = args[0].get_facecolor()
-        if 'edgecolors' not in kwargs:
-            kwargs['edgecolor'] = 'none'
+        if "facecolor" not in kwargs:
+            kwargs["facecolor"] = args[0].get_facecolor()
+        if "edgecolors" not in kwargs:
+            kwargs["edgecolor"] = "none"
         return _savefig_placeholder(*args, **kwargs)
 
     matplotlib.figure.Figure.savefig = _save
 
 
 def _enable_fastf1_color_scheme():
-    plt.rcParams['figure.facecolor'] = '#292625'
-    plt.rcParams['axes.edgecolor'] = '#2d2928'
-    plt.rcParams['xtick.color'] = '#f1f2f3'
-    plt.rcParams['ytick.color'] = '#f1f2f3'
-    plt.rcParams['axes.labelcolor'] = '#F1f2f3'
-    plt.rcParams['axes.facecolor'] = '#1e1c1b'
+    plt.rcParams["figure.facecolor"] = "#292625"
+    plt.rcParams["axes.edgecolor"] = "#2d2928"
+    plt.rcParams["xtick.color"] = "#f1f2f3"
+    plt.rcParams["ytick.color"] = "#f1f2f3"
+    plt.rcParams["axes.labelcolor"] = "#F1f2f3"
+    plt.rcParams["axes.facecolor"] = "#1e1c1b"
     # plt.rcParams['axes.facecolor'] = '#292625'
-    plt.rcParams['axes.titlesize'] = 'x-large'
+    plt.rcParams["axes.titlesize"] = "x-large"
     # plt.rcParams['font.family'] = 'Gravity'
-    plt.rcParams['font.weight'] = 'medium'
-    plt.rcParams['text.color'] = '#F1F1F3'
-    plt.rcParams['axes.titlesize'] = '19'
-    plt.rcParams['axes.titlepad'] = '12'
-    plt.rcParams['axes.titleweight'] = 'light'
-    plt.rcParams['axes.prop_cycle'] = cycler('color', _COLOR_PALETTE)
-    plt.rcParams['legend.fancybox'] = False
-    plt.rcParams['legend.facecolor'] = (0.1, 0.1, 0.1, 0.7)
-    plt.rcParams['legend.edgecolor'] = (0.1, 0.1, 0.1, 0.9)
-    plt.rcParams['savefig.transparent'] = False
-    plt.rcParams['axes.axisbelow'] = True
+    plt.rcParams["font.weight"] = "medium"
+    plt.rcParams["text.color"] = "#F1F1F3"
+    plt.rcParams["axes.titlesize"] = "19"
+    plt.rcParams["axes.titlepad"] = "12"
+    plt.rcParams["axes.titleweight"] = "light"
+    plt.rcParams["axes.prop_cycle"] = cycler("color", _COLOR_PALETTE)
+    plt.rcParams["legend.fancybox"] = False
+    plt.rcParams["legend.facecolor"] = (0.1, 0.1, 0.1, 0.7)
+    plt.rcParams["legend.edgecolor"] = (0.1, 0.1, 0.1, 0.9)
+    plt.rcParams["savefig.transparent"] = False
+    plt.rcParams["axes.axisbelow"] = True
 
 
-def lapnumber_axis(ax, axis='xaxis'):
+def lapnumber_axis(ax, axis="xaxis"):
     """
     Set axis to integer ticks only.
 
@@ -407,10 +430,13 @@ def lapnumber_axis(ax, axis='xaxis'):
     Returns:
         the modified axis instance
     """
-    warnings.warn("The function `lapnumber_axis` is deprecated and will be "
-                  "removed without replacement in a future version.",
-                  FutureWarning)
-    getattr(ax, axis).get_major_locator().set_params(integer=True,
-                                                     min_n_ticks=0)
+    warnings.warn(
+        "The function `lapnumber_axis` is deprecated and will be "
+        "removed without replacement in a future version.",
+        FutureWarning,
+    )
+    getattr(ax, axis).get_major_locator().set_params(
+        integer=True, min_n_ticks=0
+    )
 
     return ax

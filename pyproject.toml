@@ -82,18 +82,13 @@ exclude = [
 [tool.ruff.lint]
 select = [
 #    "D", TODO: select and fix docstrings
-    "E",
-    "F",
-    "W",
-    "UP",
-    "NPY201"
+  "E",  # pycodestyle errors
+  "W",  # pycodestyle warnings
+  "F",  # pyflakes
+  "I",  # isort
+  "UP",  # pyupgrade
+  "NPY201"
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "fastf1/_api.py" = ["E501"]
-
-[tool.isort]
-skip = ["docs/**"]
-multi_line_output = 3
-force_grid_wrap = 2
-lines_after_imports = 2

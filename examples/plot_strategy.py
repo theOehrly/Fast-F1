@@ -10,11 +10,10 @@ from matplotlib import pyplot as plt
 import fastf1
 import fastf1.plotting
 
-
 ###############################################################################
 # Load the race session
 
-session = fastf1.get_session(2022, "Hungary", 'R')
+session = fastf1.get_session(2022, "Hungary", "R")
 session.load()
 laps = session.laps
 
@@ -55,15 +54,16 @@ for driver in drivers:
     for idx, row in driver_stints.iterrows():
         # each row contains the compound name and stint length
         # we can use these information to draw horizontal bars
-        compound_color = fastf1.plotting.get_compound_color(row["Compound"],
-                                                            session=session)
+        compound_color = fastf1.plotting.get_compound_color(
+            row["Compound"], session=session
+        )
         plt.barh(
             y=driver,
             width=row["StintLength"],
             left=previous_stint_end,
             color=compound_color,
             edgecolor="black",
-            fill=True
+            fill=True,
         )
 
         previous_stint_end += row["StintLength"]
@@ -82,9 +82,9 @@ ax.invert_yaxis()
 
 ###############################################################################
 # Plot aesthetics
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
-ax.spines['left'].set_visible(False)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.spines["left"].set_visible(False)
 
 plt.tight_layout()
 plt.show()

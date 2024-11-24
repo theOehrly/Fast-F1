@@ -24,10 +24,13 @@ A collection of functions to interface with the F1 web api.
    parse
 
 """
+
 import warnings
 
 from fastf1._api import *  # noqa
 
-
-warnings.warn("`fastf1.api` will be considered private in future releases and "
-              "potentially be removed or changed!", UserWarning)
+warnings.warn(
+    "`fastf1.api` will be considered private in future releases and "
+    "potentially be removed or changed!",
+    UserWarning,
+)

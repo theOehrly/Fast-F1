@@ -1,12 +1,7 @@
 import dataclasses
 import warnings
 from collections.abc import Sequence
-from typing import (
-    Any,
-    Literal,
-    Optional,
-    Union
-)
+from typing import Any, Literal, Optional, Union
 
 import matplotlib.axes
 import matplotlib.legend
@@ -19,27 +14,22 @@ from fastf1.plotting._base import (
     _DriverTeamMapping,
     _logger,
     _normalize_string,
-    _Team
+    _Team,
 )
 from fastf1.plotting._constants import Constants as _Constants
 
-
-_DEFAULT_COLOR_MAP: Literal['fastf1', 'official'] = 'fastf1'
+_DEFAULT_COLOR_MAP: Literal["fastf1", "official"] = "fastf1"
 _DRIVER_TEAM_MAPPINGS = dict()
 
 
-def _get_driver_team_mapping(
-        session: Session
-) -> "_DriverTeamMapping":
+def _get_driver_team_mapping(session: Session) -> "_DriverTeamMapping":
     # driver-team mappings are generated once for each session and then reused
     # on future calls
     api_path = session.api_path
-    year = str(session.event['EventDate'].year)
+    year = str(session.event["EventDate"].year)
 
     if api_path not in _DRIVER_TEAM_MAPPINGS:
-        teams = _load_drivers_from_f1_livetiming(
-            api_path=api_path, year=year
-        )
+        teams = _load_drivers_from_f1_livetiming(api_path=api_path, year=year)
         mapping = _DriverTeamMapping(year, teams)
         _DRIVER_TEAM_MAPPINGS[api_path] = mapping
 
@@ -47,7 +37,7 @@ def _get_driver_team_mapping(
 
 
 def _get_driver(
-        identifier: str, session: Session, *, exact_match: bool = False
+    identifier: str, session: Session, *, exact_match: bool = False
 ) -> _Driver:
     if exact_match:
         return _get_driver_exact(identifier, session)
@@ -73,16 +63,25 @@ def _get_driver_fuzzy(identifier: str, session: Session) -> _Driver:
 
     # do fuzzy string matching
     drivers = list(dtm.drivers_by_normalized.values())
-    strings = [[driver.normalized_value, ] for driver in drivers]
-    index, exact = fuzzy_matcher(query=identifier,
-                                 reference=strings,
-                                 abs_confidence=0.35,
-                                 rel_confidence=0.30)
+    strings = [
+        [
+            driver.normalized_value,
+        ]
+        for driver in drivers
+    ]
+    index, exact = fuzzy_matcher(
+        query=identifier,
+        reference=strings,
+        abs_confidence=0.35,
+        rel_confidence=0.30,
+    )
     normalized_driver = drivers[index].normalized_value
 
     if not exact:
-        _logger.warning(f"Correcting user input '{identifier}' to "
-                        f"'{normalized_driver}'")
+        _logger.warning(
+            f"Correcting user input '{identifier}' to "
+            f"'{normalized_driver}'"
+        )
 
     return dtm.drivers_by_normalized[normalized_driver]
 
@@ -103,7 +102,7 @@ def _get_driver_exact(identifier: str, session: Session) -> _Driver:
 
 
 def _get_team(
-        identifier: str, session: Session, *, exact_match=False
+    identifier: str, session: Session, *, exact_match=False
 ) -> _Team:
     if exact_match:
         return _get_team_exact(identifier, session)
@@ -115,7 +114,7 @@ def _get_team_fuzzy(identifier: str, session: Session) -> _Team:
     identifier = _normalize_string(identifier).lower()
 
     # remove common non-unique words
-    for word in ('racing', 'team', 'f1', 'scuderia'):
+    for word in ("racing", "team", "f1", "scuderia"):
         identifier = identifier.replace(word, "")
 
     # check for an exact team name match
@@ -130,16 +129,25 @@ def _get_team_fuzzy(identifier: str, session: Session) -> _Team:
 
     # do fuzzy string match
     teams = list(dtm.teams_by_normalized.values())
-    strings = [[team.normalized_value, ] for team in teams]
-    index, exact = fuzzy_matcher(query=identifier,
-                                 reference=strings,
-                                 abs_confidence=0.35,
-                                 rel_confidence=0.30)
+    strings = [
+        [
+            team.normalized_value,
+        ]
+        for team in teams
+    ]
+    index, exact = fuzzy_matcher(
+        query=identifier,
+        reference=strings,
+        abs_confidence=0.35,
+        rel_confidence=0.30,
+    )
     normalized_team_name = teams[index].normalized_value
 
     if not exact:
-        _logger.warning(f"Correcting user input '{identifier}' to "
-                        f"'{normalized_team_name}'")
+        _logger.warning(
+            f"Correcting user input '{identifier}' to "
+            f"'{normalized_team_name}'"
+        )
 
     return dtm.teams_by_normalized[normalized_team_name]
 
@@ -161,53 +169,52 @@ def _get_team_exact(identifier: str, session: Session) -> _Team:
 
 
 def _get_driver_color(
-        identifier: str,
-        session: Session,
-        *,
-        colormap: str = 'default',
-        exact_match: bool = False,
-        _variants: bool = False
+    identifier: str,
+    session: Session,
+    *,
+    colormap: str = "default",
+    exact_match: bool = False,
+    _variants: bool = False,
 ) -> str:
     driver = _get_driver(identifier, session, exact_match=exact_match)
     team_name = driver.team.normalized_value
 
-    return _get_team_color(team_name, session, colormap=colormap,
-                           exact_match=True)
+    return _get_team_color(
+        team_name, session, colormap=colormap, exact_match=True
+    )
 
 
 def _get_team_color(
-        identifier: str,
-        session: Session,
-        *,
-        colormap: str = 'default',
-        exact_match: bool = False
+    identifier: str,
+    session: Session,
+    *,
+    colormap: str = "default",
+    exact_match: bool = False,
 ) -> str:
     dtm = _get_driver_team_mapping(session)
 
     if dtm.year not in _Constants.keys():
         raise ValueError(f"No team colors for year '{dtm.year}'")
 
-    team = _get_team(
-        identifier, session, exact_match=exact_match
-    )
+    team = _get_team(identifier, session, exact_match=exact_match)
 
-    if colormap == 'default':
+    if colormap == "default":
         colormap = _DEFAULT_COLOR_MAP
 
-    if colormap == 'fastf1':
+    if colormap == "fastf1":
         return team.constants.TeamColor.FastF1
-    elif colormap == 'official':
+    elif colormap == "official":
         return team.constants.TeamColor.Official
     else:
         raise ValueError(f"Invalid colormap '{colormap}'")
 
 
 def get_team_name(
-        identifier: str,
-        session: Session,
-        *,
-        short: bool = False,
-        exact_match: bool = False
+    identifier: str,
+    session: Session,
+    *,
+    short: bool = False,
+    exact_match: bool = False,
 ) -> str:
     """
     Get a full or shortened team name based on a recognizable and identifiable
@@ -233,11 +240,11 @@ def get_team_name(
 
 
 def get_team_name_by_driver(
-        identifier: str,
-        session: Session,
-        *,
-        short: bool = False,
-        exact_match: bool = False
+    identifier: str,
+    session: Session,
+    *,
+    short: bool = False,
+    exact_match: bool = False,
 ) -> str:
     """
     Get a full team name based on a driver's abbreviation or based on a
@@ -264,11 +271,11 @@ def get_team_name_by_driver(
 
 
 def get_team_color(
-        identifier: str,
-        session: Session,
-        *,
-        colormap: str = 'default',
-        exact_match: bool = False
+    identifier: str,
+    session: Session,
+    *,
+    colormap: str = "default",
+    exact_match: bool = False,
 ) -> str:
     """
     Get a team color based on a recognizable and identifiable part of
@@ -288,13 +295,13 @@ def get_team_color(
     Returns:
         A hexadecimal RGB color code
     """
-    return _get_team_color(identifier, session,
-                           colormap=colormap,
-                           exact_match=exact_match)
+    return _get_team_color(
+        identifier, session, colormap=colormap, exact_match=exact_match
+    )
 
 
 def get_driver_name(
-        identifier: str, session: Session, *, exact_match: bool = False
+    identifier: str, session: Session, *, exact_match: bool = False
 ) -> str:
     """
     Get a full driver name based on the driver's abbreviation or based on
@@ -311,7 +318,7 @@ def get_driver_name(
 
 
 def get_driver_abbreviation(
-        identifier: str, session: Session, *, exact_match: bool = False
+    identifier: str, session: Session, *, exact_match: bool = False
 ) -> str:
     """
     Get a driver's abbreviation based on a recognizable and identifiable
@@ -333,7 +340,7 @@ def get_driver_abbreviation(
 
 
 def get_driver_names_by_team(
-        identifier: str, session: Session, *, exact_match: bool = False
+    identifier: str, session: Session, *, exact_match: bool = False
 ) -> list[str]:
     """
     Get a list of full names of all drivers that drove for a team in a given
@@ -350,7 +357,7 @@ def get_driver_names_by_team(
 
 
 def get_driver_abbreviations_by_team(
-        identifier: str, session: Session, *, exact_match: bool = False
+    identifier: str, session: Session, *, exact_match: bool = False
 ) -> list[str]:
     """
     Get a list of abbreviations of all drivers that drove for a team in a given
@@ -367,11 +374,11 @@ def get_driver_abbreviations_by_team(
 
 
 def get_driver_color(
-        identifier: str,
-        session: Session,
-        *,
-        colormap: str = 'default',
-        exact_match: bool = False
+    identifier: str,
+    session: Session,
+    *,
+    colormap: str = "default",
+    exact_match: bool = False,
 ) -> str:
     """
     Get the color that is associated with a driver based on the driver's
@@ -399,18 +406,19 @@ def get_driver_color(
         A hexadecimal RGB color code
 
     """
-    return _get_driver_color(identifier, session, colormap=colormap,
-                             exact_match=exact_match)
+    return _get_driver_color(
+        identifier, session, colormap=colormap, exact_match=exact_match
+    )
 
 
 def get_driver_style(
-        identifier: str,
-        style: Union[str, Sequence[str], Sequence[dict]],
-        session: Session,
-        *,
-        colormap: str = 'default',
-        additional_color_kws: Union[list, tuple] = (),
-        exact_match: bool = False
+    identifier: str,
+    style: Union[str, Sequence[str], Sequence[dict]],
+    session: Session,
+    *,
+    colormap: str = "default",
+    additional_color_kws: Union[list, tuple] = (),
+    exact_match: bool = False,
 ) -> dict[str, Any]:
     """
     Get a plotting style that is unique for a driver based on the driver's
@@ -534,27 +542,36 @@ def get_driver_style(
         :add-heading:
     """
     stylers = {
-        'linestyle': ['solid', 'dashed', 'dashdot', 'dotted'],
-        'marker': ['x', 'o', '^', 'D']
+        "linestyle": ["solid", "dashed", "dashdot", "dotted"],
+        "marker": ["x", "o", "^", "D"],
     }
 
     # color keyword arguments that are supported by various matplotlib
     # functions
     color_kwargs = (
         # generic
-        'color', 'colors', 'c',
+        "color",
+        "colors",
+        "c",
         # .plot
-        'gapcolor',
-        'markeredgecolor', 'mec',
-        'markerfacecolor', 'mfc',
-        'markerfacecoloralt', 'mfcalt',
+        "gapcolor",
+        "markeredgecolor",
+        "mec",
+        "markerfacecolor",
+        "mfc",
+        "markerfacecoloralt",
+        "mfcalt",
         # .scatter
-        'facecolor', 'facecolors', 'fc',
-        'edgecolor', 'edgecolors', 'ec',
+        "facecolor",
+        "facecolors",
+        "fc",
+        "edgecolor",
+        "edgecolors",
+        "ec",
         # .errorbar
-        'ecolor',
+        "ecolor",
         # add user defined color keyword arguments
-        *additional_color_kws
+        *additional_color_kws,
     )
 
     driver = _get_driver(identifier, session, exact_match=exact_match)
@@ -575,24 +592,29 @@ def get_driver_style(
         # arguments
         for opt in style:
             if opt in color_kwargs:
-                value = _get_team_color(team.normalized_value,
-                                        session,
-                                        colormap=colormap,
-                                        exact_match=True)
+                value = _get_team_color(
+                    team.normalized_value,
+                    session,
+                    colormap=colormap,
+                    exact_match=True,
+                )
             elif opt in stylers:
                 value = stylers[opt][idx]
             else:
-                raise ValueError(f"'{opt}' is not a supported styling "
-                                 f"option")
+                raise ValueError(
+                    f"'{opt}' is not a supported styling " f"option"
+                )
             plot_style[opt] = value
 
     else:
         try:
             custom_style = style[idx]
         except IndexError:
-            raise ValueError(f"The provided custom style info does not "
-                             f"contain enough variants! (Has: {len(style)}, "
-                             f"Required: {idx})")
+            raise ValueError(
+                f"The provided custom style info does not "
+                f"contain enough variants! (Has: {len(style)}, "
+                f"Required: {idx})"
+            )
 
         if not isinstance(custom_style, dict):
             raise ValueError("The provided style info has an invalid format!")
@@ -601,11 +623,13 @@ def get_driver_style(
         # colors with the correct color value
         plot_style = custom_style.copy()
         for kwarg in color_kwargs:
-            if plot_style.get(kwarg, None) == 'auto':
-                color = _get_team_color(team.normalized_value,
-                                        session,
-                                        colormap=colormap,
-                                        exact_match=True)
+            if plot_style.get(kwarg, None) == "auto":
+                color = _get_team_color(
+                    team.normalized_value,
+                    session,
+                    colormap=colormap,
+                    exact_match=True,
+                )
                 plot_style[kwarg] = color
 
     return plot_style
@@ -622,7 +646,7 @@ def get_compound_color(compound: str, session: Session) -> str:
     Returns:
         A hexadecimal RGB color code
     """
-    year = str(session.event['EventDate'].year)
+    year = str(session.event["EventDate"].year)
     return _Constants[year].CompoundColors[compound.upper()]
 
 
@@ -637,12 +661,14 @@ def get_compound_mapping(session: Session) -> dict[str, str]:
     Returns:
         dictionary mapping compound names to RGB hex colors
     """
-    year = str(session.event['EventDate'].year)
+    year = str(session.event["EventDate"].year)
     return _Constants[year].CompoundColors.copy()
 
 
 def get_driver_color_mapping(
-        session: Session, *, colormap: str = 'default',
+    session: Session,
+    *,
+    colormap: str = "default",
 ) -> dict[str, str]:
     """
     Returns a dictionary that maps driver abbreviations to their associated
@@ -658,15 +684,15 @@ def get_driver_color_mapping(
     """
     dtm = _get_driver_team_mapping(session)
 
-    if colormap == 'default':
+    if colormap == "default":
         colormap = _DEFAULT_COLOR_MAP
 
-    if colormap == 'fastf1':
+    if colormap == "fastf1":
         colors = {
             abb: driver.team.constants.TeamColor.FastF1
             for abb, driver in dtm.drivers_by_abbreviation.items()
         }
-    elif colormap == 'official':
+    elif colormap == "official":
         colors = {
             abb: driver.team.constants.TeamColor.Official
             for abb, driver in dtm.drivers_by_abbreviation.items()
@@ -693,8 +719,10 @@ def list_team_names(session: Session, *, short: bool = False) -> list[str]:
     dtm = _get_driver_team_mapping(session)
 
     if short:
-        return list(team.constants.ShortName
-                    for team in dtm.teams_by_normalized.values())
+        return list(
+            team.constants.ShortName
+            for team in dtm.teams_by_normalized.values()
+        )
 
     return list(team.value for team in dtm.teams_by_normalized.values())
 
@@ -713,7 +741,7 @@ def list_driver_names(session: Session) -> list[str]:
 
 def list_compounds(session: Session) -> list[str]:
     """Returns a list of all compound names for this season (not session)."""
-    year = str(session.event['EventDate'].year)
+    year = str(session.event["EventDate"].year)
     return list(_Constants[year].CompoundColors.keys())
 
 
@@ -760,11 +788,12 @@ def add_sorted_driver_legend(
             handles, labels, extra_args, kwargs = ret
 
     except AttributeError:
-        warnings.warn("Failed to parse optional legend arguments correctly.",
-                      UserWarning)
+        warnings.warn(
+            "Failed to parse optional legend arguments correctly.", UserWarning
+        )
         extra_args = []
-        kwargs.pop('handles', None)
-        kwargs.pop('labels', None)
+        kwargs.pop("handles", None)
+        kwargs.pop("labels", None)
         handles, labels = ax.get_legend_handles_labels()
 
     teams_list = list(dtm.teams_by_normalized.values())
@@ -805,18 +834,18 @@ def set_default_colormap(colormap: str):
         colormap: one of ``'fastf1'`` or ``'official'``
     """
     global _DEFAULT_COLOR_MAP
-    if colormap not in ('fastf1', 'official'):
+    if colormap not in ("fastf1", "official"):
         raise ValueError(f"Invalid colormap '{colormap}'")
     _DEFAULT_COLOR_MAP = colormap
 
 
 def override_team_constants(
-        identifier: str,
-        session: Session,
-        *,
-        short_name: Optional[str] = None,
-        official_color: Optional[str] = None,
-        fastf1_color: Optional[str] = None
+    identifier: str,
+    session: Session,
+    *,
+    short_name: Optional[str] = None,
+    official_color: Optional[str] = None,
+    fastf1_color: Optional[str] = None,
 ):
     """
     Override the default team constants for a specific team.
@@ -847,5 +876,6 @@ def override_team_constants(
         team.constants = dataclasses.replace(team.constants, TeamColor=colors)
 
     if short_name is not None:
-        team.constants = dataclasses.replace(team.constants,
-                                             ShortName=short_name)
+        team.constants = dataclasses.replace(
+            team.constants, ShortName=short_name
+        )

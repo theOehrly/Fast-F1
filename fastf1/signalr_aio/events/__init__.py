@@ -1,1 +1,1 @@
-from ._events import EventHook
+from fastf1.signalr_aio.events._events import EventHook

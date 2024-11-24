@@ -30,16 +30,12 @@ import re
 import sys
 import time
 import warnings
-from typing import (
-    Literal,
-    Optional
-)
+from typing import Literal, Optional
 
 import requests
 from requests_cache import CacheMixin
 
 from fastf1.logger import get_logger
-
 
 _logger = get_logger(__name__)
 
@@ -73,6 +69,7 @@ class _MinIntervalLimitDelay:
     Sleeps for the remaining amount of time if the last request was more recent
     than allowed by the minimum interval rule.
     """
+
     def __init__(self, interval: float):
         self._interval: float = interval
         self._t_last: float = 0.0
@@ -92,6 +89,7 @@ class _CallsPerIntervalLimitRaise:
     If the maximum number of allowed requests within this interval is exceeded,
     a :class:`RateLimitExceeded` exception is raised.
     """
+
     def __init__(self, calls: int, interval: float, info: str):
         self._interval: float = interval
         self._timestamps = collections.deque(maxlen=calls)
@@ -105,21 +103,23 @@ class _CallsPerIntervalLimitRaise:
 
 
 class _SessionWithRateLimiting(requests.Session):
-    """Apply rate limiters to requests that match a URL pattern.
-    """
+    """Apply rate limiters to requests that match a URL pattern."""
+
     _RATE_LIMITS = {
         # limits on ergast.com
         re.compile(r"^https?://(\w+\.)?ergast\.com.*"): [
             _MinIntervalLimitDelay(0.25),
             # soft limit 4 calls/sec
-            _CallsPerIntervalLimitRaise(200, 60*60, "ergast.com: 200 calls/h")
+            _CallsPerIntervalLimitRaise(
+                200, 60 * 60, "ergast.com: 200 calls/h"
+            ),
             # hard limit 200 calls/h
         ],
         # general limits on all other APIs
         re.compile(r"^https?://.+\..+"): [
             _MinIntervalLimitDelay(0.25),
             # soft limit 4 calls/sec
-            _CallsPerIntervalLimitRaise(500, 60 * 60, "any API: 500 calls/h")
+            _CallsPerIntervalLimitRaise(500, 60 * 60, "any API: 500 calls/h"),
             # hard limit 200 calls/h
         ],
     }
@@ -140,6 +140,7 @@ class _CachedSessionWithRateLimiting(CacheMixin, _SessionWithRateLimiting):
     """Equivalent of ``requests_cache.CachedSession```but using
     :class:`_SessionWithRateLimiting` as base instead of ``requests.Session``.
     """
+
     pass
 
 
@@ -220,6 +221,7 @@ class Cache(metaclass=_MetaCache):
     this also means you will have to redownload the same data again if you
     need which will lead to reduced performance.
     """
+
     _CACHE_DIR = None
     # version of the api parser code (unrelated to release version number)
     _API_CORE_VERSION = 14
@@ -236,9 +238,12 @@ class Cache(metaclass=_MetaCache):
 
     @classmethod
     def enable_cache(
-            cls, cache_dir: str, ignore_version: bool = False,
-            force_renew: bool = False,
-            use_requests_cache: bool = True):
+        cls,
+        cache_dir: str,
+        ignore_version: bool = False,
+        force_renew: bool = False,
+        use_requests_cache: bool = True,
+    ):
         """Enables the API cache.
 
         Args:
@@ -259,20 +264,22 @@ class Cache(metaclass=_MetaCache):
         cache_dir = os.path.expanduser(cache_dir)
 
         if not os.path.exists(cache_dir):
-            raise NotADirectoryError("Cache directory does not exist! Please "
-                                     "check for typos or create it first.")
+            raise NotADirectoryError(
+                "Cache directory does not exist! Please "
+                "check for typos or create it first."
+            )
         cls._CACHE_DIR = cache_dir
         cls._IGNORE_VERSION = ignore_version
         cls._FORCE_RENEW = force_renew
         if use_requests_cache:
             cls._requests_session_cached = _CachedSessionWithRateLimiting(
-                cache_name=os.path.join(cache_dir, 'fastf1_http_cache'),
-                backend='sqlite',
-                allowable_methods=('GET', 'POST'),
+                cache_name=os.path.join(cache_dir, "fastf1_http_cache"),
+                backend="sqlite",
+                allowable_methods=("GET", "POST"),
                 expire_after=datetime.timedelta(hours=12),
                 cache_control=True,
                 stale_if_error=True,
-                filter_fn=cls._custom_cache_filter
+                filter_fn=cls._custom_cache_filter,
             )
             if force_renew:
                 cls._requests_session_cached.cache.clear()
@@ -294,13 +301,14 @@ class Cache(metaclass=_MetaCache):
         if cls._ci_mode:
             # try to return a cached response first
             resp = cls._cached_request(
-                'GET', url, only_if_cached=True, **kwargs)
+                "GET", url, only_if_cached=True, **kwargs
+            )
             # 504 indicates that no cached response was found
             if resp.status_code != 504:
                 return resp
 
         cls._request_counter += 1
-        return cls._cached_request('GET', url, **kwargs)
+        return cls._cached_request("GET", url, **kwargs)
 
     @classmethod
     def requests_post(cls, url: str, **kwargs):
@@ -319,23 +327,22 @@ class Cache(metaclass=_MetaCache):
         if cls._ci_mode:
             # try to return a cached response first
             resp = cls._cached_request(
-                'POST', url, only_if_cached=True, **kwargs)
+                "POST", url, only_if_cached=True, **kwargs
+            )
             # 504 indicates that no cached response was found
             if resp.status_code != 504:
                 return resp
 
         cls._request_counter += 1
-        return cls._cached_request('POST', url, **kwargs)
+        return cls._cached_request("POST", url, **kwargs)
 
     @classmethod
-    def _cached_request(cls,
-                        method: Literal['GET', 'POST'],
-                        url: str,
-                        **kwargs):
-
-        if method == 'GET':
+    def _cached_request(
+        cls, method: Literal["GET", "POST"], url: str, **kwargs
+    ):
+        if method == "GET":
             func = cls._requests_session_cached.get
-        elif method == 'POST':
+        elif method == "POST":
             func = cls._requests_session_cached.post
         else:
             raise ValueError("Invalid method. Must be 'GET' or 'POST'.")
@@ -346,8 +353,11 @@ class Cache(metaclass=_MetaCache):
         try:
             response = func(url, **kwargs)
         except TypeError:
-            warnings.warn("You are using an outdated version of "
-                          "requests-cache. Consider upgrading.", UserWarning)
+            warnings.warn(
+                "You are using an outdated version of "
+                "requests-cache. Consider upgrading.",
+                UserWarning,
+            )
             cls._requests_session_cached.cache.delete(urls=[url])
             response = func(url, **kwargs)
         return response
@@ -365,7 +375,7 @@ class Cache(metaclass=_MetaCache):
         # get cached
 
         # workaround for Ergast returning error with status code 200
-        if 'Unable to select database' in response.text:
+        if "Unable to select database" in response.text:
             return False
 
         return True
@@ -408,11 +418,11 @@ class Cache(metaclass=_MetaCache):
 
         for dirpath, dirnames, filenames in os.walk(cache_dir):
             for filename in filenames:
-                if filename.endswith('.ff1pkl'):
+                if filename.endswith(".ff1pkl"):
                     os.remove(os.path.join(dirpath, filename))
 
         if deep:
-            cache_db_path = os.path.join(cache_dir, 'fastf1_http_cache.sqlite')
+            cache_db_path = os.path.join(cache_dir, "fastf1_http_cache.sqlite")
             if os.path.exists(cache_db_path):
                 os.remove(cache_db_path)
 
@@ -442,7 +452,7 @@ class Cache(metaclass=_MetaCache):
 
                     # file exists already, try to load it
                     try:
-                        cached = pickle.load(open(cache_file_path, 'rb'))
+                        cached = pickle.load(open(cache_file_path, "rb"))
                     except:  # noqa: E722 (bare except)
                         # don't like the bare exception clause but who knows
                         # which dependency will raise which internal exception
@@ -452,7 +462,7 @@ class Cache(metaclass=_MetaCache):
                     if (cached is not None) and cls._data_ok_for_use(cached):
                         # cached data is ok for use, return it
                         _logger.info(f"Using cached data for {func_name}")
-                        return cached['data']
+                        return cached["data"]
 
                     else:
                         # cached data needs to be downloaded again and updated
@@ -474,8 +484,10 @@ class Cache(metaclass=_MetaCache):
                         exit()
 
                 else:  # cached data does not yet exist for this api request
-                    _logger.info(f"No cached data found for {func_name}. "
-                                 f"Loading data...")
+                    _logger.info(
+                        f"No cached data found for {func_name}. "
+                        f"Loading data..."
+                    )
                     data = func(api_path, **func_kwargs)
                     if data is not None:
                         cls._write_cache(data, cache_file_path)
@@ -501,7 +513,7 @@ class Cache(metaclass=_MetaCache):
             # create subfolders if they don't yet exist
             os.makedirs(cache_dir_path)
 
-        file_name = name + '.ff1pkl'
+        file_name = name + ".ff1pkl"
         cache_file_path = os.path.join(cache_dir_path, file_name)
         return cache_file_path
 
@@ -512,17 +524,16 @@ class Cache(metaclass=_MetaCache):
             return False
         elif cls._IGNORE_VERSION:
             return True
-        elif cached['version'] == cls._API_CORE_VERSION:
+        elif cached["version"] == cls._API_CORE_VERSION:
             return True
         return False
 
     @classmethod
     def _write_cache(cls, data, cache_file_path, **kwargs):
         new_cached = dict(
-            **{'version': cls._API_CORE_VERSION, 'data': data},
-            **kwargs
+            **{"version": cls._API_CORE_VERSION, "data": data}, **kwargs
         )
-        with open(cache_file_path, 'wb') as cache_file_obj:
+        with open(cache_file_path, "wb") as cache_file_obj:
             pickle.dump(new_cached, cache_file_obj)
 
     @classmethod
@@ -558,8 +569,10 @@ class Cache(metaclass=_MetaCache):
                     try:
                         os.mkdir(cache_dir, mode=0o0700)
                     except Exception as err:
-                        _logger.error(f"Failed to create cache directory "
-                                      f"{cache_dir}. Error {err}")
+                        _logger.error(
+                            f"Failed to create cache directory "
+                            f"{cache_dir}. Error {err}"
+                        )
                         raise
 
                 # Enable cache with default
@@ -575,7 +588,8 @@ class Cache(metaclass=_MetaCache):
                     "\n\nNO CACHE! Api caching has not been enabled! \n\t"
                     "It is highly recommended to enable this feature for much "
                     "faster data loading!\n\t"
-                    "Use `fastf1.Cache.enable_cache('path/to/cache/')`\n")
+                    "Use `fastf1.Cache.enable_cache('path/to/cache/')`\n"
+                )
 
                 cls._default_cache_enabled = True
 
@@ -685,7 +699,9 @@ class Cache(metaclass=_MetaCache):
         return path, size
 
     @classmethod
-    def _convert_size(cls, size_bytes):  # https://stackoverflow.com/questions/5194057/better-way-to-convert-file-sizes-in-python # noqa: E501
+    def _convert_size(
+        cls, size_bytes
+    ):  # https://stackoverflow.com/questions/5194057/better-way-to-convert-file-sizes-in-python # noqa: E501
         if size_bytes == 0:
             return "0B"
         size_name = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
@@ -695,7 +711,9 @@ class Cache(metaclass=_MetaCache):
         return f"{s} {size_name[i]}"
 
     @classmethod
-    def _get_size(cls, start_path='.'):  # https://stackoverflow.com/questions/1392413/calculating-a-directorys-size-using-python # noqa: E501
+    def _get_size(
+        cls, start_path="."
+    ):  # https://stackoverflow.com/questions/1392413/calculating-a-directorys-size-using-python # noqa: E501
         total_size = 0
         for dirpath, dirnames, filenames in os.walk(start_path):
             for f in filenames:
@@ -718,4 +736,5 @@ class _NoCacheContext:
 # TODO: document
 class RateLimitExceededError(Exception):
     """Raised if a hard rate limit is exceeded."""
+
     pass

@@ -1,26 +1,24 @@
 """This is a collection of various functions."""
+
 import datetime
 import warnings
 from functools import reduce
-from typing import (
-    Optional,
-    Union
-)
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 import pandas as pd
 
-import fastf1
 from fastf1.logger import get_logger
 
+if TYPE_CHECKING:
+    from fastf1.core import Lap, Telemetry
 
 _logger = get_logger(__name__)
 
 
 def delta_time(
-        reference_lap: "fastf1.core.Lap",
-        compare_lap: "fastf1.core.Lap"
-) -> tuple[pd.Series, "fastf1.core.Telemetry", "fastf1.core.Telemetry"]:
+    reference_lap: "Lap", compare_lap: "Lap"
+) -> tuple[pd.Series, "Telemetry", "Telemetry"]:
     """Calculates the delta time of a given lap, along the 'Distance' axis
     of the reference lap.
 
@@ -86,10 +84,12 @@ def delta_time(
         telemetry data that was created with the same interpolation and
         resampling options!
     """
-    warnings.warn("`utils.delta_time` is considered deprecated and will"
-                  "be modified or removed in a future release because it has"
-                  "a tendency to give inaccurate results.",
-                  FutureWarning)
+    warnings.warn(
+        "`utils.delta_time` is considered deprecated and will"
+        "be modified or removed in a future release because it has"
+        "a tendency to give inaccurate results.",
+        FutureWarning,
+    )
 
     ref = reference_lap.get_car_data(interpolate_edges=True).add_distance()
     comp = compare_lap.get_car_data(interpolate_edges=True).add_distance()
@@ -102,12 +102,12 @@ def delta_time(
             [[stream[0] - dstream_start], stream, [stream[-1] + dstream_end]]
         )
 
-    ltime = mini_pro(comp['Time'].dt.total_seconds().to_numpy())
-    multiplier = ref.Distance.iat[-1]/comp.Distance.iat[-1]
-    ldistance = mini_pro(comp['Distance'].to_numpy())*multiplier
-    lap_time = np.interp(ref['Distance'], ldistance, ltime)
+    ltime = mini_pro(comp["Time"].dt.total_seconds().to_numpy())
+    multiplier = ref.Distance.iat[-1] / comp.Distance.iat[-1]
+    ldistance = mini_pro(comp["Distance"].to_numpy()) * multiplier
+    lap_time = np.interp(ref["Distance"], ldistance, ltime)
 
-    delta = lap_time - ref['Time'].dt.total_seconds()
+    delta = lap_time - ref["Time"].dt.total_seconds()
 
     return delta, ref, comp
 
@@ -123,8 +123,9 @@ def recursive_dict_get(d: dict, *keys: str, default_none: bool = False):
         return ret
 
 
-def to_timedelta(x: Union[str, datetime.timedelta]) \
-        -> Optional[datetime.timedelta]:
+def to_timedelta(
+    x: str | datetime.timedelta,
+) -> Optional[datetime.timedelta]:
     """Fast timedelta object creation from a time string
 
     Permissible string formats:
@@ -148,30 +149,33 @@ def to_timedelta(x: Union[str, datetime.timedelta]) \
     if isinstance(x, str) and len(x):
         try:
             hours, minutes = 0, 0
-            if len(hms := x.split(':')) == 3:
+            if len(hms := x.split(":")) == 3:
                 hours, minutes, seconds = hms
             elif len(hms) == 2:
                 minutes, seconds = hms
             else:
                 seconds = hms[0]
 
-            if '.' in seconds:
-                seconds, msus = seconds.split('.')
+            if "." in seconds:
+                seconds, msus = seconds.split(".")
                 if len(msus) < 6:
-                    msus = msus + '0' * (6 - len(msus))
+                    msus = msus + "0" * (6 - len(msus))
                 elif len(msus) > 6:
                     msus = msus[0:6]
             else:
                 msus = 0
 
             return datetime.timedelta(
-                hours=int(hours), minutes=int(minutes),
-                seconds=int(seconds), microseconds=int(msus)
+                hours=int(hours),
+                minutes=int(minutes),
+                seconds=int(seconds),
+                microseconds=int(msus),
             )
 
         except Exception as exc:
-            _logger.debug(f"Failed to parse timedelta string '{x}'",
-                          exc_info=exc)
+            _logger.debug(
+                f"Failed to parse timedelta string '{x}'", exc_info=exc
+            )
             return None
 
     elif isinstance(x, datetime.timedelta):
@@ -181,8 +185,9 @@ def to_timedelta(x: Union[str, datetime.timedelta]) \
         return None
 
 
-def to_datetime(x: Union[str, datetime.datetime]) \
-        -> Optional[datetime.datetime]:
+def to_datetime(
+    x: str | datetime.datetime,
+) -> Optional[datetime.datetime]:
     """Fast datetime object creation from a date string.
 
     Permissible string formats:
@@ -204,26 +209,32 @@ def to_datetime(x: Union[str, datetime.datetime]) \
     """
     if isinstance(x, str) and x:
         try:
-            date, time = x.strip('Z').split('T')
-            year, month, day = date.split('-')
-            hours, minutes, seconds = time.split(':')
-            if '.' in seconds:
-                seconds, msus = seconds.split('.')
+            date, time = x.strip("Z").split("T")
+            year, month, day = date.split("-")
+            hours, minutes, seconds = time.split(":")
+            if "." in seconds:
+                seconds, msus = seconds.split(".")
                 if len(msus) < 6:
-                    msus = msus + '0' * (6 - len(msus))
+                    msus = msus + "0" * (6 - len(msus))
                 elif len(msus) > 6:
                     msus = msus[0:6]
             else:
                 msus = 0
 
             return datetime.datetime(
-                int(year), int(month), int(day), int(hours),
-                int(minutes), int(seconds), int(msus)
+                int(year),
+                int(month),
+                int(day),
+                int(hours),
+                int(minutes),
+                int(seconds),
+                int(msus),
             )
 
         except Exception as exc:
-            _logger.debug(f"Failed to parse datetime string '{x}'",
-                          exc_info=exc)
+            _logger.debug(
+                f"Failed to parse datetime string '{x}'", exc_info=exc
+            )
             return None
 
     elif isinstance(x, datetime.datetime):

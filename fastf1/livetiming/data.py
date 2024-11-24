@@ -7,22 +7,18 @@ import warnings
 from datetime import timedelta
 
 from fastf1.logger import get_logger
-from fastf1.utils import (
-    recursive_dict_get,
-    to_datetime
-)
-
+from fastf1.utils import recursive_dict_get, to_datetime
 
 _logger = get_logger(__name__)
 
 
 _track_status_mapping = {
-    'AllClear': '1',
-    'Yellow': '2',
-    'SCDeployed': '4',
-    'Red': '5',
-    'VSCDeployed': '6',
-    'VSCEnding': '7'
+    "AllClear": "1",
+    "Yellow": "2",
+    "SCDeployed": "4",
+    "Red": "5",
+    "VSCDeployed": "6",
+    "VSCEnding": "7",
 }
 
 
@@ -51,6 +47,7 @@ class LiveTimingData:
     Args:
         *files (str): One or multiple file names
     """
+
     def __init__(self, *files, **kwargs):
         # file names
         self.files = files
@@ -63,10 +60,12 @@ class LiveTimingData:
         # date when session was started
         self._start_date = None
 
-        if 'remove_duplicates' in kwargs:
-            warnings.warn("The argument `remove_duplicates` is no longer "
-                          "available. Duplicates caused by overlapping files "
-                          "will now always be removed.")
+        if "remove_duplicates" in kwargs:
+            warnings.warn(
+                "The argument `remove_duplicates` is no longer "
+                "available. Duplicates caused by overlapping files "
+                "will now always be removed."
+            )
 
     def load(self):
         """
@@ -76,8 +75,9 @@ class LiveTimingData:
         automatically the first time :meth:`get`, :meth:`has`
         or :meth:`list_categories` are called.
         """
-        _logger.info("Reading live timing data from recording. "
-                     "This may take a bit.")
+        _logger.info(
+            "Reading live timing data from recording. " "This may take a bit."
+        )
 
         is_first = True
         _files = [*self.files, None]
@@ -105,9 +105,9 @@ class LiveTimingData:
 
             next_line = next_data[0] if next_data else None
 
-            self._load_single_file(current_data,
-                                   is_first_file=is_first,
-                                   next_line=next_line)
+            self._load_single_file(
+                current_data, is_first_file=is_first, next_line=next_line
+            )
             is_first = False
 
         # set flag that all files have been read
@@ -159,14 +159,18 @@ class LiveTimingData:
 
     def _fix_json(self, elem):
         # fix F1's not json compliant data
-        elem = elem.replace("'", '"') \
-            .replace('True', 'true') \
-            .replace('False', 'false')
+        elem = (
+            elem.replace("'", '"')
+            .replace("True", "true")
+            .replace("False", "false")
+        )
         return elem
 
     def _add_to_category(self, cat, entry):
         if cat not in self.data:
-            self.data[cat] = [entry, ]
+            self.data[cat] = [
+                entry,
+            ]
         else:
             self.data[cat].append(entry)
 
@@ -174,12 +178,13 @@ class LiveTimingData:
         # skim content to find 'Started' session status without actually
         # decoding each line to save time
         for elem in data:
-            if 'SessionStatus' in elem and 'Started' in elem:
+            if "SessionStatus" in elem and "Started" in elem:
                 break
         else:
             # didn't find 'Started'
-            _logger.error("Error while trying to set correct "
-                          "session start date!")
+            _logger.error(
+                "Error while trying to set correct " "session start date!"
+            )
             return
 
         # decode matching line
@@ -187,32 +192,37 @@ class LiveTimingData:
         try:
             cat, msg, dt = json.loads(elem)
         except (json.JSONDecodeError, ValueError):
-            _logger.error("Error while trying to set correct "
-                          "session start date!")
+            _logger.error(
+                "Error while trying to set correct " "session start date!"
+            )
             return
 
         # find correct entry in series
         try:
-            for entry in msg['StatusSeries']:
-                status = recursive_dict_get(entry, 'SessionStatus')
-                if status == 'Started':
+            for entry in msg["StatusSeries"]:
+                status = recursive_dict_get(entry, "SessionStatus")
+                if status == "Started":
                     try:
-                        self._start_date = to_datetime(entry['Utc'])
+                        self._start_date = to_datetime(entry["Utc"])
                     except (KeyError, ValueError, TypeError):
                         self.errorcount += 1
-                        _logger.error("Error while trying to set correct "
-                                      "session start date!")
+                        _logger.error(
+                            "Error while trying to set correct "
+                            "session start date!"
+                        )
                         return
         except AttributeError:
-            for entry in msg['StatusSeries'].values():
-                status = entry.get('SessionStatus', None)
-                if status == 'Started':
+            for entry in msg["StatusSeries"].values():
+                status = entry.get("SessionStatus", None)
+                if status == "Started":
                     try:
-                        self._start_date = to_datetime(entry['Utc'])
+                        self._start_date = to_datetime(entry["Utc"])
                     except (KeyError, ValueError, TypeError):
                         self.errorcount += 1
-                        _logger.error("Error while trying to set correct "
-                                      "session start date!")
+                        _logger.error(
+                            "Error while trying to set correct "
+                            "session start date!"
+                        )
                         return
 
     def get(self, name):
@@ -223,7 +233,7 @@ class LiveTimingData:
 
         Args:
             name (str): name of the category
-            """
+        """
         if not self._files_read:
             self.load()
         return self.data[name]

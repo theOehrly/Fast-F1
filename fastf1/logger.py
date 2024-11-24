@@ -57,15 +57,16 @@ class LoggingManager:
     This class acts as an interface to set the log level for FastF1 and get
     child loggers.
     """
+
     _console_formatter = logging.Formatter(
-        "{module: <8} {levelname: >10} \t{message}", style='{'
+        "{module: <8} {levelname: >10} \t{message}", style="{"
     )
 
     _console_handler = logging.StreamHandler()
     _console_handler.setFormatter(_console_formatter)
     _console_handler.setLevel(logging.INFO)
 
-    _root_logger = logging.getLogger('fastf1')
+    _root_logger = logging.getLogger("fastf1")
     _root_logger.setLevel(logging.DEBUG)
     _root_logger.addHandler(_console_handler)
 
@@ -93,7 +94,7 @@ class LoggingManager:
         cls._console_handler.setLevel(level)
 
 
-if os.getenv('FASTF1_DEBUG') == '1':
+if os.getenv("FASTF1_DEBUG") == "1":
     warnings.warn("Debug Mode enabled for Logger!", UserWarning)
     LoggingManager.debug = True
 else:
@@ -134,6 +135,7 @@ def soft_exceptions(descr_name: str, msg: str, logger: logging.Logger):
         logger: the logger that should be used to log errors (a logger instance
             as returned by :func:`get_logger`, for example).
     """
+
     # This function is used to wrap individual data loading functions that are
     # called by `Session.load`. With the default configuration, this wrapper
     # will catch all unhandled exceptions in the wrapped function and log them.
@@ -151,10 +153,12 @@ def soft_exceptions(descr_name: str, msg: str, logger: logging.Logger):
                     return func(*args, **kwargs)
                 except Exception as exc:
                     logger.warning(msg)
-                    logger.debug(f"Traceback for failure in {descr_name}",
-                                 exc_info=exc)
+                    logger.debug(
+                        f"Traceback for failure in {descr_name}", exc_info=exc
+                    )
             else:
                 return func(*args, **kwargs)
 
         return __wrapped
+
     return __decorator

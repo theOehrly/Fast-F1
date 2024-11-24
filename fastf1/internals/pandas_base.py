@@ -1,12 +1,8 @@
 """Base classes for objects that inherit form Pandas Series or DataFrame."""
-from typing import (
-    Callable,
-    Optional,
-    final
-)
+
+from typing import Callable, Optional, final
 
 import pandas as pd
-
 
 # dangerous import of pandas internals
 # these imports are covered by
@@ -15,13 +11,15 @@ import pandas as pd
 try:
     from pandas.core.internals import SingleBlockManager
 except ImportError as exc:
-    _mgr_instance = getattr(pd.Series(dtype=float), '_mgr')
+    _mgr_instance = pd.Series(dtype=float)._mgr
     if _mgr_instance is None:
-        raise ImportError("Import of Pandas internals failed. You are likely "
-                          "using a recently released version of Pandas that "
-                          "isn't yet supported. Please report this issue. In"
-                          "the meantime, you can try downgrading to an older "
-                          "version of Pandas.") from exc
+        raise ImportError(
+            "Import of Pandas internals failed. You are likely "
+            "using a recently released version of Pandas that "
+            "isn't yet supported. Please report this issue. In"
+            "the meantime, you can try downgrading to an older "
+            "version of Pandas."
+        ) from exc
     SingleBlockManager = type(_mgr_instance)
 
 
@@ -42,7 +40,8 @@ class BaseDataFrame(pd.DataFrame):
     set to ``pandas.Series`` by default and only need to be overwritten when
     a different type is desired.
     """
-    _internal_names = pd.DataFrame._internal_names + ['base_class_view']
+
+    _internal_names = pd.DataFrame._internal_names + ["base_class_view"]
     _internal_names_set = set(_internal_names)
 
     def __repr__(self) -> str:
@@ -62,9 +61,11 @@ class BaseDataFrame(pd.DataFrame):
         # has a reference to this self (i.e. the object from which the slice
         # is created) as a class property
         # type(...) returns a new subclass of a Series
-        return type('_DynamicBaseSeriesConstructor',  # noqa: return type
-                    (_BaseSeriesConstructor,),
-                    {'__meta_created_from': self})
+        return type(
+            "_DynamicBaseSeriesConstructor",  # noqa: return type
+            (_BaseSeriesConstructor,),
+            {"__meta_created_from": self},
+        )
 
     @property
     def _constructor_sliced_horizontal(self) -> Callable[..., pd.Series]:
@@ -95,14 +96,14 @@ class _BaseSeriesConstructor(pd.Series):
     __meta_created_from: Optional[BaseDataFrame]
 
     def __new__(cls, data=None, index=None, *args, **kwargs) -> pd.Series:
-        parent = getattr(cls, '__meta_created_from', None)
+        parent = getattr(cls, "__meta_created_from", None)
 
-        if ((index is None) and isinstance(data, (pd.Series,
-                                                  pd.DataFrame,
-                                                  SingleBlockManager))):
+        if (index is None) and isinstance(
+            data, (pd.Series, pd.DataFrame, SingleBlockManager)
+        ):
             # no index is explicitly given, try to get an index from the
             # data itself
-            index = getattr(data, 'index', None)
+            index = getattr(data, "index", None)
 
         if (parent is None) or (index is None):
             # do "conventional" slicing and return a pd.Series
@@ -116,9 +117,11 @@ class _BaseSeriesConstructor(pd.Series):
             # the data is a row of the parent DataFrame
             constructor = parent._constructor_sliced_horizontal
 
-        if (isinstance(data, SingleBlockManager)
-                and hasattr(constructor, '_from_mgr')
-                and pd.__version__.startswith('2.')):
+        if (
+            isinstance(data, SingleBlockManager)
+            and hasattr(constructor, "_from_mgr")
+            and pd.__version__.startswith("2.")
+        ):
             obj = constructor._from_mgr(data, axes=data.axes)
         else:
             obj = constructor(data=data, index=index, *args, **kwargs)
@@ -137,6 +140,7 @@ class BaseSeries(pd.Series):
     A same-dimensional slice of an object that inherits from this class will
     be of equivalent type (instead of being a Pandas Series).
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

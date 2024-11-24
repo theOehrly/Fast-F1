@@ -3,32 +3,31 @@ import unicodedata
 from fastf1.logger import get_logger
 from fastf1.plotting._constants.base import TeamConst
 
-
 _logger = get_logger(__package__)
 
 
-class _Driver:
-    value: str = ''
-    normalized_value: str = ''
-    abbreviation: str = ''
-    team: "_Team"
-
-
 class _Team:
-    value: str = ''
-    normalized_value: str = ''
-    constants: TeamConst = None
+    value: str = ""
+    normalized_value: str = ""
+    constants: TeamConst
 
     def __init__(self):
         super().__init__()
         self.drivers: list[_Driver] = list()
 
 
+class _Driver:
+    value: str = ""
+    normalized_value: str = ""
+    abbreviation: str = ""
+    team: _Team
+
+
 class _DriverTeamMapping:
     def __init__(
-            self,
-            year: str,
-            teams: list[_Team],
+        self,
+        year: str,
+        teams: list[_Team],
     ):
         self.year = year
         self.teams = teams
@@ -47,6 +46,9 @@ class _DriverTeamMapping:
 def _normalize_string(name: str) -> str:
     # removes accents from a string and returns the closest possible
     # ascii representation (https://stackoverflow.com/a/518232)
-    stripped = ''.join(c for c in unicodedata.normalize('NFD', name)
-                       if unicodedata.category(c) != 'Mn')
+    stripped = "".join(
+        c
+        for c in unicodedata.normalize("NFD", name)
+        if unicodedata.category(c) != "Mn"
+    )
     return stripped

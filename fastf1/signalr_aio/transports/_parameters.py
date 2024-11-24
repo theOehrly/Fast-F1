@@ -18,7 +18,7 @@ class WebSocketParameters:
         self.conn_data = self._get_conn_data(connection.hub)
         self.session = connection.session
         self.headers = None
-        self.socket_conf = None
+        self.socket_conf: dict[str, str] = {}
         self.socket_url = self._get_socket_url()
 
     @staticmethod
@@ -61,9 +61,9 @@ class WebSocketParameters:
         ws_url = self._get_ws_url_from()
         query = urlencode({
             'transport': 'webSockets',
-            'connectionToken': self.socket_conf['ConnectionToken'],
+            'connectionToken': str(self.socket_conf.get('ConnectionToken')),
             'connectionData': self.conn_data,
-            'clientProtocol': self.socket_conf['ProtocolVersion'],
+            'clientProtocol': str(self.socket_conf.get('ProtocolVersion')),
         })
 
         return self._format_url(ws_url, 'connect', query)

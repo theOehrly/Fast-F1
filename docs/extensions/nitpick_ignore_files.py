@@ -8,15 +8,14 @@ from sphinx.util import logging as sphinx_logging
 
 
 class NitpickIgnoreFiles(logging.Filter):
-
     def __init__(self, app: Sphinx) -> None:
         self.app = app
         super().__init__()
 
     def filter(self, record: sphinx_logging.SphinxLogRecord) -> bool:
-        if getattr(record, 'type', None) == 'ref':
+        if getattr(record, "type", None) == "ref":
             for pattern in self.app.config.nitpick_ignore_files:
-                if re.match(pattern, record.location.get('refdoc')):
+                if re.match(pattern, record.location.get("refdoc")):
                     return False
             return True
 
@@ -24,8 +23,8 @@ class NitpickIgnoreFiles(logging.Filter):
 
 
 def setup(app: Sphinx):
-    app.add_config_value('nitpick_ignore_files', [], '')
+    app.add_config_value("nitpick_ignore_files", [], "")
     f = NitpickIgnoreFiles(app)
-    sphinx_logging \
-        .getLogger('sphinx.transforms.post_transforms') \
-        .logger.addFilter(f)
+    sphinx_logging.getLogger(
+        "sphinx.transforms.post_transforms"
+    ).logger.addFilter(f)

@@ -3,10 +3,7 @@ from typing import get_type_hints
 
 import pandas as pd
 from docutils import nodes
-from docutils.parsers.rst import (
-    Directive,
-    directives
-)
+from docutils.parsers.rst import Directive, directives
 
 import fastf1.ergast.structure
 from fastf1 import __version__
@@ -32,14 +29,16 @@ class ApiMappingDirective(Directive):
         - ``:describe-dataframe:``: flat that indicates that a description of
           the flattened data frame should be generated as well
     """
+
     required_arguments = 1
     option_spec = {
-        'subcategory': directives.unchanged,
-        'describe-dataframe': directives.flag
+        "subcategory": directives.unchanged,
+        "describe-dataframe": directives.flag,
     }
 
-    def _build_tree(self, category, excluded_category, *,
-                    include_new_name=True):
+    def _build_tree(
+        self, category, excluded_category, *, include_new_name=True
+    ):
         # Creates an object that describes the specified 'category' that
         # matches the structure of the corresponding response from ergast.
         # All values within this structure are strings that specify the data
@@ -51,15 +50,15 @@ class ApiMappingDirective(Directive):
         # representations for description and content of MultiResponse objects.
         result = dict()
 
-        for name, mapping in category['map'].items():
+        for name, mapping in category["map"].items():
             # get the nicely readable name of the data type after auto casting
-            _type = mapping['type']
-            type_hints = get_type_hints(_type).get('return')
+            _type = mapping["type"]
+            type_hints = get_type_hints(_type).get("return")
             if type_hints:
                 # if casting is done through a conversion function like
                 # `ergast.structure.time_from_ergast`, the resulting data
                 # type needs to be determined from type hints
-                type_str = getattr(type_hints, '__name__', str(type_hints))
+                type_str = getattr(type_hints, "__name__", str(type_hints))
             else:
                 # common data types like int, float, ...: use .__name__
                 type_str = _type.__name__
@@ -70,18 +69,21 @@ class ApiMappingDirective(Directive):
                 result[name] = f"<{type_str}>"
 
         # recursively process subkeys
-        for subcategory in category['sub']:
+        for subcategory in category["sub"]:
             if subcategory is excluded_category:
                 continue
 
-            subcontent = self._build_tree(subcategory, excluded_category,
-                                          include_new_name=include_new_name)
+            subcontent = self._build_tree(
+                subcategory,
+                excluded_category,
+                include_new_name=include_new_name,
+            )
 
-            result[subcategory['name']] = subcontent
+            result[subcategory["name"]] = subcontent
 
         # change to correct representation for keys that contain a list
         # of items
-        if category['type'] is list:
+        if category["type"] is list:
             result = [result]
 
         return result
@@ -92,10 +94,11 @@ class ApiMappingDirective(Directive):
         # ErgastMultiResponse objects. It defines the subkey that is split
         # from the description df into the content df.
         root_category = getattr(fastf1.ergast.structure, self.arguments[0])
-        splitcategory_name = self.options.get('subcategory')
+        splitcategory_name = self.options.get("subcategory")
         if splitcategory_name:
-            splitcategory = getattr(fastf1.ergast.structure,
-                                    splitcategory_name)
+            splitcategory = getattr(
+                fastf1.ergast.structure, splitcategory_name
+            )
         else:
             splitcategory = None
 
@@ -103,84 +106,96 @@ class ApiMappingDirective(Directive):
         # the original response together with the new names of keys and the
         # new data types of their values after auto casting.
         tree = self._build_tree(root_category, None)
-        result_str = json.dumps(tree, indent=4).replace('"', '')
+        result_str = json.dumps(tree, indent=4).replace('"', "")
 
-        nodes_list = \
-            [nodes.raw("",
-                       "<details><summary><a>API Mapping</a></summary>"
-                       "Structure of the raw response, renamed key names for "
-                       "flattening and dtypes for automatic type casting:"
-                       "</br></br>",
-                       format='html'),
-             nodes.literal_block("", result_str, language='none'),
-             nodes.raw("", "</details>", format='html')]
+        nodes_list = [
+            nodes.raw(
+                "",
+                "<details><summary><a>API Mapping</a></summary>"
+                "Structure of the raw response, renamed key names for "
+                "flattening and dtypes for automatic type casting:"
+                "</br></br>",
+                format="html",
+            ),
+            nodes.literal_block("", result_str, language="none"),
+            nodes.raw("", "</details>", format="html"),
+        ]
 
-        if 'describe-dataframe' in self.options:
+        if "describe-dataframe" in self.options:
             # Second, add a description of how the data looks after flattening
             # in the pandas responses
 
-            nodes_list.append(nodes.raw(
-                "",
-                "<details><summary><a>DataFrame Description</a></summary>"
-                "DataFrame column names and dtypes for automatic type"
-                "casting:</br></br>",
-                format='html'
-            ))
+            nodes_list.append(
+                nodes.raw(
+                    "",
+                    "<details><summary><a>DataFrame Description</a></summary>"
+                    "DataFrame column names and dtypes for automatic type"
+                    "casting:</br></br>",
+                    format="html",
+                )
+            )
 
-            result_str = self._generate_df_description(root_category,
-                                                       splitcategory)
+            result_str = self._generate_df_description(
+                root_category, splitcategory
+            )
 
             if splitcategory:
                 # add subheading if the response is split into a MultiResponse
-                nodes_list.append(nodes.raw(
-                    "",
-                    "<code>ErgastMultiResponse.description</code>",
-                    format='html'
-                ))
+                nodes_list.append(
+                    nodes.raw(
+                        "",
+                        "<code>ErgastMultiResponse.description</code>",
+                        format="html",
+                    )
+                )
 
-            nodes_list.append(nodes.literal_block(
-                "", result_str, language='none'
-            ))
+            nodes_list.append(
+                nodes.literal_block("", result_str, language="none")
+            )
 
             if splitcategory:
                 # for split responses, generate the second description of the
                 # previously excluded subkey
-                nodes_list.append(nodes.raw(
-                    "",
-                    f"<code>ErgastMultiResponse.content</code> (contains data "
-                    f"from subkey <code>{splitcategory_name}</code>)",
-                    format='html'
-                ))
+                nodes_list.append(
+                    nodes.raw(
+                        "",
+                        f"<code>ErgastMultiResponse.content</code> (contains "
+                        f"data from subkey <code>{splitcategory_name}</code>)",
+                        format="html",
+                    )
+                )
 
                 result_str = self._generate_df_description(splitcategory, None)
-                nodes_list.append(nodes.literal_block(
-                    "", result_str, language='none'
-                ))
+                nodes_list.append(
+                    nodes.literal_block("", result_str, language="none")
+                )
 
-            nodes_list.append(nodes.raw("", "</details>", format='html'))
+            nodes_list.append(nodes.raw("", "</details>", format="html"))
 
         return nodes_list
 
     def _generate_df_description(self, root_category, splitcategory):
         # generate an object that describes the response in the same
         # structure as the response itself
-        tree = self._build_tree(root_category, splitcategory,
-                                include_new_name=False)
+        tree = self._build_tree(
+            root_category, splitcategory, include_new_name=False
+        )
         # process this object the same way an actual response is processed, so
         # that the same renaming and transformations of the structure are
         # applied to it
-        flat = ErgastResultFrame._prepare_response(tree, root_category,
-                                                   cast=False)
+        flat = ErgastResultFrame._prepare_response(
+            tree, root_category, cast=False
+        )
         # print the flattened data nicely formatted as a table (use str
         # representation of a dataframe for this)
         # remove the last line (unnecessary info about dataframe)
-        result_str = '\n'.join(
-            str(pd.DataFrame(flat).iloc[0]).split('\n')[:-1]
+        result_str = "\n".join(
+            str(pd.DataFrame(flat).iloc[0]).split("\n")[:-1]
         )
         return result_str
 
 
 def setup(app):
-    """ Register directive with Sphinx """
-    app.add_directive('ergast-api-map', ApiMappingDirective)
-    return {'version': __version__}
+    """Register directive with Sphinx"""
+    app.add_directive("ergast-api-map", ApiMappingDirective)
+    return {"version": __version__}

@@ -2,10 +2,9 @@ import warnings
 
 import numpy as np
 
-
 with warnings.catch_warnings():
     warnings.filterwarnings(
-        'ignore', message="Using slow pure-python SequenceMatcher"
+        "ignore", message="Using slow pure-python SequenceMatcher"
     )
     # suppress that warning, it's confusing at best here, we don't need fast
     # sequence matching and the installation (on windows) requires some effort
@@ -13,11 +12,11 @@ with warnings.catch_warnings():
 
 
 def fuzzy_matcher(
-        query: str,
-        reference: list[list[str]],
-        abs_confidence: float = 0.0,
-        rel_confidence: float = 0.0
-) -> (int, bool):
+    query: str,
+    reference: list[list[str]],
+    abs_confidence: float = 0.0,
+    rel_confidence: float = 0.0,
+) -> tuple[int, bool]:
     """
     Match a query string to a reference list of lists of strings using fuzzy
     string matching.
@@ -101,8 +100,9 @@ def fuzzy_matcher(
         # in the array by setting them to zero
         unique, counts = np.unique(reference, return_counts=True)
         count_dict = dict(zip(unique, counts))
-        mask = ((np.vectorize(count_dict.get)(reference) > 1)
-                & (ratios == max_ratio))
+        mask = (np.vectorize(count_dict.get)(reference) > 1) & (
+            ratios == max_ratio
+        )
         ratios[mask] = 0
 
     # get the index of the row that contains the maximum ratio
@@ -110,15 +110,21 @@ def fuzzy_matcher(
 
     # optional confidence checks
     if abs_confidence and (max_ratio < (abs_confidence * 100)):
-        raise KeyError(f"Found no match for '{query}' with sufficient "
-                       f"absolute confidence")
+        raise KeyError(
+            f"Found no match for '{query}' with sufficient "
+            f"absolute confidence"
+        )
 
-    if rel_confidence and (max_ratio / np.partition(ratios.flatten(), -2)[-2]
-                           < (1 + rel_confidence)):
+    if rel_confidence and (
+        max_ratio / np.partition(ratios.flatten(), -2)[-2]
+        < (1 + rel_confidence)
+    ):
         # max ratio divided by second-largest ratio is less
         # than 1 + rel_confidence
-        raise KeyError(f"Found no match for '{query}' with sufficient "
-                       f"relative confidence")
+        raise KeyError(
+            f"Found no match for '{query}' with sufficient "
+            f"relative confidence"
+        )
 
     # return index as inaccurate match
     return max_index, False
