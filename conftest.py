@@ -1,6 +1,18 @@
 import os
+from typing import TYPE_CHECKING
 
 import pytest
+
+if TYPE_CHECKING:
+    from pytest import (
+        CollectReport,
+        Config,
+        ExitCode,
+        Item,
+        Parser,
+        Session,
+        TestReport,
+    )
 
 ERGAST_BACKEND_OVERRIDE = os.environ.get("FASTF1_TEST_ERGAST_BACKEND_OVERRIDE")
 
@@ -10,7 +22,7 @@ if ERGAST_BACKEND_OVERRIDE:
     fastf1.ergast.interface.BASE_URL = ERGAST_BACKEND_OVERRIDE
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: Parser):
     parser.addoption(
         "--no-f1-tel-api",
         action="store_true",
@@ -39,7 +51,7 @@ def pytest_addoption(parser):
     )
 
 
-def pytest_configure(config):
+def pytest_configure(config: Config):
     config.addinivalue_line(
         "markers", "f1telapi: test connects to the f1 telemetry api"
     )
@@ -55,7 +67,9 @@ def pytest_configure(config):
     )
 
 
-def pytest_collection_modifyitems(config, items):
+def pytest_collection_modifyitems(
+    session: Session, config: Config, items: list[Item]
+):
     # cli conditional skip extremely slow tests
     if not config.getoption("--slow"):
         skip_slow = pytest.mark.skip(
@@ -105,7 +119,9 @@ def pytest_collection_modifyitems(config, items):
 # ########## request counter ############
 
 
-def pytest_report_teststatus(report, config):
+def pytest_report_teststatus(
+    report: CollectReport | TestReport, config: Config
+):
     from fastf1 import Cache
 
     if (report.when == "teardown") and (Cache._request_counter > 0):
@@ -115,7 +131,11 @@ def pytest_report_teststatus(report, config):
         Cache._request_counter = 0
 
 
-def pytest_terminal_summary(terminalreporter, exitstatus, config):
+def pytest_terminal_summary(
+    terminalreporter,
+    exitstatus: ExitCode,
+    config: Config,
+):
     reports = terminalreporter.getreports("")
     content = os.linesep.join(
         text
