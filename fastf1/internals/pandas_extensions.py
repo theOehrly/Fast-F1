@@ -19,7 +19,7 @@ try:
 
 except (AttributeError, ImportError) as import_exc:
     logger.warning(
-        "Import of pandas internals failed. Performance will be " "reduced."
+        "Import of pandas internals failed. Performance will be reduced."
     )
     logger.debug("Traceback for import failure", exc_info=import_exc)
     CREATE_DF_FAST = False

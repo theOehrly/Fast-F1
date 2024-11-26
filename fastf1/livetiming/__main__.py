@@ -47,7 +47,7 @@ rec_parser.add_argument(
     "--debug",
     action="store_true",
     default=False,
-    help="Enable debug mode: save full SignalR message, " "not just the data.",
+    help="Enable debug mode: save full SignalR message, not just the data.",
 )
 rec_parser.add_argument(
     "--timeout",

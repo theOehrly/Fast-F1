@@ -76,7 +76,7 @@ class LiveTimingData:
         or :meth:`list_categories` are called.
         """
         _logger.info(
-            "Reading live timing data from recording. " "This may take a bit."
+            "Reading live timing data from recording. This may take a bit."
         )
 
         is_first = True
@@ -183,7 +183,7 @@ class LiveTimingData:
         else:
             # didn't find 'Started'
             _logger.error(
-                "Error while trying to set correct " "session start date!"
+                "Error while trying to set correct session start date!"
             )
             return
 
@@ -193,7 +193,7 @@ class LiveTimingData:
             cat, msg, dt = json.loads(elem)
         except (json.JSONDecodeError, ValueError):
             _logger.error(
-                "Error while trying to set correct " "session start date!"
+                "Error while trying to set correct session start date!"
             )
             return
 

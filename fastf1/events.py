@@ -221,7 +221,7 @@ _SESSION_TYPE_ABBREVIATIONS = {
 }
 
 _SCHEDULE_BASE_URL = (
-    "https://raw.githubusercontent.com/" "theOehrly/f1schedule/master/"
+    "https://raw.githubusercontent.com/theOehrly/f1schedule/master/"
 )
 _HEADERS = {"User-Agent": f"FastF1/{__version_short__}"}
 
@@ -434,7 +434,7 @@ def get_testing_event(
     """
     if backend == "ergast":
         raise ValueError(
-            "The 'ergast' backend does not support " "testing events!"
+            "The 'ergast' backend does not support testing events!"
         )
     schedule = get_event_schedule(year=year, backend=backend)
     schedule = schedule[schedule.is_testing()]

@@ -48,7 +48,7 @@ def pytest_configure(config):
     )
     config.addinivalue_line(
         "markers",
-        "prjdoc: general non-code tests for project and " "structure",
+        "prjdoc: general non-code tests for project and structure",
     )
     config.addinivalue_line(
         "markers", "slow: extremely slow tests (multiple minutes)"
@@ -59,7 +59,7 @@ def pytest_collection_modifyitems(config, items):
     # cli conditional skip extremely slow tests
     if not config.getoption("--slow"):
         skip_slow = pytest.mark.skip(
-            reason="need --slow option to run; " "usage highly discouraged"
+            reason="need --slow option to run; usage highly discouraged"
         )
         for item in items:
             if "slow" in item.keywords:
@@ -76,7 +76,7 @@ def pytest_collection_modifyitems(config, items):
     # cli conditional skip test that connect to the ergast api
     if not config.getoption("--ergast-api"):
         skip_ergast = pytest.mark.skip(
-            reason="need --ergast-api option to " "run"
+            reason="need --ergast-api option to run"
         )
         for item in items:
             if "ergastapi" in item.keywords:

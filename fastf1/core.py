@@ -300,7 +300,7 @@ class Telemetry(pd.DataFrame):
                 )
             if not len(ref_laps["DriverNumber"].unique()) <= 1:
                 raise ValueError(
-                    "Cannot create telemetry for multiple " "drivers at once!"
+                    "Cannot create telemetry for multiple drivers at once!"
                 )
 
             end_time: pd.Timedelta = ref_laps["Time"].max()
@@ -617,11 +617,11 @@ class Telemetry(pd.DataFrame):
         """
         if rule is not None and new_date_ref is not None:
             raise ValueError(
-                "You can only specify one of 'rule' or " "'new_index'"
+                "You can only specify one of 'rule' or 'new_index'"
             )
         if rule is None and new_date_ref is None:
             raise ValueError(
-                "You need to specify either 'rule' or " "'new_index'"
+                "You need to specify either 'rule' or 'new_index'"
             )
 
         if new_date_ref is None:
@@ -1736,7 +1736,7 @@ class Session:
 
     @soft_exceptions(
         "generate retired laps",
-        "Failed to generate last laps for drivers that retired" "on track!",
+        "Failed to generate last laps for drivers that retired on track!",
         _logger,
     )
     def _fix_missing_laps_retired_on_track(self):
@@ -2117,7 +2117,7 @@ class Session:
         self._track_status = pd.DataFrame(track_status)
         if not self._track_status.size:
             _logger.warning(
-                "Could not load any valid session status " "information!"
+                "Could not load any valid session status information!"
             )
 
     @soft_exceptions(
