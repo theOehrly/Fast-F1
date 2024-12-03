@@ -1,14 +1,10 @@
 """
 Season Summary Visualization
 ==================================
-
 This example demonstrates how to summarize the season by visualizing
 race results, points progression, and other key statistics.
-
 .. codeauthor:: Vandana
 """
-
-import logging
 
 import numpy as np
 import pandas as pd
@@ -16,57 +12,50 @@ import plotly.graph_objects as go
 from plotly.io import show
 from plotly.subplots import make_subplots
 
-import fastf1
+from fastf1.ergast import Ergast
 
 
-logging.basicConfig(filename="debug.log", level=logging.WARNING)
-fastf1.logger.set_log_level(logging.WARNING)
+# Initialize Ergast API
+ergast = Ergast()
 
-# Enable FastF1 cache
-fastf1.Cache.enable_cache("../cache")
+# Fetch the event schedule
+schedules = ergast.get_race_schedule(2022)
+races = pd.DataFrame(schedules)
 
-# Define sprint points allocation
-SPRINT_POINTS = {1: 8, 2: 7, 3: 6, 4: 5, 5: 4, 6: 3, 7: 2, 8: 1}
-
-# Load the event schedule and filter out testing events
-schedules = fastf1.get_event_schedule(2022)
-races = schedules[schedules["EventName"].str.contains("Grand Prix", na=False)]
-
-# Prepare standings data
 standings = []
 
-for _, race in races.iterrows():  # Iterate over the filtered races
-    race_name = race["OfficialEventName"]
-    round_number = race["RoundNumber"]
+for _, race in races.iterrows():
+    race_name = race["raceName"]
+    round_number = race["round"]
 
     # Fetch the race session
-    session = fastf1.get_session(2022, round_number, "R")  # Race session
-    session.load()
+    session = ergast.get_race_results(2022, round_number)  # Race session
 
-    # Check for a sprint session (if exists)
     sprint_session = None
 
     try:
-        sprint_session = fastf1.get_session(2022, round_number, "Sprint")
-        sprint_session.load()
+        sprint_session = ergast.get_sprint_results(2022, round_number)
     except Exception:
         pass
 
     # Fetch race data
-    race_results = session.results
-    for driver in race_results["Abbreviation"]:
-        driver_result = race_results[race_results["Abbreviation"] == driver]
-        points = driver_result["Points"].iloc[0]  # Race points
-        position = driver_result["Position"].iloc[0]
+    race_results = session.content
+    race_results = pd.DataFrame(race_results[0])
+    for driver in race_results["driverCode"]:
+        driver_result = race_results[race_results["driverCode"] == driver]
+        points = driver_result["points"]
+        position = driver_result["position"]
 
         # Add sprint race points if applicable
-        if sprint_session is not None:
-            sprint_results = sprint_session.results
-            if driver in sprint_results["Abbreviation"].values:
-                sprint_position = sprint_results[
-                    sprint_results["Abbreviation"] == driver
-                ]["Position"].iloc[0]
-                sprint_points = SPRINT_POINTS.get(sprint_position, 0)
+        if sprint_session.content:
+            sprint_results = sprint_session.content
+            sprint_results = pd.DataFrame(sprint_results[0])
+            if driver in sprint_results["driverCode"].values:
+                sprint_points = int(
+                    sprint_results[sprint_results["driverCode"] == driver][
+                        "points"
+                    ].iloc[0]
+                )
             else:
                 sprint_points = 0
         else:
@@ -77,10 +66,11 @@ for _, race in races.iterrows():  # Iterate over the filtered races
                 "Race": race_name,
                 "RoundNumber": round_number,
                 "Driver": driver,
-                "Points": points + sprint_points,  # Ignore fastest lap points
-                "Position": position,
+                "Points": int(points.iloc[0]) + sprint_points,
+                "Position": int(position.iloc[0]),
             }
         )
+
 
 df = pd.DataFrame(standings)
 
@@ -97,7 +87,7 @@ position_data = df.pivot(
 ).fillna("N/A")
 
 # Map race names
-race_name_mapping = dict(zip(schedules["RoundNumber"], schedules["EventName"]))
+race_name_mapping = dict(zip(races["round"], races["raceName"]))
 
 # Simplify x-axis labels
 heatmap_data_rounds = heatmap_data.iloc[:, :-1]
@@ -191,6 +181,3 @@ fig.update_layout(title="F1 Results Tracker Heatmap")
 
 # Plot the updated heatmap
 show(fig)
-fig.write_image(
-    "../docs/_build/html/gen_modules/examples_gallery/temp-plot.png"
-)
