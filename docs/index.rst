@@ -160,7 +160,6 @@ Contents
 
    time_explanation
    howto_accurate_calculations
-   known_bugs
    troubleshooting
    contributing/index
    changelog/index
