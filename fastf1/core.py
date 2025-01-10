@@ -3093,7 +3093,7 @@ class Laps(BaseDataFrame):
 
         return self[self['Team'].isin(names)]
 
-    def pick_fastest(self, only_by_time: bool = False) -> "Lap":
+    def pick_fastest(self, only_by_time: bool = False) -> Optional["Lap"]:
         """Return the lap with the fastest lap time.
 
         This method will by default return the quickest lap out of self, that
@@ -3104,7 +3104,7 @@ class Laps(BaseDataFrame):
         the driver exceeded track limits and the lap time was deleted.
 
         If no lap is marked as personal best lap or self contains no laps,
-        an empty Lap object will be returned.
+        ``None`` is returned instead.
 
         The check for personal best lap can be disabled, so that any quickest
         lap will be returned.
@@ -3115,29 +3115,16 @@ class Laps(BaseDataFrame):
                 lowest lap time.
 
         Returns:
-            instance of :class:`Lap`
+            instance of :class:`Lap` or ``None``
         """
-        # TODO: Deprecate returning empty lap object when there is no lap
-        # that matches definion
         if only_by_time:
             laps = self  # all laps
         else:
             # select only laps marked as personal fastest
             laps = self.loc[self['IsPersonalBest'] == True]  # noqa: E712
 
-        if not laps.size:
-            warnings.warn(("In the future, `None` will be returned instead of "
-                           "an empty `Lap` object when there are no laps that "
-                           "satisfy the definition for fastest lap."),
-                          FutureWarning)
-            return Lap(index=self.columns, dtype=object).__finalize__(self)
-
-        if laps['LapTime'].isna().all():
-            warnings.warn(("In the future, `None` will be returned instead of "
-                           "an empty `Lap` object when there is no recorded "
-                           "LapTime for any lap."),
-                          FutureWarning)
-            return Lap(index=self.columns, dtype=object).__finalize__(self)
+        if (not laps.size) or laps['LapTime'].isna().all():
+            return None
 
         lap = laps.loc[laps['LapTime'].idxmin()]
         if isinstance(lap, pd.DataFrame):
