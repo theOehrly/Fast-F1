@@ -15,7 +15,7 @@ from fastf1.internals.pandas_base import (
 from fastf1.req import Cache
 
 
-BASE_URL = 'https://ergast.com/api/f1'
+BASE_URL = 'https://api.jolpi.ca/ergast/f1'
 TIMEOUT = 5.0
 HEADERS = {'User-Agent': f'FastF1/{__version_short__}'}
 
