@@ -41,7 +41,6 @@ analyzing specific parts of the data.
 """
 import collections
 import re
-import typing
 import warnings
 from collections.abc import Iterable
 from functools import cached_property
@@ -78,7 +77,7 @@ from fastf1.utils import to_timedelta
 _logger = get_logger(__name__)
 
 
-class Telemetry(pd.DataFrame):
+class Telemetry(BaseDataFrame):
     """Multi-channel time series telemetry data
 
     The object can contain multiple telemetry channels. Multiple telemetry
@@ -91,7 +90,7 @@ class Telemetry(pd.DataFrame):
 
         - **Car data**:
             - `Speed` (float): Car speed [km/h]
-            - `RPM` (int): Car RPM
+            - `RPM` (float): Car RPM
             - `nGear` (int): Car gear number
             - `Throttle` (float): 0-100 Throttle pedal pressure [%]
             - `Brake` (bool): Brakes are applied or not.
@@ -102,7 +101,7 @@ class Telemetry(pd.DataFrame):
             - `X` (float): X position [1/10 m]
             - `Y` (float): Y position [1/10 m]
             - `Z` (float): Z position [1/10 m]
-            - `Status` (string): Flag - OffTrack/OnTrack
+            - `Status` (str): Flag - OffTrack/OnTrack
 
         - **For both of the above**:
             - `Time` (timedelta): Time (0 is start of the data slice)
@@ -188,6 +187,28 @@ class Telemetry(pd.DataFrame):
         'DistanceToDriverAhead': {'type': 'continuous', 'method': 'linear'}
     }
     """Known telemetry channels which are supported by default"""
+
+    _COLUMNS = {
+        'X': 'float64',
+        'Y': 'float64',
+        'Z': 'float64',
+        'Status': str,
+        'Speed': 'float64',
+        'RPM': 'float64',
+        'Throttle': 'float64',
+        'Brake': 'bool',
+        'DRS': 'int',
+        'nGear': 'int',
+        'Source': str,
+        'Date': 'datetime64[ns]',
+        'Time': 'timedelta64[ns]',
+        'SessionTime': 'timedelta64[ns]',
+        'Distance': 'float64',
+        'RelativeDistance': 'float64',
+        'DifferentialDistance': 'float64',
+        'DriverAhead': 'int',
+        'DistanceToDriverAhead': 'float64'
+    }
 
     _metadata = ['session', 'driver']
     _internal_names = pd.DataFrame._internal_names + ['base_class_view']
@@ -613,7 +634,7 @@ class Telemetry(pd.DataFrame):
         )
 
         mask = combined_tel['Date'].isin(new_date_ref)
-        new_tel = combined_tel.loc[mask, :]
+        new_tel = combined_tel.loc[mask, :].copy()
 
         return new_tel
 
@@ -1471,7 +1492,7 @@ class Session:
                 .intersection(set(useful['Driver'].unique()))
             _nums_df = pd.DataFrame({'DriverNumber': list(drivers)},
                                     index=list(drivers))
-            self._results = SessionResults(_nums_df, force_default_cols=True)
+            self._results = SessionResults(_nums_df, _force_default_cols=True)
             _logger.warning("Generating minimal driver list from timing data.")
 
         df = None
@@ -1634,7 +1655,7 @@ class Session:
 
         self._add_track_status_to_laps(laps)
 
-        self._laps = Laps(laps, session=self, force_default_cols=True)
+        self._laps = Laps(laps, session=self, _force_default_cols=True)
         self._check_lap_accuracy()
 
     @soft_exceptions("generate retired laps",
@@ -2191,17 +2212,17 @@ class Session:
         # no data
         if no_driver_info_f1 and no_driver_info_ergast:
             _logger.warning("Failed to load driver list and session results!")
-            self._results = SessionResults(force_default_cols=True)
+            self._results = SessionResults(_force_default_cols=True)
 
         # only Ergast data
         elif no_driver_info_f1:  # LP2
             self._results = SessionResults(driver_info_ergast,
-                                           force_default_cols=True)
+                                           _force_default_cols=True)
 
         # only F1 data
         elif no_driver_info_ergast:
             self._results = SessionResults(driver_info_f1,
-                                           force_default_cols=True)
+                                           _force_default_cols=True)
 
         # F1 and Ergast data
         else:
@@ -2216,7 +2237,7 @@ class Session:
             self._results = SessionResults(
                 driver_info_f1.join(driver_info_ergast.loc[:, join_cols],
                                     how='outer'),
-                force_default_cols=True
+                _force_default_cols=True
             )
 
             if missing_drivers:
@@ -2455,9 +2476,13 @@ class Session:
                 # drop and recalculate timestamps based on 'Date', because
                 # 'Date' has a higher resolution
                 try:
-                    drv_car = Telemetry(src[drv].drop(labels='Time', axis=1),
-                                        session=self, driver=drv,
-                                        drop_unknown_channels=True)
+                    drv_car = Telemetry(
+                        src[drv].drop(labels='Time', axis=1),
+                        session=self,
+                        driver=drv,
+                        drop_unknown_channels=True,
+                        _cast_default_cols=True
+                    )
                 except KeyError:
                     # not pos data or car data exists for this driver
                     continue
@@ -2670,7 +2695,7 @@ class Laps(BaseDataFrame):
               this.)
     """
 
-    _COL_TYPES = {
+    _COLUMNS = {
         'Time': 'timedelta64[ns]',
         'Driver': str,
         'DriverNumber': str,
@@ -2714,32 +2739,9 @@ class Laps(BaseDataFrame):
     def __init__(self,
                  *args,
                  session: Optional[Session] = None,
-                 force_default_cols: bool = False,
                  **kwargs):
 
-        if force_default_cols:
-            kwargs['columns'] = list(self._COL_TYPES.keys())
-
         super().__init__(*args, **kwargs)
-
-        if force_default_cols:
-            # apply column specific dtypes
-            for col, _type in self._COL_TYPES.items():
-                if col not in self.columns:
-                    continue
-                convert = True
-                if self[col].isna().all():
-                    if isinstance(_type, str):
-                        self[col] = pd.Series(dtype=_type)
-                    elif type(None) in typing.get_args(_type):
-                        # column is optional, cannot force dtype, set to None
-                        self[col] = None
-                        convert = False
-                    else:
-                        self[col] = _type()
-
-                if convert:
-                    self[col] = self[col].astype(_type)
 
         self.session = session
 
@@ -3675,7 +3677,7 @@ class SessionResults(BaseDataFrame):
     .. versionadded:: 2.2
     """
 
-    _COL_TYPES = {
+    _COLUMNS = {
         'DriverNumber': str,
         'BroadcastName': str,
         'Abbreviation': str,
@@ -3698,24 +3700,6 @@ class SessionResults(BaseDataFrame):
         'Status': str,
         'Points': 'float64'
     }
-
-    def __init__(self, *args, force_default_cols: bool = False, **kwargs):
-        if force_default_cols:
-            kwargs['columns'] = list(self._COL_TYPES.keys())
-        super().__init__(*args, **kwargs)
-
-        # apply column specific dtypes
-        if force_default_cols:
-            for col, _type in self._COL_TYPES.items():
-                if col not in self.columns:
-                    continue
-                if self[col].isna().all():
-                    if isinstance(_type, str):
-                        self[col] = pd.Series(dtype=_type)
-                    else:
-                        self[col] = _type()
-
-                self[col] = self[col].astype(_type)
 
     @property
     def _constructor_sliced_horizontal(self) -> Callable[..., "DriverResult"]:

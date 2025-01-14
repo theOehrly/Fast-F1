@@ -1,5 +1,7 @@
 """Base classes for objects that inherit form Pandas Series or DataFrame."""
+import typing
 from typing import (
+    Any,
     Callable,
     Optional,
     final
@@ -41,12 +43,69 @@ class BaseDataFrame(pd.DataFrame):
     and ``_constructor_sliced_vertical`` are introduced. Both properties are
     set to ``pandas.Series`` by default and only need to be overwritten when
     a different type is desired.
+
+    Args:
+        _cast_default_cols: If True, the default columns of the DataFrame are
+            cast to the correct type as defined in the _COLUMNS attribute.
+        _force_default_cols: If True, the default columns of the DataFrame are
+            added to the DataFrame even if they are not present in the input
+            data and unknown columns will be dropped. The default columns are
+            defined in the optional _COLUMNS attribute. All data is cast to
+            the correct type as defined in the _COLUMNS attribute.
     """
+
+    _COLUMNS: Optional[dict[str, Any]] = None
+    """
+    A dictionary that defines the default columns of the DataFrame and their
+    corresponding data types. The keys are the column names and the values are
+    the data types. The data types can be given as strings
+    (e.g. 'datetime64[ns]') or as classes (e.g. int).
+    """
+
     _internal_names = pd.DataFrame._internal_names + ['base_class_view']
     _internal_names_set = set(_internal_names)
 
     def __repr__(self) -> str:
         return self.base_class_view.__repr__()
+
+    def __init__(
+            self,
+            *args,
+            _cast_default_cols: bool = False,
+            _force_default_cols: bool = False,
+            **kwargs
+    ):
+        if _force_default_cols and (self._COLUMNS is not None):
+            kwargs['columns'] = list(self._COLUMNS.keys())
+            # force casting of default columns when forcing columns
+            _cast_default_cols = True
+
+        super().__init__(*args, **kwargs)
+
+        if _cast_default_cols and (self._COLUMNS is not None):
+            for col, _type in self._COLUMNS.items():
+                if col not in self.columns:
+                    continue
+                cast = True
+                if self[col].isna().all():
+                    # empty column, set appropriate NA-type
+                    if isinstance(_type, str) and not (_type == 'object'):
+                        # type given as string, e.g. 'datetime64[ns]'
+                        self[col] = pd.Series(dtype=_type)
+                    elif type(None) in typing.get_args(_type):
+                        # type given using typing module and type is marked as
+                        # optional, e.g. typing.Optional[int]
+                        self[col] = None
+                        cast = False  # do not cast this column
+                    elif (_type == object) or (_type == 'object'):  # noqa: E721, type comparison with ==
+                        # object type, set to None
+                        self[col] = None
+                        cast = False
+                    else:
+                        self[col] = _type()
+
+                if cast and (type(None) not in typing.get_args(_type)):
+                    self[col] = self[col].astype(_type)
 
     @property
     def _constructor(self) -> Callable[..., "BaseDataFrame"]:

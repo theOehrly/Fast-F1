@@ -102,7 +102,7 @@ def test_add_lap_status_to_laps():
          [pd.Timedelta(minutes=5), pd.Timedelta(minutes=6)],
          [pd.Timedelta(minutes=6), pd.Timedelta(minutes=7)],
          [pd.Timedelta(minutes=7), pd.Timedelta(minutes=8)]],
-        force_default_cols=False,
+        _force_default_cols=False,
         columns=('LapStartTime', 'Time')
     )
 

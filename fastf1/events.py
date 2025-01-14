@@ -632,7 +632,7 @@ def _get_schedule_ff1(year):
                    for col in df.columns}
     df = df.rename(columns=col_renames)
 
-    schedule = EventSchedule(df, year=year, force_default_cols=True)
+    schedule = EventSchedule(df, year=year, _force_default_cols=True)
     return schedule
 
 
@@ -719,7 +719,7 @@ def _get_schedule_from_f1_timing(year: int):
         ev_date = ev_date.replace(hour=0, minute=0, second=0)
         data['EventDate'].append(ev_date)
 
-    schedule = EventSchedule(data, year=year, force_default_cols=True)
+    schedule = EventSchedule(data, year=year, _force_default_cols=True)
     return schedule
 
 
@@ -811,7 +811,7 @@ def _get_schedule_from_ergast(year) -> "EventSchedule":
         # simplified; this is only true most of the time
 
     df = pd.DataFrame(data)
-    schedule = EventSchedule(df, year=year, force_default_cols=True)
+    schedule = EventSchedule(df, year=year, _force_default_cols=True)
     return schedule
 
 
@@ -828,15 +828,13 @@ class EventSchedule(BaseDataFrame):
     Args:
         *args: passed on to :class:`pandas.DataFrame` superclass
         year: Championship year
-        force_default_cols: Enforce that all default columns and only
-            the default columns exist
         **kwargs: passed on to :class:`pandas.DataFrame` superclass
             (except 'columns' which is unsupported for the event schedule)
 
     .. versionadded:: 2.2
     """
 
-    _COL_TYPES = {
+    _COLUMNS = {
         'RoundNumber': int,
         'Country': str,
         'Location': str,
@@ -864,25 +862,10 @@ class EventSchedule(BaseDataFrame):
 
     _metadata = ['year']
 
-    def __init__(self, *args, year: int = 0,
-                 force_default_cols: bool = False, **kwargs):
-        if force_default_cols:
-            kwargs['columns'] = list(self._COL_TYPES)
+    def __init__(self, *args, year: int = 0, **kwargs):
+
         super().__init__(*args, **kwargs)
         self.year = year
-
-        # apply column specific dtypes
-        for col, _type in self._COL_TYPES.items():
-            if col not in self.columns:
-                continue
-            if self[col].isna().all():
-                if _type == 'datetime64[ns]':
-                    self[col] = pd.NaT
-                elif _type == object:  # noqa: E721, type comparison with ==
-                    self[col] = None
-                else:
-                    self[col] = _type()
-            self[col] = self[col].astype(_type)
 
     @property
     def _constructor_sliced_horizontal(self) -> type["Event"]:

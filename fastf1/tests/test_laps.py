@@ -36,7 +36,7 @@ def test_dtypes_from_api(reference_laps_data):
 
 
 def test_dtypes_default_columns():
-    laps = fastf1.core.Laps(force_default_cols=True)
+    laps = fastf1.core.Laps(_force_default_cols=True)
     ensure_data_type(LAP_DTYPES, laps)
 
 

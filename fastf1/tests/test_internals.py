@@ -1,3 +1,5 @@
+from typing import Optional
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -179,3 +181,44 @@ def test_base_series_constructor_direct_fallback(test_data):
     assert not isinstance(series_a, _BaseSeriesConstructor)
     assert isinstance(series_a, pd.Series)
     assert (series_a == series_b).all()
+
+
+def test_base_frame_default_columns():
+
+    class TestDataFrame(BaseDataFrame):
+
+        _COLUMNS = {
+            'A': int,
+            'B': 'float64',
+            'C': object,
+            'D': 'object',
+            'E': Optional[int],
+            'F': 'string[python]',
+            'G': str,
+            'known': 'string[python]'
+        }
+
+
+    df = TestDataFrame({'unknown': [1, 2, 3], 'known': ['a', 'b', 'c']},
+                       _force_default_cols=True)
+
+    for key in TestDataFrame._COLUMNS.keys():
+        assert key in df.columns
+
+    assert 'unknown' not in df.columns
+
+    assert df['A'].dtype == np.int64
+    assert df['B'].dtype == np.float64
+    assert df['C'].dtype == np.dtype('O')
+    assert df['D'].dtype == np.dtype('O')
+    assert df['E'].dtype == np.dtype('O')
+    assert df['F'].dtype == 'string[python]'
+
+    assert df['A'].iloc[0] == 0
+    assert np.isnan(df['B'].iloc[0])
+    assert df['C'].iloc[0] is None
+    assert df['D'].iloc[0] is None
+    assert df['E'].iloc[0] is None
+    assert pd.isna(df['F'].iloc[0])
+    assert df['G'].iloc[0] == ""
+    assert df['known'].iloc[0] == "a"
