@@ -1551,7 +1551,8 @@ class Session:
                 laps_start_time.insert(0, self.session_start_time)
             else:
                 laps_start_time.insert(0, pd.NaT)
-            laps_start_time = pd.Series(laps_start_time)
+            laps_start_time = pd.Series(laps_start_time,
+                                        dtype="timedelta64[ns]")
 
             # don't set lap start times after red flag restart to the time
             # at which the previous lap was set
@@ -1590,9 +1591,7 @@ class Session:
                     elif row['Status'] == 'Aborted':  # red flag
                         _is_aborted = True
 
-            result.loc[:, 'LapStartTime'] = pd.Series(
-                laps_start_time, dtype='timedelta64[ns]'
-            )
+            result['LapStartTime'] = laps_start_time
 
             # set missing lap start times to pit out time, where possible
             mask = (pd.isna(result['LapStartTime'])
