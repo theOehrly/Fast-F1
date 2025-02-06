@@ -2638,8 +2638,10 @@ class Laps(BaseDataFrame):
           the quicker lap is invalid and not counted. For example, this can
           happen if the track limits were exceeded.
         - **Compound** (str): Tyres event specific compound name: SOFT, MEDIUM,
-          HARD, INTERMEDIATE, WET (the actual underlying compounds C1 to C5 are
-          not differentiated).
+          HARD, INTERMEDIATE, WET, TEST_UNKNOWN, UNKNOWN.
+          The actual underlying compounds C1 to C5 are not differentiated.
+          TEST_UNKNOWN compounds can appear in the data during pre-season
+          testing and in-season Pirelli tyre tests.
         - **TyreLife** (float): Laps driven on this tire (includes laps in
           other sessions for used sets of tires)
         - **FreshTyre** (bool): Tyre had TyreLife=0 at stint start, i.e.
@@ -3159,7 +3161,7 @@ class Laps(BaseDataFrame):
 
         Args:
             compound: may be "SOFT", "MEDIUM", "HARD",
-                "INTERMEDIATE" or "WET"
+                "INTERMEDIATE", "WET", "UNKNOWN", or "TEST_UNKNOWN"
 
         Returns:
             instance of :class:`Laps`
@@ -3177,7 +3179,8 @@ class Laps(BaseDataFrame):
             slick_laps = session_laps.pick_compounds(['SOFT', 'MEDIUM', "HARD])
 
         Args:
-            compounds: may be "SOFT", "MEDIUM", "HARD", "INTERMEDIATE" or "WET"
+            compounds: may be "SOFT", "MEDIUM", "HARD", "INTERMEDIATE", "WET",
+            "UNKNOWN", or "TEST_UNKNOWN"
 
         Returns:
             instance of :class:`Laps`
