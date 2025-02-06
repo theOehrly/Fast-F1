@@ -1550,9 +1550,7 @@ class Session:
                 # started can only be made for the race
                 laps_start_time.insert(0, self.session_start_time)
             else:
-                laps_start_time.insert(0, pd.NaT)
-            laps_start_time = pd.Series(laps_start_time,
-                                        dtype="timedelta64[ns]")
+                laps_start_time.insert(0, np.timedelta64("NaT"))
 
             # don't set lap start times after red flag restart to the time
             # at which the previous lap was set
