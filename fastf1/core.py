@@ -2609,7 +2609,7 @@ class Laps(BaseDataFrame):
 
         - **Time** (pandas.Timedelta): Session time when the lap time was
           set (end of lap)
-        - **Driver** (string): Three letter driver identifier
+        - **Driver** (str): Three letter driver identifier
         - **DriverNumber** (str): Driver number
         - **LapTime** (pandas.Timedelta): Recorded lap time.
           To see if a lap time was deleted, check the **Deleted** column.
