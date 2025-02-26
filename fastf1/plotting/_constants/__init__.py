@@ -5,14 +5,15 @@ from fastf1.plotting._constants import (  # noqa: F401, unused import used throu
     season2021,
     season2022,
     season2023,
-    season2024
+    season2024,
+    season2025
 )
 from fastf1.plotting._constants.base import BaseSeasonConst
 
 
 Constants: dict[str, BaseSeasonConst] = dict()
 
-for year in range(2018, 2025):
+for year in range(2018, 2026):
     season = globals()[f"season{year}"]
     Constants[str(year)] = BaseSeasonConst(
         CompoundColors=season.CompoundColors,
