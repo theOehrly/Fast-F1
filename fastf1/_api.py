@@ -80,7 +80,13 @@ def make_path(wname, wdate, sname, sdate):
     smooth_operator = f'{wdate[:4]}/{wdate} {wname}/{sdate} {sname}/'
     path = '/static/' + smooth_operator.replace(' ', '_')
     # Workaround for Brazil Qualifying on sunday (#652), TODO: fix properly
-    path = path.replace("2024-11-03_Qualifying", "2024-11-02_Qualifying")
+    # and workaround for pre-season testing 2025
+    path = path \
+        .replace("2024-11-03_Qualifying", "2024-11-02_Qualifying") \
+        .replace("2025-02-26_Practice_1", "2025-02-26_Day_1") \
+        .replace("2025-02-27_Practice_2", "2025-02-27_Day_2") \
+        .replace("2025-02-28_Practice_3", "2025-02-28_Day_3")
+
     return path
 
 
