@@ -1,3 +1,14 @@
+What's new in v3.4.5
+--------------------
+
+(released 26/02/2025)
+
+Bug Fixes
+^^^^^^^^^
+
+- Add workaround to support 2025 pre-season testing sessions
+
+
 What's new in v3.4.4
 --------------------
 
