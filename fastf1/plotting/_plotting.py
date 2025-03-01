@@ -114,6 +114,9 @@ def driver_color(identifier: str) -> str:
     """
     Get a driver's color from a driver name or abbreviation.
 
+    .. warning::
+        This function is incompatible with the 2025 season.
+
     .. deprecated:: 3.4.0
         This function is deprecated and will be removed in a future version.
         Use :func:`~fastf1.plotting.get_driver_color` instead.
@@ -148,9 +151,9 @@ def driver_color(identifier: str) -> str:
     Returns:
         str: hex color code
     """
-    warnings.warn("The function `driver_color` is deprecated and will be "
-                  "removed in a future version. Use "
-                  "`fastf1.plotting.get_driver_color` instead.",
+    warnings.warn("INCOMPATIBLE with 2025 season! The function `driver_color` "
+                  "is deprecated and will be removed in a future version. "
+                  "Use `fastf1.plotting.get_driver_color` instead.",
                   FutureWarning)
 
     if identifier.upper() in LEGACY_DRIVER_TRANSLATE:
@@ -201,6 +204,10 @@ def team_color(identifier: str) -> str:
     """
     Get a team's color from a team name or abbreviation.
 
+    .. warning::
+        This function is incompatible with the 2025 season.
+
+
     .. deprecated:: 3.4.0
         This function is deprecated and will be removed in a future version.
         Use :func:`~fastf1.plotting.get_team_color` instead.
@@ -239,10 +246,9 @@ def team_color(identifier: str) -> str:
     Returns:
         str: hex color code
     """
-    warnings.warn("The function `team_color` is deprecated and will be "
-                  "removed in a future version. Use "
-                  "`fastf1.plotting.get_team_color` instead.",
-                  FutureWarning)
+    warnings.warn("INCOMPATIBLE with 2025 season!The function `team_color` "
+                  "is deprecated and will be removed in a future version. Use "
+                  "`fastf1.plotting.get_team_color` instead.", FutureWarning)
 
     if identifier.upper() in LEGACY_TEAM_TRANSLATE:
         # try short team abbreviations first

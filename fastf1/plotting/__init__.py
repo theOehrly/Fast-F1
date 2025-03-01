@@ -81,8 +81,9 @@ __all__ = [
 def __getattr__(name):
     if name in ('COMPOUND_COLORS', 'DRIVER_TRANSLATE', 'DRIVER_COLORS',
                 'TEAM_COLORS', 'TEAM_TRANSLATE', 'COLOR_PALETTE'):
-        warnings.warn(f"{name} is deprecated and will be removed in a future "
-                      f"version.", FutureWarning)
+        warnings.warn(f"INCOMPATIBLE with 2025 season! {name} is deprecated "
+                      f"and will be removed in a future version.",
+                      FutureWarning)
 
         return globals()[f"_DEPR_{name}"]
 
@@ -111,8 +112,9 @@ DRIVER_COLORS: dict[str, str]
 Mapping of driver names to driver colors (hex color codes).
 
 .. warning::
-    This dictionary will no longer be updated to include new drivers. Use
-    the new API instead.
+    This dictionary is incompatible with the 2025 season. Use the new API
+    instead.
+
 
 .. deprecated:: 3.4.0
     The ``DRIVER_COLORS`` dictionary is deprecated and will ber removed in a
@@ -127,8 +129,8 @@ DRIVER_TRANSLATE: dict[str, str]
 Mapping of driver names to theirs respective abbreviations.
 
 .. warning::
-    This dictionary will no longer be updated to include new drivers. Use
-    the new API instead.
+    This dictionary is incompatible with the 2025 season. Use the new API
+    instead.
 
 
 .. deprecated:: 3.4.0
@@ -140,7 +142,11 @@ _DEPR_TEAM_COLORS: dict[str, str] = _LEGACY_TEAM_COLORS.copy()
 TEAM_COLORS: dict[str, str]
 """
 Mapping of team names to team colors (hex color codes).
-(current season only)
+(2024 season only)
+
+.. warning::
+    This dictionary is incompatible with the 2025 season. Use the new API
+    instead.
 
 .. deprecated:: 3.4.0
     The ``TEAM_COLORS`` dictionary is deprecated and will be removed in a
@@ -151,6 +157,10 @@ _DEPR_TEAM_TRANSLATE: dict[str, str] = _LEGACY_TEAM_TRANSLATE.copy()
 TEAM_TRANSLATE: dict[str, str]
 """
 Mapping of team names to theirs respective abbreviations.
+
+.. warning::
+    This dictionary is incompatible with the 2025 season. Use the new API
+    instead.
 
 .. deprecated:: 3.4.0
     The ``TEAM_TRANSLATE`` dictionary is deprecated and will be removed in a
