@@ -288,6 +288,9 @@ def _align_laps(laps_data, stream_data):
             elif drv not in delta.keys():
                 expected_gap[drv] = to_timedelta(gap_str)
 
+        if leader is None:
+            continue
+
         leader_time \
             = laps_data[laps_data['Driver'] == leader].iloc[offset]['Time']
 

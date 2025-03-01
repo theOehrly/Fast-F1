@@ -231,11 +231,18 @@ def test_laps_aligned_across_drivers():
 
 
 @pytest.mark.f1telapi
-def test_laps_aligned_consistency():
+@pytest.mark.parametrize(
+    'year, round_',
+    (
+        (2023, 1),
+        (2020, 15)
+    )
+)
+def test_laps_aligned_consistency(year, round_):
     # Test that the lap time alignment algorithm works correctly, by running
     # it twice. If the laps were aligned correctly the first time, nothing
     # should change the second time.
-    session = fastf1.get_session(2023, 1, 'R')
+    session = fastf1.get_session(year, round_, 'R')
 
     # get laps_data from parser, this is already aligned once
     laps_data, stream_data, _ = _api._extended_timing_data(session.api_path)
