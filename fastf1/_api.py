@@ -254,85 +254,97 @@ def _extended_timing_data(path, response=None, livedata=None):
                  logger=_logger)
 def _align_laps(laps_data, stream_data):
     # align lap start and end times between drivers based on Gap to leader
-    # TODO: it should be possible to align based on different laps
-    if not pd.isnull(stream_data['GapToLeader']).all():
-        expected_gap = dict()
-        delta = dict()
+    if pd.isnull(stream_data['GapToLeader']).all():
+        return  # no data to align on
+
+    expected_gap = dict()
+    delta = dict()
+    n_laps = laps_data['NumberOfLaps'].max()
+
+    for offset in range(0, n_laps):
         leader = None
-        max_delta = None
 
-        # try to align on the first lap where usable data is available
-        # ideally, this is the end of the first lap
-        offset = -1  # start at -1 so that value it is zero on first iteration
+        # drivers still running on this lap
+        active_drivers = laps_data.loc[
+            laps_data['NumberOfLaps'] == (offset + 1), 'Driver'
+        ].unique()
 
-        max_offset = (
-                laps_data.loc[:, ('Driver', 'NumberOfLaps')].groupby('Driver')
-                .max()['NumberOfLaps']  # find max lap count for each driver
-                .min()  # find the smallest max lap count (first retirement)
-                - 1  # subtract one, because offset counts from zero
-        )
+        # drivers that pit on this lap need to be skipped
+        skip_drivers = laps_data.loc[
+            (
+                (laps_data['NumberOfLaps'] == (offset + 1))
+                & (~pd.isnull(laps_data['PitInTime']))
+                & (~pd.isnull(laps_data['PitOutTime']))
+            ), 'Driver'
+        ].to_list()
 
-        while leader is None:
-            offset += 1
-
-            if offset >= max_offset:
-                _logger.warning('Skipping lap alignment (no suitable lap)!')
-                return
-
-            # find the leader after the first usable lap and get the expected
-            # gaps to the leader for all other drivers
-
-            if not pd.isnull(
-                laps_data.loc[laps_data['NumberOfLaps'] == (offset + 1)]
-                         .loc[:, 'PitInTime']).all():
-                # cannot align on laps where one or more drivers pit, therefore
-                # skip and try next one
+        for drv in active_drivers:
+            if drv in skip_drivers:
                 continue
 
-            for drv in laps_data['Driver'].unique():
-                try:
-                    gap_str = _get_gap_str_for_drv(drv, offset, laps_data,
-                                                   stream_data)
-                    if 'LAP' in gap_str:
-                        leader = drv
-                    else:
-                        expected_gap[drv] = to_timedelta(gap_str)
-                except IndexError:
-                    expected_gap[drv] = None
+            gap_str = _get_gap_str_for_drv(drv, offset, laps_data, stream_data)
+            if 'LAP' in gap_str:
+                leader = drv
+            elif drv not in delta.keys():
+                expected_gap[drv] = to_timedelta(gap_str)
 
-        # find the greatest delta between actual gap and currently calculated
-        # gap
         leader_time \
             = laps_data[laps_data['Driver'] == leader].iloc[offset]['Time']
 
+        # if first alignment pass, set current leader as zero point
+        # else get already calculated offset of current leader as zero point
+        if leader not in delta:
+            delta[leader] = datetime.timedelta(0)
+        ref_zero = delta[leader]
+
         for drv in expected_gap.keys():
-            if expected_gap[drv] is None:
-                delta[drv] = None
-                continue
+            if drv in delta:
+                continue  # driver already has a delta, skip
 
             other_time \
                 = laps_data[laps_data['Driver'] == drv].iloc[offset]['Time']
             is_gap = other_time - leader_time
-            delta[drv] = expected_gap[drv] - is_gap
-            if (max_delta is None) or (delta[drv] > max_delta):
-                max_delta = delta[drv]
+            # expected_gap is taken from "gap to leader" values
+            # is_gap is calculated from difference between when laps where set
+            # after correcting for ref_zero, this yields out delta by which we
+            # must shift the laps to align them
+            delta[drv] = expected_gap[drv] - is_gap + ref_zero
 
-        # Subtract the maximum delta from all leader timestamps.
-        # It is impossible that the data was received too early, which in turn
-        # means that it must have been received too late if the delta is
-        # greater than zero
-        if max_delta > datetime.timedelta(0):
-            max_delta = datetime.timedelta(0)
-        laps_data.loc[laps_data['Driver'] == leader, 'Time'] -= max_delta
+        if len(active_drivers) <= len(delta):
+            break
 
-        # Subtract the delta between actual gap and currently calculated gap
-        # from each drivers timestamps to align them. Correct for the max
-        # delta shift of the timestamps of the leader.
-        for drv in delta.keys():
-            if delta[drv] is None:
-                continue
-            laps_data.loc[laps_data['Driver'] == drv, 'Time'] \
-                -= (max_delta - delta[drv])
+    unaligned_drivers = list(
+        set(laps_data['Driver'].unique()) - set(delta.keys())
+    )
+
+    # realign all deltas: a positive delta means too early with reference to
+    # our zero point; negative delta means too late
+    # it's physically impossible for data to be too early, therefore, if any
+    # delta is positive, our zero point is too late, and we need to shift all
+    # deltas by the maximum delta to align them.
+    max_delta = None
+    for drv, value in delta.items():
+        if (max_delta is None) or (value > max_delta):
+            max_delta = value
+
+    # if for some reason, our max delta were a negative value, don't
+    # shift anything, as we'd be shifting everything too late
+    if max_delta < datetime.timedelta(0):
+        max_delta = datetime.timedelta(0)
+
+    for drv in delta.keys():
+        delta[drv] -= max_delta
+
+    # Subtract the delta between actual gap and currently calculated gap
+    # from each drivers timestamps to align them.
+    for drv in delta.keys():
+        if delta[drv] is None:
+            continue
+        laps_data.loc[laps_data['Driver'] == drv, 'Time'] += delta[drv]
+
+    if unaligned_drivers:
+        _logger.warning(f"Failed to align laps for drivers: "
+                        f"{unaligned_drivers}")
 
 
 def _get_gap_str_for_drv(drv, idx, laps_data, stream_data):
