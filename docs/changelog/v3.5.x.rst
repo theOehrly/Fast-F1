@@ -1,0 +1,43 @@
+What's new in v3.5.0
+--------------------
+
+(released 01/03/2024)
+
+
+New Features
+^^^^^^^^^^^^
+
+- The backend for the Ergast API is now changed to its successor Jolpica-F1
+  (see https://github.com/jolpica/jolpica-f1 ) to ensure continued support for
+  the 2025 season and later seasons.
+
+- Added team colors for the 2025 season. (by @Casper-Guo) (#690)
+
+
+Bug Fixes
+^^^^^^^^^
+
+- Incorrect and inconsistent data types in various places have been fixed. The
+  dtypes of all DataFrames after data loading now always match the dtypes that
+  are defined in the documentation. Some dtypes may have changed as a result
+  of this fix.
+
+- Fixed lap time alignment failures in some edge cases.
+
+
+Backwards Incompatible Changes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- ``Laps.pick_fastest()`` will now return ``None`` if no fastest lap exists, as
+  announced previously.
+  Previously, an empty ``Lap`` object was returned.
+
+
+Maintenance
+^^^^^^^^^^^
+
+- Addressed upcoming changes in pandas and fixed a related deprecation warning
+  caused by implicit type coercion. (by @Casper-Guo) (#676, #682)
+
+- Temporarily pinned ``websockets`` to version 14 or older to prevent issues
+  with live timing recording.
