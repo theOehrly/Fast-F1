@@ -269,12 +269,12 @@ def _align_laps(laps_data, stream_data):
             laps_data['NumberOfLaps'] == (offset + 1), 'Driver'
         ].unique()
 
-        # drivers that pit on this lap need to be skipped
+        # drivers that pit in/out on this lap need to be skipped
         skip_drivers = laps_data.loc[
             (
-                (laps_data['NumberOfLaps'] == (offset + 1))
-                & (~pd.isnull(laps_data['PitInTime']))
-                & (~pd.isnull(laps_data['PitOutTime']))
+                (laps_data['NumberOfLaps'] == (offset + 1)) &
+                ((~pd.isnull(laps_data['PitInTime'])) |
+                 (~pd.isnull(laps_data['PitOutTime'])))
             ), 'Driver'
         ].to_list()
 
@@ -286,7 +286,10 @@ def _align_laps(laps_data, stream_data):
             if 'LAP' in gap_str:
                 leader = drv
             elif drv not in delta.keys():
-                expected_gap[drv] = to_timedelta(gap_str)
+                eg = to_timedelta(gap_str)
+                if eg is not None:
+                    # cannot work with "+ 1 Lap" and similar
+                    expected_gap[drv] = eg
 
         if leader is None:
             continue

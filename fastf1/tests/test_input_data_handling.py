@@ -234,8 +234,9 @@ def test_laps_aligned_across_drivers():
 @pytest.mark.parametrize(
     'year, round_',
     (
+        (2020, 15),
         (2023, 1),
-        (2020, 15)
+        (2024, 4),
     )
 )
 def test_laps_aligned_consistency(year, round_):
