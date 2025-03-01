@@ -15,7 +15,7 @@ env:
 
 jobs:
   run-code-tests:
-    if: (!contains(github.event.head_commit.message, '[skip-pytest]'))
+    if: (!contains(github.event.head_commit.message, '[skip-pytest]')) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name)
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -89,7 +89,7 @@ jobs:
 
 
   run-lint-checks:
-    if: (!contains(github.event.head_commit.message, '[skip-ruff]'))
+    if: (!contains(github.event.head_commit.message, '[skip-ruff]')) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name)
     runs-on: ubuntu-latest
     name: Linting (Ruff)
     steps:
@@ -126,7 +126,7 @@ jobs:
 
 
   run-isort-test:
-    if: (!contains(github.event.head_commit.message, '[skip-isort]'))
+    if: (!contains(github.event.head_commit.message, '[skip-isort]')) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name)
     name: Test import order (isort)
     runs-on: ubuntu-latest
 
@@ -157,7 +157,7 @@ jobs:
           python -m isort . --check-only
 
   run-readme-render-test:
-    if: (!contains(github.event.head_commit.message, '[skip-readme-test]'))
+    if: (!contains(github.event.head_commit.message, '[skip-readme-test]')) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name)
     name: Test readme renders on PyPi
     runs-on: ubuntu-latest
 
@@ -178,6 +178,7 @@ jobs:
 
 
   run-sphinx-build-test:
+    if: (!contains(github.event.head_commit.message, '[skip-docs]')) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name)
     name: Test Docs
     uses: ./.github/workflows/docs.yml
     with:
