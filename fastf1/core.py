@@ -2893,6 +2893,12 @@ class Laps(BaseDataFrame):
             - the last known value before the end of the lap if there are
               no values within the duration of a lap
 
+        .. note::
+            The returned DataFrame will have one row for each lap in `self`.
+            If `self` contains laps from multiple drivers, these may overlap
+            and the returned DataFrame may contain duplicate rows with
+            duplicate index values.
+
         See :func:`fastf1.api.weather_data` for available data
         channels.
 
@@ -2908,18 +2914,18 @@ class Laps(BaseDataFrame):
             >>> session.load(telemetry=False)
             >>> weather_data = session.laps.get_weather_data()
             >>> print(weather_data)
-                                 Time AirTemp Humidity  ... TrackTemp WindDirection WindSpeed
-            20 0 days 00:20:14.613000    22.5     52.0  ...      35.8           212       2.0
-            21 0 days 00:21:15.001000    22.5     52.2  ...      36.1           207       2.7
-            23 0 days 00:23:14.854000    22.7     52.5  ...      37.4           210       2.3
-            24 0 days 00:24:14.430000    23.2     51.5  ...      37.4           207       3.2
-            26 0 days 00:26:14.315000    23.6     50.2  ...      37.2           238       1.8
-            ..                    ...     ...      ...  ...       ...           ...       ...
-            36 0 days 00:36:14.426000    23.0     51.1  ...      38.3           192       0.9
-            37 0 days 00:37:14.391000    23.3     50.0  ...      38.7           213       0.9
-            28 0 days 00:28:14.324000    23.5     49.9  ...      37.5           183       1.3
-            34 0 days 00:34:14.385000    23.0     51.7  ...      37.7           272       0.8
-            35 0 days 00:35:14.460000    23.2     50.3  ...      38.0           339       1.1
+                                 Time AirTemp  ... WindDirection WindSpeed
+            20 0 days 00:20:14.613000    22.5  ...           212       2.0
+            21 0 days 00:21:15.001000    22.5  ...           207       2.7
+            23 0 days 00:23:14.854000    22.7  ...           210       2.3
+            24 0 days 00:24:14.430000    23.2  ...           207       3.2
+            26 0 days 00:26:14.315000    23.6  ...           238       1.8
+            ..                    ...     ...  ...           ...       ...
+            36 0 days 00:36:14.426000    23.0  ...           192       0.9
+            37 0 days 00:37:14.391000    23.3  ...           213       0.9
+            28 0 days 00:28:14.324000    23.5  ...           183       1.3
+            34 0 days 00:34:14.385000    23.0  ...           272       0.8
+            35 0 days 00:35:14.460000    23.2  ...           339       1.1
             <BLANKLINE>
             [275 rows x 8 columns]
 
@@ -2954,9 +2960,15 @@ class Laps(BaseDataFrame):
         """  # noqa: E501 (due to long examples and doctest output)
         wd = [lap.get_weather_data() for _, lap in self.iterrows()]
         if wd:
-            return pd.concat(wd, axis=1).T
+            df = pd.concat(wd, axis=1).T
         else:
-            return pd.DataFrame(columns=self.session.weather_data.columns)
+            df = pd.DataFrame(columns=self.session.weather_data.columns)
+
+        # restore column data types
+        for col in df.columns:
+            df[col] = df[col].astype(self.session.weather_data[col].dtype)
+
+        return df
 
     def pick_lap(self, lap_number: int) -> "Laps":
         """Return all laps of a specific LapNumber in self based on LapNumber.
