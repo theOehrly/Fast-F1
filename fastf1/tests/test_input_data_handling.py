@@ -8,6 +8,7 @@ import pytest
 import fastf1
 import fastf1.ergast
 import fastf1.testing
+from fastf1 import _api
 from fastf1.testing.reference_values import LAP_DTYPES
 
 
@@ -227,3 +228,29 @@ def test_laps_aligned_across_drivers():
     for drv in session.results.loc[finished, 'DriverNumber'].iloc[1:]:
         other_time = session.laps.pick_drivers(drv).iloc[-1]['Time']
         assert (other_time - leader_time) == ref[drv]
+
+
+@pytest.mark.f1telapi
+@pytest.mark.parametrize(
+    'year, round_',
+    (
+        (2020, 15),
+        (2023, 1),
+        (2024, 4),
+    )
+)
+def test_laps_aligned_consistency(year, round_):
+    # Test that the lap time alignment algorithm works correctly, by running
+    # it twice. If the laps were aligned correctly the first time, nothing
+    # should change the second time.
+    session = fastf1.get_session(year, round_, 'R')
+
+    # get laps_data from parser, this is already aligned once
+    laps_data, stream_data, _ = _api._extended_timing_data(session.api_path)
+
+    laps_data_ref = laps_data.copy()
+
+    # align again, if everything is correct, nothing must change here
+    _api._align_laps(laps_data, stream_data)
+
+    pd.testing.assert_frame_equal(laps_data, laps_data_ref)
