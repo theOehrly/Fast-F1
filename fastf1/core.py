@@ -2227,17 +2227,18 @@ class Session:
                                    .difference(driver_info_f1['DriverNumber']))
             # drivers are missing if DNSed (did not start)
             # in that case, pull more information from Ergast for these drivers
-
             join_cols \
                 = list(set(driver_info_ergast.columns).difference(info_cols))
 
             self._results = SessionResults(
-                driver_info_f1.join(driver_info_ergast.loc[:, join_cols],
-                                    how='outer'),
+                driver_info_f1.join(
+                    driver_info_ergast.loc[:, join_cols],
+                    how='outer' if self.name == "Race" else "left"
+                ),
                 _force_default_cols=True
             )
 
-            if missing_drivers:
+            if missing_drivers and self.name == "Race":
                 self._results.loc[missing_drivers, info_cols] \
                     = driver_info_ergast.loc[missing_drivers, info_cols]
 
