@@ -9,7 +9,7 @@ schedules, timing data and telemetry.
 ## Main Features
 
 - Access to F1 timing data, telemetry, sessions results and more
-- Full support for [Ergast](http://ergast.com/mrd/) to access current and
+- Full support for the Ergast compatible [jolpica-f1](https://github.com/jolpica/jolpica-f1/blob/main/docs/README.md) API to access current and
   historical F1 data
 - All data is provided in the form of extended Pandas DataFrames to make
   working with the data easy while having powerful tools available
