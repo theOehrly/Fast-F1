@@ -322,6 +322,37 @@ def test_get_driver_style_custom_style():
     }
 
 
+def test_get_driver_style_recursive():
+    session = fastf1.get_session(2023, 10, 'R')
+    custom_style = (
+        {"facecolor": "auto", "line":{"color": "auto", "rotation":"auto"}},
+        {"facecolor": "red", "box":{"bordercolor": "auto"}}
+    )
+
+    ver_style = fastf1.plotting.get_driver_style(
+        'verstappen',
+        custom_style,
+        session,
+        colormap='default'
+    )
+    assert ver_style == {
+        "facecolor": DEFAULT_RB_COLOR,
+        "line": {"color": DEFAULT_RB_COLOR, "rotation": "auto"}
+    }
+
+    per_style = fastf1.plotting.get_driver_style(
+        'perez',
+        custom_style,
+        session,
+        colormap='default',
+        additional_color_kws=("bordercolor", )
+    )
+    assert per_style == {
+        "facecolor": "red",
+        "box": {"bordercolor": DEFAULT_RB_COLOR}
+    }
+
+
 def test_get_compound_color():
     session = fastf1.get_session(2023, 10, 'R')
     assert (fastf1.plotting.get_compound_color('HARD', session)
