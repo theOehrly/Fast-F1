@@ -111,7 +111,7 @@ New Features
   anymore. The cache defaults to using operating system specific default
   locations that are intended for storing temporary files.
   The cache directory can either be changed from within a script or by setting
-  and environemnt variable to define an alternative cache loaction.
+  and environment variable to define an alternative cache location.
   See: :class:`fastf1.Cache`
   (by @oscr)
 

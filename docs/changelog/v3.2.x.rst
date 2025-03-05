@@ -74,7 +74,7 @@ Bug Fixes
   resampling frequency for telemetry data is changed (#455)
 
 - Fixed multiple issues with the Ergast API interface that resulted in
-  invalid request being made and consequentially no data being returned
+  invalid request being made and consequently no data being returned
   (#489, #494) (by @Lombardoc4)
 
 - Fixed missing driver information for drivers that did not start in a race

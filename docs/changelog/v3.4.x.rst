@@ -95,7 +95,7 @@ New Features
     - Driver changes and test drivers running in free practice session are now
       supported automatically and do no longer require an update of FastF1.
 
-    - Users can now choose between the "offcial" F1 color map and the color map
+    - Users can now choose between the "official" F1 color map and the color map
       that was already used previously by FastF1.
 
     - Driver specific colors are deprecated. Users are encouraged to use more

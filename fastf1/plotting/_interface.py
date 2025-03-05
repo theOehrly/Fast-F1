@@ -444,7 +444,7 @@ def get_driver_style(
     The styling options include one color for each team and up to four
     different line styles and marker styles within a team. That means that no
     more than four different drivers are supported for a team in a single
-    session. This should be sufficent in almost all scenarios.
+    session. This should be sufficient in almost all scenarios.
 
     The following example obtains the driver style for Alonso and Stroll in a
     race in the 2023 season. The drivers should be represented using the
@@ -472,7 +472,7 @@ def get_driver_style(
     custom styling variants. These are not tied to any specific plotting
     library.
 
-    In the following example, a list with two custom stlyes is defined that are
+    In the following example, a list with two custom styles is defined that are
     then used to generate driver specific styles. Each style is represented by
     a dictionary of keywords and values.
 
@@ -484,7 +484,7 @@ def get_driver_style(
 
     1. The notion of first or second driver does not refer to any particular
     reference and no specific order for drivers within a team is intended or
-    guranteed.
+    guaranteed.
 
     2. Any color-related key can make use of the "magic" ``'auto'`` value as
     shown with Alonso in this example. When the color value is set to
@@ -521,7 +521,7 @@ def get_driver_style(
             The default colormap is ``'fastf1'``. Use
             :func:`~fastf1.plotting.set_default_colormap` to change it.
         additional_color_kws: A list of keys that should additionally be
-            treated as colors. This is most usefull for making the magic
+            treated as colors. This is most useful for making the magic
             ``'auto'`` color work with custom styling options.
         exact_match: match the identifier exactly (case-insensitive, special
             characters are converted to their nearest ASCII equivalent)

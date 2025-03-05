@@ -97,3 +97,9 @@ skip = ["docs/**"]
 multi_line_output = 3
 force_grid_wrap = 2
 lines_after_imports = 2
+
+[tool.codespell]
+builtin = "clear,rare,informal"
+ignore-regex = "ALO|[Ss]argeant"
+skip = "./venv/*, ./fastf1/testing/reference_data/*, ./fastf1/legacy.py"
+quiet-level = 3
