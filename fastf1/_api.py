@@ -514,7 +514,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             )
 
         # Create approximate (sub)session (i.e. quali) split times by
-        # (mis)using the session number counter from 'BestLapTimes'.
+        # (mis)using the session number counter from 'BestLapTimes'. codespell:ignore
         # (Note: those lap times cannot be used for correct personal best
         #  detection, because the previous value is not resent here when a lap
         #  is deleted.)

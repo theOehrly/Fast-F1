@@ -8,7 +8,7 @@ This version integrates a major overhaul of the api code (:mod:`fastf1.api`)
     First, this makes more sense.
     Second, this column is currently already renamed to 'LapTime' later and already accessible under this name
     in the dataframe returned by :func:`core.Session.load_laps`. Therefore the renaming makes the column name
-    be consistend between api and core.
+    be consistent between api and core.
 
     (This also applies to the dictionary returned by the private function :func:`api._laps_data_driver`),
 
@@ -36,7 +36,7 @@ This version integrates a major overhaul of the api code (:mod:`fastf1.api`)
 
   - light cleanup and light documentation improvements of :mod:`fastf1.core`
 
-  - supressed python-levenshtein warning; it is really not necessary to have it installed for this module
+  - suppressed python-levenshtein warning; it is really not necessary to have it installed for this module
 
   - changed logging format for hopefully better readability
 

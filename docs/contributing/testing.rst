@@ -85,7 +85,7 @@ FastF1 uses Github Actions to run the tests on every push to the repository and
 when updating a pull request. Usually, you should just let all tests run and
 make sure that they are passing.
 
-In rare cases, it may be usefull to skip some tests. You can do this by adding
+In rare cases, it may be useful to skip some tests. You can do this by adding
 a specific comment to the commit message. The following comments are supported:
 
 - ``[skip-pytest]``: Skip pytest runs on all Python versions

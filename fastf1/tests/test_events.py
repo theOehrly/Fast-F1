@@ -169,7 +169,7 @@ def test_event_fuzzy_search():
     assert schedule.get_event_by_name(
         "Saudi Arabia").EventName == "Saudi Arabian Grand Prix"
 
-    # tests agaisnt colloquialisms
+    # tests against colloquialisms
     assert schedule.get_event_by_name(
         "Imola").EventName == "Emilia Romagna Grand Prix"
     assert schedule.get_event_by_name(
