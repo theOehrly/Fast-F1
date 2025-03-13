@@ -1,7 +1,31 @@
+What's new in v3.5.1
+--------------------
+
+(released 13/03/2025)
+
+
+New Features
+^^^^^^^^^^^^
+
+- :func:`~fastf1.plotting.get_driver_style` now replaces the magic ``'auto'``
+  color keyword recursively. This allows for more complex plotting styles, for
+  example when using the Plotly library. (by @Casper-Guo) (#701)
+
+
+Bug Fixes
+^^^^^^^^^
+
+- Missing drivers are now only added to session results based on data from
+  Jolpica-F1 (formerly Ergast), when the session type is fully supported by
+  the API. This fixes cases where drivers were incorrectly added in practice
+  sessions, for example. (by @Casper-Guo) (#699)
+
+
+
 What's new in v3.5.0
 --------------------
 
-(released 01/03/2024)
+(released 01/03/2025)
 
 
 New Features
