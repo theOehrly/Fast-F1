@@ -1,0 +1,8 @@
+autodocsumm>=0.2.10  # support for sphinx v6
+furo
+kaleido
+plotly
+seaborn>0.13.0
+sphinx-autodoc-typehints
+sphinx-gallery>=0.10.0
+sphinx>=8.0
