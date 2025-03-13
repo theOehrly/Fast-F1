@@ -1,18 +1,10 @@
-autodocsumm>=0.2.10  # support for sphinx v6
-furo
 isort
-kaleido
-plotly
 pre-commit
 pytest-mpl==0.14.0  # logging issues in newer versions
 pytest>=6.0.0  # equals pytest min version requirement
 requests-mock
 requests>=2.28.1
 ruff
-seaborn>0.13.0
-sphinx-autodoc-typehints
-sphinx-gallery>=0.10.0
-sphinx>6.0,<7.3
 websockets>=10.3,<14
 wheel
 xdoctest
