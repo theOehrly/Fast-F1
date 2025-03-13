@@ -58,10 +58,15 @@ of FastF1 without re-installing after every change.
 
 Installing additional dependencies for development
 ==================================================
-To install additional dependencies for development, testing and building of the
-documentation, run the following command within the :file:`Fast-F1` directory::
+To install additional dependencies for development and testing run the
+following command within the :file:`Fast-F1` directory::
 
     python -m pip install -r requirements/dev.txt
+
+If you also want to build the documentation, you need to install further
+additional dependencies::
+
+    python -m pip install -r requirements/doc-build.txt
 
 
 .. _pre_commit_hooks:

@@ -174,13 +174,13 @@ class Cache(metaclass=_MetaCache):
     (temporarily) disable caching.
 
     .. autosummary::
-        fastf1.Cache.enable_cache
-        fastf1.Cache.clear_cache
-        fastf1.Cache.get_cache_info
-        fastf1.Cache.disabled
-        fastf1.Cache.set_disabled
-        fastf1.Cache.set_enabled
-        fastf1.Cache.offline_mode
+        enable_cache
+        clear_cache
+        get_cache_info
+        disabled
+        set_disabled
+        set_enabled
+        offline_mode
 
     The parsed API data will be saved as a pickled object.
     Raw GET and POST requests are cached in a sqlite db using the
