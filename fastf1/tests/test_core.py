@@ -168,3 +168,25 @@ def test_tyre_data_parsing():
 
     compare = ver[['Stint', 'Compound', 'FreshTyre', 'TyreLife']]
     assert compare.equals(ref)
+
+
+def test_session_results_drivers():
+    # Sainz (55) is replaced by Bearman (38) after FP2
+    session = fastf1.get_session(2024, "Saudi Arabia", 2)
+    session.load(laps=False, telemetry=False, weather=False)
+    drivers = session.results.index
+    assert "55" in drivers
+    assert "38" not in drivers
+
+    session = fastf1.get_session(2024, "Saudi Arabia", 3)
+    session.load(laps=False, telemetry=False, weather=False)
+    drivers = session.results.index
+    assert "38" in drivers
+    assert "55" not in drivers
+
+    # Mick Schumacher (47) is not officially classified
+    # and does not appear in the F1 API response
+    session = fastf1.get_session(2022, "Saudi Arabia", "R")
+    session.load(laps=False, telemetry=False, weather=False)
+    drivers = session.results.index
+    assert "47" in drivers
