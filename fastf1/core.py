@@ -169,10 +169,11 @@ class Telemetry(BaseDataFrame):
         'Y': {'type': 'continuous', 'method': 'quadratic'},
         'Z': {'type': 'continuous', 'method': 'quadratic'},
         'Status': {'type': 'discrete'},
-        'Speed': {'type': 'continuous', 'method': 'linear'},
-        'RPM': {'type': 'continuous', 'method': 'linear'},
-        'Throttle': {'type': 'continuous', 'method': 'linear'},
-        # linear is often required as quadratic overshoots on sudden changes
+        'Speed': {'type': 'continuous', 'method': 'index'},
+        'RPM': {'type': 'continuous', 'method': 'index'},
+        'Throttle': {'type': 'continuous', 'method': 'index'},
+        # 'index' is linear interpolation based on the index values, it is
+        # often required as 'quadratic' overshoots on sudden changes
         'Brake': {'type': 'discrete'},
         'DRS': {'type': 'discrete'},
         'nGear': {'type': 'discrete'},
@@ -184,7 +185,7 @@ class Telemetry(BaseDataFrame):
         'RelativeDistance': {'type': 'continuous', 'method': 'quadratic'},
         'DifferentialDistance': {'type': 'continuous', 'method': 'quadratic'},
         'DriverAhead': {'type': 'discrete'},
-        'DistanceToDriverAhead': {'type': 'continuous', 'method': 'linear'}
+        'DistanceToDriverAhead': {'type': 'continuous', 'method': 'index'}
     }
     """Known telemetry channels which are supported by default"""
 
