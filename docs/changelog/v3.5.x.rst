@@ -1,3 +1,18 @@
+What's new in v3.5.2
+--------------------
+
+(released 14/03/2025)
+
+Bug Fixes
+^^^^^^^^^
+
+- Use yellow instead of red as team color for Racing Bulls in the 2025 season
+  to better distinguish the color from others. (by @pesaventofilippo) (#707)
+
+- Switch to a linear interpolation that considers sample timestamps correctly
+  when merging/resampling telemetry data.
+
+
 What's new in v3.5.1
 --------------------
 
