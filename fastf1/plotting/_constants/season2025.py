@@ -57,7 +57,7 @@ Teams: dict[str, TeamConst] = {
         ShortName='RB',
         TeamColor=TeamColorsConst(
             Official='#6692ff',
-            FastF1='#e80020'
+            FastF1='#fcd700'
         )
     ),
     'red bull': TeamConst(
