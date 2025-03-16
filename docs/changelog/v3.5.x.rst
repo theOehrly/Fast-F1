@@ -1,3 +1,18 @@
+What's new in v3.5.3
+--------------------
+
+(released 16/03/2025)
+
+Bug Fixes
+^^^^^^^^^
+
+- Fixed incorrect number of total laps (``Session.total_laps``) for the
+  2025 Grand Prix of Australia.
+
+- Fixed incorrectly added 58th lap for Norris in the 2025 Grand Prix of
+  Australia.
+
+
 What's new in v3.5.2
 --------------------
 
