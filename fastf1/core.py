@@ -1690,6 +1690,22 @@ class Session:
                 self.session_status['Time'] <= ref_time
             ]
 
+            if drv_laps['LapNumber'].max() == self.total_laps:
+                # total laps completed, don't add another one
+                if ('Finished' == next_statuses['Status']).any():
+                    # warn if total laps reached before race finished
+                    race_end = next_statuses[
+                        next_statuses['Status'] == 'Finished'
+                    ]['Time'].iloc[0]
+                    driver_finished = drv_laps['Time'].max()
+                    early_by = (str(race_end - driver_finished)
+                                .replace('0 days 00:', ''))  # strip days hours
+                    _logger.warning(
+                        f"Driver {drv} completed the race distance {early_by} "
+                        f"before the recorded end of the session."
+                    )
+                continue
+
             if ((not prev_statuses.empty)
                     and (prev_statuses['Status'] == 'Finished').any()):
                 # driver finished session correctly, nothing to do
@@ -2016,9 +2032,12 @@ class Session:
         if self.name in self._RACE_LIKE_SESSIONS:
             try:
                 lap_count = api.lap_count(self.api_path, livedata=livedata)
-                # A race-like session can have multiple intended total laps,
-                # the first one being the original schedule
-                self._total_laps = lap_count['TotalLaps'][0]
+                # 'TotalLaps' is intended lap count, use last value that is not
+                # None in case of wrong data being corrected later. Shouldn't
+                # usually change.
+                for count in lap_count['TotalLaps']:
+                    if count is not None:
+                        self._total_laps = count
             except IndexError:
                 self._total_laps = None
                 _logger.warning("No lap count data for this session.")
