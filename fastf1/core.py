@@ -2073,21 +2073,19 @@ class Session:
 
         for i, stint in enumerate(df['Stint'].unique()):
             for _, row in df.loc[df['Stint'] == stint].iterrows():
-                # iterate over all messages (rows) that were received for this
-                # stint
-                if pd.isna(corrected.loc[i]).all():
-                    # first message: set as a whole (performance)
-                    corrected.loc[i] = row
-                    continue
-
                 for key, value in row.items():
-                    # correction: update existing values only if new value
-                    # is non-na
                     if pd.isna(value):
                         continue
-                    if (key == 'Time') and not pd.isna(corrected.loc[i, key]):
+                    if key == 'Time' and not pd.isna(corrected.loc[i, key]):
                         # always keep first time stamp instead of corrected
                         # corresponds to pit stop time
+                        continue
+                    if (
+                        key == "Compound" and
+                        corrected.loc[i, key] != "UNKNOWN"
+                    ):
+                        corrected.loc[i, key] = value
+                        corrected.loc[i, "Time"] = row.loc["Time"]
                         continue
                     corrected.loc[i, key] = value
 
