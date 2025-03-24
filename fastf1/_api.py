@@ -581,7 +581,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         # check for incorrect lap times and remove them
         # fixes GH#167 among others
         if sector_sum > drv_data['LapTime'][i]:
-            drv_data['LapTime'][i] = pd.NaT
+            drv_data["LapTime"][i] = np.timedelta64("NaT")
             integrity_errors.append(i + 1)
 
         if i == 0:
@@ -740,7 +740,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
     # There is also a PitInTime if the car actually pits at the end of the
     # first lap, those need to be kept.
     if drv_data['PitInTime'][0] < drv_data['PitOutTime'][0]:
-        drv_data['PitInTime'][0] = pd.NaT
+        drv_data["PitInTime"][0] = np.timedelta64("NaT")
 
     if integrity_errors:
         _logger.warning(

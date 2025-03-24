@@ -746,7 +746,7 @@ def _get_schedule_from_ergast(year) -> "EventSchedule":
                 f"{rnd.get('date', '')}T{rnd.get('time', '')}",
             ).tz_localize(None)
         except dateutil.parser.ParserError:
-            date = pd.NaT
+            date = pd.Timestamp(pd.NaT)
         data['EventDate'].append(date)
 
         if 'Sprint' in rnd:
