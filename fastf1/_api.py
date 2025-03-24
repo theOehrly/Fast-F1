@@ -91,16 +91,16 @@ def make_path(wname, wdate, sname, sdate):
 
 
 # define all empty columns for timing data
-EMPTY_LAPS = {'Time': pd.NaT, 'Driver': '', 'LapTime': pd.NaT,
+EMPTY_LAPS = {'Time': pd.Timedelta("NaT"), 'Driver': '', 'LapTime': pd.Timedelta("NaT"),
               'NumberOfLaps': np.nan, 'NumberOfPitStops': np.nan,
-              'PitOutTime': pd.NaT, 'PitInTime': pd.NaT,
-              'Sector1Time': pd.NaT, 'Sector2Time': pd.NaT,
-              'Sector3Time': pd.NaT, 'Sector1SessionTime': pd.NaT,
-              'Sector2SessionTime': pd.NaT, 'Sector3SessionTime': pd.NaT,
+              'PitOutTime': pd.Timedelta("NaT"), 'PitInTime': pd.Timedelta("NaT"),
+              'Sector1Time': pd.Timedelta("NaT"), 'Sector2Time': pd.Timedelta("NaT"),
+              'Sector3Time': pd.Timedelta("NaT"), 'Sector1SessionTime': pd.Timedelta("NaT"),
+              'Sector2SessionTime': pd.Timedelta("NaT"), 'Sector3SessionTime': pd.Timedelta("NaT"),
               'SpeedI1': np.nan, 'SpeedI2': np.nan, 'SpeedFL': np.nan,
               'SpeedST': np.nan, 'IsPersonalBest': False}
 
-EMPTY_STREAM = {'Time': pd.NaT, 'Driver': '', 'Position': np.nan,
+EMPTY_STREAM = {'Time': pd.Timedelta("NaT"), 'Driver': '', 'Position': np.nan,
                 'GapToLeader': np.nan, 'IntervalToPositionAhead': np.nan}
 
 
@@ -587,7 +587,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         # fixes GH#167 among others
         if ((drv_data['LapTime'][i] is not None)
                 and (sector_sum > drv_data['LapTime'][i])):
-            drv_data['LapTime'][i] = pd.NaT
+            drv_data['LapTime'][i] = pd.Timedelta("NaT")
             integrity_errors.append(i + 1)
 
         # Lap times are initially set to NaT. If and only if an empty value is
@@ -599,7 +599,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             if not na_sectors:
                 drv_data['LapTime'][i] = sector_sum
             else:
-                drv_data['LapTime'][i] = pd.NaT
+                drv_data['LapTime'][i] = pd.Timedelta("NaT")
 
         if i == 0:
             # only do following corrections for 2nd lap and onwards
@@ -767,7 +767,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
     # There is also a PitInTime if the car actually pits at the end of the
     # first lap, those need to be kept.
     if drv_data['PitInTime'][0] < drv_data['PitOutTime'][0]:
-        drv_data['PitInTime'][0] = pd.NaT
+        drv_data['PitInTime'][0] = pd.Timedelta("NaT")
 
     if integrity_errors:
         _logger.warning(
