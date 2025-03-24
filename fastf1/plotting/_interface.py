@@ -113,10 +113,9 @@ def _get_team(
 def _get_team_fuzzy(identifier: str, session: Session) -> _Team:
     dtm = _get_driver_team_mapping(session)
     identifier = _normalize_string(identifier).lower()
-
     # remove common non-unique words
     for word in ('racing', 'team', 'f1', 'scuderia'):
-        identifier = identifier.replace(word, "")
+        identifier = identifier.replace(word, "").strip()
 
     # check for an exact team name match
     if identifier in dtm.teams_by_normalized.keys():
@@ -125,7 +124,11 @@ def _get_team_fuzzy(identifier: str, session: Session) -> _Team:
     # check full match with full team name or for exact partial string
     # match with normalized team name
     for normalized, team in dtm.teams_by_normalized.items():
-        if (identifier == team.value.casefold()) or (identifier in normalized):
+        if (
+            (identifier == team.value.casefold()) or
+            (identifier == team.constants.ShortName.casefold()) or
+            (identifier in normalized)
+            ):
             return dtm.teams_by_normalized[normalized]
 
     # do fuzzy string match
