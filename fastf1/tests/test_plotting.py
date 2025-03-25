@@ -3,7 +3,11 @@ import pytest
 
 import fastf1
 import fastf1.plotting
-from fastf1.plotting._constants import season2023
+from fastf1.plotting._constants import (
+    season2023,
+    season2024,
+    season2025
+)
 from fastf1.plotting._constants.base import CompoundsConst
 
 
@@ -11,6 +15,8 @@ OFFICIAL_MERC_COLOR = season2023.Teams['mercedes'].TeamColor.Official
 OFFICIAL_RB_COLOR = season2023.Teams['red bull'].TeamColor.Official
 DEFAULT_MERC_COLOR = season2023.Teams['mercedes'].TeamColor.FastF1
 DEFAULT_RB_COLOR = season2023.Teams['red bull'].TeamColor.FastF1
+DEFAULT_2024_VCARB_COLOR = season2024.Teams['rb'].TeamColor.FastF1
+DEFAULT_2025_VCARB_COLOR = season2025.Teams['racing bulls'].TeamColor.FastF1
 
 
 @pytest.mark.parametrize(
@@ -161,6 +167,22 @@ def test_get_team_color(identifier, kwargs, expected):
         identifier, session, **kwargs
     )
     assert color == expected
+
+
+def test_get_rb_color_disambiguate():
+    # prior to 2024, RB should be interpreted as Red Bull
+    session_2023 = fastf1.get_session(2023, 10, 'R')
+    color = fastf1.plotting.get_team_color('RB', session_2023, colormap="default")
+    assert color == DEFAULT_RB_COLOR
+
+    # from 2024 onwards, RB should be interpreted as Racing Bulls
+    session_2024 = fastf1.get_session(2024, 10, 'R')
+    color = fastf1.plotting.get_team_color('RB', session_2024, colormap="default")
+    assert color == DEFAULT_2024_VCARB_COLOR
+
+    session_2025 = fastf1.get_session(2025, 2, 'R')
+    color = fastf1.plotting.get_team_color('RB', session_2025, colormap="default")
+    assert color == DEFAULT_2025_VCARB_COLOR
 
 
 @pytest.mark.parametrize(
