@@ -1586,12 +1586,13 @@ class Session:
                             # for other sessions, we cannot make this
                             # assumption set to NaT here, it will be set to
                             # PitOutTime later if possible
-                            laps_start_time[restart_index] = pd.NaT
+                            laps_start_time[
+                                restart_index
+                            ] = np.timedelta64("NaT")
                     elif row['Status'] == 'Aborted':  # red flag
                         _is_aborted = True
 
             result['LapStartTime'] = laps_start_time
-
             # set missing lap start times to pit out time, where possible
             mask = (pd.isna(result['LapStartTime'])
                     & (~pd.isna(result['PitOutTime'])))
