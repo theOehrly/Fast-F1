@@ -3663,7 +3663,9 @@ class SessionResults(BaseDataFrame):
         - ``Position`` | :class:`float` |
           The drivers finishing position (values only given if session is
           'Race', 'Qualifying', 'Sprint Shootout', 'Sprint', or
-          'Sprint Qualifying').
+          'Sprint Qualifying'). This additionally accounts for post-race
+          penalties and disqualifications if session is 'Race', 'Qualifying',
+          Sprint Shootout', or 'Sprint'.
 
         - ``ClassifiedPosition`` | :class:`str` |
           The official classification result for each driver.
