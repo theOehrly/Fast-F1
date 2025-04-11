@@ -1459,6 +1459,7 @@ class Session:
         self._fix_missing_laps_retired_on_track()
         self._set_laps_deleted_from_rcm()
         self._calculate_quali_like_session_results()
+        self._calculate_race_like_session_results()
 
         _logger.info(f"Finished loading data for {len(self.drivers)} "
                      f"drivers: {self.drivers}")
@@ -1908,6 +1909,63 @@ class Session:
 
         self.results.loc[:, quali_results.columns] = quali_results
         self.results.sort_values(by=['Position'], inplace=True)
+
+    @soft_exceptions(
+        "race results",
+        "Failed to calculate race results from lap times!",
+        _logger,
+    )
+    def _calculate_race_like_session_results(self, force=False):
+        """
+        Try to calculate race results from lap times if no results are
+        available.
+
+        DNF drivers are ordered based on the number of laps they completed.
+        Do not rely on this data as FIA considers these drivers to have no
+        finishing positions.
+
+        Args:
+            force (bool): Force calculation of race results even if
+            results are already available, (default: False)
+        """
+
+        if self.name not in self._RACE_LIKE_SESSIONS:
+            return
+
+        if not hasattr(self, '_laps'):
+            return
+
+        if not self.results['Position'].isna().all() and not force:
+            # Don't do anything if results are already available
+            # unless force is True
+            return
+
+        if self.laps['Deleted'].dtype.name != 'bool':
+            _logger.warning(
+                "Cannot calculate race results: missing information "
+                "about deleted laps. Make sure that race control messages are "
+                "being loaded."
+            )
+
+        # This keeps the final lap of each driver
+        final_laps = self.laps.loc[
+            self.laps.groupby("DriverNumber")["LapNumber"].idxmax()
+        ]
+
+        # Drivers who have completed more laps always finishes higher
+        # For drivers who finished the same number of laps, the tie is broken
+        # by who finished the lap earlier
+        # The ignore_index=True option is the same as calling reset_index
+        final_order = final_laps.sort_values(
+            by=["LapNumber", "Time"],
+            ascending=[False, True],
+            ignore_index=True
+        )
+
+        final_order["Position"] = (final_order.index + 1).astype('float64')
+        final_order = final_order.set_index('DriverNumber')
+        self.results.loc[:, ["Position"]] = final_order["Position"]
+        self.results.sort_values(by=["Position"], inplace=True)
 
     @soft_exceptions("add track status to laps",
                      "Failed to add track status to Laps!",
