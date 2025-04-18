@@ -599,7 +599,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             if not na_sectors:
                 drv_data['LapTime'][i] = sector_sum
             else:
-                drv_data['LapTime'][i] = np.timedelta64("NaT")
+                drv_data['LapTime'][i] = pd.NaT
 
         if i == 0:
             # only do following corrections for 2nd lap and onwards
