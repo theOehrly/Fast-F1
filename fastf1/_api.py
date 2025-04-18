@@ -464,11 +464,16 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
                     drv_data[sector][lapcnt - lap_offset] = to_timedelta(val)
                     drv_data[sesst][lapcnt - lap_offset] = to_timedelta(time)
 
-        if val := recursive_dict_get(resp, 'LastLapTime', 'Value'):
-            # if 'LastLapTime' is received less than five seconds after the start of a new lap, it is still added
-            # to the last lap
-            val = to_timedelta(val)
-            if val.total_seconds() < 150:
+        if ((last_lap_time := resp.get('LastLapTime'))
+                and (val := last_lap_time.get('Value')) is not None):
+            # explicitly check whether the lap time is None, i.e. key is
+            # missing or if the value is an empty string
+
+            val = to_timedelta(val)  # empty string converts to None here!
+            # Set None values too, to explicitly differentiate the case where
+            # no information about the value is found in the source from the
+            # case here where the source indicates that no value exists.
+            if (val is None) or (val.total_seconds() < 150):
                 # laps which are longer than 150 seconds are ignored; usually this is the case between Q1, Q2 and Q3
                 # because all three qualifying sessions are one session here. Those timestamps are often wrong and
                 # sometimes associated with the wrong lap
@@ -580,9 +585,21 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
 
         # check for incorrect lap times and remove them
         # fixes GH#167 among others
-        if sector_sum > drv_data['LapTime'][i]:
+        if ((drv_data['LapTime'][i] is not None)
+                and (sector_sum > drv_data['LapTime'][i])):
             drv_data['LapTime'][i] = pd.NaT
             integrity_errors.append(i + 1)
+
+        # Lap times are initially set to NaT. If and only if an empty value is
+        # received from the API, the lap time is set to None. In this case, we
+        # try to calculate the lap time from sector times.
+        # This is not done for NaT lap times to protect against parser logic
+        # errors and values simply being incorrectly assigned.
+        if drv_data['LapTime'][i] is None:
+            if not na_sectors:
+                drv_data['LapTime'][i] = sector_sum
+            else:
+                drv_data['LapTime'][i] = pd.NaT
 
         if i == 0:
             # only do following corrections for 2nd lap and onwards
@@ -662,24 +679,34 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
 
     # need to go both directions once to make everything match up; also recalculate sector times
     for i in range(len(drv_data['Time']) - 1):
-        if any(pd.isnull(tst) for tst in (
-                drv_data['Time'][i], drv_data['LapTime'][i + 1],
-                drv_data['Sector1Time'][i + 1],
-                drv_data['Sector2Time'][i + 1],
-                drv_data['Sector3Time'][i + 1])):
-            continue  # lap not usable, missing critical values
+        if (pd.isnull(drv_data['Time'][i])
+                or pd.isnull(drv_data['LapTime'][i + 1])):
+            # lap not usable, missing critical values; more checks follow
+            continue
 
         if (new_time := drv_data['Time'][i] + drv_data['LapTime'][i+1]) \
                 < drv_data['Time'][i+1]:
             drv_data['Time'][i+1] = new_time
+
+        if pd.isnull(drv_data['Sector1Time'][i + 1]):
+            continue
+
         if (new_s1_time := drv_data['Time'][i]
                 + drv_data['Sector1Time'][i+1]) \
                 < drv_data['Sector1SessionTime'][i+1]:
             drv_data['Sector1SessionTime'][i+1] = new_s1_time
+
+        if pd.isnull(drv_data['Sector2Time'][i + 1]):
+            continue
+
         if (new_s2_time := drv_data['Time'][i] + drv_data['Sector1Time'][i+1]
                 + drv_data['Sector2Time'][i+1]) \
                 < drv_data['Sector2SessionTime'][i+1]:
             drv_data['Sector2SessionTime'][i+1] = new_s2_time
+
+        if pd.isnull(drv_data['Sector3Time'][i + 1]):
+            continue
+
         if (new_s3_time := drv_data['Time'][i] + drv_data['Sector1Time'][i+1]
                 + drv_data['Sector2Time'][i+1]
                 + drv_data['Sector3Time'][i+1]) \

@@ -254,3 +254,18 @@ def test_laps_aligned_consistency(year, round_):
     _api._align_laps(laps_data, stream_data)
 
     pd.testing.assert_frame_equal(laps_data, laps_data_ref)
+
+
+@pytest.mark.f1telapi
+def test_explicitly_missing_lap_times_calculated():
+    # Russel had transponder issues in bahrain 2025, which caused the timing
+    # problems. Two lap times were missing but the source explicitly indicated
+    # {'value': ''} instead of simply skipping over the data.
+    # Check that in cases of explicitly missing lap times, where we know for
+    # sure that data wasn't just parsed incorrectly, the lap times are
+    # calculated from the sector times.
+    session = fastf1.get_session(2025, 4, 'R')
+    session.load(telemetry=False, weather=False)
+    l37 = session.laps.pick_drivers('63').pick_laps(37)
+
+    assert not l37['LapTime'].isna().any()

@@ -222,7 +222,7 @@ class Cache(metaclass=_MetaCache):
     """
     _CACHE_DIR = None
     # version of the api parser code (unrelated to release version number)
-    _API_CORE_VERSION = 14
+    _API_CORE_VERSION = 15
     _IGNORE_VERSION = False
     _FORCE_RENEW = False
 
