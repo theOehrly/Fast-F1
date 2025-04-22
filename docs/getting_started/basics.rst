@@ -1,5 +1,4 @@
-
-Getting started with the basics
+Getting Started with the Basics
 ===============================
 
 FastF1 is built mainly around Pandas DataFrame and Series objects.

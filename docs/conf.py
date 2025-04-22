@@ -52,7 +52,7 @@ project = 'FastF1'
 # author = 'Oehrly'
 version = fastf1.__version__
 release = version
-copyright = f'{datetime.now().year}, theOehrly'
+copyright = f'{datetime.now().year}, Philipp Schäfer'
 html_title = f"{project} <small>{release}</small>"
 
 # -- General configuration ---------------------------------------------------
@@ -115,10 +115,22 @@ nitpick_ignore_files = [
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'furo'
+html_theme = "pydata_sphinx_theme"
 html_theme_options = {
+    "footer_center": ["goatcounter"],
+    "secondary_sidebar_items": ["page-toc",
+                                # "sourcelink",
+                                "support_link"],
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/theOehrly/Fast-F1",
+            "icon": "fa-brands fa-square-github",
+            "type": "fontawesome",
+        }
+    ]
 }
-html_logo = "_static/logo.png"
+html_logo = "_static/banner.png"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

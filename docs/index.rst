@@ -1,17 +1,87 @@
-######
-FastF1
-######
-
-For the passionate F1 nerds.
-
-============
-Introduction
-============
+######################
+Introduction to FastF1
+######################
 
 FastF1 gives you access to F1 lap timing, car telemetry and position,
 tyre data, weather data, the event schedule and session results.
 
-**Main features**:
+
+.. raw:: html
+
+    <style>
+      .doc-tile-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 20px;
+        margin: 30px 0;
+      }
+      .doc-tile {
+        width: 200px;
+        box-shadow: 0 4px 8px var(--pst-color-shadow, rgba(0, 0, 0, 0.1));
+        border-radius: 5px;
+        padding: 20px;
+        text-align: center;
+        background-color: var(--pst-color-surface, var(--pst-color-background, white));
+        transition: transform 0.3s, box-shadow 0.3s;
+        text-decoration: none !important;
+        color: inherit !important;
+        display: block;
+      }
+      .doc-tile:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px var(--pst-color-shadow, rgba(0, 0, 0, 0.2));
+      }
+      .doc-tile h2 {
+        margin-top: 0;
+        font-size: 1.2rem;
+        margin-bottom: 5px;
+        color: var(--pst-color-text-base);
+      }
+      .doc-tile p {
+        margin: 0;
+        font-size: 0.9rem;
+        color: var(--pst-color-text-muted, #666);
+      }
+      .doc-tile-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        color: #e74c3c;
+      }
+    </style>
+    <div class="doc-tile-container">
+      <a href="getting_started/index.html" class="doc-tile">
+        <div class="doc-tile-icon">📚</div>
+        <h2>Getting Started</h2>
+        <p>Examples and tutorials to help you get started with FastF1</p>
+      </a>
+      <a href="user_guide/index.html" class="doc-tile">
+        <div class="doc-tile-icon">📖</div>
+        <h2>User Guide</h2>
+        <p>Comprehensive guide to using FastF1 effectively</p>
+      </a>
+      <a href="reference/index.html" class="doc-tile">
+        <div class="doc-tile-icon">🔍</div>
+        <h2>API Reference</h2>
+        <p>Detailed documentation of FastF1's classes and functions</p>
+      </a>
+      <a href="#available-data" class="doc-tile">
+        <div class="doc-tile-icon">📊</div>
+        <h2>Available Data</h2>
+        <p>Overview of all F1 data available through FastF1</p>
+      </a>
+      <a href="contributing/index.html" class="doc-tile">
+        <div class="doc-tile-icon">⚙️</div>
+        <h2>Development</h2>
+        <p>How to contribute to FastF1 and help improve the package</p>
+      </a>
+    </div>
+
+
+
+========
+Features
+========
 
 - Access to F1 timing data, telemetry, sessions results and more
 - Full support for the Ergast compatible `jolpica-f1 <https://github.com/jolpica/jolpica-f1/blob/main/docs/README.md>`_ API to access current and
@@ -24,46 +94,14 @@ tyre data, weather data, the event schedule and session results.
 - Implements caching for all API requests to speed up your scripts
 
 
-To get a quick overview over how to use FastF1, check out
-:doc:`examples/index` or the :doc:`gen_modules/examples_gallery/index`.
+..
+    To get a quick overview over how to use FastF1, check out
+    :doc:`examples/index` or the :doc:`gen_modules/examples_gallery/index`.
 
-Note that FastF1 handles big chunks of data (~50-100mb per session). To improve
-performance, data is per default cached locally. The default placement
-of the cache is operating system specific. A custom location can be set if
-desired. For more information see :class:`~fastf1.req.Cache`.
-
-Have fun!
-
-============
-Installation
-============
-
-It is recommended to install FastF1 using `pip`:
-
-.. code-block:: bash
-
-   pip install fastf1
-
-Note that Python 3.8 or higher is required.
-
-Alternatively, a wheel or a source distribution can be downloaded from Pypi.
-
-You can also install using `conda`:
-
-.. code-block:: bash
-
-  conda install -c conda-forge fastf1
-
-
-**Installation in Pyodide, JupyterLite and other WASM-based environments**
-
-FastF1 should be mostly compatible with Pyodide and other WASM-based
-environments, although this is not extensively tested. Currently, the
-installation and usage require some additional steps. You can find more
-information and a guide in
-`this external repository <https://github.com/f1datajunkie/jupyterlite-fastf1>`_
-and the discussion in `this issue <https://github.com/theOehrly/Fast-F1/issues/667>`_.
-
+    Note that FastF1 handles big chunks of data (~50-100mb per session). To improve
+    performance, data is per default cached locally. The default placement
+    of the cache is operating system specific. A custom location can be set if
+    desired. For more information see :class:`~fastf1.req.Cache`.
 
 
 Third-party packages
@@ -83,13 +121,6 @@ Supporting the Project
 
 If you want to support the continuous development of FastF1, you can sponsor me
 on GitHub or buy me a coffee.
-
-
-.. raw:: html
-
-  <iframe src="https://github.com/sponsors/theOehrly/button" title="Sponsor theOehrly" height="32" width="114" style="border: 0; border-radius: 6px; margin: 0 30px 0 0; padding: 0px;"></iframe>
-
-  <a href="https://www.buymeacoffee.com/fastf1" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="31"  width="134"></a>
 
 
 ==============
@@ -143,37 +174,13 @@ well, going back as far as 1950 (limited to data that is available through
 Contents
 ========
 
-
-.. toctree::
-   ← Back to Github <https://github.com/theOehrly/Fast-F1>
-
 .. toctree::
    :maxdepth: 1
    :caption: Contents:
 
-   examples/index
+   getting_started/index
    gen_modules/examples_gallery/index
-   fastf1
-   core
-   events
-   api
-   ergast
-   circuit_info
-   utils
-   plotting
-   livetiming
-   logging
-   legacy
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Information:
-
-   time_explanation
-   howto_accurate_calculations
-   troubleshooting
-   contributing/index
-   changelog/index
+   reference/index
 
 
 ========================================================
@@ -196,15 +203,6 @@ available through the main page of the GitHub repository (or click
 `here <https://github.com/theOehrly/Fast-F1/blob/master/CODE_OF_CONDUCT.md>`_),
 for information on how breaches are reported, how the
 Code of Conduct is enforced and what values FastF1 encourages.
-
-
-==================
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
 
 
 ======

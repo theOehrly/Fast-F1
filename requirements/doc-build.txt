@@ -1,8 +1,8 @@
 autodocsumm>=0.2.10  # support for sphinx v6
-furo
+pydata-sphinx-theme<0.17.0
 kaleido
 plotly
 seaborn>0.13.0
 sphinx-autodoc-typehints
 sphinx-gallery>=0.10.0
-sphinx>=8.0
+sphinx<9.0.0

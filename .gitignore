@@ -30,6 +30,9 @@ docs/_build/
 docs/gen_modules/
 **/sg_execution_times.rst
 
+# documentation generated files
+docs/reference/api/
+
 # all variations of cache directories
 *_cache/
 .DS_Store
