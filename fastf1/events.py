@@ -198,6 +198,7 @@ from typing import (
 )
 
 import dateutil.parser
+import numpy as np
 import pandas as pd
 
 import fastf1._api
@@ -746,7 +747,7 @@ def _get_schedule_from_ergast(year) -> "EventSchedule":
                 f"{rnd.get('date', '')}T{rnd.get('time', '')}",
             ).tz_localize(None)
         except dateutil.parser.ParserError:
-            date = pd.NaT
+            date = np.datetime64('NaT')
         data['EventDate'].append(date)
 
         if 'Sprint' in rnd:
@@ -874,7 +875,7 @@ class EventSchedule(BaseDataFrame):
     def is_testing(self):
         """Return `True` or `False`, depending on whether each event is a
         testing event."""
-        return pd.Series(self['EventFormat'] == 'testing')
+        return pd.Series(self['EventFormat'] == 'testing', dtype=bool)
 
     def get_event_by_round(self, round: int) -> "Event":
         """Get an :class:`Event` by its round number.

@@ -176,7 +176,7 @@ def test_base_series_constructor_direct_fallback(test_data):
     # unplanned from anywhere else, it should fall back to behaving as if
     # a pandas.Series object is created directly.
     series_a = _BaseSeriesConstructor(test_data)
-    series_b = pd.Series(test_data)
+    series_b = pd.Series(test_data, dtype=int)
 
     assert not isinstance(series_a, _BaseSeriesConstructor)
     assert isinstance(series_a, pd.Series)
