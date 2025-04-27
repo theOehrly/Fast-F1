@@ -351,6 +351,18 @@ def test_calculated_quali_results(source):
 
 
 @pytest.mark.f1telapi
+def test_calculated_race_results():
+    # This session is chosen as it has a combination of DNF drivers and lapped
+    # drivers who are behind by multiple laps
+    session = fastf1.get_session(2020, "Portugal", 'R')
+    session.load(telemetry=False, weather=False)
+
+    ergast_results = session.results.copy()
+    session._calculate_quali_like_session_results(force=True)
+    pd.testing.assert_frame_equal(ergast_results, session.results)
+
+
+@pytest.mark.f1telapi
 @pytest.mark.parametrize("source", ["session_status", "timing_data"])
 def test_quali_q3_cancelled(source):
     session = fastf1.get_session(2023, 4, 'Q')
