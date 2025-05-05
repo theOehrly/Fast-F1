@@ -269,3 +269,47 @@ def test_explicitly_missing_lap_times_calculated():
     l37 = session.laps.pick_drivers('63').pick_laps(37)
 
     assert not l37['LapTime'].isna().any()
+
+
+@pytest.mark.f1telapi
+@pytest.mark.parametrize(
+    "year, round_, session, drv, stints",
+    (
+        # 2025 Australian GP Race, only two drivers had issues (GH#715)
+        (2025, "Australia", "Race", "BOR",
+         [([1, 33], "INTERMEDIATE"),
+          ([34, 44], "MEDIUM"),
+          ([45, 46], "INTERMEDIATE")]),
+
+        (2025, "Australia", "Race", "BEA",
+         [([1, 39], "INTERMEDIATE"),
+          ([40, 44], "MEDIUM"),
+          ([45, 57], "INTERMEDIATE")]),
+
+        # 2025 Miami GP Sprint, all drivers have incorrect tyre data (GH#742)
+        (2025, "Miami", "Sprint", "VER",
+         [([1, 12], "INTERMEDIATE"),
+          ([13, 18], "SOFT")]),
+
+        (2025, "Miami", "Sprint", "RUS",
+         [([1, 13], "INTERMEDIATE"),
+          ([14, 18], "MEDIUM")]),
+
+        # special case: ANT went into the pits on lap 13 but couldn't change
+        # tyres because his box was blocked so he exited without changing and
+        # only changed in lap 14. There's some chaos in the data around this.
+        (2025, "Miami", "Sprint", "ANT",
+         [([1, 13], "INTERMEDIATE"),
+          ([14, 18], "MEDIUM")]),
+    )
+)
+def test_tyre_data_incorrect_stint_counter(year, round_, session, drv, stints):
+    session = fastf1.get_session(year, round_, session)
+    session.load(telemetry=False, weather=False)
+
+    for (start, end), compound in stints:
+        assert (
+                session.laps.pick_drivers(drv)
+                .pick_laps(range(start, end + 1))['Compound']
+                == compound
+        ).all()
