@@ -2145,7 +2145,7 @@ class Session:
             stint_mask = ((df['Time'] >= t_start)
                           & (df['Time'] <= t_end))
 
-            stint_error_mask = stint_mask & (df['Stint'] >= stint)
+            stint_error_mask = stint_mask & (df['Stint'] > stint)
 
             if stint_error_mask.any():
                 # Set the stint number for messages with incorrectly
