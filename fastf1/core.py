@@ -1089,10 +1089,10 @@ class Telemetry(BaseDataFrame):
                     break
 
                 # a relevant timestamp is NaT; pad accordingly and try again
-                if relevant_laps['LapStartTime'].iloc[-1] is pd.NaT:
+                if pd.isna(relevant_laps['LapStartTime'].iloc[-1]):
                     pad_before += 1
                     continue
-                if relevant_laps['Time'].iloc[0] is pd.NaT:
+                if pd.isna(relevant_laps['Time'].iloc[0]):
                     pad_after += 1
                     continue
                 break
@@ -1587,12 +1587,13 @@ class Session:
                             # for other sessions, we cannot make this
                             # assumption set to NaT here, it will be set to
                             # PitOutTime later if possible
-                            laps_start_time[restart_index] = pd.NaT
+                            laps_start_time[
+                                restart_index
+                            ] = np.timedelta64("NaT")
                     elif row['Status'] == 'Aborted':  # red flag
                         _is_aborted = True
 
             result['LapStartTime'] = laps_start_time
-
             # set missing lap start times to pit out time, where possible
             mask = (pd.isna(result['LapStartTime'])
                     & (~pd.isna(result['PitOutTime'])))
@@ -1601,7 +1602,7 @@ class Session:
             # remove first lap pitout time if it is before session_start_time
             mask = (result["PitOutTime"] < self.session_start_time) & \
                    (result["NumberOfLaps"] == 1)
-            result.loc[mask, 'PitOutTime'] = pd.NaT
+            result.loc[mask, "PitOutTime"] = np.timedelta64("NaT")
 
             # create total laps counter for each tyre used
             for npit in result['Stint'].unique():
@@ -1745,7 +1746,7 @@ class Session:
                 assumed_end_time = next_status['Time']
 
             else:
-                assumed_end_time = pd.NaT
+                assumed_end_time = None
                 if drv in (car_data := getattr(self, '_car_data', {})):
                     # when car_data is available, get the first time at which
                     # the car's speed becomes zero after the reference time and
@@ -1760,7 +1761,7 @@ class Session:
                     else:
                         assumed_end_time = next_zero_speed_time
 
-                if pd.isna(assumed_end_time):
+                if assumed_end_time is None:
                     # still no valid timestamp extracted
                     # fallback: use an assumed lap time of 150 seconds;
                     # this should cover all situations but most of the time
@@ -1899,7 +1900,7 @@ class Session:
                 quali_results = (quali_results
                                  .merge(laps, on='DriverNumber', how='left'))
             else:
-                quali_results[session_name] = pd.NaT
+                quali_results[session_name] = np.timedelta64("NaT")
 
         quali_results = quali_results \
             .sort_values(by=['Q3', 'Q2', 'Q1']) \
