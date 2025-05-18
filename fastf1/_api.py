@@ -767,7 +767,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
     # There is also a PitInTime if the car actually pits at the end of the
     # first lap, those need to be kept.
     if drv_data['PitInTime'][0] < drv_data['PitOutTime'][0]:
-        drv_data['PitInTime'][0] = pd.NaT
+        drv_data["PitInTime"][0] = pd.NaT
 
     if integrity_errors:
         _logger.warning(
