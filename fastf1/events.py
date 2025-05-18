@@ -567,13 +567,28 @@ def get_events_remaining(
     .. versionadded:: 2.3
     """
     if dt is None:
-        dt = datetime.datetime.now()
+        dt = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
 
     events = get_event_schedule(
         dt.year, include_testing=include_testing,
         force_ergast=force_ergast, backend=backend
     )
-    result = events.loc[events["EventDate"] >= dt]
+
+    if not include_testing:
+        result = events.loc[events["Session5DateUtc"] >= dt]
+        return result
+
+    indexes_to_drop = []
+    for idx, event in events.iterrows():
+        if not event.is_testing():
+            session_date = event["Session5DateUtc"]
+        else:
+            session_date = event["Session3DateUtc"]
+
+        if session_date <= dt:
+            indexes_to_drop.append(idx)
+
+    result = events.drop(index=indexes_to_drop)
     return result
 
 
