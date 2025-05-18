@@ -579,12 +579,14 @@ def get_events_remaining(
         return result
 
     indexes_to_drop = []
-    for i, e in events.iterrows():
-        is_testing = e.is_testing()
-        s_dt = e["Session5DateUtc"] if not is_testing else e["Session3DateUtc"]
+    for idx, event in events.iterrows():
+        if not event.is_testing():
+            session_date = event["Session5DateUtc"]
+        else:
+            session_date = event["Session3DateUtc"]
 
-        if s_dt <= dt:
-            indexes_to_drop.append(i)
+        if session_date <= dt:
+            indexes_to_drop.append(idx)
 
     result = events.drop(index=indexes_to_drop)
     return result
