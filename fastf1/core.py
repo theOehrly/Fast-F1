@@ -1487,6 +1487,11 @@ class Session:
         useful = app_data[['Driver', 'Time', 'Compound', 'StartLaps', 'New',
                            'Stint']]
 
+        # remove first lap pitout time if it is before session_start_time
+        mask = (data["PitOutTime"] < self.session_start_time) & \
+               (data["NumberOfLaps"] == 1)
+        data.loc[mask, 'PitOutTime'] = np.timedelta64("NaT")
+
         drivers = self.drivers
         if not drivers:
             # no driver list, generate from lap data
@@ -1504,7 +1509,8 @@ class Session:
             if d2.shape[0] != len(d2['Stint'].unique()):
                 # tyre info includes correction messages that need to be
                 # applied before continuing
-                d2 = self.__fix_tyre_info(d2)
+                pit_in_times = list(d1['PitInTime'].dropna().unique())
+                d2 = self.__fix_tyre_info(d2, pit_in_times)
 
             is_generated = False
             if not len(d1):
@@ -1598,11 +1604,6 @@ class Session:
             mask = (pd.isna(result['LapStartTime'])
                     & (~pd.isna(result['PitOutTime'])))
             result.loc[mask, 'LapStartTime'] = result.loc[mask, 'PitOutTime']
-
-            # remove first lap pitout time if it is before session_start_time
-            mask = (result["PitOutTime"] < self.session_start_time) & \
-                   (result["NumberOfLaps"] == 1)
-            result.loc[mask, "PitOutTime"] = np.timedelta64("NaT")
 
             # create total laps counter for each tyre used
             for npit in result['Stint'].unique():
@@ -2119,7 +2120,60 @@ class Session:
             self._session_start_time = None
         self._session_status = pd.DataFrame(session_status)
 
-    def __fix_tyre_info(self, df):
+    def __fix_tyre_info(self, df: pd.DataFrame, pit_in_times: list):
+        # ### Part 1: detect and fix incorrectly incremented stint counter
+        # ref: GH#715, GH#742
+
+        # Pad pit in times with zero and a sufficiently far away value
+        # such that two subsequent values in the list always bracket one
+        # "stint". (The source data considers each drive through the pit as the
+        # beginning of a new stint, independent of tyres being changed)
+        pit_in_times = [
+            pd.Timedelta(0), *pit_in_times, pd.Timedelta(days=1)
+        ]
+
+        stint = 0  # stints are counted starting at zero in the source data
+        fixed_stint_errors = False
+        for i in range(len(pit_in_times) - 1):
+            t_start = pit_in_times[i]
+            t_end = pit_in_times[i + 1]
+
+            # Check if for any tyre data message in the current stint, the
+            # stint counter is higher than the current stint. This would be
+            # impossible as the stint counter can only increment once between
+            # two subsequent entries into the pit lane.
+            stint_mask = ((df['Time'] >= t_start)
+                          & (df['Time'] <= t_end))
+
+            stint_error_mask = stint_mask & (df['Stint'] > stint)
+
+            if stint_error_mask.any():
+                # Set the stint number for messages with incorrectly
+                # incremented stint counter to the current stint, thereby
+                # keeping all messages. This seems to produce correct results,
+                # although some clearly duplicated messages exist and it might
+                # be correct to drop a part of the messages?
+                df.loc[stint_error_mask, 'Stint'] = stint
+
+                fixed_stint_errors = True
+
+            if (df.loc[stint_mask, 'Stint'] == stint).any():
+                # increase stint counter only if any message actually concerned
+                # the expected current stint
+                stint += 1
+
+        if fixed_stint_errors:
+            # be overly cautious when trying to determine driver number
+            try:
+                drv = df['Driver'].dropna().unique()[0]
+            except IndexError:
+                drv = 'unknown'
+
+            _logger.warning(
+                f"Fixed incorrect tyre stint information for driver '{drv}'"
+            )
+
+        # ### Part 2: apply delayed tyre data corrections
         # Sometimes later corrections of tyre info are sent through the api.
         # These updates only set values that need to be changed and all other
         # values are none-like. Therefore, if correction updates exist, for
@@ -2127,7 +2181,7 @@ class Session:
         # iteratively updated with non-NA values from all updates for this
         # stint (in the order received).
         corrected = pd.DataFrame(
-            {'Stint': df['Stint'].unique()}, columns=df.columns
+            index=df['Stint'].unique(), columns=df.columns
         )
 
         for i, stint in enumerate(df['Stint'].unique()):
