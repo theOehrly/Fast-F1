@@ -27,8 +27,7 @@ dependencies = [
   "signalrcore",
   "rapidfuzz",
   "timple>=0.1.6",
-  "websockets>=10.3,<14",
-
+  "websockets>=10.3"
 ]
 
 [project.urls]
