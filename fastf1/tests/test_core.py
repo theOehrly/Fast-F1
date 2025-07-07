@@ -45,6 +45,30 @@ def test_lap_data_loading_position_calculation():
 
 
 @pytest.mark.f1telapi
+def test_lap_data_loading_position_calculation_first_lap_retired():
+    # GH#764 COL retired to the pits, LAW crashed on first lap; lap pos
+    # calculation must ignore them to get correct position at end of lap
+    session = fastf1.get_session(2025, 12, 'R')
+    session.load(telemetry=False, weather=False)
+
+    first_lap_pos = session.laps \
+        .pick_laps([1]) \
+        .loc[:, ("Driver", "Position")] \
+        .sort_values(by="Position") \
+        .reset_index(drop=True)
+
+    ref = {'Driver': ['VER', 'PIA', 'NOR', 'HAM', 'GAS', 'ALO', 'SAI', 'ANT',
+                      'ALB', 'TSU', 'HUL', 'STR', 'OCO', 'RUS', 'LEC', 'HAD',
+                      'BOR', 'BEA', 'LAW', 'COL'],
+           'Position': [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0,
+                        12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, float('nan'),
+                        float('nan')]}
+
+    ref_pos = pd.DataFrame(ref)
+    pd.testing.assert_frame_equal(first_lap_pos, ref_pos)
+
+
+@pytest.mark.f1telapi
 def test_first_lap_pitout_times():
     sprint_session = fastf1.get_session(2023, 4, "Sprint")
     sprint_session.load(telemetry=False, weather=False, messages=False)

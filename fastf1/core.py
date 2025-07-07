@@ -1633,25 +1633,27 @@ class Session:
         laps['Driver'] = laps['DriverNumber'].map(d_map)
 
         # add Position based on lap timing
-        laps['Position'] = np.nan  # create empty column
-        if self.name in self._RACE_LIKE_SESSIONS:
-            for lap_n in laps['LapNumber'].unique():
-                # get each drivers lap for the current lap number, sorted by
-                # the time when each lap was set
-                laps_eq_n = laps.loc[
-                    laps['LapNumber'] == lap_n, ('Time', 'Position')
-                ].reset_index(drop=True).sort_values(by='Time')
-
-                # number positions and restore previous order by index
-                laps_eq_n['Position'] = range(1, len(laps_eq_n) + 1)
-                laps.loc[laps['LapNumber'] == lap_n, 'Position'] \
-                    = laps_eq_n.sort_index()['Position'].to_list()
-
-        # assign NaN to drivers who crashed on lap 1
         lap_counts = laps['Driver'].value_counts()
         drivers_with_one_lap = lap_counts[lap_counts == 1].index
         dnf_and_generated = (laps['FastF1Generated'] &
                              laps['Driver'].isin(drivers_with_one_lap))
+
+        laps['Position'] = np.nan  # create empty column
+        if self.name in self._RACE_LIKE_SESSIONS:
+            for lap_n in laps['LapNumber'].unique():
+                lap_mask = (laps['LapNumber'] == lap_n) & ~dnf_and_generated
+                # get each drivers lap for the current lap number, sorted by
+                # the time when each lap was set
+                laps_eq_n = laps.loc[
+                    lap_mask, ('Time', 'Position')
+                ].reset_index(drop=True).sort_values(by='Time')
+
+                # number positions and restore previous order by index
+                laps_eq_n['Position'] = range(1, len(laps_eq_n) + 1)
+                laps.loc[lap_mask, 'Position'] \
+                    = laps_eq_n.sort_index()['Position'].to_list()
+
+        # assign NaN position to drivers who crashed on lap 1
         laps.loc[dnf_and_generated, 'Position'] = np.nan
 
         self._add_track_status_to_laps(laps)
