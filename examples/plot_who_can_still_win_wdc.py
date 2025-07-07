@@ -14,12 +14,12 @@ from fastf1.ergast import Ergast
 
 
 ##############################################################################
-# For this example, we are looking at the 2023 season.
+# For this example, we are looking at the 2025 season.
 # We want to know who can theoretically still win the drivers' championship
-# after the first 15 races.
+# after the first 12 races.
 
-SEASON = 2023
-ROUND = 15
+SEASON = 2025
+ROUND = 12
 
 
 ##############################################################################
@@ -36,8 +36,8 @@ def get_drivers_standings():
 # driver wins everything left of the season.
 # https://en.wikipedia.org/wiki/List_of_Formula_One_World_Championship_points_scoring_systems
 def calculate_max_points_for_remaining_season():
-    POINTS_FOR_SPRINT = 8 + 25 + 1  # Winning the sprint, race and fastest lap
-    POINTS_FOR_CONVENTIONAL = 25 + 1  # Winning the race and fastest lap
+    POINTS_FOR_SPRINT = 8 + 25 # Winning the sprint and race
+    POINTS_FOR_CONVENTIONAL = 25 # Winning the race
 
     events = fastf1.events.get_event_schedule(SEASON, backend='ergast')
     events = events[events['RoundNumber'] > ROUND]
