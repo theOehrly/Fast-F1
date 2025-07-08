@@ -1,5 +1,3 @@
-import asyncio
-import concurrent.futures
 import json
 import logging
 import time
@@ -7,9 +5,11 @@ from collections.abc import Iterable
 from typing import Optional
 
 import requests
+from signalrcore.hub_connection_builder import HubConnectionBuilder
+from signalrcore.messages.completion_message import CompletionMessage
 
 import fastf1
-from fastf1.signalr_aio import Connection
+from fastf1.internals.f1auth import get_auth_token
 
 
 def messages_from_raw(r: Iterable):
@@ -45,6 +45,7 @@ def messages_from_raw(r: Iterable):
 
 
 class SignalRClient:
+    # legacy naming, this is now a SignalR Core client
     """A client for receiving and saving F1 timing data which is streamed
     live over the SignalR protocol.
 
@@ -71,28 +72,43 @@ class SignalRClient:
         logger: By default, errors are logged to the console. If you wish to
             customize logging, you can pass an instance of
             :class:`logging.Logger` (see: :mod:`logging`).
+        no_auth: If set to true, the client will attempt to connect without
+            authentication. This may only work for some sessions or may only
+            return empty or partial data.
     """
-    _connection_url = 'https://livetiming.formula1.com/signalr'
+    _connection_url = 'wss://livetiming.formula1.com/signalrcore'
+    _negotiate_url = 'https://livetiming.formula1.com/signalrcore/negotiate'
 
-    def __init__(self, filename: str, filemode: str = 'w', debug: bool = False,
-                 timeout: int = 60, logger: Optional = None):
 
-        self.headers = {'User-agent': 'BestHTTP',
-                        'Accept-Encoding': 'gzip, identity',
-                        'Connection': 'keep-alive, Upgrade'}
+    def __init__(self,
+                 filename: str,
+                 filemode: str = 'w',
+                 debug: bool = False,
+                 timeout: int = 60,
+                 logger: Optional = None,
+                 no_auth: bool = False):
 
-        self.topics = ["Heartbeat", "CarData.z", "Position.z",
-                       "ExtrapolatedClock", "TopThree", "RcmSeries",
-                       "TimingStats", "TimingAppData",
-                       "WeatherData", "TrackStatus", "DriverList",
-                       "RaceControlMessages", "SessionInfo",
-                       "SessionData", "LapCount", "TimingData"]
+        if debug:
+            raise ValueError("Debug mode is no longer supported.")
 
-        self.debug = debug
+        self.headers = {}
+
+        self.topics = ["Heartbeat","AudioStreams","DriverList",
+                       "ExtrapolatedClock","RaceControlMessages",
+                       "SessionInfo","SessionStatus","TeamRadio",
+                       "TimingAppData","TimingStats","TrackStatus",
+                       "WeatherData","Position.z","CarData.z",
+                       "ContentStreams","SessionData","TimingData",
+                       "TopThree", "RcmSeries", "LapCount"]
+
         self.filename = filename
         self.filemode = filemode
         self.timeout = timeout
+
+        self._no_auth = no_auth
+
         self._connection = None
+        self._is_connected = False
 
         if not logger:
             logging.basicConfig(
@@ -106,136 +122,107 @@ class SignalRClient:
         self._output_file = None
         self._t_last_message = None
 
-    def _to_file(self, msg):
-        self._output_file.write(msg + '\n')
-        self._output_file.flush()
-
-    async def _on_do_nothing(self, msg):
-        # just do nothing with the message; intended for debug mode where some
-        # callback method still needs to be provided
-        pass
-
-    async def _on_message(self, msg):
+    def _on_message(self, msg: list | CompletionMessage):
         self._t_last_message = time.time()
-        loop = asyncio.get_running_loop()
-        try:
-            with concurrent.futures.ThreadPoolExecutor() as pool:
-                await loop.run_in_executor(
-                    pool, self._to_file, str(msg)
-                )
-        except Exception:
-            self.logger.exception("Exception while writing message to file")
 
-    async def _on_debug(self, **data):
-        if 'M' in data and len(data['M']) > 0:
-            self._t_last_message = time.time()
+        if isinstance(msg, CompletionMessage):
+            data = []
+            for key in msg.result.keys():
+                data.append([key, json.dumps(msg.result[key]), ''])
+            formatted = '\n'.join(map(str, data))
 
-        loop = asyncio.get_running_loop()
-        try:
-            with concurrent.futures.ThreadPoolExecutor() as pool:
-                await loop.run_in_executor(
-                    pool, self._to_file, str(data)
-                )
-        except Exception:
-            self.logger.exception("Exception while writing message to file")
+        elif isinstance(msg, list):
+            formatted = str(msg)
 
-    async def _run(self):
-        self._output_file = open(self.filename, self.filemode)
-        # Create connection
-        session = requests.Session()
-        session.headers = self.headers
-        self._connection = Connection(self._connection_url, session=session)
-
-        # Register hub
-        hub = self._connection.register_hub('Streaming')
-
-        if self.debug:
-            # Assign error handler
-            self._connection.error += self._on_debug
-            # Assign debug message handler to save raw responses
-            self._connection.received += self._on_debug
-            hub.client.on('feed', self._on_do_nothing)
-            # need to connect an async method
         else:
-            # Assign hub message handler
-            hub.client.on('feed', self._on_message)
+            self.logger.error(f"Unknown message type: {type(msg)}")
+            return
 
-        hub.server.invoke("Subscribe", self.topics)
+        try:
+            self._output_file.write(formatted + '\n')
+            self._output_file.flush()
+        except Exception:
+            self.logger.exception("Exception while writing message to file")
 
-        # Start the client
-        loop = asyncio.get_event_loop()
-        with concurrent.futures.ThreadPoolExecutor() as pool:
-            await loop.run_in_executor(pool, self._connection.start)
+    def _on_connect(self):
+        self._is_connected = True
+        self.logger.info("Connection established")
 
-    async def _supervise(self):
+    def _on_close(self):
+        self._is_connected = False
+        self.logger.info("Connection closed")
+
+    def _run(self):
+        self._output_file = open(self.filename, self.filemode)
+
+        # Pre-negotiate to the get a valid AWSALBCORS header token
+        r = requests.options(self._negotiate_url, headers=self.headers)
+        self.headers.update(
+            {"Cookie": f"AWSALBCORS={r.cookies['AWSALBCORS']}"}
+        )
+
+        # Configure and create connection
+        options = {
+            "verify_ssl": True,
+            "access_token_factory": None if self._no_auth else get_auth_token,
+            "headers": self.headers
+        }
+
+        self._connection = HubConnectionBuilder() \
+            .with_url(self._connection_url, options=options) \
+            .configure_logging(logging.INFO) \
+            .build()
+            # TODO: enable auto reconnect?
+
+        self._connection.on_open(self._on_connect)
+        self._connection.on_close(self._on_close)
+        self._connection.on('feed', self._on_message)
+
+        self._connection.start()
+
+        # wait for connection to be established
+        while not self._is_connected:
+            time.sleep(0.1)
+
+        self._connection.send(
+            "Subscribe", [self.topics], on_invocation=self._on_message
+        )
+
+    def _supervise(self):
+        # check if data is still being received and exit if not
         self._t_last_message = time.time()
         while True:
             if (self.timeout != 0
                     and time.time() - self._t_last_message > self.timeout):
+
                 self.logger.warning(f"Timeout - received no data for more "
                                     f"than {self.timeout} seconds!")
 
-                self._connection.close()
-                while self._connection.started:
-                    await asyncio.sleep(0.1)
+                self._exit()
                 return
 
-            await asyncio.sleep(1)
+            time.sleep(1)
 
-    async def _async_start(self):
-        self.logger.info(f"Starting FastF1 live timing client "
-                         f"[v{fastf1.__version__}]")
-        await asyncio.gather(asyncio.ensure_future(self._supervise()),
-                             asyncio.ensure_future(self._run()))
+    def _exit(self):
+        self._connection.stop()
         self._output_file.close()
-        self.logger.warning("Exiting...")
 
     def start(self):
         """Connect to the data stream and start writing the data to a file."""
+        self.logger.info(f"Starting FastF1 live timing client "
+                         f"[v{fastf1.__version__}]")
+        self._run()
         try:
-            # try to get an already running loop (e.g. in newer IPython)
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            # there is no running loop yet
-            self._start_without_existing_loop()
-            return
-
-        try:
-            __IPYTHON__  # noqa
-            is_ipython = True
-        except NameError:
-            is_ipython = False
-
-        if loop and is_ipython:
-            raise RuntimeError(
-                "Running in an asynchronous IPython session. "
-                "Please use `await SignalRClient().async_start()`"
-            )
-
-        else:
-            raise RuntimeError(
-                "Cannot start because an asynchronous event loop already "
-                "exists. You can try to use the "
-                "`SignalRClient().async_start()` coroutine."
-            )
+            self._supervise()
+        except KeyboardInterrupt:
+            self.logger.info("Exiting...")
+            self._exit()
 
     async def async_start(self):
         """
-        Connect to the data stream and start writing the data to a file
-        when running inside an existing event loop.
-
-        In most cases, you want to use :func:`start` instead.
+        :meta private:
         """
-        loop = asyncio.get_running_loop()
-        try:
-            task = loop.create_task(self._async_start())
-            while not task.done():
-                await asyncio.sleep(1)
-        except asyncio.CancelledError:
-            self.logger.warning("Async execution cancelled - exiting...")
-
-    def _start_without_existing_loop(self):
-        try:
-            asyncio.run(self._async_start())
-        except KeyboardInterrupt:
-            self.logger.warning("Keyboard interrupt - exiting...")
+        raise NotImplementedError(
+            "This method is no longer provided because the SignalR client no "
+            "longer uses asyncio! Please use `.start` instead."
+        )
