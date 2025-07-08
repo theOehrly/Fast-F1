@@ -1,0 +1,86 @@
+What's new in v3.6.0
+--------------------
+
+(released 08/07/2025)
+
+
+New Features
+^^^^^^^^^^^^
+
+- The number of laps that each driver completed in a race or sprint session is
+  now available in :class:`~fastf1.core.SessionResults`, accessible through
+  :attr:`~fastf1.core.Session.results`, in a new ``Laps`` column. (#766)
+
+- :func:`fastf1.get_events_remaining` now correctly considers the current time
+  of day and the starting time of the last session of an event to determine
+  the remaining events. (#750) (by @VLADOZXD)
+
+- Preliminary Race and Sprint results are now calculated from timing data when
+  no official results data is available from Jolpica-F1.
+  (#737) (by @Casper-Guo)
+
+
+Bug Fixes
+^^^^^^^^^
+
+- Fixed a bug where incorrect positions were calculated for all drivers at the
+  end of the first lap in the 2025 British GP (#765)
+
+- Added additional logic to detect and correct incorrect tyre information in
+  the source data of the 2025 Australian GP Race and the 2025 Miami GP
+  Sprint (#746)
+
+- The API parser will now calculate missing lap times from existing sector
+  times if possible when the source data explicitly indicates a missing lap
+  time by providing an empty lap time object. This fixes data errors caused by
+  transponder issues with RUS car at the 2025 Bahrain GP. (#740)
+
+- The team name matching used with the plotting functionality now additionally
+  considers the team short names to fix problems with the short "RB F1 Team"
+  name. (#726) (by @Casper-Guo)
+
+
+Removals
+^^^^^^^^
+
+According to the deprecation timeline, the following functionality has been
+removed after it was marked as deprecated in v3.4.0.
+
+- The following module level properties of :mod:`fastf1.plotting` have been
+  removed:
+  ``COMPOUND_COLORS``
+  ``DRIVER_COLORS``
+  ``DRIVER_TRANSLATE``
+  ``TEAM_COLORS``
+  ``TEAM_TRANSLATE``
+  ``COLOR_PALETTE``
+
+- The following functions in :mod:`fastf1.plotting` have been removed:
+  ``driver_color()``
+  ``team_color()``
+  ``lapnumber_axis()``
+
+- The argument ``misc_mpl_mods`` of function :func:`~fastf1.plotting.setup_mpl`
+  has been removed without replacement for its functionality.
+
+- The argument ``color_scheme`` of function :func:`~fastf1.plotting.setup_mpl`
+  now defaults to ``None``.
+
+
+Maintenance
+^^^^^^^^^^^
+
+- Addressed upcoming changes in pandas and fixed a related deprecation warning
+  caused by implicit type coercion. (by @Casper-Guo) (#727)
+
+
+Miscellaneous
+^^^^^^^^^^^^^
+
+- Updated the "Who can still win the drivers WDC" example to use the 2025
+  season. (#763) (by @faustocalvinio)
+
+- Added a new "Season Summary Visualization" example to the gallery. (#661)
+  (by @eatwhatyoukill and @Casper-Guo)
+
+- Documentation improvements (by @Casper-Guo)
