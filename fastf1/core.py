@@ -2526,7 +2526,8 @@ class Session:
                     'grid': 'GridPosition',
                     'status': 'Status',
                     'points': 'Points',
-                    'totalRaceTime': 'Time'
+                    'totalRaceTime': 'Time',
+                    'laps': 'Laps'
                 })
 
             if session_name in self._QUALI_LIKE_SESSIONS:
@@ -3821,6 +3822,10 @@ class SessionResults(BaseDataFrame):
           The number of points received by each driver for their finishing
           result.
 
+        - ``Laps`` | :class:`float` |
+          The number of laps driven by each driver (values only given if
+          session is 'Race' or 'Sprint')
+
     By default, the session results are indexed by driver number and sorted by
     finishing position.
 
@@ -3859,7 +3864,8 @@ class SessionResults(BaseDataFrame):
         'Q3': 'timedelta64[ns]',
         'Time': 'timedelta64[ns]',
         'Status': str,
-        'Points': 'float64'
+        'Points': 'float64',
+        'Laps': 'float64'
     }
 
     @property

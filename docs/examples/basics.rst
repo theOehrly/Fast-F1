@@ -225,29 +225,29 @@ functionality to speed up data loading and prevent excessive API requests.
   >>> session = fastf1.get_session(2021, 'French Grand Prix', 'Q')
   >>> session.load()
   >>> session.results
-     DriverNumber BroadcastName Abbreviation  ... Time Status Points
-  33           33  M VERSTAPPEN          VER  ...  NaT           NaN
-  44           44    L HAMILTON          HAM  ...  NaT           NaN
-  77           77      V BOTTAS          BOT  ...  NaT           NaN
-  11           11       S PEREZ          PER  ...  NaT           NaN
-  55           55       C SAINZ          SAI  ...  NaT           NaN
-  10           10       P GASLY          GAS  ...  NaT           NaN
-  16           16     C LECLERC          LEC  ...  NaT           NaN
-  4             4      L NORRIS          NOR  ...  NaT           NaN
-  14           14      F ALONSO          ALO  ...  NaT           NaN
-  3             3   D RICCIARDO          RIC  ...  NaT           NaN
-  31           31        E OCON          OCO  ...  NaT           NaN
-  5             5      S VETTEL          VET  ...  NaT           NaN
-  99           99  A GIOVINAZZI          GIO  ...  NaT           NaN
-  63           63     G RUSSELL          RUS  ...  NaT           NaN
-  47           47  M SCHUMACHER          MSC  ...  NaT           NaN
-  6             6      N LATIFI          LAT  ...  NaT           NaN
-  7             7   K RAIKKONEN          RAI  ...  NaT           NaN
-  9             9     N MAZEPIN          MAZ  ...  NaT           NaN
-  18           18      L STROLL          STR  ...  NaT           NaN
-  22           22     Y TSUNODA          TSU  ...  NaT           NaN
+     DriverNumber BroadcastName Abbreviation  ... Status Points Laps
+  33           33  M VERSTAPPEN          VER  ...           NaN  NaN
+  44           44    L HAMILTON          HAM  ...           NaN  NaN
+  77           77      V BOTTAS          BOT  ...           NaN  NaN
+  11           11       S PEREZ          PER  ...           NaN  NaN
+  55           55       C SAINZ          SAI  ...           NaN  NaN
+  10           10       P GASLY          GAS  ...           NaN  NaN
+  16           16     C LECLERC          LEC  ...           NaN  NaN
+  4             4      L NORRIS          NOR  ...           NaN  NaN
+  14           14      F ALONSO          ALO  ...           NaN  NaN
+  3             3   D RICCIARDO          RIC  ...           NaN  NaN
+  31           31        E OCON          OCO  ...           NaN  NaN
+  5             5      S VETTEL          VET  ...           NaN  NaN
+  99           99  A GIOVINAZZI          GIO  ...           NaN  NaN
+  63           63     G RUSSELL          RUS  ...           NaN  NaN
+  47           47  M SCHUMACHER          MSC  ...           NaN  NaN
+  6             6      N LATIFI          LAT  ...           NaN  NaN
+  7             7   K RAIKKONEN          RAI  ...           NaN  NaN
+  9             9     N MAZEPIN          MAZ  ...           NaN  NaN
+  18           18      L STROLL          STR  ...           NaN  NaN
+  22           22     Y TSUNODA          TSU  ...           NaN  NaN
   <BLANKLINE>
-  [20 rows x 21 columns]
+  [20 rows x 22 columns]
 
 The results object (:class:`fastf1.core.SessionResults`) is a subclass of a
 :class:`pandas.DataFrame`. Therefore, we can take a look at what data columns
@@ -257,7 +257,7 @@ there are:
   Index(['DriverNumber', 'BroadcastName', 'Abbreviation', 'DriverId', 'TeamName',
          'TeamColor', 'TeamId', 'FirstName', 'LastName', 'FullName',
          'HeadshotUrl', 'CountryCode', 'Position', 'ClassifiedPosition',
-         'GridPosition', 'Q1', 'Q2', 'Q3', 'Time', 'Status', 'Points'],
+         'GridPosition', 'Q1', 'Q2', 'Q3', 'Time', 'Status', 'Points', 'Laps'],
         dtype='object')
 
 As an example, let's display the top ten drivers and their
