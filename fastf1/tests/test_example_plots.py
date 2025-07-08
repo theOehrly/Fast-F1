@@ -6,7 +6,7 @@ import fastf1.plotting
 import fastf1.utils
 
 
-fastf1.plotting.setup_mpl(misc_mpl_mods=False, color_scheme='fastf1')
+fastf1.plotting.setup_mpl(color_scheme='fastf1')
 
 # generate baseline with
 # >pytest --mpl-generate-path=fastf1/tests/mpl-baseline
