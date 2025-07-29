@@ -29,6 +29,29 @@ def test_base_class_view_laps():
     bcv = laps.base_class_view
     assert isinstance(bcv, pandas.DataFrame)
 
+def test_merging_with_metadata_propagation():
+    class Example:
+        pass
+    e = Example()
+    laps1 = fastf1.core.Laps({'example_1': (1, 2, 3, 4, 5, 6)}, session=e)
+    laps2 = fastf1.core.Laps({'example_2': (1, 2, 3, 4, 5, 6)}, session=e)
+    merged = laps1.merge(laps2, left_index=True, right_index=True)
+    assert hasattr(merged, 'session')
+    assert isinstance(merged.session, Example)
+    assert merged.session is e
+    assert all(col in merged.columns for col in ('example_1', 'example_2'))
+
+def test_joining_with_metadata_propagation():
+    class Example:
+        pass
+    e = Example()
+    laps1 = fastf1.core.Laps({'example_1': (1, 2, 3, 4, 5, 6)}, session=e)
+    laps2 = fastf1.core.Laps({'example_2': (1, 2, 3, 4, 5, 6)}, session=e)
+    merged = laps1.join(laps2)
+    assert hasattr(merged, 'session')
+    assert isinstance(merged.session, Example)
+    assert merged.session is e
+    assert all(col in merged.columns for col in ('example_1', 'example_2'))
 
 @pytest.mark.f1telapi
 def test_dtypes_from_api(reference_laps_data):
