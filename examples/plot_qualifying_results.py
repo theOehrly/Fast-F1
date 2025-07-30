@@ -15,8 +15,7 @@ from fastf1.core import Laps
 
 
 # Enable Matplotlib patches for plotting timedelta values
-fastf1.plotting.setup_mpl(mpl_timedelta_support=True, misc_mpl_mods=False,
-                          color_scheme=None)
+fastf1.plotting.setup_mpl(mpl_timedelta_support=True, color_scheme=None)
 
 
 session = fastf1.get_session(2021, 'Spanish Grand Prix', 'Q')
