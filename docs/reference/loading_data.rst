@@ -20,3 +20,4 @@ session. This can be done with one of the following functions.
     get_event
     get_events_remaining
     get_event_schedule
+    get_testing_event
