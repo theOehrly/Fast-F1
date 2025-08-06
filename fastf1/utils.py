@@ -48,7 +48,7 @@ def delta_time(
         from fastf1 import utils
         from matplotlib import pyplot as plt
 
-        plotting.setup_mpl(misc_mpl_mods=False, color_scheme='fastf1')
+        plotting.setup_mpl(color_scheme='fastf1')
 
         session = ff1.get_session(2021, 'Emilia Romagna', 'Q')
         session.load()
