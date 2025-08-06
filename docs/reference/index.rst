@@ -20,7 +20,8 @@ The following subpackages are public.
     :maxdepth: 2
 
     loading_data
-    general_functions
     events
     session
     timing_data
+    exceptions
+    advanced_features
