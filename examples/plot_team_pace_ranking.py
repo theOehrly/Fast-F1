@@ -11,8 +11,7 @@ import fastf1.plotting
 
 
 # Load FastF1's dark color scheme
-fastf1.plotting.setup_mpl(mpl_timedelta_support=False, misc_mpl_mods=False,
-                          color_scheme='fastf1')
+fastf1.plotting.setup_mpl(mpl_timedelta_support=False, color_scheme='fastf1')
 
 
 ###############################################################################
