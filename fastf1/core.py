@@ -2915,6 +2915,34 @@ class Laps(BaseDataFrame):
             instance of :class:`Telemetry`"""
         return self.get_telemetry()
 
+    def join(self, *args, **kwargs):
+        """Wraps :meth:`pandas.DataFrame.join` and adds metadata propagation.
+
+        When calling ``self.join`` metadata will be propagated from self to the
+        joined dataframe.
+        """
+        meta = dict()
+        for var in self._metadata:
+            meta[var] = getattr(self, var)
+        ret = super().join(*args, **kwargs)
+        for var, val in meta.items():
+            setattr(ret, var, val)
+        return ret
+
+    def merge(self, *args, **kwargs):
+        """Wraps :meth:`pandas.DataFrame.merge` and adds metadata propagation.
+
+        When calling ``self.merge`` metadata will be propagated from self to
+        the merged dataframe.
+        """
+        meta = dict()
+        for var in self._metadata:
+            meta[var] = getattr(self, var)
+        ret = super().merge(*args, **kwargs)
+        for var, val in meta.items():
+            setattr(ret, var, val)
+        return ret
+
     def get_telemetry(self,
                       *,
                       frequency: Union[int, Literal['original'], None] = None
