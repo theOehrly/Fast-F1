@@ -14,6 +14,7 @@ session. This can be done with one of the following functions.
 
 .. autosummary::
     :toctree: api_autogen/
+    :template: function.rst
 
     get_session
     get_testing_session

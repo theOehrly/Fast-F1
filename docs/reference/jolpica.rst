@@ -311,8 +311,8 @@ It is also possible to manually specify an offset into the dataset:
   2    1958  https://en.wikipedia.org/wiki/1958_Formula_One...
 
 
-API Reference
--------------
+API Summary
+-----------
 
 Main Interface
 ..............

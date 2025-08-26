@@ -153,8 +153,8 @@ argument.
       -h, --help  show this help message and exit
 
 
-API Reference
--------------
+API Summary
+-----------
 
 Live Timing Client
 ^^^^^^^^^^^^^^^^^^
