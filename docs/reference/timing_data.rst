@@ -8,16 +8,12 @@ through the :attr:`Session.laps` attribute. To load a session,
 see :ref:`loading-data`.
 
 .. autosummary::
+    :toctree: api_autogen/
+    :template: class_summary_noinherited.rst
 
     Laps
     Lap
 
-.. toctree::
-    :hidden:
-    :maxdepth: 1
-
-    api/Laps
-    api/Lap
 
 
 Lap Timing Data

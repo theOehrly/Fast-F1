@@ -282,9 +282,11 @@ Introducing
 2. If possible, issue a warning when the deprecated
    API is used, using the python `warnings` module. The correct warning levels
    are:
+
     - `DeprecationWarning` for the first minor release where the deprecation is
       announced. These warnings are mostly not shown to end users by default
       (depending on how a function is called) but are shown to developers.
+
     - `FutureWarning` starting from the second minor release where the
       deprecation is announced. These warnings are always shown to end users
       and developers.

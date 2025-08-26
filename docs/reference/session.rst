@@ -9,6 +9,5 @@ race, qualifying, sprint or other Formula 1 session and all data related to
 such a session can be accessed through it.
 
 .. autoclass:: Session
-    :members:
-    :undoc-members:
-    :autosummary:
+   :members:
+   :autosummary:

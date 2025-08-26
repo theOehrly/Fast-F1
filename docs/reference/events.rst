@@ -1,3 +1,5 @@
+.. _event-schedule:
+
 Event Schedule
 ==============
 
@@ -7,31 +9,23 @@ Events and the Event Schedule are represented using the following objects.
 To access schedule data, see :ref:`loading-data`.
 
 .. autosummary::
+    :toctree: api_autogen/
+    :template: class_summary_noinherited.rst
 
     EventSchedule
     Event
 
-.. toctree::
-    :hidden:
-    :maxdepth: 1
 
-    api/Event
-    api/EventSchedule
+The :class:`EventSchedule` provides information about past and upcoming
+Formula 1 events.
 
+An :class:`Event` can be a race weekend or a testing event. Each event
+consists of multiple :class:`~fastf1.core.Session`.
 
-..
-    The :class:`EventSchedule` provides information about past and upcoming
-    Formula 1 events.
-
-..
-    An :class:`Event` can be a race weekend or a testing event. Each event
-    consists of multiple :class:`~fastf1.core.Session`.
-
-..
-    The event schedule objects are built on top of pandas'
-    :class:`pandas.DataFrame` (event schedule) and :class:`pandas.Series` (event).
-    Therefore, the usual methods of these pandas objects can be used in addition
-    to the special methods described here.
+The event schedule objects are built on top of pandas'
+:class:`pandas.DataFrame` (event schedule) and :class:`pandas.Series` (event).
+Therefore, the usual methods of these pandas objects can be used in addition
+to the special methods described here.
 
 
 .. _event-schedule-data:

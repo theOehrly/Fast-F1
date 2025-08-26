@@ -1,44 +1,3 @@
-"""
-Timing and Telemetry Data - :mod:`fastf1.core`
-==============================================
-
-The Fast-F1 core is a collection of functions and data objects for accessing
-and analyzing F1 timing and telemetry data.
-
-Data Objects
-------------
-
-All data is provided through the following data objects:
-
-    .. autosummary::
-       :nosignatures:
-
-       Session
-       Laps
-       Lap
-       Telemetry
-       SessionResults
-       DriverResult
-
-
-The :class:`Session` object is mainly used as an entry point for loading
-timing data and telemetry data. The :class:`Session` can create a
-:class:`Laps` object which contains all timing, track and session status
-data for a whole session.
-
-Usually you will be using :func:`fastf1.get_session` to get a :class:`Session`
-object.
-
-The :class:`Laps` object holds detailed information about multiple laps.
-
-The :class:`Lap` object holds the same information as :class:`Laps` but only
-for one single lap. When selecting a single lap from a :class:`Laps` object,
-an object of type :class:`Lap` will be returned.
-
-Apart from only providing data, the :class:`Laps`, :class:`Lap` and
-:class:`Telemetry` objects implement various methods for selecting and
-analyzing specific parts of the data.
-"""
 import collections
 import re
 import warnings
@@ -442,12 +401,12 @@ class Telemetry(BaseDataFrame):
             interpolated 'nGear' while linear interpolation is used for 'RPM'
             interpolation.
 
-        .. note :: Unknown telemetry channels will be merged but missing
+        .. note:: Unknown telemetry channels will be merged but missing
             values will not be interpolated. This can either be done manually
             or a custom telemetry channel can be added using
             :meth:`register_new_channel`.
 
-        .. note :: Do not resample data multiple times. Always resample based
+        .. note:: Do not resample data multiple times. Always resample based
             on the original data to preserve accuracy
 
         Args:
@@ -3279,7 +3238,7 @@ class Laps(BaseDataFrame):
 
         Args:
             compounds: may be "SOFT", "MEDIUM", "HARD", "INTERMEDIATE", "WET",
-            "UNKNOWN", or "TEST_UNKNOWN"
+                "UNKNOWN", or "TEST_UNKNOWN"
 
         Returns:
             instance of :class:`Laps`

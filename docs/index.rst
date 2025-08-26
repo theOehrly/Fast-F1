@@ -65,6 +65,12 @@ tyre data, weather data, the event schedule and session results.
         <h2>API Reference</h2>
         <p>Detailed documentation of FastF1's classes and functions</p>
       </a>
+       <a href="gen_modules/examples_gallery/index.html" class="doc-tile">
+         <div class="doc-tile-icon">🖼️</div>
+         <h2>Example Gallery</h2>
+         <p>Browse through examples showing FastF1's capabilities</p>
+       </a>
+
       <a href="#available-data" class="doc-tile">
         <div class="doc-tile-icon">📊</div>
         <h2>Available Data</h2>
@@ -141,7 +147,7 @@ this pattern is the wrapper for Ergast.
    =====================  ==============================================================================================================================  ==================================================================================================
    Topic                  Data                                                                                                                            References
    =====================  ==============================================================================================================================  ==================================================================================================
-   Event Schedule         event names, countries, locations, dates, scheduled starting times,... (previous and current season including upcoming events)  :mod:`~fastf1.events` :func:`~fastf1.get_event_schedule` :func:`~fastf1.get_event`
+   Event Schedule         event names, countries, locations, dates, scheduled starting times,... (previous and current season including upcoming events)  :ref:`event-schedule` :func:`~fastf1.get_event_schedule` :func:`~fastf1.get_event`
    Results                driver names, team names, finishing and grid positions, points, finishing status,...                                            :class:`~fastf1.core.SessionResults`, :class:`~fastf1.core.DriverResult`
    Timing Data            sector times, lap times, pit stops, tyre data and much more                                                                     :attr:`~fastf1.core.Session.laps` :class:`~fastf1.core.Laps`
    Track Status           flags, safety car                                                                                                               :attr:`~fastf1.core.Session.track_status`
@@ -149,7 +155,7 @@ this pattern is the wrapper for Ergast.
    Race Control Messages  investigations, penalties, restart announcements,...                                                                            :attr:`~fastf1.core.Session.race_control_messages`
    Telemetry              speed, rpm, gear, normalized track position, ...                                                                                :class:`~fastf1.core.Telemetry` :func:`~fastf1.core.Lap.get_car_data`
    Track Markers          corner numbers, marshall sectors, marshall lights                                                                               :func:`~fastf1.core.Session.get_circuit_info`, :ref:`circuit_info`
-   Ergast API             all endpoints that are provided by Ergast                                                                                       :ref:`ergast`
+   Jolpica-F1 API         all endpoints that are provided by Jolpica-F1 (previously Ergast)                                                               :ref:`jolpica`
    =====================  ==============================================================================================================================  ==================================================================================================
 
 
@@ -176,11 +182,13 @@ Contents
 
 .. toctree::
    :maxdepth: 1
-   :caption: Contents:
 
    getting_started/index
    gen_modules/examples_gallery/index
    reference/index
+   data_reference/index
+   changelog/index
+   contributing/index
 
 
 ========================================================

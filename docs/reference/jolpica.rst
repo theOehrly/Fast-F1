@@ -1,25 +1,34 @@
-.. _ergast:
+.. _jolpica:
 
-Ergast API Interface
-====================
+.. currentmodule:: fastf1.ergast
 
-.. currentmodule::
-  fastf1.ergast
+Jolpica-F1 API Interface
+========================
+
+.. note::
+
+    This API was previously provided by the Ergast motor racing database (Ergast MRD).
+    Ergast was shutdown at the beginning of 2025 and
+    `Jolpica-F1 <https://github.com/jolpica/jolpica-f1>`__ took over
+    as its successor, providing a replacement API that is drop-in compatible.
+    While the module names here have not been changed for backwards
+    compatibility, all data is now obtained from Jolpica-F1.
+
 
 Introduction
 ------------
 
-This module can be used to interface with the Ergast F1 API
-(https://ergast.com/mrd/). All Ergast endpoints are supported.
+This module can be used to interface with the
+`Jolpica-F1 <https://github.com/jolpica/jolpica-f1>`__ API (previously Ergast).
 
-The :class:`Ergast` object provides access to all API Endpoints of the
-Ergast API.
+The :class:`Ergast` object provides access to all Endpoints of the
+Jolpica-F1 API.
 
-The terms of use of Ergast apply (https://ergast.com/mrd/terms/).
-Especially take care not to exceed the specified rate limits.
+The `Rate Limits <https://github.com/jolpica/jolpica-f1/blob/main/docs/rate_limits.md>`__
+of Jolpica-F1 apply.
 FastF1 will handle caching and it will try to enforce rate limits where
-possible. Make sure to know what limits apply. For more information on how
-FastF1 handles caching and rate limiting see :ref:`requests-and-caching`.
+possible. For more information on how FastF1 handles caching and rate
+limiting see :ref:`rate_limits-caching`.
 
 Result Types
 ..............
@@ -309,34 +318,32 @@ Main Interface
 ..............
 
 
-.. autoclass:: Ergast
-    :members:
+.. autosummary::
+    :toctree: api_autogen/
+    :template: class_summary_noinherited.rst
+
+    Ergast
 
 
 Response Objects
 ................
 
-.. autoclass:: fastf1.ergast.interface.ErgastRawResponse
-    :members:
+.. autosummary::
+    :toctree: api_autogen/
+    :template: class_summary_noinherited.rst
 
-.. autoclass:: fastf1.ergast.interface.ErgastSimpleResponse
-    :members:
-
-.. autoclass:: fastf1.ergast.interface.ErgastMultiResponse
-    :members:
-
-.. autoclass:: fastf1.ergast.interface.ErgastResultFrame
-    :members:
-
-.. autoclass:: fastf1.ergast.interface.ErgastResponseMixin
-    :members:
+    interface.ErgastRawResponse
+    interface.ErgastSimpleResponse
+    interface.ErgastMultiResponse
+    interface.ErgastResultFrame
+    interface.ErgastResponseMixin
 
 
 Exceptions
 ..........
 
-.. autoclass:: fastf1.ergast.interface.ErgastError
+.. autosummary::
 
-.. autoclass:: fastf1.ergast.interface.ErgastJsonError
-
-.. autoclass:: fastf1.ergast.interface.ErgastInvalidRequestError
+    interface.ErgastError
+    interface.ErgastJsonError
+    interface.ErgastInvalidRequestError

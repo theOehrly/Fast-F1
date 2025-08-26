@@ -1,14 +1,3 @@
-"""
-Event Schedule
---------------
-
-The :class:`EventSchedule` provides information about past and upcoming
-Formula 1 events.
-
-An :class:`Event` can be a race weekend or a testing event. Each event
-consists of multiple :class:`~fastf1.core.Session`.
-"""
-
 import collections
 import datetime
 import json
