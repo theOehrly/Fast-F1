@@ -122,7 +122,7 @@ def _make_trajectory(session, ref_lap):
             # For tracks like suzuka (therefore only suzuka) we have
             # a beautiful crossing point. So, FOR F**K SAKE, sometimes
             # shortest distance may fall below the bridge or vice-versa
-            # gotta do some monotony sort of check. Not the cleanest
+            # got to do some monotony sort of check. Not the cleanest
             # solution.
             def moving_average(a, n=3):
                 ret = np.cumsum(a, dtype=float)

@@ -17,6 +17,12 @@ help:
 show:
 	@python -c "import webbrowser; webbrowser.open_new_tab('file://$(shell pwd)/_build/html/index.html')"
 
+serve:
+	@python -m http.server --directory $(shell pwd)/_build/html/
+
+clean-gallery:
+	@rm -rf $(shell pwd)/gen_modules/examples_gallery/*
+
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 %: Makefile

@@ -274,9 +274,9 @@ class Telemetry(BaseDataFrame):
         .. note:: Self needs to contain a 'SessionTime' column.
 
         .. note:: When slicing with an instance of :class:`Laps` as a
-            reference, the data will be sliced by first and last lap. Missing
-            laps in between will not be considered and data for these will
-            still be included in the sliced result.
+            reference, the data will be sliced by first and last lap.
+            Missing laps in between will not be considered and data for these
+            will still be included in the sliced result.
 
         Args:
             ref_laps: The lap/laps by which to slice self
@@ -559,8 +559,8 @@ class Telemetry(BaseDataFrame):
             - Usage like :meth:`pandas.DataFrame.resample`: In this case you
               need to specify the 'rule' for resampling and any additional
               keywords will be passed on to :meth:`pandas.Series.resample` to
-              create a new time reference. See the pandas method to see which
-              options are available.
+              create a new time reference. See the pandas method to see
+              which options are available.
 
             - using the 'new_date_ref' keyword a :class:`pandas.Series`
               containing new values for date (dtype :class:`pandas.Timestamp`)
@@ -2276,7 +2276,7 @@ class Session:
         driver_info_f1 = None
 
         # Ergast returns race, quali and sprint results and driver list
-        # for the corresponding sessions, none for sprint qualifiying/shootout
+        # for the corresponding sessions, none for sprint qualifying/shootout
         # and the race results and driver list for a practice session.
         driver_info_ergast = None
 

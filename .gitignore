@@ -31,7 +31,7 @@ docs/gen_modules/
 **/sg_execution_times.rst
 
 # documentation generated files
-docs/reference/api_autogen/
+docs/api_reference/api_autogen/
 
 # all variations of cache directories
 *_cache/

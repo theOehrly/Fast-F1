@@ -60,7 +60,7 @@ tyre data, weather data, the event schedule and session results.
         <h2>User Guide</h2>
         <p>Comprehensive guide to using FastF1 effectively</p>
       </a>
-      <a href="reference/index.html" class="doc-tile">
+      <a href="api_reference/index.html" class="doc-tile">
         <div class="doc-tile-icon">🔍</div>
         <h2>API Reference</h2>
         <p>Detailed documentation of FastF1's classes and functions</p>
@@ -185,7 +185,7 @@ Contents
 
    getting_started/index
    gen_modules/examples_gallery/index
-   reference/index
+   api_reference/index
    data_reference/index
    changelog/index
    contributing/index

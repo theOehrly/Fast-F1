@@ -189,6 +189,10 @@ sphinx_gallery_conf = {
     # directory where function/class granular galleries are stored
     'backreferences_dir': 'gen_modules/backreferences',
 
+    # if an example does not produce an output plot, use the following image
+    # as the thumbnail.
+    'default_thumb_file': '_static/logo.png',
+
     # Modules for which function/class level galleries are created. In
     # this case sphinx_gallery and numpy in a tuple of strings.
     'doc_module': ('fastf1', ),

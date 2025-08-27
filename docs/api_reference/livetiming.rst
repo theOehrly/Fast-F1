@@ -24,6 +24,14 @@ Usage Example
 
     python -m fastf1.livetiming save saved_data.txt
 
+or alternatively create a Python script to run the SignalR client
+
+.. code-block:: python
+
+    from fastf1.livetiming.client import SignalRClient
+
+    client = SignalRClient(filename="saved_data.txt")
+    client.start()
 
 2. Load this data into FastF1 after the session has finished
 
