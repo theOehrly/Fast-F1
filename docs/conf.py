@@ -72,7 +72,8 @@ extensions = [
     'sphinx_gallery.gen_gallery',
     'autodocsumm',
     'fastf1.ergast.sphinx',
-    'nitpick_ignore_files'
+    'nitpick_ignore_files',
+    'notfound.extension',
 ]
 
 todo_include_todos = True
@@ -118,7 +119,8 @@ nitpick_ignore_files = [
 html_theme = "pydata_sphinx_theme"
 html_theme_options = {
     "footer_center": ["goatcounter"],
-    "secondary_sidebar_items": ["page-toc",
+    "secondary_sidebar_items": ["versioning",
+                                "page-toc",
                                 # "sourcelink",
                                 "support_link"],
     "icon_links": [

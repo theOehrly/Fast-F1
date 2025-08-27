@@ -5,4 +5,5 @@ plotly
 seaborn>0.13.0
 sphinx-autodoc-typehints
 sphinx-gallery>=0.10.0
+sphinx-notfound-page
 sphinx<9.0.0
