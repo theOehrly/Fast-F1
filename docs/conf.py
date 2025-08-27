@@ -9,6 +9,7 @@
 # sys.path.insert(0, os.path.abspath('../'))
 
 import os.path
+import re
 import sys
 import warnings
 from datetime import datetime
@@ -119,7 +120,7 @@ nitpick_ignore_files = [
 html_theme = "pydata_sphinx_theme"
 html_theme_options = {
     "footer_center": ["goatcounter"],
-    "secondary_sidebar_items": ["versioning",
+    "secondary_sidebar_items": ["version-switcher",
                                 "page-toc",
                                 # "sourcelink",
                                 "support_link"],
@@ -130,7 +131,15 @@ html_theme_options = {
             "icon": "fa-brands fa-square-github",
             "type": "fontawesome",
         }
-    ]
+    ],
+    "switcher": {
+        "version_match": fastf1.__version__ \
+            if re.match(r"^\d+\.\d+\.\d+$", fastf1.__version__) \
+            else "dev",
+        "json_url": "/_static/versions.json",
+    },
+    "check_switcher": False,
+    "show_version_warning_banner": True,
 }
 html_logo = "_static/banner.png"
 html_favicon = "_static/favicon.png"

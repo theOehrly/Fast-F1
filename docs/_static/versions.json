@@ -1,15 +1,1 @@
-{
-    "current": "v1.2.3",
-    "versions": [
-        {
-            "version": "v1.2.3",
-            "url": "/versions/v1.2.3/",
-            "title": "v1.2.3 (stable)"
-        },
-        {
-            "version": "dev",
-            "url": "/versions/dev/",
-            "title": "dev (development)"
-        }
-    ]
-}
+[]
