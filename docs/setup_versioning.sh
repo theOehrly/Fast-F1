@@ -58,6 +58,6 @@ fi
 # write the JSON file to the _static directory in the root
 echo "$VERSIONS" | tr ' ' '\n' | grep -v '^$' | jq -R -s 'split("\n")[:-1] | map({
     version: .,
-    url: (if . == "'"$LATEST_VERSION"'" then "" else "/versions/" + . + "/" end),
+    url: (if . == "'"$LATEST_VERSION"'" then "/" else "/versions/" + . + "/" end),
     preferred: (if . == "'"$LATEST_VERSION"'" then true else false end)
 })' > "_build/html/_static/versions.json"
