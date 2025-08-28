@@ -29,7 +29,7 @@ version-build:
 	@rm -rf $(shell pwd)/_build/html/tmp/
 	@$(SPHINXBUILD) -b html "$(SOURCEDIR)" "_build/tmp"
 	@echo $(VERSION) > $(shell pwd)/_build/tmp/.version
-	./setup_versioning.sh $(VERSION)
+	./setup_versioning.sh
 
 
 # Catch-all target: route all unknown targets to Sphinx using the new
