@@ -100,6 +100,8 @@ jobs:
 
       - name: Checkout currently deployed build output from external repo to build directory
         uses: actions/checkout@v5
+        # skip for pull requests (no access to secret + unversioned build is sufficient)
+        if: github.event_name != 'pull_request'
         with:
           repository: theOehrly/fastf1-doc-build-output
           path: docs/_build/html
@@ -110,7 +112,9 @@ jobs:
           mkdir test_cache  # not really need but pytest setup relies on it 
           cd docs
           chmod +x ./setup_versioning.sh
-          if [[ "${{ github.event_name }}" == "release" ]]; then
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            make html
+          elif [[ "${{ github.event_name }}" == "release" ]]; then
             make version-build VERSION="${{ github.ref_name }}"
           else
             make version-build
