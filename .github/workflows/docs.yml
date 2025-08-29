@@ -12,9 +12,15 @@ on:
       publish:
         required: true
         type: boolean
-      pin-tag:
-        # pin-tag can be used to keep the latest X.Y.Z release tag instead of
+      install-ref:
+        # install-ref can be used to keep the latest X.Y.Z release tag instead of
         # a X.Y.Z-devN tag when updating the docs after a release
+        required: false
+        type: string
+      build-ref:
+        # build-ref can be used to specify a custom ref at which should be checked
+        # out before building the documentation. Else, the ref associated with
+        # the workflow run is used
         required: false
         type: string
   release:
@@ -71,25 +77,50 @@ jobs:
           restore-keys: |
             fastf1-doc-cache
 
-      - name: Install at pinned tag
-        if: inputs.pin-tag != ''
+      - name: Install at install ref
+        if: inputs.install-ref != ''
         run: |
-          git checkout ${{ inputs.pin-tag }}
+          git checkout ${{ inputs.install-ref }}
 
       - name: Install Fast-F1 from sources
         run: |
           python -m pip install -e .
 
-      - name: Re-checkout current commit after install at pinned tag
-        if: inputs.pin-tag != ''
+      - name: Re-checkout current commit after install at install ref or checkout build-ref if specified
         run: |
-          git checkout ${{ github.sha }}
+          if [ "${{ inputs.build-ref }}" != "" ]; then
+            git checkout ${{ inputs.build-ref }}
+          else
+            git checkout ${{ github.sha }}
+          fi
+
+      - name: Initialize Documentation build directory
+        run: |
+          mkdir -p docs/_build/html
+
+      - name: Checkout currently deployed build output from external repo to build directory
+        uses: actions/checkout@v5
+        # skip for pull requests (no access to secret + unversioned build is sufficient)
+        if: (github.event_name == 'release') || (github.ref == 'refs/heads/master') || (github.event_name == 'workflow_dispatch')
+        with:
+          repository: theOehrly/fastf1-doc-build-output
+          path: docs/_build/html
+          token: ${{ secrets.GH_PAT_DOC_BUILD_REPO }}
 
       - name: Build docs
         run: |
           mkdir test_cache  # not really need but pytest setup relies on it 
           cd docs
-          make html
+          chmod +x ./setup_versioning.sh
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            make version-build VERSION="${{ github.ref_name }}"  #  versioned build: release
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            make version-build  # versioned build: dev
+          elif [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+            make version-build  # versioned build: dev
+          else
+            make html  # unversioned build
+          fi
 
       - name: Upload docs as artifact
         uses: actions/upload-pages-artifact@v3
@@ -106,8 +137,21 @@ jobs:
           key: fastf1-doc-cache-${{ hashFiles('./doc_cache/**/*.*') }}
           path: ./doc_cache
 
+      - name: Push build changes to external repo
+        # If this was either a release, a manuall run with publish=true or a push to master
+        if: (github.event_name == 'release') || (github.ref == 'refs/heads/master') || inputs.publish
+        uses: EndBug/add-and-commit@v9
+        with:
+          cwd: "docs/_build/html"
+          add: "."
+          author_name: "github-actions-${{ github.ref_name }}"
+          default_author: "github_actions"
+          message: "Update documentation: triggered by ${{ github.event_name }}${{ inputs.publish && ' (publish=true)' || '' }}${{ inputs.install-ref != '' && ', install-ref=' && inputs.install-ref || '' }}${{ inputs.build-ref != '' && ', build-ref=' && inputs.build-ref || '' }} see workflow run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          push: true
+
   deploy:
-    if: (github.event_name == 'release') || inputs.publish
+    # deploy releases, dev builds on master and manual runs with publish=true
+    if: (github.event_name == 'release') || (github.ref == 'refs/heads/master') || inputs.publish
     name: Deploy Documentation
 
     # Add a dependency to the build job

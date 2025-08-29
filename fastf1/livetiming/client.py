@@ -54,8 +54,9 @@ class SignalRClient:
 
     The data will be saved in a raw text format without any postprocessing.
     It is **not** possible to use this data during a session. Instead, the
-    data can be processed after the session using the :mod:`fastf1.api` and
-    :mod:`fastf1.core`
+    data can be processed after the session by calling
+    :func:`fastf1.core.Session.load` and providing a
+    :class:`~fastf1.livetiming.data.LiveTimingData` object.
 
     Args:
         filename: filename (opt. with path) for the output file

@@ -1,5 +1,4 @@
-
-Getting started with the basics
+Getting Started with the Basics
 ===============================
 
 FastF1 is built mainly around Pandas DataFrame and Series objects.
@@ -162,7 +161,7 @@ Instead of loading a specific session or event, it is possible to load the
 full event schedule for a season. The :class:`~fastf1.events.EventSchedule`
 is a subclass of a :class:`pandas.DataFrame`. Detailed information about
 the data that is available in the event schedule can be found in
-:mod:`~fastf1.events`.
+:ref:`event-schedule`.
 
   >>> schedule = fastf1.get_event_schedule(2021)
   >>> schedule

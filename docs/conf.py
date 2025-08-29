@@ -9,6 +9,7 @@
 # sys.path.insert(0, os.path.abspath('../'))
 
 import os.path
+import re
 import sys
 import warnings
 from datetime import datetime
@@ -52,7 +53,7 @@ project = 'FastF1'
 # author = 'Oehrly'
 version = fastf1.__version__
 release = version
-copyright = f'{datetime.now().year}, theOehrly'
+copyright = f'{datetime.now().year}, Philipp Schäfer'
 html_title = f"{project} <small>{release}</small>"
 
 # -- General configuration ---------------------------------------------------
@@ -72,7 +73,8 @@ extensions = [
     'sphinx_gallery.gen_gallery',
     'autodocsumm',
     'fastf1.ergast.sphinx',
-    'nitpick_ignore_files'
+    'nitpick_ignore_files',
+    'notfound.extension',
 ]
 
 todo_include_todos = True
@@ -115,10 +117,32 @@ nitpick_ignore_files = [
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'furo'
+html_theme = "pydata_sphinx_theme"
 html_theme_options = {
+    "footer_center": ["goatcounter"],
+    "secondary_sidebar_items": ["version-switcher",
+                                "page-toc",
+                                # "sourcelink",
+                                "support_link"],
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/theOehrly/Fast-F1",
+            "icon": "fa-brands fa-square-github",
+            "type": "fontawesome",
+        }
+    ],
+    "switcher": {
+        "version_match": fastf1.__version__ \
+            if re.match(r"^\d+\.\d+\.\d+$", fastf1.__version__) \
+            else "dev",
+        "json_url": "/_static/versions.json",
+    },
+    "check_switcher": False,
+    "show_version_warning_banner": True,
 }
-html_logo = "_static/logo.png"
+html_logo = "_static/banner.png"
+html_favicon = "_static/favicon.png"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -175,6 +199,10 @@ sphinx_gallery_conf = {
                       sphinx_gallery_setup),  # custom setup
     # directory where function/class granular galleries are stored
     'backreferences_dir': 'gen_modules/backreferences',
+
+    # if an example does not produce an output plot, use the following image
+    # as the thumbnail.
+    'default_thumb_file': '_static/logo.png',
 
     # Modules for which function/class level galleries are created. In
     # this case sphinx_gallery and numpy in a tuple of strings.

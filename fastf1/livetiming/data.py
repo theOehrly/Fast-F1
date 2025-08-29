@@ -36,7 +36,7 @@ class LiveTimingData:
     Usually you will only instantiate this function and pass it to
     other functions.
 
-    See :mod:`fastf1.livetiming` for a usage example.
+    See :ref:`livetiming` for more information.
 
     If you want to load data from multiple files you can simply pass multiple
     filenames::

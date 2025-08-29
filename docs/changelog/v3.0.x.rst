@@ -128,7 +128,7 @@ New Features
   - enforces rate limits defined by Ergast (with cached requests not counting
     towards the rate limits)
 
-  See: :ref:`ergast`
+  See: :ref:`jolpica`
 
 - The livetiming client now supports all current versions of Python. The limit
   to version 3.9 and lower no longer exists for this feature. A big thank you

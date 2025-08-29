@@ -1,12 +1,13 @@
-Plotting - :mod:`fastf1.plotting`
-=================================
+.. _plotting-data:
 
-Helper functions for creating data plots.
+.. currentmodule:: fastf1.plotting
 
-:mod:`fastf1.plotting` provides optional functionality with the intention of
-making it easy to create nice plots.
+Plotting Data
+=============
 
-This module mainly offers:
+The :mod:`fastf1.plotting` submodule contains helper functions for creating data plots.
+
+This submodule mainly offers:
     - team names and colors
     - driver names and driver abbreviations
     - Matplotlib integration and helper functions
@@ -53,106 +54,70 @@ See here for a complete list of all colors: :ref:`Team-Colormaps-Overview`
 
 
 
-Overview
---------
+API Summary
+-----------
 
 
 Configuration and Setup
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: fastf1.plotting
-  :noindex:
-  :no-members:
-  :autosummary:
-  :autosummary-members:
+.. autosummary::
+    :toctree: api_autogen/
+    :template: function.rst
+
     setup_mpl
 
 
 Get Colors, Names and Abbreviations for Drivers or Teams
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: fastf1.plotting
-  :noindex:
-  :no-members:
-  :autosummary:
-  :autosummary-members:
-    get_compound_color,
-    get_driver_abbreviation,
-    get_driver_abbreviations_by_team,
-    get_driver_color,
-    get_driver_name,
-    get_driver_names_by_team,
-    get_driver_style,
-    get_team_color,
-    get_team_name,
+.. autosummary::
+    :toctree: api_autogen/
+    :template: function.rst
+
+    get_compound_color
+    get_driver_abbreviation
+    get_driver_abbreviations_by_team
+    get_driver_color
+    get_driver_name
+    get_driver_names_by_team
+    get_driver_style
+    get_team_color
+    get_team_name
     get_team_name_by_driver
 
 
 List all Names and Abbreviations for Drivers/Teams in a Session
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: fastf1.plotting
-  :noindex:
-  :no-members:
-  :autosummary:
-  :autosummary-members:
-    get_compound_mapping,
-    get_driver_color_mapping,
-    list_compounds,
-    list_driver_abbreviations,
-    list_driver_names,
+.. autosummary::
+    :toctree: api_autogen/
+    :template: function.rst
+
+    get_compound_mapping
+    get_driver_color_mapping
+    list_compounds
+    list_driver_abbreviations
+    list_driver_names
     list_team_names
 
 
 Plot Styling
 ^^^^^^^^^^^^
 
-.. automodule:: fastf1.plotting
-  :noindex:
-  :no-members:
-  :autosummary:
-  :autosummary-members:
-    add_sorted_driver_legend,
+.. autosummary::
+    :toctree: api_autogen/
+    :template: function.rst
+
+    add_sorted_driver_legend
     set_default_colormap
 
 
 Advanced Functionality
 ^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: fastf1.plotting
-  :noindex:
-  :no-members:
-  :autosummary:
-  :autosummary-members:
+.. autosummary::
+    :toctree: api_autogen/
+    :template: function.rst
+
     override_team_constants
-
-
-Deprecated Functionality
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-The following module-level attributes are deprecated since version 3.4.0 and
-will be removed in a future release.
-
-
-.. automodule:: fastf1.plotting
-  :noindex:
-  :no-members:
-  :autosummary:
-  :autosummary-members:
-    driver_color,
-    lapnumber_axis,
-    team_color,
-    COMPOUND_COLORS,
-    DRIVER_TRANSLATE,
-    DRIVER_COLORS,
-    TEAM_COLORS,
-    TEAM_TRANSLATE,
-    COLOR_PALETTE
-
-
-
-Plotting API Reference
-----------------------
-
-.. automodule:: fastf1.plotting
-  :members:

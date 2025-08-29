@@ -1,44 +1,3 @@
-"""
-Timing and Telemetry Data - :mod:`fastf1.core`
-==============================================
-
-The Fast-F1 core is a collection of functions and data objects for accessing
-and analyzing F1 timing and telemetry data.
-
-Data Objects
-------------
-
-All data is provided through the following data objects:
-
-    .. autosummary::
-       :nosignatures:
-
-       Session
-       Laps
-       Lap
-       Telemetry
-       SessionResults
-       DriverResult
-
-
-The :class:`Session` object is mainly used as an entry point for loading
-timing data and telemetry data. The :class:`Session` can create a
-:class:`Laps` object which contains all timing, track and session status
-data for a whole session.
-
-Usually you will be using :func:`fastf1.get_session` to get a :class:`Session`
-object.
-
-The :class:`Laps` object holds detailed information about multiple laps.
-
-The :class:`Lap` object holds the same information as :class:`Laps` but only
-for one single lap. When selecting a single lap from a :class:`Laps` object,
-an object of type :class:`Lap` will be returned.
-
-Apart from only providing data, the :class:`Laps`, :class:`Lap` and
-:class:`Telemetry` objects implement various methods for selecting and
-analyzing specific parts of the data.
-"""
 import collections
 import re
 import warnings
@@ -315,9 +274,9 @@ class Telemetry(BaseDataFrame):
         .. note:: Self needs to contain a 'SessionTime' column.
 
         .. note:: When slicing with an instance of :class:`Laps` as a
-            reference, the data will be sliced by first and last lap. Missing
-            laps in between will not be considered and data for these will
-            still be included in the sliced result.
+            reference, the data will be sliced by first and last lap.
+            Missing laps in between will not be considered and data for these
+            will still be included in the sliced result.
 
         Args:
             ref_laps: The lap/laps by which to slice self
@@ -442,12 +401,12 @@ class Telemetry(BaseDataFrame):
             interpolated 'nGear' while linear interpolation is used for 'RPM'
             interpolation.
 
-        .. note :: Unknown telemetry channels will be merged but missing
+        .. note:: Unknown telemetry channels will be merged but missing
             values will not be interpolated. This can either be done manually
             or a custom telemetry channel can be added using
             :meth:`register_new_channel`.
 
-        .. note :: Do not resample data multiple times. Always resample based
+        .. note:: Do not resample data multiple times. Always resample based
             on the original data to preserve accuracy
 
         Args:
@@ -600,8 +559,8 @@ class Telemetry(BaseDataFrame):
             - Usage like :meth:`pandas.DataFrame.resample`: In this case you
               need to specify the 'rule' for resampling and any additional
               keywords will be passed on to :meth:`pandas.Series.resample` to
-              create a new time reference. See the pandas method to see which
-              options are available.
+              create a new time reference. See the pandas method to see
+              which options are available.
 
             - using the 'new_date_ref' keyword a :class:`pandas.Series`
               containing new values for date (dtype :class:`pandas.Timestamp`)
@@ -2317,7 +2276,7 @@ class Session:
         driver_info_f1 = None
 
         # Ergast returns race, quali and sprint results and driver list
-        # for the corresponding sessions, none for sprint qualifiying/shootout
+        # for the corresponding sessions, none for sprint qualifying/shootout
         # and the race results and driver list for a practice session.
         driver_info_ergast = None
 
@@ -2751,95 +2710,6 @@ class Laps(BaseDataFrame):
 
     Slicing this class will return :class:`Laps` again for slices containing
     multiple rows. Single rows will be returned as :class:`Lap`.
-
-    The following information is available per lap (one DataFrame column
-    for each):
-
-        - **Time** (pandas.Timedelta): Session time when the lap time was
-          set (end of lap)
-        - **Driver** (str): Three letter driver identifier
-        - **DriverNumber** (str): Driver number
-        - **LapTime** (pandas.Timedelta): Recorded lap time.
-          To see if a lap time was deleted, check the **Deleted** column.
-        - **LapNumber** (float): Recorded lap number
-        - **Stint** (float): Stint number
-        - **PitOutTime** (pandas.Timedelta): Session time when car exited
-          the pit
-        - **PitInTime** (pandas.Timedelta): Session time when car entered
-          the pit
-        - **Sector1Time** (pandas.Timedelta): Sector 1 recorded time
-        - **Sector2Time** (pandas.Timedelta): Sector 2 recorded time
-        - **Sector3Time** (pandas.Timedelta): Sector 3 recorded time
-        - **Sector1SessionTime** (pandas.Timedelta): Session time when the
-          Sector 1 time was set
-        - **Sector2SessionTime** (pandas.Timedelta): Session time when the
-          Sector 2 time was set
-        - **Sector3SessionTime** (pandas.Timedelta): Session time when the
-          Sector 3 time was set
-        - **SpeedI1** (float): Speedtrap sector 1 [km/h]
-        - **SpeedI2** (float): Speedtrap sector 2 [km/h]
-        - **SpeedFL** (float): Speedtrap at finish line [km/h]
-        - **SpeedST** (float): Speedtrap on longest straight (Not sure) [km/h]
-        - **IsPersonalBest** (bool): Flag that indicates whether this lap is
-          the official personal best lap of a driver. If any lap of a driver
-          is quicker than their respective personal best lap, this means that
-          the quicker lap is invalid and not counted. For example, this can
-          happen if the track limits were exceeded.
-        - **Compound** (str): Tyres event specific compound name: SOFT, MEDIUM,
-          HARD, INTERMEDIATE, WET, TEST_UNKNOWN, UNKNOWN.
-          The actual underlying compounds C1 to C5 are not differentiated.
-          TEST_UNKNOWN compounds can appear in the data during pre-season
-          testing and in-season Pirelli tyre tests.
-        - **TyreLife** (float): Laps driven on this tire (includes laps in
-          other sessions for used sets of tires)
-        - **FreshTyre** (bool): Tyre had TyreLife=0 at stint start, i.e.
-          was a new tire
-        - **Team** (str): Team name
-        - **LapStartTime** (pandas.Timedelta): Session time at the start of
-          the lap
-        - **LapStartDate** (pandas.Timestamp): Timestamp at the start of
-          the lap
-        - **TrackStatus** (str): A string that contains track status numbers
-          for all track status that occurred
-          during this lap. The meaning of the track status numbers is
-          explained in :func:`fastf1.api.track_status_data`.
-          For filtering laps by track status, you may want to use
-          :func:`Laps.pick_track_status`.
-        - **Position** (float): Position of the driver at the end of each lap.
-          This value is NaN for FP1, FP2, FP3, Sprint Shootout, and Qualifying
-          as well as for crash laps.
-        - **Deleted** (Optional[bool]): Indicates that a lap was deleted by
-          the stewards, for example because of a track limits violation.
-          This data is only available when race control messages are loaded.
-        - **DeletedReason** (str): Gives the reason for a lap time deletion.
-          This data is only available when race control messages are loaded.
-        - **FastF1Generated** (bool): Indicates that this lap was added by
-          FastF1. Such a lap will generally have very limited information
-          available and information is partly interpolated or based on
-          reasonable assumptions. Cases were this is used are, for example,
-          when a partial last lap is added for drivers that retired on track.
-        - **IsAccurate** (bool): Indicates that the lap start and end time are
-          synced correctly with other laps. Do not confuse this with the
-          accuracy of the lap time or sector times. They are always considered
-          to be accurate if they exist!
-          If this value is True, the lap has passed as basic accuracy check
-          for timing data. This does not guarantee accuracy but laps marked
-          as inaccurate need to be handled with caution. They might contain
-          errors which can not be spotted easily.
-          Laps need to satisfy the following criteria to be marked
-          as accurate:
-
-            - not an inlap or outlap
-            - set under green or yellow flag (the api sometimes has issues
-              with data from SC/VSC laps)
-            - is not the first lap after a safety car period
-              (issues with SC/VSC might still appear on the first lap
-              after it has ended)
-            - has a value for lap time and all sector times
-            - the sum of the sector times matches the lap time
-              (If this were to ever occur, it would also be logged separately
-              as a data integrity error. You usually don't need to worry about
-              this.)
     """
 
     _COLUMNS = {
@@ -3368,7 +3238,7 @@ class Laps(BaseDataFrame):
 
         Args:
             compounds: may be "SOFT", "MEDIUM", "HARD", "INTERMEDIATE", "WET",
-            "UNKNOWN", or "TEST_UNKNOWN"
+                "UNKNOWN", or "TEST_UNKNOWN"
 
         Returns:
             instance of :class:`Laps`

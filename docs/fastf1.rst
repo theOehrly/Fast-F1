@@ -1,3 +1,0 @@
-
-.. automodule:: fastf1
-
