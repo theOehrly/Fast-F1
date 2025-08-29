@@ -101,7 +101,7 @@ jobs:
       - name: Checkout currently deployed build output from external repo to build directory
         uses: actions/checkout@v5
         # skip for pull requests (no access to secret + unversioned build is sufficient)
-        if: (github.event_name == 'release') || (github.ref == 'refs/heads/master') || (github.event_name == 'workflow_dispatch') || (github.ref == 'refs/heads/doc-overhaul')
+        if: (github.event_name == 'release') || (github.ref == 'refs/heads/master') || (github.event_name == 'workflow_dispatch')
         with:
           repository: theOehrly/fastf1-doc-build-output
           path: docs/_build/html
@@ -139,7 +139,7 @@ jobs:
 
       - name: Push build changes to external repo
         # If this was either a release, a manuall run with publish=true or a push to master
-        if: (github.event_name == 'release') || inputs.publish || (github.ref == 'refs/heads/master') || (github.ref == 'refs/heads/doc-overhaul')
+        if: (github.event_name == 'release') || inputs.publish || (github.ref == 'refs/heads/master')
         uses: EndBug/add-and-commit@v9
         with:
           cwd: "docs/_build/html"
