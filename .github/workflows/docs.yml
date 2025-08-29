@@ -12,9 +12,15 @@ on:
       publish:
         required: true
         type: boolean
-      pin-tag:
-        # pin-tag can be used to keep the latest X.Y.Z release tag instead of
+      install-ref:
+        # install-ref can be used to keep the latest X.Y.Z release tag instead of
         # a X.Y.Z-devN tag when updating the docs after a release
+        required: false
+        type: string
+      build-ref:
+        # build-ref can be used to specify a custom ref at which should be checked
+        # out before building the documentation. Else, the ref associated with
+        # the workflow run is used
         required: false
         type: string
   release:
@@ -71,25 +77,42 @@ jobs:
           restore-keys: |
             fastf1-doc-cache
 
-      - name: Install at pinned tag
-        if: inputs.pin-tag != ''
+      - name: Install at install ref
+        if: inputs.install-ref != ''
         run: |
-          git checkout ${{ inputs.pin-tag }}
+          git checkout ${{ inputs.install-ref }}
 
       - name: Install Fast-F1 from sources
         run: |
           python -m pip install -e .
 
-      - name: Re-checkout current commit after install at pinned tag
-        if: inputs.pin-tag != ''
+      - name: Re-checkout current commit after install at install ref or checkout build-ref if specified
         run: |
-          git checkout ${{ github.sha }}
+          if [ "${{ inputs.build-ref }}" != "" ]; then
+            git checkout ${{ inputs.build-ref }}
+          else
+            git checkout ${{ github.sha }}
+          fi
+
+      - name: Initialize Documentation build directory
+        run: |
+          mkdir -p docs/_build/html
+
+      - name: Checkout currently deployed build output from external repo to build directory
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git clone --depth 1 "https://x-access-token:${{ secrets.GH_PAT_DOC_BUILD_REPO }}@github.com/theOehrly/fastf1-doc-build-output.git" docs/_build/html
 
       - name: Build docs
         run: |
           mkdir test_cache  # not really need but pytest setup relies on it 
           cd docs
-          make html
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            make version-build VERSION="${{ github.ref_name }}"
+          else
+            make version-build
+          fi
 
       - name: Upload docs as artifact
         uses: actions/upload-pages-artifact@v3
@@ -105,6 +128,16 @@ jobs:
         with:
           key: fastf1-doc-cache-${{ hashFiles('./doc_cache/**/*.*') }}
           path: ./doc_cache
+
+      - name: Push build changes to external repo
+        # If this was either a release, a manuall run with publish=true or a push to master
+        if: (github.event_name == 'release') || inputs.publish || (github.ref == 'refs/heads/master')
+        run: |
+          cd docs/_build/html
+          git add -A
+          git commit -m "Update documentation: triggered by ${{ github.event_name }}${{ inputs.publish && ' (publish=true)' || '' }}${{ inputs.install-ref != '' && ', install-ref=' && inputs.install-ref || '' }}${{ inputs.build-ref != '' && ', build-ref=' && inputs.build-ref || '' }} see workflow run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          
+          git push "https://x-access-token:${{ secrets.GH_PAT_DOC_BUILD_REPO }}@github.com/theOehrly/fastf1-doc-build-output.git" HEAD:main
 
   deploy:
     if: (github.event_name == 'release') || inputs.publish
