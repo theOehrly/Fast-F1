@@ -139,7 +139,7 @@ jobs:
 
       - name: Push build changes to external repo
         # If this was either a release, a manuall run with publish=true or a push to master
-        if: (github.event_name == 'release') || inputs.publish || (github.ref == 'refs/heads/master')
+        if: (github.event_name == 'release') || (github.ref == 'refs/heads/master') || inputs.publish
         uses: EndBug/add-and-commit@v9
         with:
           cwd: "docs/_build/html"
@@ -150,7 +150,8 @@ jobs:
           push: true
 
   deploy:
-    if: (github.event_name == 'release') || inputs.publish
+    # deploy releases, dev builds on master and manual runs with publish=true
+    if: (github.event_name == 'release') || (github.ref == 'refs/heads/master') || inputs.publish
     name: Deploy Documentation
 
     # Add a dependency to the build job
