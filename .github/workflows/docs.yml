@@ -112,12 +112,14 @@ jobs:
           mkdir test_cache  # not really need but pytest setup relies on it 
           cd docs
           chmod +x ./setup_versioning.sh
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            make html
-          elif [[ "${{ github.event_name }}" == "release" ]]; then
-            make version-build VERSION="${{ github.ref_name }}"
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            make version-build VERSION="${{ github.ref_name }}"  #  versioned build: release
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            make version-build  # versioned build: dev
+          elif [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+            make version-build  # versioned build: dev
           else
-            make version-build
+            make html  # unversioned build
           fi
 
       - name: Upload docs as artifact
