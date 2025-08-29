@@ -109,6 +109,7 @@ jobs:
         run: |
           mkdir test_cache  # not really need but pytest setup relies on it 
           cd docs
+          chmod +x ./setup_versioning.sh
           if [[ "${{ github.event_name }}" == "release" ]]; then
             make version-build VERSION="${{ github.ref_name }}"
           else
