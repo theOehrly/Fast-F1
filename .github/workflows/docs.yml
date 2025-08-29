@@ -102,7 +102,9 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git clone --depth 1 "https://theOehrly:${{ secrets.GH_PAT_DOC_BUILD_REPO }}@github.com/theOehrly/fastf1-doc-build-output.git" docs/_build/html
+          git clone --depth 1 "https://github.com/theOehrly/fastf1-doc-build-output.git" docs/_build/html
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT_DOC_BUILD_REPO }}
 
       - name: Build docs
         run: |
@@ -137,7 +139,9 @@ jobs:
           git add -A
           git commit -m "Update documentation: triggered by ${{ github.event_name }}${{ inputs.publish && ' (publish=true)' || '' }}${{ inputs.install-ref != '' && ', install-ref=' && inputs.install-ref || '' }}${{ inputs.build-ref != '' && ', build-ref=' && inputs.build-ref || '' }} see workflow run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
-          git push "https://theOehrly:${{ secrets.GH_PAT_DOC_BUILD_REPO }}@github.com/theOehrly/fastf1-doc-build-output.git" HEAD:main
+          git push "https://github.com/theOehrly/fastf1-doc-build-output.git" HEAD:main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT_DOC_BUILD_REPO }}
 
   deploy:
     if: (github.event_name == 'release') || inputs.publish
