@@ -101,7 +101,7 @@ jobs:
       - name: Checkout currently deployed build output from external repo to build directory
         uses: actions/checkout@v5
         # skip for pull requests (no access to secret + unversioned build is sufficient)
-        if: github.event_name != 'pull_request'
+        if: (github.event_name == 'release') || (github.ref == 'refs/heads/master') || (github.event_name == 'workflow_dispatch')
         with:
           repository: theOehrly/fastf1-doc-build-output
           path: docs/_build/html
