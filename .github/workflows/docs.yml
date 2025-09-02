@@ -10,21 +10,34 @@ on:
   workflow_dispatch:
     inputs:
       publish:
+        description: "Publish documentation"
         required: true
         type: boolean
       install-ref:
         # install-ref can be used to keep the latest X.Y.Z release tag instead of
         # a X.Y.Z-devN tag when updating the docs after a release
+        description: "Install at this ref instead of the current commit"
         required: false
         type: string
       build-ref:
         # build-ref can be used to specify a custom ref at which should be checked
         # out before building the documentation. Else, the ref associated with
         # the workflow run is used
+        description: "Checkout this ref after installation before building the documentation"
         required: false
         type: string
   release:
     types: [ released ]
+  push:
+    branches:
+      - master
+    paths:
+      - 'src/docs/**'
+      - 'src/fastf1/**'
+      - 'src/examples/**'
+      - 'src/requirements/**'
+      - 'src/pyproject.toml'
+      - 'src/.github/workflows/docs.yml'
 
 
 env:
@@ -138,7 +151,7 @@ jobs:
           path: ./doc_cache
 
       - name: Push build changes to external repo
-        # If this was either a release, a manuall run with publish=true or a push to master
+        # If this was either a release, run manually with publish=true or a push to master
         if: (github.event_name == 'release') || (github.ref == 'refs/heads/master') || inputs.publish
         uses: EndBug/add-and-commit@v9
         with:
