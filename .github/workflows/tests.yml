@@ -178,7 +178,14 @@ jobs:
 
 
   run-sphinx-build-test:
-    if: (!contains(github.event.head_commit.message, '[skip-docs]')) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name)
+    # Run if the commit does not contain [skip-docs] and if not a pull request or if the base repo is different from
+    # the head repo (e.g. a fork), to prevent triggering twice on push to branch and pull request.
+    # Skip the doc build test on master since the dev docs are published from the master branch anyway (trigger
+    # defined in .github/workflows/docs.yml).
+    if: |
+      (!contains(github.event.head_commit.message, '[skip-docs]')) 
+      && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name)
+      && (github.ref != 'refs/heads/master')
     name: Test Docs
     uses: ./.github/workflows/docs.yml
     with:
