@@ -35,10 +35,25 @@ def _load_drivers_from_f1_livetiming(
             team = _Team()
             team.value = team_name
 
-        abbreviation = driver_entry.get('Tla')
+        abbreviation = driver_entry.get('Tla', '')
+        if not abbreviation.strip():
+            _logger.warning(
+                "Skipping driver with incomplete data while generating "
+                "driver-team mapping for plotting constants."
+            )
+            _logger.debug(f"Skipping driver entry: {driver_entry}")
 
-        name = ' '.join((driver_entry.get('FirstName'),
-                         driver_entry.get('LastName')))
+        name = ' '.join((driver_entry.get('FirstName', ''),
+                         driver_entry.get('LastName', '')))
+
+        if not name.strip():
+            _logger.warning(
+                "Skipping driver with incomplete data while generating "
+                "driver-team mapping for plotting constants."
+            )
+            _logger.debug(f"Skipping driver entry: {driver_entry}")
+            continue
+
         driver = _Driver()
         driver.value = name
         driver.normalized_value = _normalize_string(name).lower()
