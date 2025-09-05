@@ -1,3 +1,16 @@
+What's new in v3.6.1
+--------------------
+
+(released 05/09/2025)
+
+
+Bug Fixes
+^^^^^^^^^
+
+- Fix an error when generating the driver-team mapping for plotting constants
+  (caused by incorrect source data in the 2025 Monza FP1).
+
+
 What's new in v3.6.0
 --------------------
 
