@@ -1,11 +1,13 @@
 import json
 import threading
 import urllib.parse
+from datetime import datetime
 from http.server import (
     BaseHTTPRequestHandler,
     HTTPServer
 )
 from pathlib import Path
+from typing import cast
 
 import jwt
 import platformdirs
@@ -25,7 +27,8 @@ AUTH_DATA_FILE = USER_DATA_DIR / "f1auth.json"
 AUTH_DATA_FILE.touch(exist_ok=True)
 
 _auth_finished = threading.Event()
-_subscription_data: None | dict = None
+
+_subscription_token: None | str = None
 
 _logger = get_logger(__name__)
 
@@ -57,8 +60,9 @@ class AuthHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({"status": "ok"}).encode())
 
-            global _subscription_data
-            _subscription_data = parsed_data
+            global _subscription_token
+            _subscription_token \
+                = parsed_data.get("data", {}).get("subscriptionToken")
             _auth_finished.set()
 
 
@@ -78,10 +82,12 @@ def _run_auth_server():
     httpd.shutdown()
 
     try:
-        _verify_jwt(_subscription_data['data']['subscriptionToken'], JWKS_URL)
+        _verify_jwt(_subscription_token, JWKS_URL)
     except PyJWTError:
-        _logger.error("Unknown error encountered: sign-in successful, "
-                      "but token verification failed.")
+        print("Unknown error encountered: sign-in successful, "
+              "but token verification failed.")
+    else:
+        print("Sign-in successful.")
 
 
 def _get_jwk_from_jwks_uri(jwks_uri, kid):
@@ -97,7 +103,7 @@ def _get_jwk_from_jwks_uri(jwks_uri, kid):
     raise ValueError("Public key not found in JWKS for given kid.")
 
 
-def _verify_jwt(token, jwks_uri, audience=None, issuer=None):
+def _verify_jwt(token, jwks_uri, audience=None, issuer=None, verify=True):
     # Decode headers to get the kid
     unverified_header = jwt.get_unverified_header(token)
     kid = unverified_header.get('kid')
@@ -113,7 +119,7 @@ def _verify_jwt(token, jwks_uri, audience=None, issuer=None):
         algorithms="RS256",
         audience=audience,
         issuer=issuer,
-        verify=True
+        verify=verify
     )
 
     return payload
@@ -123,44 +129,85 @@ def get_auth_token():
     """Get the authentication token."""
     # TODO: add option to override from env var and dotenv file
 
-    global _subscription_data
-    token = None
+    global _subscription_token
 
-    if _subscription_data is None:
-        try:
-            with open(AUTH_DATA_FILE) as f:
-                _subscription_data = json.load(f)
-        except json.JSONDecodeError:
-            # expected if file is empty
-            pass
+    if not _subscription_token:
+        with open(AUTH_DATA_FILE) as f:
+            _subscription_token = f.read()
 
-    if _subscription_data is not None:
-        token = _subscription_data['data']['subscriptionToken']
-
-    if token is None:
+    if not _subscription_token:
         print("\nThis feature requires an active F1TV Access/Pro/Premium "
               "subscription.\n")
 
-    # TODO: add option to ignore expiry
-    if token is not None:
-        # if token is already known, validate it
+    else:
+        # if the token is already known, verify it
         try:
-            _verify_jwt(token, JWKS_URL)
+            _verify_jwt(_subscription_token, JWKS_URL)
         except InvalidTokenError:
             print("Subscription token is invalid. Please re-authenticate.")
-            _subscription_data = None
-            token = None
+            _subscription_token = None
         except PyJWTError:
             print("Unknown error occurred while validating token. "
                   "Please re-authenticate.")
-            _subscription_data = None
-            token = None
+            _subscription_token = None
 
-    if _subscription_data is None:
-        # no token found or token is invalid, user needs to authenticate
+    if not _subscription_token:
+        # no token found or token is invalid, the user needs to authenticate
         _run_auth_server()
-        with open(AUTH_DATA_FILE, 'w') as f:
-            json.dump(_subscription_data, f)
-        token = _subscription_data['data']['subscriptionToken']
 
-    return token
+        # indicate to the type checker that _subscription_data is not
+        # necessarily None anymore after calling _run_auth_server()
+        _subscription_token = cast(None | str, _subscription_token)
+
+        if _subscription_token is None:
+            print("Authentication failed. Please try again.")
+        else:
+            with open(AUTH_DATA_FILE, 'w') as f:
+                f.write(_subscription_token)
+
+    return _subscription_token
+
+
+def clear_auth_token():
+    """Clear the authentication token."""
+    global _subscription_token
+    _subscription_token = None
+    try:
+        AUTH_DATA_FILE.unlink()
+    except FileNotFoundError:
+        pass
+
+
+def print_auth_status():
+    """Print the authentication status."""
+    global _subscription_token
+
+    if _subscription_token is None:
+        with open(AUTH_DATA_FILE) as f:
+            _subscription_token = f.read()
+
+    if _subscription_token:
+        decoded = _verify_jwt(_subscription_token, JWKS_URL, verify=False)
+
+        if (exp := decoded.get('exp')) and exp < datetime.now().timestamp():
+            token_status = "Expired"
+        else:
+            token_status = f"Expires {datetime.fromtimestamp(exp)} (UTC)"
+
+        print(f"Subscription Status: {decoded.get('SubscriptionStatus')}\n"
+              f"Subscribed Product: {decoded.get('SubscribedProduct')}\n"
+              f"Token Status: {token_status}")
+
+    else:
+        print("Not authenticated")
+
+
+def print_auth_token():
+    """Print the authentication token."""
+    global _subscription_token
+
+    if not _subscription_token:
+        with open(AUTH_DATA_FILE) as f:
+            _subscription_token = f.read()
+
+    print(_subscription_token)
