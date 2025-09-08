@@ -79,7 +79,6 @@ exclude = [
   "scripts",
   "fastf1/tests",
   "fastf1/testing",
-  "fastf1/signalr_aio",
   "fastf1/legacy.py",
 ]
 
