@@ -1617,6 +1617,12 @@ class Session:
 
         self._add_track_status_to_laps(laps)
 
+        # Forward fill SpeedFL and SpeedI1 columns to fill NaN values
+        if 'SpeedFL' in laps.columns:
+            laps['SpeedFL'] = laps['SpeedFL'].ffill()
+        if 'SpeedI1' in laps.columns:
+            laps['SpeedI1'] = laps['SpeedI1'].ffill()
+
         self._laps = Laps(laps, session=self, _force_default_cols=True)
         self._check_lap_accuracy()
 
