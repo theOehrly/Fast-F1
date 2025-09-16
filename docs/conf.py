@@ -147,6 +147,10 @@ html_favicon = "_static/favicon.png"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+# Add any extra paths that contain custom files that should be copied to the
+# output directory.
+html_extra_path = ['_extra']
+
 # These paths are either relative to html_static_path
 # or fully qualified paths (eg. https://...)
 html_css_files = [
