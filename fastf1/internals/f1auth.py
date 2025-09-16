@@ -103,7 +103,14 @@ def _get_jwk_from_jwks_uri(jwks_uri, kid):
     raise ValueError("Public key not found in JWKS for given kid.")
 
 
-def _verify_jwt(token, jwks_uri, audience=None, issuer=None, verify=True):
+def _verify_jwt(
+        token,
+        jwks_uri,
+        audience=None,
+        issuer=None,
+        verify=True,
+        options=None
+):
     # Decode headers to get the kid
     unverified_header = jwt.get_unverified_header(token)
     kid = unverified_header.get('kid')
@@ -119,7 +126,8 @@ def _verify_jwt(token, jwks_uri, audience=None, issuer=None, verify=True):
         algorithms="RS256",
         audience=audience,
         issuer=issuer,
-        verify=verify
+        verify=verify,
+        options=options
     )
 
     return payload
@@ -187,16 +195,19 @@ def print_auth_status():
             _subscription_token = f.read()
 
     if _subscription_token:
-        decoded = _verify_jwt(_subscription_token, JWKS_URL, verify=False)
+        decoded = _verify_jwt(_subscription_token,
+                              JWKS_URL,
+                              verify=False,
+                              options={'verify_signature': False})
 
         if (exp := decoded.get('exp')) and exp < datetime.now().timestamp():
-            token_status = "Expired"
+            token_status = "EXPIRED"
         else:
             token_status = f"Expires {datetime.fromtimestamp(exp)} (UTC)"
 
-        print(f"Subscription Status: {decoded.get('SubscriptionStatus')}\n"
-              f"Subscribed Product: {decoded.get('SubscribedProduct')}\n"
-              f"Token Status: {token_status}")
+        print(f"Token Status: {token_status}\n"
+              f"Subscription Status: {decoded.get('SubscriptionStatus')}\n"
+              f"Subscribed Product: {decoded.get('SubscribedProduct')}\n")
 
     else:
         print("Not authenticated")
