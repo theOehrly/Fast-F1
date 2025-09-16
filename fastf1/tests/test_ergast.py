@@ -570,44 +570,128 @@ def test_ergast_result_series_constructor():
 
 def test_ergast_raw_response():
     # test auto-casting in subcategories (i.e. verify proper recursion as well)
-    data = [{
-        "circuitId": "albert_park",
-        "url": "https://...",
-        "circuitName": "Albert Park Grand Prix Circuit",
-        "Location": {"lat": "-37.8497",
-                     "long": "144.968",
-                     "locality": "Melbourne",
-                     "country": "Australia"}
-    }, {
-        "circuitId": "bahrain",
-        "url": "https://...",
-        "circuitName": "Bahrain International Circuit",
-        "Location": {"lat": "26.0325",
-                     "long": "50.5106",
-                     "locality": "Sakhir",
-                     "country": "Bahrain"}
-    }]
+    data = [
+        {
+            'season': '2025',
+            'round': '1',
+            'url': 'https://...',
+            'raceName': 'Australian Grand Prix',
+            'Circuit': {
+                'circuitId': 'albert_park',
+                'url': 'https://...',
+                'circuitName': 'Albert Park Grand Prix Circuit',
+                'Location': {
+                    'lat': '-37.8497',
+                    'long': '144.968',
+                    'locality': 'Melbourne',
+                    'country': 'Australia'
+                }
+            },
+            'date': '2025-03-16',
+            'time': '04:00:00Z',
+            'Results': [
+                {
+                    'number': '4',
+                    'position': '1',
+                    'positionText': '1',
+                    'points': '25',
+                    'Driver': {
+                        'driverId': 'norris',
+                        'permanentNumber': '4',
+                        'code': 'NOR',
+                        'url': 'http://...',
+                        'givenName': 'Lando',
+                        'familyName': 'Norris',
+                        'dateOfBirth': '1999-11-13',
+                        'nationality': 'British'
+                    },
+                    'Constructor': {
+                        'constructorId': 'mclaren',
+                        'url': 'http://...',
+                        'name': 'McLaren',
+                        'nationality': 'British'
+                    },
+                    'grid': '1',
+                    'laps': '57',
+                    'status': 'Finished',
+                    'Time': {
+                        'millis': '6126304',
+                        'time': '1:42:06.304'
+                    },
+                    'FastestLap': {
+                        'rank': '1',
+                        'lap': '43',
+                        'Time': {
+                            'time': '1:22.167'
+                        }
+                    }
+                },
+            ]
+        },
+    ]
 
-    expected = [{
-        "circuitId": "albert_park",
-        "url": "https://...",
-        "circuitName": "Albert Park Grand Prix Circuit",
-        "Location": {"lat": -37.8497,  # cast from str
-                     "long": 144.968,
-                     "locality": "Melbourne",
-                     "country": "Australia"}
-    }, {
-        "circuitId": "bahrain",
-        "url": "https://...",
-        "circuitName": "Bahrain International Circuit",
-        "Location": {"lat": 26.0325,
-                     "long": 50.5106,
-                     "locality": "Sakhir",
-                     "country": "Bahrain"}
-    }]
+    expected = [
+        {
+            'season': int(2025),
+            'round': int(1),
+            'url': 'https://...',
+            'raceName': 'Australian Grand Prix',
+            'Circuit': {
+                'circuitId': 'albert_park',
+                'url': 'https://...',
+                'circuitName': 'Albert Park Grand Prix Circuit',
+                'Location': {
+                    'lat': float(-37.8497),
+                    'long': float(144.968),
+                    'locality': 'Melbourne',
+                    'country': 'Australia'
+                }
+            },
+            'date': datetime.datetime(2025, 3, 16, 0, 0),
+            'time': datetime.time(4, 0, tzinfo=datetime.timezone.utc),
+            'Results': [
+                {
+                    'number': int(4),
+                    'position': int(1),
+                    'positionText': '1',
+                    'points': float(25),
+                    'Driver': {
+                        'driverId': 'norris',
+                        'permanentNumber': int(4),
+                        'code': 'NOR',
+                        'url': 'http://...',
+                        'givenName': 'Lando',
+                        'familyName': 'Norris',
+                        'dateOfBirth': datetime.datetime(1999, 11, 13, 0, 0),
+                        'nationality': 'British'
+                    },
+                    'Constructor': {
+                        'constructorId': 'mclaren',
+                        'url': 'http://...',
+                        'name': 'McLaren',
+                        'nationality': 'British'
+                    },
+                    'grid': int(1),
+                    'laps': int(57),
+                    'status': 'Finished',
+                    'Time': {
+                        'millis': int(6126304),
+                        'time': datetime.timedelta(seconds=6126, microseconds=304000)
+                    },
+                    'FastestLap': {
+                        'rank': int(1),
+                        'lap': int(43),
+                        'Time': {
+                            'time': datetime.timedelta(seconds=82, microseconds=167000)
+                        }
+                    }
+                },
+            ]
+        },
+    ]
 
     result = ErgastRawResponse(query_result=data,
-                               category=API.Circuits,
+                               category=API.Races_RaceResults,
                                auto_cast=True,
                                # set invalid arguments for Mixin: not required
                                response_headers=None,

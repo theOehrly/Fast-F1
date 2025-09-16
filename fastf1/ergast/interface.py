@@ -216,12 +216,23 @@ class ErgastRawResponse(ErgastResponseMixin, list):
         # has the same structure. Iterate over all elements and call the
         # recursive _auto_cast method to convert data types
         query_result = copy.deepcopy(query_result)  # TODO: efficiency?
-        for i in range(len(query_result)):
-            query_result[i] = cls._auto_cast(query_result[i], category)
+        query_result = cls._auto_cast(query_result, category)
         return query_result
 
     @classmethod
     def _auto_cast(cls, data, category):
+        # data types can be dict or list where list then contains dicts and
+        # requires iterating over each entry separately
+        if category['type'] is list:
+            for i in range(len(data)):
+                data[i] = cls._auto_cast_item(data[i], category)
+        else:
+            data = cls._auto_cast_item(data, category)
+
+        return data
+
+    @classmethod
+    def _auto_cast_item(cls, data, category):
         # convert datatypes for all known elements
         for name, mapping in category['map'].items():
             if name not in data:
