@@ -144,3 +144,16 @@ def fastf1_setup():
 
     fastf1.Cache.ci_mode(True)  # only request uncached data
     LoggingManager.debug = True  # raise all exceptions
+
+
+@pytest.fixture(autouse=True)
+def automock_terminal_size(doctest_namespace):
+    # Patch terminal width for pytest output to ensure consistent output for
+    # doctests in all environments. This is especially important for the
+    # formatting of Pandas DataFrames.
+    # Patching inside an autouse=True fixture ensures that it is applied to
+    # all tests but not to the pytest result output in the terminal.
+    # Requiring the doctest_namespace fixture ensures that the patch also
+    # applies to doctests.
+    import shutil
+    shutil.get_terminal_size = lambda *args, **kwargs: (80, 24)
