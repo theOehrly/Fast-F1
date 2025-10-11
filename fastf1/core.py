@@ -2294,63 +2294,58 @@ class Session:
                 load_drivers=True, load_results=True
             )
 
-        # set results from either source or join if both data is available
-        # use driver info from F1 as primary source, only fall back to Ergast
-        # if unavailable
-        # use results from Ergast, if data is unavailable from F1 API
 
-        no_driver_info_f1 = (driver_info_f1 is None) or driver_info_f1.empty
-        no_driver_info_ergast \
-            = (driver_info_ergast is None) or driver_info_ergast.empty
+        # Helper to check for invalid driver info (None None or placeholder abbreviations)
+        def _is_invalid_driver_info(df):
+            if df is None or df.empty:
+                return True
+            # Check for 'None None' in FullName or 3-letter abbreviations that are not standard
+            invalid_names = df['FullName'].fillna('').str.strip().eq('None None').any()
+            # Abbreviations should be 3 uppercase letters, not random codes
+            invalid_abbr = df['Abbreviation'].fillna('').str.match(r'^[A-Z]{3}$').sum() < (len(df) // 2)
+            return invalid_names or invalid_abbr
 
-        # no data
-        if no_driver_info_f1 and no_driver_info_ergast:
-            _logger.warning("Failed to load driver list and session results!")
-            self._results = SessionResults(_force_default_cols=True)
+        # Fallback logic for practice sessions: use Ergast if F1 API is invalid
+        use_ergast_fallback = False
+        if self.name not in self._RACE_LIKE_SESSIONS and not self.event.is_testing():
+            if _is_invalid_driver_info(driver_info_f1):
+                _logger.warning("F1 API driver info is invalid for this session; falling back to Ergast driver info.")
+                use_ergast_fallback = True
 
-        # only Ergast data
-        elif no_driver_info_f1:  # LP2
-            self._results = SessionResults(driver_info_ergast,
-                                           _force_default_cols=True)
-
-        # only F1 data
-        elif no_driver_info_ergast:
-            self._results = SessionResults(driver_info_f1,
-                                           _force_default_cols=True)
-
-        # F1 and Ergast data
+        if use_ergast_fallback:
+            if driver_info_ergast is not None and not driver_info_ergast.empty:
+                self._results = SessionResults(driver_info_ergast, _force_default_cols=True)
+            else:
+                _logger.warning("No valid driver info available from Ergast either!")
+                self._results = SessionResults(_force_default_cols=True)
         else:
-            join_cols \
-                = list(set(driver_info_ergast.columns).difference(shared_cols))
+            # original logic
+            no_driver_info_f1 = (driver_info_f1 is None) or driver_info_f1.empty
+            no_driver_info_ergast = (driver_info_ergast is None) or driver_info_ergast.empty
 
-            # do not rely on Ergast driver list for practice and sprint
-            # qualifying sessions
-            ergast_list_accurate = (
-                self.name in self._RACE_LIKE_SESSIONS
-                or self.name == "Qualifying"
-            )
-            self._results = SessionResults(
-                driver_info_f1.join(
-                    driver_info_ergast.loc[:, join_cols],
-                    # Ergast driver list is not accurate for practice and
-                    # sprint qualifying sessions
-                    how='outer' if ergast_list_accurate else "left"
-                ),
-                _force_default_cols=True
-            )
-
-            if ergast_list_accurate:
-                # drivers are missing if DNSed (did not start)
-                # fill in their information using Ergast
-                missing_drivers = list(set(driver_info_ergast['DriverNumber'])
-                        .difference(driver_info_f1['DriverNumber']))
-                self._results.loc[missing_drivers, shared_cols] \
-                    = driver_info_ergast.loc[missing_drivers, shared_cols]
-
-                # set (Grid)Position to NaN instead of default last or zero to
-                # make the DNS more obvious
-                self._results.loc[missing_drivers,
-                                  ('Position', 'GridPosition')] = np.nan
+            if no_driver_info_f1 and no_driver_info_ergast:
+                _logger.warning("Failed to load driver list and session results!")
+                self._results = SessionResults(_force_default_cols=True)
+            elif no_driver_info_f1:
+                self._results = SessionResults(driver_info_ergast, _force_default_cols=True)
+            elif no_driver_info_ergast:
+                self._results = SessionResults(driver_info_f1, _force_default_cols=True)
+            else:
+                join_cols = list(set(driver_info_ergast.columns).difference(shared_cols))
+                ergast_list_accurate = (
+                    self.name in self._RACE_LIKE_SESSIONS or self.name == "Qualifying"
+                )
+                self._results = SessionResults(
+                    driver_info_f1.join(
+                        driver_info_ergast.loc[:, join_cols],
+                        how='outer' if ergast_list_accurate else "left"
+                    ),
+                    _force_default_cols=True
+                )
+                if ergast_list_accurate:
+                    missing_drivers = list(set(driver_info_ergast['DriverNumber']).difference(driver_info_f1['DriverNumber']))
+                    self._results.loc[missing_drivers, shared_cols] = driver_info_ergast.loc[missing_drivers, shared_cols]
+                    self._results.loc[missing_drivers, ('Position', 'GridPosition')] = np.nan
 
         if (dupl_mask := self._results.index.duplicated()).any():
             dupl_drv = list(self._results.index[dupl_mask])
