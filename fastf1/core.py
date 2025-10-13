@@ -2294,6 +2294,58 @@ class Session:
                 load_drivers=True, load_results=True
             )
 
+        no_driver_info_f1 = (driver_info_f1 is None) or driver_info_f1.empty
+        no_driver_info_ergast \
+            = (driver_info_ergast is None) or driver_info_ergast.empty
+
+        # no data
+        if no_driver_info_f1 and no_driver_info_ergast:
+            _logger.warning("Failed to load driver list and session results!")
+            self._results = SessionResults(_force_default_cols=True)
+
+        # only Ergast data
+        elif no_driver_info_f1:  # LP2
+            self._results = SessionResults(driver_info_ergast,
+                                           _force_default_cols=True)
+
+        # only F1 data
+        elif no_driver_info_ergast:
+            self._results = SessionResults(driver_info_f1,
+                                           _force_default_cols=True)
+
+        # F1 and Ergast data
+        else:
+            join_cols \
+                = list(set(driver_info_ergast.columns).difference(shared_cols))
+
+            # do not rely on Ergast driver list for practice and sprint
+            # qualifying sessions
+            ergast_list_accurate = (
+                self.name in self._RACE_LIKE_SESSIONS
+                or self.name == "Qualifying"
+            )
+            self._results = SessionResults(
+                driver_info_f1.join(
+                    driver_info_ergast.loc[:, join_cols],
+                    # Ergast driver list is not accurate for practice and
+                    # sprint qualifying sessions
+                    how='outer' if ergast_list_accurate else "left"
+                ),
+                _force_default_cols=True
+            )
+
+            if ergast_list_accurate:
+                # drivers are missing if DNSed (did not start)
+                # fill in their information using Ergast
+                missing_drivers = list(set(driver_info_ergast['DriverNumber'])
+                        .difference(driver_info_f1['DriverNumber']))
+                self._results.loc[missing_drivers, shared_cols] \
+                    = driver_info_ergast.loc[missing_drivers, shared_cols]
+
+                # set (Grid)Position to NaN instead of default last or zero to
+                # make the DNS more obvious
+                self._results.loc[missing_drivers,
+                                  ('Position', 'GridPosition')] = np.nan
 
         # Helper to check for invalid driver info (None None or placeholder abbreviations)
         def _is_invalid_driver_info(df):
