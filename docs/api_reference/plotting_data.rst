@@ -1,11 +1,10 @@
 .. _plotting-data:
 
-.. currentmodule:: fastf1.plotting
 
 Plotting Data
 =============
 
-The :mod:`fastf1.plotting` submodule contains helper functions for creating data plots.
+The ``fastf1.plotting`` submodule contains helper functions for creating data plots.
 
 This submodule mainly offers:
     - team names and colors
@@ -56,6 +55,8 @@ See here for a complete list of all colors: :ref:`Team-Colormaps-Overview`
 
 API Summary
 -----------
+
+.. currentmodule:: fastf1.plotting
 
 
 Configuration and Setup

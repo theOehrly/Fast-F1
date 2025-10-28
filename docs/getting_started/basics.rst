@@ -335,5 +335,5 @@ So let's see what the fastest lap time was and who is on pole.
 
 
 Check out this example that shows how you can plot lap times:
-:ref:`sphx_glr_gen_modules_examples_gallery_plot_qualifying_results.py`
+:ref:`sphx_glr_gen_modules_examples_gallery_results_strategy_plot_qualifying_results.py`
 
