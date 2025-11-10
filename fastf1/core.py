@@ -2850,13 +2850,20 @@ class Laps(BaseDataFrame):
 
         # calculate driver ahead from data without padding to
         # prevent out of bounds errors
-        drv_ahead = car_data.iloc[1:-1] \
-            .add_driver_ahead() \
-            .loc[:, ('DriverAhead', 'DistanceToDriverAhead',
-                     'Date', 'Time', 'SessionTime')]
+        # only calculate if there's enough data (at least 3 rows to allow
+        # removing padding with iloc[1:-1])
+        if len(car_data) >= 3:
+            drv_ahead = car_data.iloc[1:-1] \
+                .add_driver_ahead() \
+                .loc[:, ('DriverAhead', 'DistanceToDriverAhead',
+                         'Date', 'Time', 'SessionTime')]
 
-        car_data = car_data.add_distance().add_relative_distance()
-        car_data = car_data.merge_channels(drv_ahead, frequency=frequency)
+            car_data = car_data.add_distance().add_relative_distance()
+            car_data = car_data.merge_channels(drv_ahead, frequency=frequency)
+        else:
+            # not enough data to calculate driver ahead, skip it
+            car_data = car_data.add_distance().add_relative_distance()
+
         merged = pos_data.merge_channels(car_data, frequency=frequency)
         return merged.slice_by_lap(self, interpolate_edges=True)
 
@@ -3514,13 +3521,20 @@ class Lap(BaseSeries):
 
         # calculate driver ahead from data without padding to
         # prevent out of bounds errors
-        drv_ahead = car_data.iloc[1:-1] \
-            .add_driver_ahead() \
-            .loc[:, ('DriverAhead', 'DistanceToDriverAhead',
-                     'Date', 'Time', 'SessionTime')]
+        # only calculate if there's enough data (at least 3 rows to allow
+        # removing padding with iloc[1:-1])
+        if len(car_data) >= 3:
+            drv_ahead = car_data.iloc[1:-1] \
+                .add_driver_ahead() \
+                .loc[:, ('DriverAhead', 'DistanceToDriverAhead',
+                         'Date', 'Time', 'SessionTime')]
 
-        car_data = car_data.add_distance().add_relative_distance()
-        car_data = car_data.merge_channels(drv_ahead, frequency=frequency)
+            car_data = car_data.add_distance().add_relative_distance()
+            car_data = car_data.merge_channels(drv_ahead, frequency=frequency)
+        else:
+            # not enough data to calculate driver ahead, skip it
+            car_data = car_data.add_distance().add_relative_distance()
+
         merged = pos_data.merge_channels(car_data, frequency=frequency)
         return merged.slice_by_lap(self, interpolate_edges=True)
 
