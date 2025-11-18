@@ -2,6 +2,16 @@
 Introduction to FastF1
 ######################
 
+.. toctree::
+   :hidden:
+
+   getting_started/index
+   gen_modules/examples_gallery/index
+   api_reference/index
+   data_reference/index
+   changelog/index
+   contributing/index
+
 FastF1 gives you access to F1 lap timing, car telemetry and position,
 tyre data, weather data, the event schedule and session results.
 
@@ -13,14 +23,14 @@ tyre data, weather data, the event schedule and session results.
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
-        gap: 20px;
+        gap: 16px;
         margin: 30px 0;
       }
       .doc-tile {
-        width: 200px;
+        width: 165px;
         box-shadow: 0 4px 8px var(--pst-color-shadow, rgba(0, 0, 0, 0.1));
         border-radius: 5px;
-        padding: 20px;
+        padding: 10px 16px 10px 16px;
         text-align: center;
         background-color: var(--pst-color-surface, var(--pst-color-background, white));
         transition: transform 0.3s, box-shadow 0.3s;
@@ -49,38 +59,47 @@ tyre data, weather data, the event schedule and session results.
         color: #e74c3c;
       }
     </style>
+
     <div class="doc-tile-container">
+
       <a href="getting_started/index.html" class="doc-tile">
         <div class="doc-tile-icon">📚</div>
-        <h2>Getting Started</h2>
-        <p>Examples and tutorials to help you get started with FastF1</p>
+        <h2>Getting<br>Started</h2>
+        <p>Examples and tutorials to help you get started</p>
       </a>
+
+      <!-- TODO:  add user guide
       <a href="user_guide/index.html" class="doc-tile">
         <div class="doc-tile-icon">📖</div>
         <h2>User Guide</h2>
         <p>Comprehensive guide to using FastF1 effectively</p>
       </a>
+      -->
+
       <a href="api_reference/index.html" class="doc-tile">
         <div class="doc-tile-icon">🔍</div>
-        <h2>API Reference</h2>
-        <p>Detailed documentation of FastF1's classes and functions</p>
+        <h2>API<br>Reference</h2>
+        <p>Documentation of classes and functions</p>
       </a>
+
+      <a href="data_reference/index.html" class="doc-tile">
+        <div class="doc-tile-icon">📊</div>
+        <h2>Data<br>Reference</h2>
+        <p>Documentation of the available data</p>
+      </a>
+
        <a href="gen_modules/examples_gallery/index.html" class="doc-tile">
          <div class="doc-tile-icon">🖼️</div>
-         <h2>Example Gallery</h2>
-         <p>Browse through examples showing FastF1's capabilities</p>
+         <h2>Example<br>Gallery</h2>
+         <p>Examples showing FastF1's capabilities</p>
        </a>
 
-      <a href="#available-data" class="doc-tile">
-        <div class="doc-tile-icon">📊</div>
-        <h2>Available Data</h2>
-        <p>Overview of all F1 data available through FastF1</p>
-      </a>
       <a href="contributing/index.html" class="doc-tile">
         <div class="doc-tile-icon">⚙️</div>
-        <h2>Development</h2>
-        <p>How to contribute to FastF1 and help improve the package</p>
+        <h2>Development<br>&nbsp</h2>
+        <p>How to contribute and help improve FastF1</p>
       </a>
+
     </div>
 
 
@@ -110,85 +129,26 @@ Features
     desired. For more information see :class:`~fastf1.req.Cache`.
 
 
-Third-party packages
---------------------
-
-- R package that wraps FastF1: https://cran.r-project.org/package=f1dataR
+=================
+Third-party Tools
+=================
 
 These packages are not directly related to the FastF1 project. Questions and
 suggestions regarding these packages need to be directed at their respective
 maintainers.
 
 
+SDKs
+----
 
-======================
-Supporting the Project
-======================
-
-If you want to support the continuous development of FastF1, you can sponsor me
-on GitHub or buy me a coffee.
+- **f1dataR**: R package that wraps FastF1 (https://cran.r-project.org/package=f1dataR)
 
 
-==============
-Available Data
-==============
+Websites
+--------
 
-The following is a short overview over the available data with some references
-to functions and objects used to work with this data.
-
-In most cases, the default workflow with FastF1 is to create a
-:class:`~fastf1.core.Session` object using :func:`~fastf1.get_session`. You,
-will then access all data through the session object. One notable exception to
-this pattern is the wrapper for Ergast.
-
-.. table:: Overview over the available data
-   :widths: auto
-
-   =====================  ==============================================================================================================================  ==================================================================================================
-   Topic                  Data                                                                                                                            References
-   =====================  ==============================================================================================================================  ==================================================================================================
-   Event Schedule         event names, countries, locations, dates, scheduled starting times,... (previous and current season including upcoming events)  :ref:`event-schedule` :func:`~fastf1.get_event_schedule` :func:`~fastf1.get_event`
-   Results                driver names, team names, finishing and grid positions, points, finishing status,...                                            :class:`~fastf1.core.SessionResults`, :class:`~fastf1.core.DriverResult`
-   Timing Data            sector times, lap times, pit stops, tyre data and much more                                                                     :attr:`~fastf1.core.Session.laps` :class:`~fastf1.core.Laps`
-   Track Status           flags, safety car                                                                                                               :attr:`~fastf1.core.Session.track_status`
-   Session Status         started, finished, finalized                                                                                                    :attr:`~fastf1.core.Session.session_status`
-   Race Control Messages  investigations, penalties, restart announcements,...                                                                            :attr:`~fastf1.core.Session.race_control_messages`
-   Telemetry              speed, rpm, gear, normalized track position, ...                                                                                :class:`~fastf1.core.Telemetry` :func:`~fastf1.core.Lap.get_car_data`
-   Track Markers          corner numbers, marshall sectors, marshall lights                                                                               :func:`~fastf1.core.Session.get_circuit_info`, :ref:`circuit_info`
-   Jolpica-F1 API         all endpoints that are provided by Jolpica-F1 (previously Ergast)                                                               :ref:`jolpica`
-   =====================  ==============================================================================================================================  ==================================================================================================
-
-
-Compatibility and Availability
-------------------------------
-
-Timing data, session information, car telemetry and position data are available
-from 2018 onwards. (This data is usually available within 30-120 minutes after
-the end of a session.)
-It is also possible to obtain this data by recording the data live stream,
-using the live timing recorder that is built into FastF1. Usually this is not
-necessary but there have been server issues in the past which caused the
-data to be not available for download. Recording of the data live stream is
-therefore mostly a solution for redundancy.
-
-Schedule information and session results are available for older seasons as
-well, going back as far as 1950 (limited to data that is available through
-`Ergast <https://ergast.com/mrd/>`_).
-
-
-========
-Contents
-========
-
-.. toctree::
-   :maxdepth: 1
-
-   getting_started/index
-   gen_modules/examples_gallery/index
-   api_reference/index
-   data_reference/index
-   changelog/index
-   contributing/index
+- **GP Tempo**: Web App for exploring F1 Telemetry Data (https://www.gp-tempo.com/)
+- **Armchair Strategist**: Strategy dashboard for all F1 races since 2018 (https://armchair-strategist.dev/)
 
 
 ========================================================
@@ -199,7 +159,7 @@ For questions that may be of interest to the whole community, please use the
 Github `Discussions <https://github.com/theOehrly/Fast-F1/discussions>`_
 section to ask for help. This includes general support questions.
 
-In case of questions that you prefer to discuss privately, feel free to contact
+In case of questions that you need to discuss privately, feel free to contact
 me via email at oehrly@mailbox.org. Any requests to this address will be
 treated with confidentiality, if desired. **Do not use this email address for
 general support requests! Such requests will likely be ignored.**
