@@ -30,6 +30,7 @@ jobs:
           - python-version: "3.11"
           - python-version: "3.12"
           - python-version: "3.13"
+          - python-version: "3.14"
     name: Tests on ${{ matrix.python-version }} ${{ matrix.name-suffix }}
     steps:
       - name: Setup python
