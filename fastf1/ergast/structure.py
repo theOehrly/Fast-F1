@@ -1,6 +1,9 @@
 import datetime
 import re
-from typing import Optional
+from typing import (
+    Any,
+    Optional
+)
 
 from fastf1.logger import get_logger
 
@@ -17,18 +20,18 @@ _time_string_matcher = re.compile(
 # matches [hh:][mm:]ss[.micros][Z | +-hh:mm] timestring
 
 
-def date_from_ergast(d_str) -> Optional[datetime.datetime]:
+def date_from_ergast(d_str: Any) -> Optional[datetime.datetime]:
     """Create a ``datetime.datetime`` object from a date stamp formatted
     like 'YYYY-MM-DD'."""
     try:
         return datetime.datetime.strptime(d_str, "%Y-%m-%d")
-    except ValueError:
+    except (ValueError, TypeError):
         logger.debug(f"Failed to parse date stamp '{d_str}' in Ergast"
                      f"response.")
         return None
 
 
-def time_from_ergast(t_str) -> Optional[datetime.time]:
+def time_from_ergast(t_str: Any) -> Optional[datetime.time]:
     """Create a ``datetime.time`` object from a string that is formatted
     mostly like a timestamp according to ISO 8601. The implementation here only
     implements a subset of ISO 8601 to work around some missing functionality
@@ -42,7 +45,10 @@ def time_from_ergast(t_str) -> Optional[datetime.time]:
     #   - 12:34.2 -> not accepted because only on microsecond decimal is given
     #   - 12:34Z  -> 'Z' is not accepted as an alias of '+00:00' (utc)
 
-    res = _time_string_matcher.match(t_str)
+    try:
+        res = _time_string_matcher.match(t_str)
+    except TypeError:
+        res = None
 
     if res is None:
         logger.debug(f"Failed to parse timestamp '{t_str}' in Ergast"
@@ -77,11 +83,16 @@ def time_from_ergast(t_str) -> Optional[datetime.time]:
         return None
 
 
-def timedelta_from_ergast(t_str) -> Optional[datetime.timedelta]:
+def timedelta_from_ergast(t_str: Any) -> Optional[datetime.timedelta]:
     """Create a ``datetime.timedelta`` object from a string that is formatted
     [+/-][hh:][mm:]ss[.micros], where all parts except for seconds are
     optional.
     """
+    if not isinstance(t_str, str):
+        logger.debug(f"Failed to parse timestamp '{t_str}' in Ergast"
+                     f"response.")
+        return None
+
     if t_str.startswith('-'):
         sign = -1
         t_str = t_str.strip('-')
@@ -98,7 +109,7 @@ def timedelta_from_ergast(t_str) -> Optional[datetime.timedelta]:
     return None
 
 
-def save_int(i_str) -> int:
+def save_int(i_str: Any) -> int:
     """
     Create an ``int`` object from a string that is formatted like an
     integer. In cases where the input string is not a valid integer,
@@ -106,8 +117,13 @@ def save_int(i_str) -> int:
     """
     # Match pure integer strings, e.g.
     #   - '1234' -> 1234
-    if re.match(r'^[+-]?\d+$', i_str):
-        return int(i_str)
+    try:
+        if re.match(r'^[+-]?\d+$', i_str):
+            return int(i_str)
+
+    except TypeError:
+        # likely invalid JSON
+        return -1
 
     # Otherwise, return -1. A notable example is #432: 1954 British GP, where
     # the racing time (in milliseconds) for Mike Hawthorn is an empty string
@@ -116,14 +132,19 @@ def save_int(i_str) -> int:
         return -1
 
 
-def save_float(f_str) -> float:
+def save_float(f_str: Any) -> float:
     """Create a ``float`` object from a string that is formatted like a float.
     In cases where the input string isn't a valid float, return nan
     """
     # Match pure float strings, e.g.
     #   - '1234.5678' -> 1234.5678
-    if re.match(r'^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$', f_str):
-        return float(f_str)
+    try:
+        if re.match(r'^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$', f_str):
+            return float(f_str)
+
+    except TypeError:
+        # likely invalid JSON
+        return float('nan')
 
     # Otherwise, return np.nan
     else:
