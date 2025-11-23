@@ -32,7 +32,8 @@ def test_date_from_ergast():
     "date_string",
     (
         "",
-        "huh?"
+        "huh?",
+        None
     )
 )
 def test_date_from_ergast_errors(date_string, caplog):
@@ -131,7 +132,8 @@ def test_time_from_ergast(time_string, expected):
     "time_string",
     (
         "huh?",
-        "10:30:75"
+        "10:30:75",
+        None
     )
 )
 def test_time_from_ergast_errors(time_string, caplog):
@@ -184,6 +186,7 @@ def test_timedelta_from_ergast(time_string, expected):
     (
         "nope, not a timestamp",
         "10:30:75.123456",
+        None,
     )
 )
 def test_timedelta_from_ergast_error(time_string, caplog):
@@ -198,7 +201,8 @@ def test_timedelta_from_ergast_error(time_string, caplog):
         ("123", 123),
         ("-4", -4),
         ("", -1),
-        ("123.0", -1)
+        ("123.0", -1),
+        (None, -1)
     )
 )
 def test_save_int(int_string, expected):
@@ -210,7 +214,8 @@ def test_save_int(int_string, expected):
     (
         ("123.4", 123.4),
         ("-5.6", -5.6),
-        ("", float('nan'))
+        ("", float('nan')),
+        (None, float('nan'))
     )
 )
 def test_save_float(float_string, expected):
