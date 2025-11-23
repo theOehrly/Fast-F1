@@ -45,6 +45,7 @@ The following subpackages are public.
     :maxdepth: 1
     :caption: Advanced
 
+    accounts_auth
     cache_and_rate_limits
     exceptions
     logging

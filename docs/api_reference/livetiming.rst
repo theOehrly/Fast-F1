@@ -7,6 +7,12 @@ This module can be used to save live timing data during a session.
 It is **not** possible to do real-time processing of the data.
 
 
+.. note::
+
+    Usage of the live timing client requires an active F1TV Access/Pro/Premium subscription.
+    FastF1 will direct you to sign in to you F1TV account if you have not already done so.
+    You can get more information about the authentication flow in the :ref:`accounts-auth` section.
+
 There are two ways to interact with this module.
 
     - From a python script by creating an instance of
