@@ -13,6 +13,9 @@ It is **not** possible to do real-time processing of the data.
     FastF1 will direct you to sign in to you F1TV account if you have not already done so.
     You can get more information about the authentication flow in the :ref:`accounts-auth` section.
 
+    The live timing client cannot be used in hosted environments like Google Colab or in WebAssembly
+    based environments like Jupyter Lite, due to limitations of the sign-in method.
+
 There are two ways to interact with this module.
 
     - From a python script by creating an instance of
@@ -62,10 +65,11 @@ optionally you can load live timing data from two or more files
 Important Notes
 ---------------
 
-- You should try to record a full session whenever possible. Recording should
-  start 2-3 minutes before a sessions starts. The api parser may not be able to
-  deal with the data correctly if the beginning of a session is missing.
-  Your mileage may vary depending on what and how much data is missing.
+- You should try to record a full session whenever possible. Recording may need
+  to start up to one hour before the start of the session to capture all data.
+  The api parser may not be able to deal with the data correctly if the
+  beginning of a session is missing. Your mileage may vary depending on what
+  and how much data is missing.
 
 - You should not mix recorded live timing data and data requested from the api
   after a session. The data will likely not be synchronized correctly.

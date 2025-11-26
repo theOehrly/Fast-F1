@@ -54,7 +54,7 @@ project = 'FastF1'
 version = fastf1.__version__
 release = version
 copyright = f'{datetime.now().year}, Philipp Schäfer'
-html_title = f"{project} <small>{release}</small>"
+html_title = f"{project} ({release})"
 
 # -- General configuration ---------------------------------------------------
 
