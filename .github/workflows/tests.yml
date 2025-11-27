@@ -188,3 +188,4 @@ jobs:
     uses: ./.github/workflows/docs.yml
     with:
       publish: false
+      test-build: true

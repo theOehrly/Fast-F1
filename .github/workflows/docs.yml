@@ -7,6 +7,9 @@ on:
       publish:
         required: true
         type: boolean
+      test-build:
+        required: true
+        type: boolean
   workflow_dispatch:
     inputs:
       publish:
@@ -26,6 +29,13 @@ on:
         description: "Checkout this ref after installation before building the documentation"
         required: false
         type: string
+      test-build:
+        # does not use the versioning setup and only does a simple html build
+        # enables running on push to master when no access to secrets is available
+        description: "Unversioned test build"
+        required: false
+        type: boolean
+        default: false
   release:
     types: [ released ]
   push:
@@ -114,7 +124,7 @@ jobs:
       - name: Checkout currently deployed build output from external repo to build directory
         uses: actions/checkout@v5
         # skip for pull requests (no access to secret + unversioned build is sufficient)
-        if: (github.event_name == 'release') || (github.ref == 'refs/heads/master') || (github.event_name == 'workflow_dispatch')
+        if: (github.event_name == 'release') || (github.ref == 'refs/heads/master') || (github.event_name == 'workflow_dispatch') || (!inputs.test-build)
         with:
           repository: theOehrly/fastf1-doc-build-output
           path: docs/_build/html
@@ -125,7 +135,9 @@ jobs:
           mkdir test_cache  # not really need but pytest setup relies on it 
           cd docs
           chmod +x ./setup_versioning.sh
-          if [[ "${{ github.event_name }}" == "release" ]]; then
+          if [[ "${{ inputs.test-build }}" == "true" ]]; then
+            make html  # simple unversioned test build
+          elif [[ "${{ github.event_name }}" == "release" ]]; then
             make version-build VERSION="${{ github.ref_name }}"  #  versioned build: release
           elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             make version-build  # versioned build: dev
@@ -152,7 +164,7 @@ jobs:
 
       - name: Push build changes to external repo
         # If this was either a release, run manually with publish=true or a push to master
-        if: (github.event_name == 'release') || (github.ref == 'refs/heads/master') || inputs.publish
+        if: (github.event_name == 'release') || (github.ref == 'refs/heads/master') || inputs.publish || (!inputs.test-build)
         uses: EndBug/add-and-commit@v9
         with:
           cwd: "docs/_build/html"
@@ -164,7 +176,7 @@ jobs:
 
   deploy:
     # deploy releases, dev builds on master and manual runs with publish=true
-    if: (github.event_name == 'release') || (github.ref == 'refs/heads/master') || inputs.publish
+    if: (github.event_name == 'release') || (github.ref == 'refs/heads/master') || inputs.publish || (!inputs.test-build)
     name: Deploy Documentation
 
     # Add a dependency to the build job
