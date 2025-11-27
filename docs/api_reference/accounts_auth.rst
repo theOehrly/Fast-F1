@@ -29,6 +29,12 @@ You can also visit f1login.fastf1.dev directly. If the addon is installed and wo
 to see a success status message. Else, you will be provided with download options for the addon.
 
 
+.. note::
+
+    Authentication is not supported in hosted environments like Google Colab or in WebAssembly
+    based environments like Jupyter Lite, due to limitations of the sign-in method.
+
+
 Command Line Interface
 ----------------------
 
