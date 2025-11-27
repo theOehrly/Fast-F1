@@ -7,6 +7,9 @@ on:
       publish:
         required: true
         type: boolean
+      test-build:
+        required: true
+        type: boolean
   workflow_dispatch:
     inputs:
       publish:
