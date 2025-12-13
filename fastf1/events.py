@@ -571,7 +571,8 @@ def _get_schedule_from_ergast(year) -> "EventSchedule":
         try:
             date = pd.to_datetime(
                 f"{rnd.get('date', '')}T{rnd.get('time', '')}",
-            ).tz_localize(None)
+            ).normalize().tz_localize(None)
+            # TODO: Las Vegas Time Zone not handled correctly
         except dateutil.parser.ParserError:
             date = pd.Timestamp(pd.NaT)
         data['EventDate'].append(date)
@@ -592,47 +593,91 @@ def _get_schedule_from_ergast(year) -> "EventSchedule":
                                  'Qualifying', 'Race']
 
             data['EventFormat'].append(_format)
-
-            data['Session1'].append(session_names[0])
-            data['Session1DateUtc'].append(
-                date.floor('D') - pd.Timedelta(days=2))
-
-            data['Session2'].append(session_names[1])
-            data['Session2DateUtc'].append(
-                date.floor('D') - pd.Timedelta(days=2))
-
-            data['Session3'].append(session_names[2])
-            data['Session3DateUtc'].append(
-                date.floor('D') - pd.Timedelta(days=1))
-
-            data['Session4'].append(session_names[3])
-            data['Session4DateUtc'].append(
-                date.floor('D') - pd.Timedelta(days=1))
-
-            data['Session5'].append(session_names[4])
-            data['Session5DateUtc'].append(date)
-
+        #
+        #     data['Session1'].append(session_names[0])
+        #     data['Session1DateUtc'].append(
+        #         date.floor('D') - pd.Timedelta(days=2))
+        #
+        #     data['Session2'].append(session_names[1])
+        #     data['Session2DateUtc'].append(
+        #         date.floor('D') - pd.Timedelta(days=2))
+        #
+        #     data['Session3'].append(session_names[2])
+        #     data['Session3DateUtc'].append(
+        #         date.floor('D') - pd.Timedelta(days=1))
+        #
+        #     data['Session4'].append(session_names[3])
+        #     data['Session4DateUtc'].append(
+        #         date.floor('D') - pd.Timedelta(days=1))
+        #
+        #     data['Session5'].append(session_names[4])
+        #     data['Session5DateUtc'].append(date)
+        #
         else:
             data['EventFormat'].append("conventional")
+        #
+        #     data['Session1'].append('Practice 1')
+        #     data['Session1DateUtc'].append(
+        #         date.floor('D') - pd.Timedelta(days=2))
+        #
+        #     data['Session2'].append('Practice 2')
+        #     data['Session2DateUtc'].append(
+        #         date.floor('D') - pd.Timedelta(days=2))
+        #
+        #     data['Session3'].append('Practice 3')
+        #     data['Session3DateUtc'].append(
+        #         date.floor('D') - pd.Timedelta(days=1))
+        #
+        #     data['Session4'].append('Qualifying')
+        #     data['Session4DateUtc'].append(
+        #         date.floor('D') - pd.Timedelta(days=1))
+        #
+        #     data['Session5'].append('Race')
+        #     data['Session5DateUtc'].append(date)
 
-            data['Session1'].append('Practice 1')
-            data['Session1DateUtc'].append(
-                date.floor('D') - pd.Timedelta(days=2))
+        fp1 = rnd.get('FirstPractice')
+        data['Session1'].append('Practice 1')
+        data['Session1Date'].append(pd.to_datetime(
+            f"{fp1.get('date', '')}T{fp1.get('time', '')}"
+        ))
+        data['Session1DateUtc'].append(data['Session1Date'][-1].tz_localize(None))
 
+        if fp2 := rnd.get('SecondPractice'):
             data['Session2'].append('Practice 2')
-            data['Session2DateUtc'].append(
-                date.floor('D') - pd.Timedelta(days=2))
+            data['Session2Date'].append(pd.to_datetime(
+                f"{fp2.get('date', '')}T{fp2.get('time', '')}"
+            ))
+        elif sq := rnd.get('SprintQualifying'):
+            data['Session2'].append('Sprint Qualifying')
+            data['Session2Date'].append(pd.to_datetime(
+                f"{sq.get('date', '')}T{sq.get('time', '')}",
+            ))
+        data['Session2DateUtc'].append(data['Session2Date'][-1].tz_localize(None))
 
+        if fp3 := rnd.get('ThirdPractice'):
             data['Session3'].append('Practice 3')
-            data['Session3DateUtc'].append(
-                date.floor('D') - pd.Timedelta(days=1))
+            data['Session3Date'].append(pd.to_datetime(
+                f"{fp3.get('date', '')}T{fp3.get('time', '')}"
+            ))
+        elif s := rnd.get('Sprint'):
+            data['Session3'].append('Sprint')
+            data['Session3Date'].append(pd.to_datetime(
+                f"{s.get('date', '')}T{s.get('time', '')}"
+            ))
+        data['Session3DateUtc'].append(data['Session3Date'][-1].tz_localize(None))
 
-            data['Session4'].append('Qualifying')
-            data['Session4DateUtc'].append(
-                date.floor('D') - pd.Timedelta(days=1))
+        quali = rnd.get('Qualifying')
+        data['Session4'].append('Qualifying')
+        data['Session4Date'].append(pd.to_datetime(
+            f"{quali.get('date', '')}T{quali.get('time', '')}"
+        ))
+        data['Session4DateUtc'].append(data['Session4Date'][-1].tz_localize(None))
 
-            data['Session5'].append('Race')
-            data['Session5DateUtc'].append(date)
+        data['Session5'].append('Race')
+        data['Session5Date'].append(pd.to_datetime(
+            f"{rnd.get('date', '')}T{rnd.get('time', '')}",
+        ))
+        data['Session5DateUtc'].append(data['Session5Date'][-1].tz_localize(None))
 
         data['F1ApiSupport'].append(True if year >= 2018 else False)
         # simplified; this is only true most of the time
