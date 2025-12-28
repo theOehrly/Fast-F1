@@ -17,6 +17,7 @@ import requests
 from requests_cache import CacheMixin
 
 from fastf1.logger import get_logger
+from fastf1.utils.warnings import FastF1DataWarning
 
 
 _logger = get_logger(__name__)
@@ -344,6 +345,10 @@ class Cache(metaclass=_MetaCache):
 
         # workaround for Ergast returning error with status code 200
         if 'Unable to select database' in response.text:
+            warnings.warn(
+                "Ergast returned an error with status code 200. This response was ignored.",
+                FastF1DataWarning
+            )
             return False
 
         return True

@@ -1,4 +1,5 @@
 import numpy as np
+import warnings
 from pandas import (
     DataFrame,
     Index,
@@ -6,6 +7,7 @@ from pandas import (
 )
 
 from fastf1.internals import internals_logger as logger
+from fastf1.utils.warnings import FastF1DataWarning
 
 
 try:
@@ -63,6 +65,10 @@ def create_df_fast(
         if not fallback:
             raise exc
         # in case of error, use the usual but slower method
+        warnings.warn(
+            "Falling back to slow DataFrame creation due to an error in the optimized method.",
+            FastF1DataWarning
+        )
         logger.warning("Falling back to slow data frame creation!")
         logger.debug("Error during fast DataFrame creation", exc_info=exc)
         return _fallback_create_df(arrays, columns)
@@ -72,6 +78,10 @@ def _fallback_create_df(
         arrays: list[np.ndarray],
         columns: list
 ) -> DataFrame:
+    warnings.warn(
+        "Falling back to slow DataFrame creation due to unsupported operation.",
+        FastF1DataWarning
+    )
     data = {col: arr for col, arr in zip(columns, arrays)}
     return DataFrame(data)
 
