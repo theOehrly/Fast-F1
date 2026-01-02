@@ -1400,6 +1400,8 @@ class Session:
 
             if telemetry:
                 self._load_telemetry(livedata=livedata)
+                if laps:
+                    self._impute_missing_speeds()
 
             if weather:
                 self._load_weather_data(livedata=livedata)
@@ -2645,6 +2647,122 @@ class Session:
         )
         return circuit_info
 
+    def _impute_missing_speeds(self):
+        """
+        Impute missing speed trap values (SpeedST, SpeedFL, SpeedI1, SpeedI2)
+        using telemetry data.
+        """
+        if not hasattr(self, '_laps') or not hasattr(self, '_car_data'):
+            return
+
+        _logger.info("Imputing missing speed trap values...")
+
+        speed_cols = ['SpeedST', 'SpeedFL', 'SpeedI1', 'SpeedI2']
+        
+        # 1. Calibration
+        trap_distances = {}
+        
+        # We need a sample of valid laps to calibrate distances
+        valid_laps_all = self._laps.dropna(subset=speed_cols, how='all')
+        if valid_laps_all.empty:
+            return
+
+        # Sample up to 100 laps
+        sample_laps = valid_laps_all.sample(min(len(valid_laps_all), 100), random_state=42)
+        
+        for col in speed_cols:
+            dists = []
+            # Filter for this column
+            valid_sample = sample_laps.dropna(subset=[col])
+            if valid_sample.empty: continue
+            
+            # Limit samples to avoid excessive computation
+            valid_sample = valid_sample.head(25)
+
+            for _, lap in valid_sample.iterrows():
+                drv = lap['DriverNumber']
+                if drv not in self._car_data: continue
+                
+                # Get lap telemetry slice
+                t_start = lap['LapStartTime']
+                t_end = lap['Time']
+                
+                # Check for NaT
+                if pd.isna(t_start) or pd.isna(t_end): continue
+                
+                car = self._car_data[drv]
+                
+                chunk = car[(car['SessionTime'] >= t_start) & (car['SessionTime'] <= t_end)].copy()
+                if chunk.empty: continue
+                
+                # Reset Time for Lap Distance
+                chunk['Time'] = chunk['SessionTime'] - t_start
+                
+                chunk = chunk.add_distance()
+            
+                st_speed = lap[col]
+                
+                # Filter low speeds
+                chunk_high = chunk[chunk['Speed'] > 10]
+                if chunk_high.empty: continue
+                
+                # Find closest speed match
+                diff = (chunk_high['Speed'] - st_speed).abs()
+                if diff.min() > 5.0: continue
+                
+                match_dist = chunk_high.loc[diff.idxmin(), 'Distance']
+                dists.append(match_dist)
+            
+            if dists:
+                trap_distances[col] = np.median(dists)
+                _logger.debug(f"{col} calibrated at {trap_distances[col]:.1f}m")
+
+        # 2. Imputation
+        for col, trap_dist in trap_distances.items():
+            # Identify missing values
+            missing_mask = self._laps[col].isna()
+            if not missing_mask.any(): continue
+            
+            # Iterate only missing
+            missing_idxs = self._laps[missing_mask].index
+            
+            for idx in missing_idxs:
+                lap = self._laps.loc[idx]
+                drv = lap['DriverNumber']
+                if drv not in self._car_data: continue
+                
+                t_start = lap['LapStartTime']
+                t_end = lap['Time']
+                if pd.isna(t_start) or pd.isna(t_end): continue
+                
+                car = self._car_data[drv]
+                chunk = car[(car['SessionTime'] >= t_start) & (car['SessionTime'] <= t_end)].copy()
+                if chunk.empty: continue
+                
+                # Reset Time for Lap Distance
+                chunk['Time'] = chunk['SessionTime'] - t_start
+
+                chunk = chunk.add_distance()
+                
+                # Find speed at trap_dist
+                d_diff = (chunk['Distance'] - trap_dist).abs()
+                
+                # If closest point is too far (>50m), skip (maybe short lap/incomplete)
+                if d_diff.min() > 50.0: continue
+                
+                best_idx = d_diff.idxmin()
+                
+                # Smoothing (avg of 3 points centered)
+                pos = chunk.index.get_loc(best_idx)
+                start_p = max(0, pos - 1)
+                end_p = min(len(chunk), pos + 2) # exclusive
+                
+                speeds = chunk.iloc[start_p:end_p]['Speed']
+                imputed_speed = speeds.mean()
+                
+                # Inject
+                self._laps.at[idx, col] = imputed_speed
+
     def _calculate_t0_date(self, *tel_data_sets: dict):
         """
         Calculate the date timestamp at which data for this session is
@@ -2652,9 +2770,6 @@ class Session:
 
         This does not mark the start of a race (or other sessions). This marks
         the start of the data which is sometimes far before.
-
-        This function sets :attr:`self.t0_date` which is an internally
-        required offset for some calculations.
 
         The current assumption is that the latest date which can be calculated
         is correct. (Based on the timestamp with the least delay.)

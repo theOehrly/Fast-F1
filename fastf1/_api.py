@@ -240,9 +240,6 @@ def _extended_timing_data(path, response=None, livedata=None):
 
     laps_data = pd.DataFrame(laps_data)
 
-    # Forward fill missing speed trap values as they are omitted by the API when unchanged
-    speed_cols = ['SpeedI1', 'SpeedI2', 'SpeedFL', 'SpeedST']
-    laps_data[speed_cols] = laps_data.groupby('Driver')[speed_cols].ffill()
 
     stream_data = pd.DataFrame(stream_data)
 
