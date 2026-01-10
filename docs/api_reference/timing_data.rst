@@ -73,16 +73,16 @@ for each):
      - Session time when the Sector 3 time was set
    * - **SpeedI1**
      - ``float``
-     - Speedtrap sector 1 [km/h]
+     - Speedtrap sector 1 [km/h] (missing under red flag)
    * - **SpeedI2**
      - ``float``
-     - Speedtrap sector 2 [km/h]
+     - Speedtrap sector 2 [km/h] (missing under red flag)
    * - **SpeedFL**
      - ``float``
-     - Speedtrap at finish line [km/h]
+     - Speedtrap at finish line [km/h] (missing under red flag and missing on laps where a driver enters the pits)
    * - **SpeedST**
      - ``float``
-     - Speedtrap on longest straight (Not sure) [km/h]
+     - Speedtrap on longest straight or at a select high speed point, dependent on the circuit [km/h] (missing under red flag)
    * - **IsPersonalBest**
      - ``bool``
      - Flag that indicates whether this lap is the official personal best lap of a driver. If any lap of a driver is quicker than their respective personal best lap, this means that the quicker lap is invalid and not counted. For example, this can happen if the track limits were exceeded.

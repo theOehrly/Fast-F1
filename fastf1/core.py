@@ -1619,6 +1619,32 @@ class Session:
 
         self._add_track_status_to_laps(laps)
 
+        # fix missing speed trap values, caused by the API data skipping
+        # over consecutive equivalent values (#775)
+        for drv in drivers:
+            drv_mask = laps["DriverNumber"] == drv
+            # drv_laps = laps[drv_mask]
+
+            # forward fill sector 1, sector 2 and the "ST" speed trap for all
+            # original laps that didn't take place under a red flag
+            appl_mask = (
+                    ~laps.loc[drv_mask, "FastF1Generated"]
+                    & ~laps.loc[drv_mask, "TrackStatus"].str.contains("5")
+            )
+            fill_12st = laps.loc[
+                drv_mask, ("SpeedI1", "SpeedI2", "SpeedST")
+            ].ffill().loc[appl_mask]
+            laps.loc[
+                appl_mask & drv_mask,
+                ("SpeedI1", "SpeedI2", "SpeedST")
+            ] = fill_12st
+
+            # forward fill finish line speed trap like sector 1 speed trap,
+            # additionally excluding laps where the driver entered the pits
+            appl_mask &= pd.isnull(laps.loc[drv_mask, "PitInTime"])
+            fill_fl = laps.loc[drv_mask, "SpeedFL"].ffill().loc[appl_mask]
+            laps.loc[appl_mask & drv_mask, "SpeedFL"] = fill_fl
+
         self._laps = Laps(laps, session=self, _force_default_cols=True)
         self._check_lap_accuracy()
 
