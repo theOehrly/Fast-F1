@@ -16,7 +16,6 @@ classifiers = [
   "Intended Audience :: Developers",
   "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
@@ -25,7 +24,7 @@ classifiers = [
 ]
 
 # minimum python version additionally needs to be changed in the test matrix
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 # minimum package versions additionally need to be changed in requirements/minver.txt
 dependencies = [
   "cryptography",
