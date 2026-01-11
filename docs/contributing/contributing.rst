@@ -94,9 +94,9 @@ A brief overview is:
 
 5. Create a branch to hold your changes::
 
-      git checkout -b my-feature origin/master
+      git checkout -b my-feature origin/main
 
-   and start making changes. Never work in the ``master`` branch!
+   and start making changes. Never work in the ``main`` branch!
 
 6. Work on this copy, on your computer, using Git to do the version control.
    When you're done editing e.g., ``fastf1/core.py``, do::
