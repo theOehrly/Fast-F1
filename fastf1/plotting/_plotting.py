@@ -1,5 +1,4 @@
 import warnings
-from typing import Optional
 
 
 try:
@@ -29,7 +28,7 @@ _COLOR_PALETTE: list[str] = ['#FF79C6', '#50FA7B', '#8BE9FD', '#BD93F9',
 
 def setup_mpl(
         mpl_timedelta_support: bool = True,
-        color_scheme: Optional[str] = None,
+        color_scheme: str | None = None,
         *args, **kwargs  # for backwards compatibility, do not use in new code
 ):
     """Setup matplotlib for use with fastf1.

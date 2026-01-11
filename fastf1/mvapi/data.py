@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -117,7 +116,7 @@ class CircuitInfo:
             df['Distance'] = distances
 
 
-def get_circuit_info(*, year: int, circuit_key: int) -> Optional[CircuitInfo]:
+def get_circuit_info(*, year: int, circuit_key: int) -> CircuitInfo | None:
     """:meta private:
     Load circuit information from the MultiViewer API and convert it into
     as :class:``SessionInfo`` object.

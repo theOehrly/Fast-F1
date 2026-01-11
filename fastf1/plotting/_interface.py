@@ -3,9 +3,7 @@ import warnings
 from collections.abc import Sequence
 from typing import (
     Any,
-    Literal,
-    Optional,
-    Union
+    Literal
 )
 
 import matplotlib.axes
@@ -411,7 +409,7 @@ def _replace_magic_auto(
         style: dict,
         session: Session,
         colormap: str,
-        color_kws: Union[list, tuple]
+        color_kws: list | tuple
     ) -> dict[str, Any]:
     """
     Recursively replace the 'auto' values with the team color of the driver if
@@ -431,11 +429,11 @@ def _replace_magic_auto(
 
 def get_driver_style(
         identifier: str,
-        style: Union[str, Sequence[str], Sequence[dict]],
+        style: str | Sequence[str] | Sequence[dict],
         session: Session,
         *,
         colormap: str = 'default',
-        additional_color_kws: Union[list, tuple] = (),
+        additional_color_kws: list | tuple = (),
         exact_match: bool = False
 ) -> dict[str, Any]:
     """
@@ -841,9 +839,9 @@ def override_team_constants(
         identifier: str,
         session: Session,
         *,
-        short_name: Optional[str] = None,
-        official_color: Optional[str] = None,
-        fastf1_color: Optional[str] = None
+        short_name: str | None = None,
+        official_color: str | None = None,
+        fastf1_color: str | None = None
 ):
     """
     Override the default team constants for a specific team.

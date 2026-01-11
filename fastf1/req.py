@@ -8,10 +8,7 @@ import re
 import sys
 import time
 import warnings
-from typing import (
-    Literal,
-    Optional
-)
+from typing import Literal
 
 import requests
 from requests_cache import CacheMixin
@@ -204,7 +201,7 @@ class Cache(metaclass=_MetaCache):
     _IGNORE_VERSION = False
     _FORCE_RENEW = False
 
-    _requests_session_cached: Optional[_CachedSessionWithRateLimiting] = None
+    _requests_session_cached: _CachedSessionWithRateLimiting | None = None
     _requests_session: requests.Session = _SessionWithRateLimiting()
     _default_cache_enabled = False  # flag to ensure that warning about disabled cache is logged once only # noqa: E501
     _tmp_disabled = False
@@ -644,7 +641,7 @@ class Cache(metaclass=_MetaCache):
         cls._ci_mode = enabled
 
     @classmethod
-    def get_cache_info(cls) -> tuple[Optional[str], Optional[int]]:
+    def get_cache_info(cls) -> tuple[str | None, int | None]:
         """Returns information about the cache directory and its size.
 
         If the cache is not configured, None will be returned for both the

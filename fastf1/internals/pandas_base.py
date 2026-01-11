@@ -1,9 +1,8 @@
-"""Base classes for objects that inherit form Pandas Series or DataFrame."""
+"""Base classes for objects that inherit from Pandas Series or DataFrame."""
 import typing
+from collections.abc import Callable
 from typing import (
     Any,
-    Callable,
-    Optional,
     final
 )
 
@@ -54,7 +53,7 @@ class BaseDataFrame(pd.DataFrame):
             the correct type as defined in the _COLUMNS attribute.
     """
 
-    _COLUMNS: Optional[dict[str, Any]] = None
+    _COLUMNS: dict[str, Any] | None = None
     """
     A dictionary that defines the default columns of the DataFrame and their
     corresponding data types. The keys are the column names and the values are
@@ -151,14 +150,13 @@ class _BaseSeriesConstructor(pd.Series):
     from this class in its __new__ method.
     """
 
-    __meta_created_from: Optional[BaseDataFrame]
+    __meta_created_from: BaseDataFrame | None
 
     def __new__(cls, data=None, index=None, *args, **kwargs) -> pd.Series:
         parent = getattr(cls, '__meta_created_from', None)
 
-        if ((index is None) and isinstance(data, (pd.Series,
-                                                  pd.DataFrame,
-                                                  SingleBlockManager))):
+        if (index is None) and isinstance(
+                data, pd.Series | pd.DataFrame | SingleBlockManager):
             # no index is explicitly given, try to get an index from the
             # data itself
             index = getattr(data, 'index', None)
@@ -175,9 +173,7 @@ class _BaseSeriesConstructor(pd.Series):
             # the data is a row of the parent DataFrame
             constructor = parent._constructor_sliced_horizontal
 
-        if (isinstance(data, SingleBlockManager)
-                and hasattr(constructor, '_from_mgr')
-                and pd.__version__.startswith('2.')):
+        if isinstance(data, SingleBlockManager):
             obj = constructor._from_mgr(data, axes=data.axes)
         else:
             obj = constructor(data=data, index=index, *args, **kwargs)

@@ -3,10 +3,6 @@ import collections
 import datetime
 import json
 import zlib
-from typing import (
-    Optional,
-    Union
-)
 
 import numpy as np
 import pandas as pd
@@ -105,7 +101,7 @@ EMPTY_STREAM = {'Time': pd.NaT, 'Driver': '', 'Position': np.nan,
 
 
 def timing_data(path: str,
-                response: Optional[str] = None,
+                response: str | None = None,
                 livedata=None
                 ) -> (pd.DataFrame, pd.DataFrame):
     """
@@ -1784,7 +1780,7 @@ def fetch_page(path, name):
         return None
 
 
-def parse(text: str, zipped: bool = False) -> Union[str, dict]:
+def parse(text: str, zipped: bool = False) -> str | dict:
     """
     .. warning::
         :mod:`fastf1.api` will be considered private in future releases and

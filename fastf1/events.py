@@ -2,11 +2,7 @@ import collections
 import datetime
 import json
 import warnings
-from typing import (
-    Literal,
-    Optional,
-    Union
-)
+from typing import Literal
 
 import dateutil.parser
 import pandas as pd
@@ -52,10 +48,10 @@ _HEADERS = {'User-Agent': f'FastF1/{__version_short__}'}
 
 def get_session(
         year: int,
-        gp: Union[str, int],
-        identifier: Optional[Union[int, str]] = None,
+        gp: str | int,
+        identifier: int | str | None = None,
         *,
-        backend: Optional[Literal['fastf1', 'f1timing', 'ergast']] = None,
+        backend: Literal['fastf1', 'f1timing', 'ergast'] | None = None,
         force_ergast: bool = False,
 ) -> Session:
     """Create a :class:`~fastf1.core.Session` object based on year, event name
@@ -128,7 +124,7 @@ def get_testing_session(
         test_number: int,
         session_number: int,
         *,
-        backend: Optional[Literal['fastf1', 'f1timing']] = None
+        backend: Literal['fastf1', 'f1timing'] | None = None
 ) -> Session:
     """Create a :class:`~fastf1.core.Session` object for testing sessions
     based on year, test  event number and session number.
@@ -161,9 +157,9 @@ def get_testing_session(
 
 def get_event(
         year: int,
-        gp: Union[int, str],
+        gp: int | str,
         *,
-        backend: Optional[Literal['fastf1', 'f1timing', 'ergast']] = None,
+        backend: Literal['fastf1', 'f1timing', 'ergast'] | None = None,
         force_ergast: bool = False,
         strict_search: bool = False,
         exact_match: bool = False
@@ -231,7 +227,7 @@ def get_testing_event(
         year: int,
         test_number: int,
         *,
-        backend: Optional[Literal['fastf1', 'f1timing']] = None
+        backend: Literal['fastf1', 'f1timing'] | None = None
 ) -> "Event":
     """Create a :class:`fastf1.events.Event` object for testing sessions
     based on year and test event number.
@@ -270,7 +266,7 @@ def get_event_schedule(
         year: int,
         *,
         include_testing: bool = True,
-        backend: Optional[Literal['fastf1', 'f1timing', 'ergast']] = None,
+        backend: Literal['fastf1', 'f1timing', 'ergast'] | None = None,
         force_ergast: bool = False
 ) -> "EventSchedule":
     """Create an :class:`~fastf1.events.EventSchedule` object for a specific
@@ -339,10 +335,10 @@ def get_event_schedule(
 
 
 def get_events_remaining(
-        dt: Optional[datetime.datetime] = None,
+        dt: datetime.datetime | None = None,
         *,
         include_testing: bool = True,
-        backend: Optional[Literal['fastf1', 'f1timing', 'ergast']] = None,
+        backend: Literal['fastf1', 'f1timing', 'ergast'] | None = None,
         force_ergast: bool = False
 ) -> 'EventSchedule':
     """
@@ -902,7 +898,7 @@ class Event(BaseSeries):
 
         return session_name
 
-    def get_session_date(self, identifier: Union[str, int], utc=False) \
+    def get_session_date(self, identifier: str | int, utc=False) \
             -> pd.Timestamp:
         """Return the date and time (if available) at which a specific session
         of this event is or was held.
@@ -932,7 +928,7 @@ class Event(BaseSeries):
                 return date_utc
             return date
 
-    def get_session(self, identifier: Union[int, str]) -> "Session":
+    def get_session(self, identifier: int | str) -> "Session":
         """Return a session from this event.
 
         Args:

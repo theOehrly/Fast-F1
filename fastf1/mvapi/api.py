@@ -1,4 +1,3 @@
-from typing import Optional
 
 import requests.exceptions
 
@@ -16,7 +15,7 @@ def _make_url(path: str):
     return f"{PROTO}://{HOST}{path}"
 
 
-def get_circuit(*, year: int, circuit_key: int) -> Optional[dict]:
+def get_circuit(*, year: int, circuit_key: int) -> dict | None:
     """:meta private:
     Request circuit data from the MultiViewer API and return the JSON
     response."""

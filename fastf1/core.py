@@ -1,11 +1,13 @@
 import collections
 import re
 import warnings
-from collections.abc import Iterable
+from collections.abc import (
+    Callable,
+    Iterable
+)
 from functools import cached_property
 from typing import (
     Any,
-    Callable,
     Literal,
     Optional,
     Union
@@ -181,7 +183,7 @@ class Telemetry(BaseDataFrame):
                  drop_unknown_channels: bool = False,
                  **kwargs):
         super().__init__(*args, **kwargs)
-        self.session: Optional[Session] = session
+        self.session: Session | None = session
         self.driver = driver
 
         if drop_unknown_channels:
@@ -234,7 +236,7 @@ class Telemetry(BaseDataFrame):
 
     def slice_by_mask(
             self,
-            mask: Union[list, pd.Series, np.ndarray],
+            mask: list | pd.Series | np.ndarray,
             pad: int = 0,
             pad_side: str = 'both'
     ) -> "Telemetry":
@@ -297,7 +299,7 @@ class Telemetry(BaseDataFrame):
             end_time = ref_laps['Time'].max()
             start_time = ref_laps['LapStartTime'].min()
 
-        elif isinstance(ref_laps, (Lap, Laps)):
+        elif isinstance(ref_laps, Lap | Laps):
             if isinstance(ref_laps, Laps):  # one lap in Laps
                 ref_laps = ref_laps.iloc[0]  # handle as a single lap
             if 'DriverNumber' not in ref_laps.index:
@@ -365,7 +367,7 @@ class Telemetry(BaseDataFrame):
     def merge_channels(
             self,
             other: Union["Telemetry", pd.DataFrame],
-            frequency: Union[int, Literal['original'], None] = None
+            frequency: int | Literal['original'] | None = None
     ):
         """Merge telemetry objects containing different telemetry channels.
 
@@ -544,9 +546,9 @@ class Telemetry(BaseDataFrame):
 
     def resample_channels(
             self,
-            rule: Optional[str] = None,
-            new_date_ref: Optional[pd.Series] = None,
-            **kwargs: Optional[Any]
+            rule: str | None = None,
+            new_date_ref: pd.Series | None = None,
+            **kwargs: Any | None
     ):
         """Resample telemetry data.
 
@@ -671,7 +673,7 @@ class Telemetry(BaseDataFrame):
             cls,
             name: str,
             signal_type: str,
-            interpolation_method: Optional[str] = None
+            interpolation_method: str | None = None
     ):
         """Register a custom telemetry channel.
 
@@ -1186,11 +1188,11 @@ class Session:
 
         self._track_status: pd.DataFrame
 
-        self._total_laps: Optional[int]
+        self._total_laps: int | None
         self._laps: Laps
 
-        self._t0_date: Optional[pd.Timestamp]
-        self._session_start_time: Optional[pd.Timedelta]
+        self._t0_date: pd.Timestamp | None
+        self._session_start_time: pd.Timedelta | None
 
         self._car_data: dict
         self._pos_data: dict
@@ -1198,7 +1200,7 @@ class Session:
         self._weather_data: pd.DataFrame
         self._results: SessionResults
 
-        self._session_split_times: Optional[list] = None
+        self._session_split_times: list | None = None
 
     def __repr__(self):
         return (f"{self.event.year} Season Round {self.event.RoundNumber}: "
@@ -2405,7 +2407,7 @@ class Session:
 
     def _drivers_results_from_ergast(
             self, *, load_drivers=False, load_results=False
-    ) -> Optional[pd.DataFrame]:
+    ) -> pd.DataFrame | None:
         if self.name in self._RACE_LIKE_SESSIONS + self._QUALI_LIKE_SESSIONS:
             session_name = self.name
         else:
@@ -2620,7 +2622,7 @@ class Session:
             raise ValueError(f"Invalid driver identifier '{identifier}'")
         return self.results[mask].iloc[0]
 
-    def get_circuit_info(self) -> Optional[CircuitInfo]:
+    def get_circuit_info(self) -> CircuitInfo | None:
         """Returns additional information about the circuit that hosts this
         event.
 
@@ -2740,7 +2742,7 @@ class Laps(BaseDataFrame):
         'LapStartDate': 'datetime64[ns]',
         'TrackStatus': str,
         'Position': 'float64',  # need to support NaN
-        'Deleted': Optional[bool],
+        'Deleted': bool | None,
         'DeletedReason': str,
         'FastF1Generated': bool,
         'IsAccurate': bool
@@ -2755,7 +2757,7 @@ class Laps(BaseDataFrame):
 
     def __init__(self,
                  *args,
-                 session: Optional[Session] = None,
+                 session: Session | None = None,
                  **kwargs):
 
         super().__init__(*args, **kwargs)
@@ -2815,7 +2817,7 @@ class Laps(BaseDataFrame):
 
     def get_telemetry(self,
                       *,
-                      frequency: Union[int, Literal['original'], None] = None
+                      frequency: int | Literal['original'] | None = None
                       ) -> Telemetry:
         """Telemetry data for all laps in `self`
 
@@ -3037,7 +3039,7 @@ class Laps(BaseDataFrame):
                       FutureWarning)
         return self[self['LapNumber'] == lap_number]
 
-    def pick_laps(self, lap_numbers: Union[int, Iterable[int]]) -> "Laps":
+    def pick_laps(self, lap_numbers: int | Iterable[int]) -> "Laps":
         """Return all laps of a specific LapNumber or a list of LapNumbers
         in self. ::
 
@@ -3051,7 +3053,7 @@ class Laps(BaseDataFrame):
         Returns:
             instance of :class:`Laps`
         """
-        if isinstance(lap_numbers, (int, float)):
+        if isinstance(lap_numbers, int | float):
             lap_numbers = [lap_numbers, ]
 
         for i in lap_numbers:
@@ -3060,7 +3062,7 @@ class Laps(BaseDataFrame):
 
         return self[self["LapNumber"].isin(lap_numbers)]
 
-    def pick_driver(self, identifier: Union[int, str]) -> "Laps":
+    def pick_driver(self, identifier: int | str) -> "Laps":
         """Return all laps of a specific driver in self based on the driver's
         three letters identifier or based on the driver number.
 
@@ -3088,7 +3090,7 @@ class Laps(BaseDataFrame):
             return self[self['Driver'] == identifier]
 
     def pick_drivers(self,
-                     identifiers: Union[int, str, Iterable[Union[int, str]]]
+                     identifiers: int | str | Iterable[int | str]
                      ) -> "Laps":
         """Return all laps of the specified driver or drivers in self based
         on the drivers' three letters identifier or the driver number. ::
@@ -3103,7 +3105,7 @@ class Laps(BaseDataFrame):
         Returns:
             instance of :class:`Laps`
         """
-        if isinstance(identifiers, (int, str)):
+        if isinstance(identifiers, int | str):
             identifiers = [identifiers, ]
 
         names = [n.upper() for n in identifiers if not str(n).isdigit()]
@@ -3134,7 +3136,7 @@ class Laps(BaseDataFrame):
                       FutureWarning)
         return self[self['Team'] == name]
 
-    def pick_teams(self, names: Union[str, Iterable[str]]) -> "Laps":
+    def pick_teams(self, names: str | Iterable[str]) -> "Laps":
         """Return all laps of the specified team or teams in self based
         on the team names. ::
 
@@ -3192,7 +3194,7 @@ class Laps(BaseDataFrame):
 
         return lap
 
-    def pick_quicklaps(self, threshold: Optional[float] = None) -> "Laps":
+    def pick_quicklaps(self, threshold: float | None = None) -> "Laps":
         """Return all laps with `LapTime` faster than a certain limit. By
         default, the threshold is 107% of the best `LapTime` of all laps
         in self.
@@ -3229,7 +3231,7 @@ class Laps(BaseDataFrame):
                       FutureWarning)
         return self[self['Compound'] == compound.upper()]
 
-    def pick_compounds(self, compounds: Union[str, Iterable[str]]) -> "Laps":
+    def pick_compounds(self, compounds: str | Iterable[str]) -> "Laps":
         """Return all laps in self which were done on some specific compounds.
         ::
 
@@ -3416,7 +3418,7 @@ class Laps(BaseDataFrame):
                 laps[i] = None
         return laps
 
-    def iterlaps(self, require: Optional[Iterable] = None) \
+    def iterlaps(self, require: Iterable | None = None) \
             -> Iterable[tuple[int, "Lap"]]:
         """Iterator for iterating over all laps in self.
 
@@ -3481,7 +3483,7 @@ class Lap(BaseSeries):
 
     def get_telemetry(self,
                       *,
-                      frequency: Union[int, Literal['original'], None] = None
+                      frequency: int | Literal['original'] | None = None
                       ) -> Telemetry:
         """Telemetry data for this lap
 

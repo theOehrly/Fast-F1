@@ -2,10 +2,6 @@
 import datetime
 import warnings
 from functools import reduce
-from typing import (
-    Optional,
-    Union
-)
 
 import numpy as np
 import pandas as pd
@@ -123,8 +119,8 @@ def recursive_dict_get(d: dict, *keys: str, default_none: bool = False):
         return ret
 
 
-def to_timedelta(x: Union[str, datetime.timedelta]) \
-        -> Optional[datetime.timedelta]:
+def to_timedelta(x: str | datetime.timedelta) \
+        -> datetime.timedelta | None:
     """Fast timedelta object creation from a time string
 
     Permissible string formats:
@@ -181,8 +177,8 @@ def to_timedelta(x: Union[str, datetime.timedelta]) \
         return None
 
 
-def to_datetime(x: Union[str, datetime.datetime]) \
-        -> Optional[datetime.datetime]:
+def to_datetime(x: str | datetime.datetime) \
+        -> datetime.datetime | None:
     """Fast datetime object creation from a date string.
 
     Permissible string formats:
