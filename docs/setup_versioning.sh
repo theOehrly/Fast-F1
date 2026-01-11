@@ -19,7 +19,10 @@ if [ -f "_build/html/.version" ]; then
 
     rm -rf "_build/html/versions/$CURRENT_VERSION"
     mkdir -p "_build/html/versions/$CURRENT_VERSION"
-    rsync -av --quiet --exclude='versions' "_build/html/" "_build/html/versions/$CURRENT_VERSION/"
+
+    # make sure to not move the .git folder! Else, git will treat the version as a subrepository and not
+    # commit and push it!
+    rsync -av --quiet --exclude='versions' --exclude=".git" "_build/html/" "_build/html/versions/$CURRENT_VERSION/"
 fi
 
 # if a new version is in the tmp build directory, grab it and move it to its
@@ -59,6 +62,7 @@ fi
 # ensure that the _static dir exists first
 mkdir -p "_build/html/_static"
 echo "$VERSIONS" | tr ' ' '\n' | jq -R -s 'split("\n")[:-1] | map({
+    name: (if . == "'"$LATEST_VERSION"'" then . + " (stable)" else . end),
     version: .,
     url: (if . == "'"$LATEST_VERSION"'" then "/" else "/versions/" + . + "/" end),
     preferred: (if . == "'"$LATEST_VERSION"'" then true else false end)
