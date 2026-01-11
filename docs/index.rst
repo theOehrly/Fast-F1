@@ -164,11 +164,11 @@ me via email at oehrly@mailbox.org. Any requests to this address will be
 treated with confidentiality, if desired. **Do not use this email address for
 general support requests! Such requests will likely be ignored.**
 
-FastF1 has a `Code of Conduct <https://github.com/theOehrly/Fast-F1/blob/master/CODE_OF_CONDUCT.md>`_.
+FastF1 has a `Code of Conduct <https://github.com/theOehrly/Fast-F1/blob/main/CODE_OF_CONDUCT.md>`_.
 Complaints about a perceived breach of this code of conduct should be sent to
 oehrly@mailbox.org, in almost all cases. Please refer to the Code of Conduct,
 available through the main page of the GitHub repository (or click
-`here <https://github.com/theOehrly/Fast-F1/blob/master/CODE_OF_CONDUCT.md>`_),
+`here <https://github.com/theOehrly/Fast-F1/blob/main/CODE_OF_CONDUCT.md>`_),
 for information on how breaches are reported, how the
 Code of Conduct is enforced and what values FastF1 encourages.
 

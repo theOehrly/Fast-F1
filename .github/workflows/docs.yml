@@ -31,7 +31,7 @@ on:
         type: string
       test-build:
         # does not use the versioning setup and only does a simple html build
-        # enables running on push to master when no access to secrets is available
+        # enables running on push to main when no access to secrets is available
         description: "Unversioned test build"
         required: false
         type: boolean
@@ -40,7 +40,7 @@ on:
     types: [ released ]
   push:
     branches:
-      - master
+      - main
     paths:
       - 'src/docs/**'
       - 'src/fastf1/**'
@@ -124,7 +124,7 @@ jobs:
       - name: Checkout currently deployed build output from external repo to build directory
         uses: actions/checkout@v5
         # skip for pull requests (no access to secret + unversioned build is sufficient)
-        if: (!inputs.test-build) && ((github.event_name == 'release') || (github.ref == 'refs/heads/master') || (github.event_name == 'workflow_dispatch'))
+        if: (!inputs.test-build) && ((github.event_name == 'release') || (github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch'))
         with:
           repository: theOehrly/fastf1-doc-build-output
           path: docs/_build/html
@@ -141,7 +141,7 @@ jobs:
             make version-build VERSION="${{ github.ref_name }}"  #  versioned build: release
           elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             make version-build  # versioned build: dev
-          elif [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             make version-build  # versioned build: dev
           else
             make html  # unversioned build
@@ -163,8 +163,8 @@ jobs:
           path: ./doc_cache
 
       - name: Push build changes to external repo
-        # If this was either a release, run manually with publish=true or a push to master
-        if: (!inputs.test-build) && ((github.event_name == 'release') || (github.ref == 'refs/heads/master') || inputs.publish)
+        # If this was either a release, run manually with publish=true or a push to main
+        if: (!inputs.test-build) && ((github.event_name == 'release') || (github.ref == 'refs/heads/main') || inputs.publish)
         uses: EndBug/add-and-commit@v9
         with:
           cwd: "docs/_build/html"
@@ -175,8 +175,8 @@ jobs:
           push: true
 
   deploy:
-    # deploy releases, dev builds on master and manual runs with publish=true
-    if: (!inputs.test-build) && ((github.event_name == 'release') || (github.ref == 'refs/heads/master') || inputs.publish)
+    # deploy releases, dev builds on main and manual runs with publish=true
+    if: (!inputs.test-build) && ((github.event_name == 'release') || (github.ref == 'refs/heads/main') || inputs.publish)
     name: Deploy Documentation
 
     # Add a dependency to the build job

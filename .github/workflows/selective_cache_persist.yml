@@ -7,7 +7,7 @@ on:
 
 
 jobs:
-  access-fastf1-master-cache:
+  access-fastf1-main-cache:
     # Simply access the FastF1 cache for all runners of the test matrix without
     # modifying them to prevent GitHub from deleting the cache entries because
     # they have not been accessed.
