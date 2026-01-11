@@ -2,7 +2,6 @@ import copy
 import json
 from typing import (
     Literal,
-    Optional,
     Union
 )
 
@@ -127,8 +126,8 @@ class ErgastResultFrame(BaseDataFrame):
     _internal_names_set = set(_internal_names)
 
     def __init__(self, data=None, *,
-                 category: Optional[dict] = None,
-                 response: Optional[list] = None,
+                 category: dict | None = None,
+                 response: list | None = None,
                  auto_cast: bool = True,
                  **kwargs):
         if (data is not None) and (response is not None):
@@ -408,7 +407,7 @@ class Ergast:
     def __init__(self,
                  result_type: Literal['raw', 'pandas'] = 'pandas',
                  auto_cast: bool = True,
-                 limit: Optional[int] = None):
+                 limit: int | None = None):
         self._default_result_type = result_type
         self._default_auto_cast = auto_cast
         self._limit = limit
@@ -416,18 +415,18 @@ class Ergast:
     @staticmethod
     def _build_url(
             endpoint: str,
-            season: Union[Literal['current'], int] = None,
-            round: Union[Literal['last'], int] = None,
-            circuit: Optional[str] = None,
-            constructor: Optional[str] = None,
-            driver: Optional[str] = None,
-            grid_position: Optional[int] = None,
-            results_position: Optional[int] = None,
-            fastest_rank: Optional[int] = None,
-            status: Optional[str] = None,
-            lap_number: Optional[int] = None,
-            stop_number: Optional[int] = None,
-            standings_position: Optional[int] = None
+            season: Literal['current'] | int = None,
+            round: Literal['last'] | int = None,
+            circuit: str | None = None,
+            constructor: str | None = None,
+            driver: str | None = None,
+            grid_position: int | None = None,
+            results_position: int | None = None,
+            fastest_rank: int | None = None,
+            status: str | None = None,
+            lap_number: int | None = None,
+            stop_number: int | None = None,
+            standings_position: int | None = None
     ) -> str:
         selectors = list()
 
@@ -497,7 +496,7 @@ class Ergast:
         return BASE_URL + "".join(selectors) + ".json"
 
     @classmethod
-    def _get(cls, url: str, params: dict) -> Union[dict, list]:
+    def _get(cls, url: str, params: dict) -> dict | list:
         # request data from ergast and load the returned json data.
         r = Cache.requests_get(url, headers=HEADERS, params=params,
                                timeout=TIMEOUT)
@@ -521,15 +520,13 @@ class Ergast:
             endpoint: str,
             table: str,
             category: dict,
-            subcategory: Optional[dict],
-            result_type: Optional[Literal['pandas', 'raw']] = None,
-            auto_cast: Optional[bool] = None,
-            limit: Optional[int] = None,
-            offset: Optional[int] = None,
-            selectors: Optional[dict] = None,
-    ) -> Union[ErgastSimpleResponse,
-               ErgastMultiResponse,
-               ErgastRawResponse]:
+            subcategory: dict | None,
+            result_type: Literal['pandas', 'raw'] | None = None,
+            auto_cast: bool | None = None,
+            limit: int | None = None,
+            offset: int | None = None,
+            selectors: dict | None = None,
+    ) -> ErgastSimpleResponse | ErgastMultiResponse | ErgastRawResponse:
         # query the Ergast database and
         # split the raw response into multiple parts, depending also on what
         # type was selected for the response data format.
@@ -584,13 +581,11 @@ class Ergast:
     def _build_default_result(
             self, *,
             selectors: dict,
-            result_type: Optional[Literal['pandas', 'raw']] = None,
-            auto_cast: Optional[bool] = None,
-            limit: Optional[int] = None,
+            result_type: Literal['pandas', 'raw'] | None = None,
+            auto_cast: bool | None = None,
+            limit: int | None = None,
             **kwargs
-    ) -> Union[ErgastSimpleResponse,
-               ErgastMultiResponse,
-               ErgastRawResponse]:
+    ) -> ErgastSimpleResponse | ErgastMultiResponse | ErgastRawResponse:
         # use defaults or per-call overrides if specified
         if result_type is None:
             result_type = self._default_result_type
@@ -612,18 +607,18 @@ class Ergast:
     # can be represented by a DataFrame-like object
     def get_seasons(
             self,
-            circuit: Optional[str] = None,
-            constructor: Optional[str] = None,
-            driver: Optional[str] = None,
-            grid_position: Optional[int] = None,
-            results_position: Optional[int] = None,
-            fastest_rank: Optional[int] = None,
-            status: Optional[str] = None,
-            result_type: Optional[Literal['pandas', 'raw']] = None,
-            auto_cast: Optional[bool] = None,
-            limit: Optional[int] = None,
-            offset: Optional[int] = None
-    ) -> Union[ErgastSimpleResponse, ErgastRawResponse]:
+            circuit: str | None = None,
+            constructor: str | None = None,
+            driver: str | None = None,
+            grid_position: int | None = None,
+            results_position: int | None = None,
+            fastest_rank: int | None = None,
+            status: str | None = None,
+            result_type: Literal['pandas', 'raw'] | None = None,
+            auto_cast: bool | None = None,
+            limit: int | None = None,
+            offset: int | None = None
+    ) -> ErgastSimpleResponse | ErgastRawResponse:
         """Get a list of seasons.
 
         See: https://ergast.com/mrd/methods/seasons/
@@ -673,20 +668,20 @@ class Ergast:
 
     def get_race_schedule(
             self,
-            season: Union[Literal['current'], int],
-            round: Optional[Union[Literal['last'], int]] = None,
-            circuit: Optional[str] = None,
-            constructor: Optional[str] = None,
-            driver: Optional[str] = None,
-            grid_position: Optional[int] = None,
-            results_position: Optional[int] = None,
-            fastest_rank: Optional[int] = None,
-            status: Optional[str] = None,
-            result_type: Optional[Literal['pandas', 'raw']] = None,
-            auto_cast: Optional[bool] = None,
-            limit: Optional[int] = None,
-            offset: Optional[int] = None
-    ) -> Union[ErgastSimpleResponse, ErgastRawResponse]:
+            season: Literal['current'] | int,
+            round: Literal['last'] | int | None = None,
+            circuit: str | None = None,
+            constructor: str | None = None,
+            driver: str | None = None,
+            grid_position: int | None = None,
+            results_position: int | None = None,
+            fastest_rank: int | None = None,
+            status: str | None = None,
+            result_type: Literal['pandas', 'raw'] | None = None,
+            auto_cast: bool | None = None,
+            limit: int | None = None,
+            offset: int | None = None
+    ) -> ErgastSimpleResponse | ErgastRawResponse:
         """Get a list of races.
 
         See: https://ergast.com/mrd/methods/schedule/
@@ -740,20 +735,20 @@ class Ergast:
 
     def get_driver_info(
             self,
-            season: Optional[Union[Literal['current'], int]] = None,
-            round: Optional[Union[Literal['last'], int]] = None,
-            circuit: Optional[str] = None,
-            constructor: Optional[str] = None,
-            driver: Optional[str] = None,
-            grid_position: Optional[int] = None,
-            results_position: Optional[int] = None,
-            fastest_rank: Optional[int] = None,
-            status: Optional[str] = None,
-            result_type: Optional[Literal['pandas', 'raw']] = None,
-            auto_cast: Optional[bool] = None,
-            limit: Optional[int] = None,
-            offset: Optional[int] = None
-    ) -> Union[ErgastSimpleResponse, ErgastRawResponse]:
+            season: Literal['current'] | int | None = None,
+            round: Literal['last'] | int | None = None,
+            circuit: str | None = None,
+            constructor: str | None = None,
+            driver: str | None = None,
+            grid_position: int | None = None,
+            results_position: int | None = None,
+            fastest_rank: int | None = None,
+            status: str | None = None,
+            result_type: Literal['pandas', 'raw'] | None = None,
+            auto_cast: bool | None = None,
+            limit: int | None = None,
+            offset: int | None = None
+    ) -> ErgastSimpleResponse | ErgastRawResponse:
         """Get a list of drivers.
 
         See: https://ergast.com/mrd/methods/drivers/
@@ -807,20 +802,20 @@ class Ergast:
 
     def get_constructor_info(
             self,
-            season: Optional[Union[Literal['current'], int]] = None,
-            round: Optional[Union[Literal['last'], int]] = None,
-            circuit: Optional[str] = None,
-            constructor: Optional[str] = None,
-            driver: Optional[str] = None,
-            grid_position: Optional[int] = None,
-            results_position: Optional[int] = None,
-            fastest_rank: Optional[int] = None,
-            status: Optional[str] = None,
-            result_type: Optional[Literal['pandas', 'raw']] = None,
-            auto_cast: Optional[bool] = None,
-            limit: Optional[int] = None,
-            offset: Optional[int] = None
-    ) -> Union[ErgastSimpleResponse, ErgastRawResponse]:
+            season: Literal['current'] | int | None = None,
+            round: Literal['last'] | int | None = None,
+            circuit: str | None = None,
+            constructor: str | None = None,
+            driver: str | None = None,
+            grid_position: int | None = None,
+            results_position: int | None = None,
+            fastest_rank: int | None = None,
+            status: str | None = None,
+            result_type: Literal['pandas', 'raw'] | None = None,
+            auto_cast: bool | None = None,
+            limit: int | None = None,
+            offset: int | None = None
+    ) -> ErgastSimpleResponse | ErgastRawResponse:
         """Get a list of constructors.
 
         See: https://ergast.com/mrd/methods/constructors/
@@ -874,19 +869,19 @@ class Ergast:
 
     def get_circuits(
             self,
-            season: Optional[Union[Literal['current'], int]] = None,
-            round: Optional[Union[Literal['last'], int]] = None,
-            constructor: Optional[str] = None,
-            driver: Optional[str] = None,
-            grid_position: Optional[int] = None,
-            results_position: Optional[int] = None,
-            fastest_rank: Optional[int] = None,
-            status: Optional[str] = None,
-            result_type: Optional[Literal['pandas', 'raw']] = None,
-            auto_cast: Optional[bool] = None,
-            limit: Optional[int] = None,
-            offset: Optional[int] = None
-    ) -> Union[ErgastSimpleResponse, ErgastRawResponse]:
+            season: Literal['current'] | int | None = None,
+            round: Literal['last'] | int | None = None,
+            constructor: str | None = None,
+            driver: str | None = None,
+            grid_position: int | None = None,
+            results_position: int | None = None,
+            fastest_rank: int | None = None,
+            status: str | None = None,
+            result_type: Literal['pandas', 'raw'] | None = None,
+            auto_cast: bool | None = None,
+            limit: int | None = None,
+            offset: int | None = None
+    ) -> ErgastSimpleResponse | ErgastRawResponse:
         """Get a list of circuits.
 
         See: https://ergast.com/mrd/methods/circuits/
@@ -938,20 +933,20 @@ class Ergast:
 
     def get_finishing_status(
             self,
-            season: Optional[Union[Literal['current'], int]] = None,
-            round: Optional[Union[Literal['last'], int]] = None,
-            circuit: Optional[str] = None,
-            constructor: Optional[str] = None,
-            driver: Optional[str] = None,
-            grid_position: Optional[int] = None,
-            results_position: Optional[int] = None,
-            fastest_rank: Optional[int] = None,
-            status: Optional[str] = None,
-            result_type: Optional[Literal['pandas', 'raw']] = None,
-            auto_cast: Optional[bool] = None,
-            limit: Optional[int] = None,
-            offset: Optional[int] = None
-    ) -> Union[ErgastSimpleResponse, ErgastRawResponse]:
+            season: Literal['current'] | int | None = None,
+            round: Literal['last'] | int | None = None,
+            circuit: str | None = None,
+            constructor: str | None = None,
+            driver: str | None = None,
+            grid_position: int | None = None,
+            results_position: int | None = None,
+            fastest_rank: int | None = None,
+            status: str | None = None,
+            result_type: Literal['pandas', 'raw'] | None = None,
+            auto_cast: bool | None = None,
+            limit: int | None = None,
+            offset: int | None = None
+    ) -> ErgastSimpleResponse | ErgastRawResponse:
         """Get a list of finishing status codes.
 
         See: https://ergast.com/mrd/methods/status/
@@ -1011,20 +1006,20 @@ class Ergast:
     # needs to be represented by multiple DataFrame-like objects
     def get_race_results(
             self,
-            season: Optional[Union[Literal['current'], int]] = None,
-            round: Optional[Union[Literal['last'], int]] = None,
-            circuit: Optional[str] = None,
-            constructor: Optional[str] = None,
-            driver: Optional[str] = None,
-            grid_position: Optional[int] = None,
-            results_position: Optional[int] = None,
-            fastest_rank: Optional[int] = None,
-            status: Optional[str] = None,
-            result_type: Optional[Literal['pandas', 'raw']] = None,
-            auto_cast: Optional[bool] = None,
-            limit: Optional[int] = None,
-            offset: Optional[int] = None
-    ) -> Union[ErgastMultiResponse, ErgastRawResponse]:
+            season: Literal['current'] | int | None = None,
+            round: Literal['last'] | int | None = None,
+            circuit: str | None = None,
+            constructor: str | None = None,
+            driver: str | None = None,
+            grid_position: int | None = None,
+            results_position: int | None = None,
+            fastest_rank: int | None = None,
+            status: str | None = None,
+            result_type: Literal['pandas', 'raw'] | None = None,
+            auto_cast: bool | None = None,
+            limit: int | None = None,
+            offset: int | None = None
+    ) -> ErgastMultiResponse | ErgastRawResponse:
         """Get race results for one or multiple races.
 
         See: https://ergast.com/mrd/methods/results/
@@ -1079,20 +1074,20 @@ class Ergast:
 
     def get_qualifying_results(
             self,
-            season: Optional[Union[Literal['current'], int]] = None,
-            round: Optional[Union[Literal['last'], int]] = None,
-            circuit: Optional[str] = None,
-            constructor: Optional[str] = None,
-            driver: Optional[str] = None,
-            grid_position: Optional[int] = None,
-            results_position: Optional[int] = None,
-            fastest_rank: Optional[int] = None,
-            status: Optional[str] = None,
-            result_type: Optional[Literal['pandas', 'raw']] = None,
-            auto_cast: Optional[bool] = None,
-            limit: Optional[int] = None,
-            offset: Optional[int] = None
-    ) -> Union[ErgastMultiResponse, ErgastRawResponse]:
+            season: Literal['current'] | int | None = None,
+            round: Literal['last'] | int | None = None,
+            circuit: str | None = None,
+            constructor: str | None = None,
+            driver: str | None = None,
+            grid_position: int | None = None,
+            results_position: int | None = None,
+            fastest_rank: int | None = None,
+            status: str | None = None,
+            result_type: Literal['pandas', 'raw'] | None = None,
+            auto_cast: bool | None = None,
+            limit: int | None = None,
+            offset: int | None = None
+    ) -> ErgastMultiResponse | ErgastRawResponse:
         """Get qualifying results for one or multiple qualifying sessions.
 
         See: https://ergast.com/mrd/methods/qualifying/
@@ -1147,19 +1142,19 @@ class Ergast:
 
     def get_sprint_results(
             self,
-            season: Optional[Union[Literal['current'], int]] = None,
-            round: Optional[Union[Literal['last'], int]] = None,
-            circuit: Optional[str] = None,
-            constructor: Optional[str] = None,
-            driver: Optional[str] = None,
-            grid_position: Optional[int] = None,
-            results_position: Optional[int] = None,
-            status: Optional[str] = None,
-            result_type: Optional[Literal['pandas', 'raw']] = None,
-            auto_cast: Optional[bool] = None,
-            limit: Optional[int] = None,
-            offset: Optional[int] = None
-    ) -> Union[ErgastMultiResponse, ErgastRawResponse]:
+            season: Literal['current'] | int | None = None,
+            round: Literal['last'] | int | None = None,
+            circuit: str | None = None,
+            constructor: str | None = None,
+            driver: str | None = None,
+            grid_position: int | None = None,
+            results_position: int | None = None,
+            status: str | None = None,
+            result_type: Literal['pandas', 'raw'] | None = None,
+            auto_cast: bool | None = None,
+            limit: int | None = None,
+            offset: int | None = None
+    ) -> ErgastMultiResponse | ErgastRawResponse:
         """Get sprint results for one or multiple sprints.
 
         See: https://ergast.com/mrd/methods/sprint/
@@ -1212,15 +1207,15 @@ class Ergast:
 
     def get_driver_standings(
             self,
-            season: Optional[Union[Literal['current'], int]] = None,
-            round: Optional[Union[Literal['last'], int]] = None,
-            driver: Optional[str] = None,
-            standings_position: Optional[int] = None,
-            result_type: Optional[Literal['pandas', 'raw']] = None,
-            auto_cast: Optional[bool] = None,
-            limit: Optional[int] = None,
-            offset: Optional[int] = None
-    ) -> Union[ErgastMultiResponse, ErgastRawResponse]:
+            season: Literal['current'] | int | None = None,
+            round: Literal['last'] | int | None = None,
+            driver: str | None = None,
+            standings_position: int | None = None,
+            result_type: Literal['pandas', 'raw'] | None = None,
+            auto_cast: bool | None = None,
+            limit: int | None = None,
+            offset: int | None = None
+    ) -> ErgastMultiResponse | ErgastRawResponse:
         """Get driver standings at specific points of a season.
 
         See: https://ergast.com/mrd/methods/standings/
@@ -1264,15 +1259,15 @@ class Ergast:
 
     def get_constructor_standings(
             self,
-            season: Optional[Union[Literal['current'], int]] = None,
-            round: Optional[Union[Literal['last'], int]] = None,
-            constructor: Optional[str] = None,
-            standings_position: Optional[int] = None,
-            result_type: Optional[Literal['pandas', 'raw']] = None,
-            auto_cast: Optional[bool] = None,
-            limit: Optional[int] = None,
-            offset: Optional[int] = None
-    ) -> Union[ErgastMultiResponse, ErgastRawResponse]:
+            season: Literal['current'] | int | None = None,
+            round: Literal['last'] | int | None = None,
+            constructor: str | None = None,
+            standings_position: int | None = None,
+            result_type: Literal['pandas', 'raw'] | None = None,
+            auto_cast: bool | None = None,
+            limit: int | None = None,
+            offset: int | None = None
+    ) -> ErgastMultiResponse | ErgastRawResponse:
         """Get constructor standings at specific points of a season.
 
         See: https://ergast.com/mrd/methods/standings/
@@ -1318,15 +1313,15 @@ class Ergast:
         )
 
     def get_lap_times(self,
-                      season: Union[Literal['current'], int],
-                      round: Union[Literal['last'], int],
-                      lap_number: Optional[int] = None,
-                      driver: Optional[str] = None,
-                      result_type: Optional[Literal['pandas', 'raw']] = None,
-                      auto_cast: Optional[bool] = None,
-                      limit: Optional[int] = None,
-                      offset: Optional[int] = None
-                      ) -> Union[ErgastMultiResponse, ErgastRawResponse]:
+                      season: Literal['current'] | int,
+                      round: Literal['last'] | int,
+                      lap_number: int | None = None,
+                      driver: str | None = None,
+                      result_type: Literal['pandas', 'raw'] | None = None,
+                      auto_cast: bool | None = None,
+                      limit: int | None = None,
+                      offset: int | None = None
+                      ) -> ErgastMultiResponse | ErgastRawResponse:
         """Get sprint results for one or multiple sprints.
 
         See: https://ergast.com/mrd/methods/laps/
@@ -1369,16 +1364,16 @@ class Ergast:
                                           selectors=selectors)
 
     def get_pit_stops(self,
-                      season: Union[Literal['current'], int],
-                      round: Union[Literal['last'], int],
-                      stop_number: Optional[int] = None,
-                      lap_number: Optional[int] = None,
-                      driver: Optional[str] = None,
-                      result_type: Optional[Literal['pandas', 'raw']] = None,
-                      auto_cast: Optional[bool] = None,
-                      limit: Optional[int] = None,
-                      offset: Optional[int] = None
-                      ) -> Union[ErgastMultiResponse, ErgastRawResponse]:
+                      season: Literal['current'] | int,
+                      round: Literal['last'] | int,
+                      stop_number: int | None = None,
+                      lap_number: int | None = None,
+                      driver: str | None = None,
+                      result_type: Literal['pandas', 'raw'] | None = None,
+                      auto_cast: bool | None = None,
+                      limit: int | None = None,
+                      offset: int | None = None
+                      ) -> ErgastMultiResponse | ErgastRawResponse:
         """Get pit stop information for one or multiple sessions.
 
         See: https://ergast.com/mrd/methods/standings/

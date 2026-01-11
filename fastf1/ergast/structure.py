@@ -1,9 +1,6 @@
 import datetime
 import re
-from typing import (
-    Any,
-    Optional
-)
+from typing import Any
 
 from fastf1.logger import get_logger
 
@@ -20,7 +17,7 @@ _time_string_matcher = re.compile(
 # matches [hh:][mm:]ss[.micros][Z | +-hh:mm] timestring
 
 
-def date_from_ergast(d_str: Any) -> Optional[datetime.datetime]:
+def date_from_ergast(d_str: Any) -> datetime.datetime | None:
     """Create a ``datetime.datetime`` object from a date stamp formatted
     like 'YYYY-MM-DD'."""
     try:
@@ -31,7 +28,7 @@ def date_from_ergast(d_str: Any) -> Optional[datetime.datetime]:
         return None
 
 
-def time_from_ergast(t_str: Any) -> Optional[datetime.time]:
+def time_from_ergast(t_str: Any) -> datetime.time | None:
     """Create a ``datetime.time`` object from a string that is formatted
     mostly like a timestamp according to ISO 8601. The implementation here only
     implements a subset of ISO 8601 to work around some missing functionality
@@ -83,7 +80,7 @@ def time_from_ergast(t_str: Any) -> Optional[datetime.time]:
         return None
 
 
-def timedelta_from_ergast(t_str: Any) -> Optional[datetime.timedelta]:
+def timedelta_from_ergast(t_str: Any) -> datetime.timedelta | None:
     """Create a ``datetime.timedelta`` object from a string that is formatted
     [+/-][hh:][mm:]ss[.micros], where all parts except for seconds are
     optional.
