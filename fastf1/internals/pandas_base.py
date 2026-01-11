@@ -1,4 +1,4 @@
-"""Base classes for objects that inherit form Pandas Series or DataFrame."""
+"""Base classes for objects that inherit from Pandas Series or DataFrame."""
 import typing
 from typing import (
     Any,
@@ -175,12 +175,7 @@ class _BaseSeriesConstructor(pd.Series):
             # the data is a row of the parent DataFrame
             constructor = parent._constructor_sliced_horizontal
 
-        if (isinstance(data, SingleBlockManager)
-                and hasattr(constructor, '_from_mgr')
-                and pd.__version__.startswith('2.')):
-            obj = constructor._from_mgr(data, axes=data.axes)
-        else:
-            obj = constructor(data=data, index=index, *args, **kwargs)
+        obj = constructor._from_mgr(data, axes=data.axes)
 
         if parent is not None:
             # catch-all fix for some missing __finalize__ calls in Pandas
