@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 import numpy as np
 import pandas as pd
@@ -248,8 +249,22 @@ def test_driver_list():
         for key, val in driver.items():
             assert isinstance(val, dtypes[key])
 
-
 # ########## special test cases ##########
+
+def test_driver_list_contains_support_race(caplog):
+    caplog.set_level(logging.WARNING)
+    response = list()
+    tl = 12  # length of timestamp: len('00:00:00:000')
+    with open('fastf1/testing/reference_data/2023_11_FP1/driver_list.raw', 'rb') as fobj:
+        for line in fobj.readlines():
+            dec = line.decode('utf-8-sig')
+            response.append([dec[:tl], fastf1._api.parse(dec[tl:])])
+
+    # parse data; api path is unused here, so it does not need to be valid
+    data = fastf1._api.driver_info('api/path', response=response)
+    assert len(caplog.record_tuples) == 1
+    _, _, warn_message = caplog.record_tuples[0]
+    assert warn_message.startswith("Skipping delayed declaration of driver")
 
 @pytest.mark.f1telapi
 def test_deleted_laps_not_marked_personal_best():

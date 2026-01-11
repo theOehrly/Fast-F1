@@ -1,5 +1,4 @@
 import base64
-import collections
 import datetime
 import json
 import zlib
@@ -1560,13 +1559,16 @@ def driver_info(path, response=None, livedata=None):
                 "recently, please try again in a few minutes."
             )
 
-    drivers = collections.defaultdict(dict)
+    drivers = {}
 
     default_keys = [
         'RacingNumber', 'BroadcastName', 'FullName', 'Tla', 'Line',
         'TeamName', 'TeamColour', 'FirstName', 'LastName', 'Reference',
         'HeadshotUrl', 'CountryCode'
     ]
+
+    new_driver_cutoff = datetime.timedelta(minutes=60)
+    delayed_drivers = set()
 
     for line in response:
         try:
@@ -1579,10 +1581,22 @@ def driver_info(path, response=None, livedata=None):
         for drv_num, patch in content.items():
             if not isinstance(patch, dict):
                 continue  # unexpected data format
+
+            if drv_num not in drivers:
+                if to_timedelta(ts) < new_driver_cutoff:
+                    drivers[drv_num] = {}
+                else:
+                    delayed_drivers.add(drv_num)
+                    continue
+
             for key, val in patch.items():
                 if key not in default_keys:
                     continue
                 drivers[drv_num][key] = val
+
+    if delayed_drivers:
+        _logger.warning(f"Skipping delayed declaration of drivers "
+                        f"{delayed_drivers}")
 
     return drivers
 
