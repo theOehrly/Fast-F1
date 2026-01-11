@@ -62,6 +62,7 @@ fi
 # ensure that the _static dir exists first
 mkdir -p "_build/html/_static"
 echo "$VERSIONS" | tr ' ' '\n' | jq -R -s 'split("\n")[:-1] | map({
+    name: (if . == "'"$LATEST_VERSION"'" then . + " (stable)" else . end),
     version: .,
     url: (if . == "'"$LATEST_VERSION"'" then "/" else "/versions/" + . + "/" end),
     preferred: (if . == "'"$LATEST_VERSION"'" then true else false end)

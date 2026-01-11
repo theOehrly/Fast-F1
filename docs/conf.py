@@ -131,7 +131,7 @@ html_theme_options = {
         }
     ],
     "switcher": {
-        "version_match": fastf1.__version__ \
+        "version_match": f"v{fastf1.__version__}" \
             if re.match(r"^\d+\.\d+\.\d+$", fastf1.__version__) \
             else "dev",
         "json_url": "/_static/versions.json",
