@@ -30,7 +30,7 @@ dependencies = [
   "cryptography",
   "matplotlib>=3.8.0,<4.0.0",
   "numpy>=1.26.0,<3.0.0",
-  "pandas>=2.1.0,<3.0.0",
+  "pandas>=2.1.1,<3.0.0",
   "platformdirs",
   "pyjwt",
   "python-dateutil",

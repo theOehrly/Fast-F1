@@ -1,6 +1,6 @@
 matplotlib==3.8.0
 numpy==1.26.0
-pandas==2.1.0
+pandas==2.1.1
 requests==2.30.0
 requests-cache==1.0.0
 scipy==1.11.0
