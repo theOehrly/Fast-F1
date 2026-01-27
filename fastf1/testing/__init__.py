@@ -6,6 +6,9 @@ import logging
 import multiprocessing
 
 
+_MP_CONFIGURED = False
+
+
 class SubprocessTestError(Exception):
     """Raised if an Exception is encountered in a subprocess test.
     """
@@ -23,6 +26,13 @@ def run_in_subprocess(func, *args, **kwargs):
     Raises:
         SubprocessTestError: The subprocess finished with a non-zero exitcode
     """
+    global _MP_CONFIGURED
+    if not _MP_CONFIGURED:
+        multiprocessing.set_start_method('spawn')
+        # "spawn" is slower than the linux default but ensure that the child
+        # process is created cleanly with no inherited state in all cases
+        _MP_CONFIGURED = True
+
     prcs = multiprocessing.Process(target=func, args=args, kwargs=kwargs)
     prcs.start()
     prcs.join()
