@@ -12,6 +12,7 @@ if __version_tuple__:
 else:
     __version_short__ = __version__
 
+import warnings
 
 from fastf1.events import get_session  # noqa: F401
 from fastf1.events import (  # noqa: F401
@@ -22,7 +23,17 @@ from fastf1.events import (  # noqa: F401
     get_testing_session
 )
 from fastf1.logger import set_log_level  # noqa: F401
-from fastf1.req import (  # noqa: F401
-    Cache,
-    RateLimitExceededError
-)
+from fastf1.req import Cache  # noqa: F401
+
+
+# TODO: remove in v3.10
+def __getattr__(name):
+    if name == "RateLimitExceededError":
+
+        warnings.warn(f"Accessing `{name}` via `{__name__}` is deprecated. "
+                      f"Use `fastf1.exceptions` instead.")
+
+        from fastf1.exceptions import RateLimitExceededError
+        return RateLimitExceededError
+
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
