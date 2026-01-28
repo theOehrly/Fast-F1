@@ -44,7 +44,8 @@ warnings.filterwarnings(action='ignore',
                                 r'COLOR_PALETTE) is deprecated and.*')
 
 doc_cache = os.path.abspath('../doc_cache')
-
+if not os.path.exists(doc_cache):
+    os.makedirs(doc_cache)
 
 # -- Project information -----------------------------------------------------
 
