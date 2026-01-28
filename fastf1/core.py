@@ -18,7 +18,10 @@ import pandas as pd
 
 import fastf1
 from fastf1 import _api as api
-from fastf1 import ergast
+from fastf1 import (
+    ergast,
+    exceptions
+)
 from fastf1.internals.pandas_base import (
     BaseDataFrame,
     BaseSeries
@@ -33,6 +36,20 @@ from fastf1.mvapi import (
     get_circuit_info
 )
 from fastf1.utils import to_timedelta
+
+
+# TODO: remove in v3.10
+def __getattr__(name):
+    if name in ("NoLapDataError",
+                "DataNotLoadedError",
+                "InvalidSessionError"):
+
+        warnings.warn(f"Accessing `{name}` via `{__name__}` is deprecated. "
+                      f"Use `fastf1.exceptions` instead.")
+
+        return getattr(exceptions, name)
+
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 _logger = get_logger(__name__)
@@ -1208,7 +1225,7 @@ class Session:
 
     def _get_property_warn_not_loaded(self, name):
         if not hasattr(self, name):
-            raise DataNotLoadedError(
+            raise exceptions.DataNotLoadedError(
                 "The data you are trying to access has not been loaded yet. "
                 "See `Session.load`"
             )
@@ -1574,7 +1591,7 @@ class Session:
             df = pd.concat([df, result], sort=False)
 
         if df is None:
-            raise NoLapDataError
+            raise exceptions.NoLapDataError
 
         laps = df.reset_index(drop=True)  # noqa: F821
 
@@ -3354,9 +3371,10 @@ class Laps(BaseDataFrame):
         if 'Deleted' in self.columns:
             return self[~self['Deleted']]
         else:
-            raise DataNotLoadedError("The Deleted column is only available "
-                                     "when race control messages are loaded. "
-                                     "See `Session.load`")
+            raise exceptions.DataNotLoadedError(
+                "The Deleted column is only available when race control "
+                "messages are loaded. See `Session.load`"
+            )
 
     def pick_accurate(self) -> "Laps":
         """Return all laps which pass the accuracy validation check
@@ -3828,27 +3846,3 @@ class DriverResult(BaseSeries):
     def dnf(self) -> bool:
         """True if driver did not finish"""
         return not (self.Status[3:6] == 'Lap' or self.Status == 'Finished')
-
-
-class DataNotLoadedError(Exception):
-    """Raised if an attempt is made to access data that has not been loaded
-    yet."""
-    pass
-
-
-class NoLapDataError(Exception):
-    """
-    Raised if the API request does not fail but there is no usable data
-    after processing the result.
-    """
-    def __init__(self, *args):
-        super().__init__("Failed to load session because the API did not "
-                         "provide any usable data.")
-
-
-class InvalidSessionError(Exception):
-    """Raised if no session for the specified event name, type and year
-    can be found."""
-
-    def __init__(self, *args):
-        super().__init__("No matching session can be found.")

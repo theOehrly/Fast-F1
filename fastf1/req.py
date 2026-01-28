@@ -13,6 +13,7 @@ from typing import Literal
 import requests
 from requests_cache import CacheMixin
 
+from fastf1.exceptions import RateLimitExceededError
 from fastf1.logger import get_logger
 
 
@@ -688,8 +689,3 @@ class _NoCacheContext:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         Cache.set_enabled()
-
-
-class RateLimitExceededError(Exception):
-    """Raised if a hard rate limit is exceeded."""
-    pass

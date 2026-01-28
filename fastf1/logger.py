@@ -3,6 +3,8 @@ import logging
 import os
 import warnings
 
+from fastf1.exceptions import FastF1CriticalError
+
 
 class LoggingManager:
     """Interface for configuring logging in FastF1.
@@ -108,6 +110,9 @@ def soft_exceptions(descr_name: str, msg: str, logger: logging.Logger):
             if not LoggingManager.debug:
                 try:
                     return func(*args, **kwargs)
+                except FastF1CriticalError:
+                    # specific category of errors that should always be raised
+                    raise
                 except Exception as exc:
                     logger.warning(msg)
                     logger.debug(f"Traceback for failure in {descr_name}",

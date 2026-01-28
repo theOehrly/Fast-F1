@@ -1,17 +1,35 @@
 import copy
 import json
+import warnings
 from typing import (
     Literal,
     Union
 )
 
 import fastf1.ergast.structure as API
-from fastf1 import __version_short__
+from fastf1 import (
+    __version_short__,
+    exceptions
+)
 from fastf1.internals.pandas_base import (
     BaseDataFrame,
     BaseSeries
 )
 from fastf1.req import Cache
+
+
+# TODO: remove in v3.10
+def __getattr__(name):
+    if name in ("ErgastError",
+                "ErgastJsonError",
+                "ErgastInvalidRequestError"):
+
+        warnings.warn(f"Accessing `{name}` via `{__name__}` is deprecated. "
+                      f"Use `fastf1.exceptions` instead.")
+
+        return getattr(exceptions, name)
+
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 BASE_URL = 'https://api.jolpi.ca/ergast/f1'
@@ -505,11 +523,11 @@ class Ergast:
                 return json.loads(r.content.decode('utf-8'))
             except Exception as exc:
                 Cache.delete_response(url)  # don't keep a corrupted response
-                raise ErgastJsonError(
+                raise exceptions.ErgastJsonError(
                     f"Failed to parse Ergast response ({url})"
                 ) from exc
         else:
-            raise ErgastInvalidRequestError(
+            raise exceptions.ErgastInvalidRequestError(
                 f"Invalid request to Ergast ({url})\n"
                 f"Server response: '{r.reason}'"
             )
@@ -1417,18 +1435,3 @@ class Ergast:
                                           limit=limit,
                                           offset=offset,
                                           selectors=selectors)
-
-
-class ErgastError(Exception):
-    """Base class for Ergast API errors."""
-    pass
-
-
-class ErgastJsonError(ErgastError):
-    """The response that was returned by the server could not be parsed."""
-    pass
-
-
-class ErgastInvalidRequestError(ErgastError):
-    """The server rejected the request because it was invalid."""
-    pass
