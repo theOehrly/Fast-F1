@@ -181,6 +181,10 @@ class Cache(metaclass=_MetaCache):
         >>> session = fastf1.get_session(2021, 5, 'Q')
         >>> # ...
 
+    When doing this, :func:`enable_cache` must be called right after your
+    imports and before any other FastF1 related functionality is called to
+    ensure that the cache is configured correctly.
+
     An alternative way to set the cache directory is to configure an
     environment variable `FASTF1_CACHE`. However, this value will be
     ignored if `Cache.enable_cache()` is called.
@@ -613,6 +617,11 @@ class Cache(metaclass=_MetaCache):
         returned. This can be useful for freezing the state of the cache or
         working with an unstable internet connection.
 
+        .. note::
+
+            This function must be called after :func:`enable_cache` when
+            using a custom cache directory.
+
         Args:
             enabled: sets the state of offline mode to 'enabled' (``True``)
                 or 'disabled' (``False``)
@@ -638,6 +647,11 @@ class Cache(metaclass=_MetaCache):
         Additionally, the pickle cache (stage 2) is disabled completely, so
         no parsed data is cached. This means that the API parser code is
         always executed and not skipped due to caching.
+
+        .. note::
+
+            This function must be called after :func:`enable_cache` when
+            using a custom cache directory.
         """
         cls._ci_mode = enabled
 
