@@ -97,8 +97,8 @@ users.
   - Only some combinations of filter parameters are possible and those vary for
     each API endpoint. FastF1 does not impose restrictions on these
     combinations as the relationships are fairly complex. Instead, an
-    :class:`~fastf1.ergast.interface.ErgastInvalidRequestError` will
-    be returned in such a case. The exception will contain the error response
+    :class:`~fastf1.exceptions.ErgastInvalidRequestError` will
+    be raised in such a case. The exception will contain the error response
     of the server.
 
 
@@ -337,13 +337,3 @@ Response Objects
     interface.ErgastMultiResponse
     interface.ErgastResultFrame
     interface.ErgastResponseMixin
-
-
-Exceptions
-..........
-
-.. autosummary::
-
-    interface.ErgastError
-    interface.ErgastJsonError
-    interface.ErgastInvalidRequestError

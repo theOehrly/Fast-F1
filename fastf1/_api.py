@@ -1828,7 +1828,13 @@ def parse(text: str, zipped: bool = False) -> str | dict:
 
 class SessionNotAvailableError(Exception):
     """Raised if an api request returned no data for the requested session.
-    A likely cause is that the session does not exist because it was cancelled."""
+    A likely cause is that the session does not exist because it was cancelled.
+
+    .. warning::
+        This exception is provided by the :mod:`fastf1.api` submodule. It will
+        be considered private in future releases and potentially be removed
+        or changed.
+    """
 
     def __init__(self, *args):
         super().__init__(*args)
