@@ -70,7 +70,10 @@ class Telemetry(BaseDataFrame):
             - `Speed` (float): Car speed [km/h]
             - `RPM` (float): Car RPM
             - `nGear` (int): Car gear number
-            - `Throttle` (float): 0-100 Throttle pedal pressure [%]
+            - `Throttle` (float): 0-100 Throttle pedal pressure [%] (The value
+              104 is sometimes observed to indicate an error or unavailable
+              data. Usually, this only happens outside actual running when the
+              car is stationary in the pits or on the grid.)
             - `Brake` (bool): Brakes are applied or not.
             - `DRS` (int): DRS indicator (See :func:`fastf1.api.car_data`
               for more info)
