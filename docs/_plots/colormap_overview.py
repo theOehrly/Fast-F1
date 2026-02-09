@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-from fastf1.plotting._constants import Constants
+from fastf1.plotting._backend import Constants
 
 
 n = len(Constants)  # total number of years
@@ -15,7 +15,7 @@ years_sorted = [str(year) for year in
 
 # generate one axis/graphic for each year
 for i, year in enumerate(years_sorted):
-    teams = Constants[year].Teams
+    teams = Constants[year].teams
 
     ax = fig.add_subplot(n, 1, i + 1)
 
@@ -25,9 +25,9 @@ for i, year in enumerate(years_sorted):
     official_colors = list()
 
     for j, (name, team) in enumerate(teams.items()):
-        x_labels.append(team.ShortName)
-        default_colors.append(team.TeamColor.FastF1)
-        official_colors.append(team.TeamColor.Official)
+        x_labels.append(team.short_name)
+        default_colors.append(team.colors.fastf1)
+        official_colors.append(team.colors.official)
 
         x_ranges.append((j + 0.5, 1))
 

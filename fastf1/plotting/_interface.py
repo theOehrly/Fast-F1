@@ -1,4 +1,3 @@
-import dataclasses
 import warnings
 from collections.abc import Sequence
 from typing import (
@@ -11,15 +10,18 @@ import matplotlib.legend
 
 from fastf1.core import Session
 from fastf1.internals.fuzzy import fuzzy_matcher
-from fastf1.plotting._backend import _load_drivers_from_f1_livetiming
-from fastf1.plotting._base import (
-    _Driver,
-    _DriverTeamMapping,
-    _logger,
-    _normalize_string,
-    _Team
+from fastf1.plotting._backend import (
+    Constants,
+    _load_drivers_from_f1_livetiming
 )
-from fastf1.plotting._constants import Constants as _Constants
+from fastf1.plotting._base import (
+    CompoundTypes,
+    Driver,
+    DriverTeamMapping,
+    Team,
+    _logger,
+    _normalize_string
+)
 
 
 _DEFAULT_COLOR_MAP: Literal['fastf1', 'official'] = 'fastf1'
@@ -28,7 +30,7 @@ _DRIVER_TEAM_MAPPINGS = dict()
 
 def _get_driver_team_mapping(
         session: Session
-) -> "_DriverTeamMapping":
+) -> "DriverTeamMapping":
     # driver-team mappings are generated once for each session and then reused
     # on future calls
     api_path = session.api_path
@@ -38,7 +40,7 @@ def _get_driver_team_mapping(
         teams = _load_drivers_from_f1_livetiming(
             api_path=api_path, year=year
         )
-        mapping = _DriverTeamMapping(year, teams)
+        mapping = DriverTeamMapping(year=year, teams=teams)
         _DRIVER_TEAM_MAPPINGS[api_path] = mapping
 
     return _DRIVER_TEAM_MAPPINGS[api_path]
@@ -46,13 +48,13 @@ def _get_driver_team_mapping(
 
 def _get_driver(
         identifier: str, session: Session, *, exact_match: bool = False
-) -> _Driver:
+) -> Driver:
     if exact_match:
         return _get_driver_exact(identifier, session)
     return _get_driver_fuzzy(identifier, session)
 
 
-def _get_driver_fuzzy(identifier: str, session: Session) -> _Driver:
+def _get_driver_fuzzy(identifier: str, session: Session) -> Driver:
     dtm = _get_driver_team_mapping(session)
     identifier = _normalize_string(identifier).lower()
 
@@ -71,12 +73,12 @@ def _get_driver_fuzzy(identifier: str, session: Session) -> _Driver:
 
     # do fuzzy string matching
     drivers = list(dtm.drivers_by_normalized.values())
-    strings = [[driver.normalized_value, ] for driver in drivers]
+    strings = [[driver.normalized_name, ] for driver in drivers]
     index, exact = fuzzy_matcher(query=identifier,
                                  reference=strings,
                                  abs_confidence=0.35,
                                  rel_confidence=0.30)
-    normalized_driver = drivers[index].normalized_value
+    normalized_driver = drivers[index].normalized_name
 
     if not exact:
         _logger.warning(f"Correcting user input '{identifier}' to "
@@ -85,7 +87,7 @@ def _get_driver_fuzzy(identifier: str, session: Session) -> _Driver:
     return dtm.drivers_by_normalized[normalized_driver]
 
 
-def _get_driver_exact(identifier: str, session: Session) -> _Driver:
+def _get_driver_exact(identifier: str, session: Session) -> Driver:
     dtm = _get_driver_team_mapping(session)
     identifier = _normalize_string(identifier).lower()
 
@@ -102,13 +104,13 @@ def _get_driver_exact(identifier: str, session: Session) -> _Driver:
 
 def _get_team(
         identifier: str, session: Session, *, exact_match=False
-) -> _Team:
+) -> Team:
     if exact_match:
         return _get_team_exact(identifier, session)
     return _get_team_fuzzy(identifier, session)
 
 
-def _get_team_fuzzy(identifier: str, session: Session) -> _Team:
+def _get_team_fuzzy(identifier: str, session: Session) -> Team:
     dtm = _get_driver_team_mapping(session)
     identifier = _normalize_string(identifier).lower()
     # remove common non-unique words
@@ -123,20 +125,20 @@ def _get_team_fuzzy(identifier: str, session: Session) -> _Team:
     # match with normalized team name
     for normalized, team in dtm.teams_by_normalized.items():
         if (
-            (identifier == team.value.casefold()) or
-            (identifier == team.constants.ShortName.casefold()) or
+            (identifier == team.name.casefold()) or
+            (identifier == team.short_name.casefold()) or
             (identifier in normalized)
             ):
             return dtm.teams_by_normalized[normalized]
 
     # do fuzzy string match
     teams = list(dtm.teams_by_normalized.values())
-    strings = [[team.normalized_value, ] for team in teams]
+    strings = [[team.normalized_name, ] for team in teams]
     index, exact = fuzzy_matcher(query=identifier,
                                  reference=strings,
                                  abs_confidence=0.35,
                                  rel_confidence=0.30)
-    normalized_team_name = teams[index].normalized_value
+    normalized_team_name = teams[index].normalized_name
 
     if not exact:
         _logger.warning(f"Correcting user input '{identifier}' to "
@@ -145,7 +147,7 @@ def _get_team_fuzzy(identifier: str, session: Session) -> _Team:
     return dtm.teams_by_normalized[normalized_team_name]
 
 
-def _get_team_exact(identifier: str, session: Session) -> _Team:
+def _get_team_exact(identifier: str, session: Session) -> Team:
     dtm = _get_driver_team_mapping(session)
     identifier = _normalize_string(identifier).lower()
 
@@ -155,7 +157,7 @@ def _get_team_exact(identifier: str, session: Session) -> _Team:
 
     # check full match with full team name
     for normalized, full in dtm.teams_by_normalized.items():
-        if identifier == full.value.casefold():
+        if identifier == full.name.casefold():
             return dtm.teams_by_normalized[normalized]
 
     raise KeyError(f"No team found for '{identifier}' (exact match only)")
@@ -170,7 +172,7 @@ def _get_driver_color(
         _variants: bool = False
 ) -> str:
     driver = _get_driver(identifier, session, exact_match=exact_match)
-    team_name = driver.team.normalized_value
+    team_name = driver.team.normalized_name
 
     return _get_team_color(team_name, session, colormap=colormap,
                            exact_match=True)
@@ -185,7 +187,7 @@ def _get_team_color(
 ) -> str:
     dtm = _get_driver_team_mapping(session)
 
-    if dtm.year not in _Constants.keys():
+    if dtm.year not in Constants.keys():
         raise ValueError(f"No team colors for year '{dtm.year}'")
 
     team = _get_team(
@@ -196,9 +198,9 @@ def _get_team_color(
         colormap = _DEFAULT_COLOR_MAP
 
     if colormap == 'fastf1':
-        return team.constants.TeamColor.FastF1
+        return team.colors.fastf1
     elif colormap == 'official':
-        return team.constants.TeamColor.Official
+        return team.colors.official
     else:
         raise ValueError(f"Invalid colormap '{colormap}'")
 
@@ -228,9 +230,9 @@ def get_team_name(
     team = _get_team(identifier, session, exact_match=exact_match)
 
     if short:
-        return team.constants.ShortName
+        return team.short_name
 
-    return team.value
+    return team.name
 
 
 def get_team_name_by_driver(
@@ -259,9 +261,9 @@ def get_team_name_by_driver(
     team = driver.team
 
     if short:
-        return team.constants.ShortName
+        return team.short_name
 
-    return team.value
+    return team.name
 
 
 def get_team_color(
@@ -308,7 +310,7 @@ def get_driver_name(
             characters are converted to their nearest ASCII equivalent)
     """
     driver = _get_driver(identifier, session, exact_match=exact_match)
-    return driver.value
+    return driver.name
 
 
 def get_driver_abbreviation(
@@ -347,7 +349,7 @@ def get_driver_names_by_team(
             characters are converted to their nearest ASCII equivalent)
     """
     team = _get_team(identifier, session, exact_match=exact_match)
-    return [driver.value for driver in team.drivers]
+    return [driver.name for driver in team.drivers]
 
 
 def get_driver_abbreviations_by_team(
@@ -601,7 +603,7 @@ def get_driver_style(
         # arguments
         for opt in style:
             if opt in color_kwargs:
-                value = _get_team_color(team.normalized_value,
+                value = _get_team_color(team.normalized_name,
                                         session,
                                         colormap=colormap,
                                         exact_match=True)
@@ -626,7 +628,7 @@ def get_driver_style(
         # copy the correct user provided style and replace any 'auto'
         # colors with the correct color value
         plot_style = _replace_magic_auto(
-            team.normalized_value,
+            team.normalized_name,
             custom_style.copy(),
             session,
             colormap,
@@ -648,7 +650,8 @@ def get_compound_color(compound: str, session: Session) -> str:
         A hexadecimal RGB color code
     """
     year = str(session.event['EventDate'].year)
-    return _Constants[year].CompoundColors[compound.upper()]
+    compound_type = CompoundTypes(compound.upper())  # cast to enum
+    return Constants[year].compound_colors[compound_type]
 
 
 def get_compound_mapping(session: Session) -> dict[str, str]:
@@ -663,7 +666,8 @@ def get_compound_mapping(session: Session) -> dict[str, str]:
         dictionary mapping compound names to RGB hex colors
     """
     year = str(session.event['EventDate'].year)
-    return _Constants[year].CompoundColors.copy()
+    return {e.value: value
+            for e, value in Constants[year].compound_colors.items()}
 
 
 def get_driver_color_mapping(
@@ -688,12 +692,12 @@ def get_driver_color_mapping(
 
     if colormap == 'fastf1':
         colors = {
-            abb: driver.team.constants.TeamColor.FastF1
+            abb: driver.team.colors.fastf1
             for abb, driver in dtm.drivers_by_abbreviation.items()
         }
     elif colormap == 'official':
         colors = {
-            abb: driver.team.constants.TeamColor.Official
+            abb: driver.team.colors.official
             for abb, driver in dtm.drivers_by_abbreviation.items()
         }
     else:
@@ -718,10 +722,10 @@ def list_team_names(session: Session, *, short: bool = False) -> list[str]:
     dtm = _get_driver_team_mapping(session)
 
     if short:
-        return list(team.constants.ShortName
+        return list(team.short_name
                     for team in dtm.teams_by_normalized.values())
 
-    return list(team.value for team in dtm.teams_by_normalized.values())
+    return list(team.name for team in dtm.teams_by_normalized.values())
 
 
 def list_driver_abbreviations(session: Session) -> list[str]:
@@ -733,13 +737,13 @@ def list_driver_abbreviations(session: Session) -> list[str]:
 def list_driver_names(session: Session) -> list[str]:
     """Returns a list of full names of all drivers in the ``session``."""
     dtm = _get_driver_team_mapping(session)
-    return list(driver.value for driver in dtm.drivers_by_normalized.values())
+    return list(driver.name for driver in dtm.drivers_by_normalized.values())
 
 
 def list_compounds(session: Session) -> list[str]:
     """Returns a list of all compound names for this season (not session)."""
     year = str(session.event['EventDate'].year)
-    return list(_Constants[year].CompoundColors.keys())
+    return [e.value for e in Constants[year].compound_colors.keys()]
 
 
 def add_sorted_driver_legend(
@@ -863,14 +867,9 @@ def override_team_constants(
     """
     team = _get_team(identifier, session, exact_match=True)
 
-    colors = team.constants.TeamColor
     if official_color is not None:
-        colors = dataclasses.replace(colors, Official=official_color)
+        team.colors.official = official_color
     if fastf1_color is not None:
-        colors = dataclasses.replace(colors, FastF1=fastf1_color)
-    if (official_color is not None) or (fastf1_color is not None):
-        team.constants = dataclasses.replace(team.constants, TeamColor=colors)
-
+        team.colors.fastf1 = fastf1_color
     if short_name is not None:
-        team.constants = dataclasses.replace(team.constants,
-                                             ShortName=short_name)
+        team.short_name = short_name

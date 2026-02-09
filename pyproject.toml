@@ -32,6 +32,7 @@ dependencies = [
   "numpy>=1.26.0,<3.0.0",
   "pandas>=2.1.1,<3.0.0",
   "platformdirs",
+  "pydantic",
   "pyjwt",
   "python-dateutil",
   "requests>=2.30.0",

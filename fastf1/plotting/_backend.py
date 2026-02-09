@@ -1,23 +1,48 @@
-import dataclasses
+import json
+from importlib.resources import files
 
 import fastf1._api
 from fastf1.plotting._base import (
-    _Driver,
+    Driver,
+    SeasonConstants,
+    Team,
     _logger,
-    _normalize_string,
-    _Team
+    _normalize_string
 )
-from fastf1.plotting._constants import Constants
+
+
+Constants: dict[str, SeasonConstants] = dict()
+
+json_path = files("fastf1.plotting").joinpath("constants.json")
+content = json_path.read_text(encoding="utf-8")
+
+for year, consts in json.loads(content).items():
+    Constants[year] = SeasonConstants(**consts)
 
 
 def _load_drivers_from_f1_livetiming(
-        *, api_path: str, year: str
-) -> list[_Team]:
+        *,
+        api_path: str,
+        year: str
+) -> list[Team]:
+
     # load the driver information for the determined session
     driver_info = fastf1._api.driver_info(api_path)
 
-    # parse the data into the required format
-    teams: dict[str, _Team] = dict()
+    if year in Constants.keys():
+        teams = {}
+        for team_key, team_consts in Constants[year].teams.items():
+            teams[team_key] = Team(
+                normalized_name=team_key,
+                short_name=team_consts.short_name,
+                # copy required so that each team gets a separate copy of the
+                # data per session, since data can be overwritten per session
+                colors=team_consts.colors.model_copy()
+            )
+
+    else:
+        # generate teams from API response, initialize empty for now
+        teams = {}
 
     # Sorting by driver number here will directly guarantee that drivers
     # are sorted by driver number within each team. This has two advantages:
@@ -29,24 +54,11 @@ def _load_drivers_from_f1_livetiming(
         driver_entry = driver_info[num]
         team_name = driver_entry.get('TeamName')
 
-        if team_name in teams:
-            team = teams[team_name]
-        else:
-            team = _Team()
-            team.value = team_name
-
         abbreviation = driver_entry.get('Tla', '')
-        if not abbreviation.strip():
-            _logger.warning(
-                "Skipping driver with incomplete data while generating "
-                "driver-team mapping for plotting constants."
-            )
-            _logger.debug(f"Skipping driver entry: {driver_entry}")
-
         name = ' '.join((driver_entry.get('FirstName', ''),
                          driver_entry.get('LastName', '')))
 
-        if not name.strip():
+        if not abbreviation.strip() or not name.strip():
             _logger.warning(
                 "Skipping driver with incomplete data while generating "
                 "driver-team mapping for plotting constants."
@@ -54,40 +66,25 @@ def _load_drivers_from_f1_livetiming(
             _logger.debug(f"Skipping driver entry: {driver_entry}")
             continue
 
-        driver = _Driver()
-        driver.value = name
-        driver.normalized_value = _normalize_string(name).lower()
-        driver.abbreviation = abbreviation
-        driver.team = team
+        normalized_full_team_name = _normalize_string(team_name).lower()
+        for team_key, team in teams.items():
+            if team_key in normalized_full_team_name:
+                team.name = team_name
+                team.colors.official \
+                    = f"#{driver_entry.get('TeamColour').lower()}"
+                break
+        else:
+            # TODO improve
+            # TODO maybe generate teams here?
+            raise RuntimeError("Found no matching team.")
 
-        team.drivers.append(driver)
+        driver = Driver(
+            team=team,
+            abbreviation=abbreviation,
+            name=name,
+            normalized_name=_normalize_string(name).lower(),
+        )
+        team.add_driver(driver)
 
-        if team not in teams:
-            normalized_full_team_name = _normalize_string(team_name).lower()
-            for ref_team_name, team_consts in Constants[year].Teams.items():
-                if ref_team_name in normalized_full_team_name:
-                    team.normalized_value = ref_team_name
-
-                    # copy team constants, update the official color if it
-                    # is available from the API and add the constants to the
-                    # team
-                    if team_color := driver_entry.get('TeamColour'):
-                        replacements = {'Official': f"#{team_color}"}
-                    else:
-                        replacements = {}
-                    colors = dataclasses.replace(
-                        team_consts.TeamColor, **replacements
-                    )
-                    team.constants = dataclasses.replace(
-                        team_consts, TeamColor=colors
-                    )
-
-                    break
-            else:
-                _logger.warning(f"Encountered unknown team '{team_name}' "
-                                f"while loading driver-team mapping.")
-                continue
-
-            teams[team_name] = team
-
-    return list(teams.values())
+    # return all teams that have drivers in this session
+    return [team for team in teams.values() if team.drivers]

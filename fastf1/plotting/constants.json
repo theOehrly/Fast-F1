@@ -1,0 +1,677 @@
+{
+    "2018": {
+        "compound_colors": {
+            "HYPERSOFT": "#feb1c1",
+            "ULTRASOFT": "#b24ba7",
+            "SUPERSOFT": "#fc2b2a",
+            "SOFT": "#ffd318",
+            "MEDIUM": "#f0f0f0",
+            "HARD": "#00a2f5",
+            "SUPERHARD": "#fd7d3c",
+            "INTERMEDIATE": "#43b02a",
+            "WET": "#0067ad",
+            "UNKNOWN": "#00ffff",
+            "TEST-UNKNOWN": "#434649"
+        },
+        "teams": {
+            "ferrari": {
+                "short_name": "Ferrari",
+                "colors": {
+                    "official": "#dc0000",
+                    "fastf1": "#dc0000"
+                }
+            },
+            "force india": {
+                "short_name": "Force India",
+                "colors": {
+                    "official": "#f596c8",
+                    "fastf1": "#ff87bc"
+                }
+            },
+            "haas": {
+                "short_name": "Haas",
+                "colors": {
+                    "official": "#828282",
+                    "fastf1": "#b6babd"
+                }
+            },
+            "mclaren": {
+                "short_name": "McLaren",
+                "colors": {
+                    "official": "#ff8000",
+                    "fastf1": "#ff8000"
+                }
+            },
+            "mercedes": {
+                "short_name": "Mercedes",
+                "colors": {
+                    "official": "#00d2be",
+                    "fastf1": "#00f5d0"
+                }
+            },
+            "racing point": {
+                "short_name": "Racing Point",
+                "colors": {
+                    "official": "#f596c8",
+                    "fastf1": "#ff87bc"
+                }
+            },
+            "red bull": {
+                "short_name": "Red Bull",
+                "colors": {
+                    "official": "#1e41ff",
+                    "fastf1": "#1e41ff"
+                }
+            },
+            "renault": {
+                "short_name": "Renault",
+                "colors": {
+                    "official": "#fff500",
+                    "fastf1": "#fff500"
+                }
+            },
+            "sauber": {
+                "short_name": "Sauber",
+                "colors": {
+                    "official": "#9b0000",
+                    "fastf1": "#900000"
+                }
+            },
+            "toro rosso": {
+                "short_name": "Toro Rosso",
+                "colors": {
+                    "official": "#469bff",
+                    "fastf1": "#2b4562"
+                }
+            },
+            "williams": {
+                "short_name": "Williams",
+                "colors": {
+                    "official": "#ffffff",
+                    "fastf1": "#00a0dd"
+                }
+            }
+        }
+    },
+    "2019": {
+        "compound_colors": {
+            "SOFT": "#da291c",
+            "MEDIUM": "#ffd12e",
+            "HARD": "#f0f0ec",
+            "INTERMEDIATE": "#43b02a",
+            "WET": "#0067ad",
+            "UNKNOWN": "#00ffff",
+            "TEST-UNKNOWN": "#434649"
+        },
+        "teams": {
+            "alfa romeo": {
+                "short_name": "Alfa Romeo",
+                "colors": {
+                    "official": "#9b0000",
+                    "fastf1": "#900000"
+                }
+            },
+            "haas": {
+                "short_name": "Haas",
+                "colors": {
+                    "official": "#bd9e57",
+                    "fastf1": "#bd9e57"
+                }
+            },
+            "ferrari": {
+                "short_name": "Ferrari",
+                "colors": {
+                    "official": "#dc0000",
+                    "fastf1": "#da291c"
+                }
+            },
+            "mclaren": {
+                "short_name": "McLaren",
+                "colors": {
+                    "official": "#ff8700",
+                    "fastf1": "#ff8000"
+                }
+            },
+            "mercedes": {
+                "short_name": "Mercedes",
+                "colors": {
+                    "official": "#00d2be",
+                    "fastf1": "#00d2be"
+                }
+            },
+            "racing point": {
+                "short_name": "Racing Point",
+                "colors": {
+                    "official": "#f596c8",
+                    "fastf1": "#ff87bc"
+                }
+            },
+            "red bull": {
+                "short_name": "Red Bull",
+                "colors": {
+                    "official": "#1e41ff",
+                    "fastf1": "#1e41ff"
+                }
+            },
+            "renault": {
+                "short_name": "Renault",
+                "colors": {
+                    "official": "#fff500",
+                    "fastf1": "#fff500"
+                }
+            },
+            "toro rosso": {
+                "short_name": "Toro Rosso",
+                "colors": {
+                    "official": "#469bff",
+                    "fastf1": "#2b4562"
+                }
+            },
+            "williams": {
+                "short_name": "Williams",
+                "colors": {
+                    "official": "#ffffff",
+                    "fastf1": "#00a0dd"
+                }
+            }
+        }
+    },
+    "2020": {
+        "compound_colors": {
+            "SOFT": "#da291c",
+            "MEDIUM": "#ffd12e",
+            "HARD": "#f0f0ec",
+            "INTERMEDIATE": "#43b02a",
+            "WET": "#0067ad",
+            "UNKNOWN": "#00ffff",
+            "TEST-UNKNOWN": "#434649"
+        },
+        "teams": {
+            "alfa romeo": {
+                "short_name": "Alfa Romeo",
+                "colors": {
+                    "official": "#9b0000",
+                    "fastf1": "#900000"
+                }
+            },
+            "alphatauri": {
+                "short_name": "AlphaTauri",
+                "colors": {
+                    "official": "#ffffff",
+                    "fastf1": "#2b4562"
+                }
+            },
+            "ferrari": {
+                "short_name": "Ferrari",
+                "colors": {
+                    "official": "#dc0000",
+                    "fastf1": "#dc0000"
+                }
+            },
+            "haas": {
+                "short_name": "Haas",
+                "colors": {
+                    "official": "#787878",
+                    "fastf1": "#b6babd"
+                }
+            },
+            "mclaren": {
+                "short_name": "McLaren",
+                "colors": {
+                    "official": "#ff8700",
+                    "fastf1": "#ff8000"
+                }
+            },
+            "mercedes": {
+                "short_name": "Mercedes",
+                "colors": {
+                    "official": "#00d2be",
+                    "fastf1": "#00d2be"
+                }
+            },
+            "racing point": {
+                "short_name": "Racing Point",
+                "colors": {
+                    "official": "#f596c8",
+                    "fastf1": "#ff87bc"
+                }
+            },
+            "red bull": {
+                "short_name": "Red Bull",
+                "colors": {
+                    "official": "#1e41ff",
+                    "fastf1": "#1e41ff"
+                }
+            },
+            "renault": {
+                "short_name": "Renault",
+                "colors": {
+                    "official": "#fff500",
+                    "fastf1": "#fff500"
+                }
+            },
+            "williams": {
+                "short_name": "Williams",
+                "colors": {
+                    "official": "#0082fa",
+                    "fastf1": "#00a0dd"
+                }
+            }
+        }
+    },
+    "2021": {
+        "compound_colors": {
+            "SOFT": "#da291c",
+            "MEDIUM": "#ffd12e",
+            "HARD": "#f0f0ec",
+            "INTERMEDIATE": "#43b02a",
+            "WET": "#0067ad",
+            "UNKNOWN": "#00ffff",
+            "TEST-UNKNOWN": "#434649"
+        },
+        "teams": {
+            "alfa romeo": {
+                "short_name": "Alfa Romeo",
+                "colors": {
+                    "official": "#900000",
+                    "fastf1": "#900000"
+                }
+            },
+            "alphatauri": {
+                "short_name": "AlphaTauri",
+                "colors": {
+                    "official": "#2b4562",
+                    "fastf1": "#2b4562"
+                }
+            },
+            "alpine": {
+                "short_name": "Alpine",
+                "colors": {
+                    "official": "#0090ff",
+                    "fastf1": "#0755ab"
+                }
+            },
+            "aston martin": {
+                "short_name": "Aston Martin",
+                "colors": {
+                    "official": "#006f62",
+                    "fastf1": "#00665e"
+                }
+            },
+            "ferrari": {
+                "short_name": "Ferrari",
+                "colors": {
+                    "official": "#dc0004",
+                    "fastf1": "#dc0004"
+                }
+            },
+            "haas": {
+                "short_name": "Haas",
+                "colors": {
+                    "official": "#ffffff",
+                    "fastf1": "#b6babd"
+                }
+            },
+            "mclaren": {
+                "short_name": "McLaren",
+                "colors": {
+                    "official": "#ff9800",
+                    "fastf1": "#ff8000"
+                }
+            },
+            "mercedes": {
+                "short_name": "Mercedes",
+                "colors": {
+                    "official": "#00d2be",
+                    "fastf1": "#00f5d0"
+                }
+            },
+            "red bull": {
+                "short_name": "Red Bull",
+                "colors": {
+                    "official": "#0600ef",
+                    "fastf1": "#0600ef"
+                }
+            },
+            "williams": {
+                "short_name": "Williams",
+                "colors": {
+                    "official": "#005aff",
+                    "fastf1": "#00a0dd"
+                }
+            }
+        }
+    },
+    "2022": {
+        "compound_colors": {
+            "SOFT": "#da291c",
+            "MEDIUM": "#ffd12e",
+            "HARD": "#f0f0ec",
+            "INTERMEDIATE": "#43b02a",
+            "WET": "#0067ad",
+            "UNKNOWN": "#00ffff",
+            "TEST-UNKNOWN": "#434649"
+        },
+        "teams": {
+            "alfa romeo": {
+                "short_name": "Alfa Romeo",
+                "colors": {
+                    "official": "#b12039",
+                    "fastf1": "#900000"
+                }
+            },
+            "alphatauri": {
+                "short_name": "AlphaTauri",
+                "colors": {
+                    "official": "#4e7c9b",
+                    "fastf1": "#2b4562"
+                }
+            },
+            "alpine": {
+                "short_name": "Alpine",
+                "colors": {
+                    "official": "#2293d1",
+                    "fastf1": "#fe86bc"
+                }
+            },
+            "aston martin": {
+                "short_name": "Aston Martin",
+                "colors": {
+                    "official": "#2d826d",
+                    "fastf1": "#00665e"
+                }
+            },
+            "ferrari": {
+                "short_name": "Ferrari",
+                "colors": {
+                    "official": "#ed1c24",
+                    "fastf1": "#da291c"
+                }
+            },
+            "haas": {
+                "short_name": "Haas",
+                "colors": {
+                    "official": "#b6babd",
+                    "fastf1": "#b6babd"
+                }
+            },
+            "mclaren": {
+                "short_name": "McLaren",
+                "colors": {
+                    "official": "#f58020",
+                    "fastf1": "#ff8000"
+                }
+            },
+            "mercedes": {
+                "short_name": "Mercedes",
+                "colors": {
+                    "official": "#6cd3bf",
+                    "fastf1": "#00f5d0"
+                }
+            },
+            "red bull": {
+                "short_name": "Red Bull",
+                "colors": {
+                    "official": "#1e5bc6",
+                    "fastf1": "#0600ef"
+                }
+            },
+            "williams": {
+                "short_name": "Williams",
+                "colors": {
+                    "official": "#37bedd",
+                    "fastf1": "#00a0dd"
+                }
+            }
+        }
+    },
+    "2023": {
+        "compound_colors": {
+            "SOFT": "#da291c",
+            "MEDIUM": "#ffd12e",
+            "HARD": "#f0f0ec",
+            "INTERMEDIATE": "#43b02a",
+            "WET": "#0067ad",
+            "UNKNOWN": "#00ffff",
+            "TEST-UNKNOWN": "#434649"
+        },
+        "teams": {
+            "alfa romeo": {
+                "short_name": "Alfa Romeo",
+                "colors": {
+                    "official": "#c92d4b",
+                    "fastf1": "#900000"
+                }
+            },
+            "alphatauri": {
+                "short_name": "AlphaTauri",
+                "colors": {
+                    "official": "#5e8faa",
+                    "fastf1": "#2b4562"
+                }
+            },
+            "alpine": {
+                "short_name": "Alpine",
+                "colors": {
+                    "official": "#2293d1",
+                    "fastf1": "#fe86bc"
+                }
+            },
+            "aston martin": {
+                "short_name": "Aston Martin",
+                "colors": {
+                    "official": "#358c75",
+                    "fastf1": "#00665e"
+                }
+            },
+            "ferrari": {
+                "short_name": "Ferrari",
+                "colors": {
+                    "official": "#f91536",
+                    "fastf1": "#da291c"
+                }
+            },
+            "haas": {
+                "short_name": "Haas",
+                "colors": {
+                    "official": "#b6babd",
+                    "fastf1": "#b6babd"
+                }
+            },
+            "mclaren": {
+                "short_name": "McLaren",
+                "colors": {
+                    "official": "#f58020",
+                    "fastf1": "#ff8000"
+                }
+            },
+            "mercedes": {
+                "short_name": "Mercedes",
+                "colors": {
+                    "official": "#6cd3bf",
+                    "fastf1": "#00f5d0"
+                }
+            },
+            "red bull": {
+                "short_name": "Red Bull",
+                "colors": {
+                    "official": "#3671c6",
+                    "fastf1": "#0600ef"
+                }
+            },
+            "williams": {
+                "short_name": "Williams",
+                "colors": {
+                    "official": "#37bedd",
+                    "fastf1": "#00a0dd"
+                }
+            }
+        }
+    },
+    "2024": {
+        "compound_colors": {
+            "SOFT": "#da291c",
+            "MEDIUM": "#ffd12e",
+            "HARD": "#f0f0ec",
+            "INTERMEDIATE": "#43b02a",
+            "WET": "#0067ad",
+            "UNKNOWN": "#00ffff",
+            "TEST-UNKNOWN": "#434649"
+        },
+        "teams": {
+            "alpine": {
+                "short_name": "Alpine",
+                "colors": {
+                    "official": "#0093cc",
+                    "fastf1": "#ff87bc"
+                }
+            },
+            "aston martin": {
+                "short_name": "Aston Martin",
+                "colors": {
+                    "official": "#229971",
+                    "fastf1": "#00665f"
+                }
+            },
+            "ferrari": {
+                "short_name": "Ferrari",
+                "colors": {
+                    "official": "#e8002d",
+                    "fastf1": "#e8002d"
+                }
+            },
+            "haas": {
+                "short_name": "Haas",
+                "colors": {
+                    "official": "#b6babd",
+                    "fastf1": "#b6babd"
+                }
+            },
+            "mclaren": {
+                "short_name": "McLaren",
+                "colors": {
+                    "official": "#ff8000",
+                    "fastf1": "#ff8000"
+                }
+            },
+            "mercedes": {
+                "short_name": "Mercedes",
+                "colors": {
+                    "official": "#27f4d2",
+                    "fastf1": "#27f4d2"
+                }
+            },
+            "rb": {
+                "short_name": "RB",
+                "colors": {
+                    "official": "#6692ff",
+                    "fastf1": "#364aa9"
+                }
+            },
+            "red bull": {
+                "short_name": "Red Bull",
+                "colors": {
+                    "official": "#3671c6",
+                    "fastf1": "#0600ef"
+                }
+            },
+            "kick sauber": {
+                "short_name": "Sauber",
+                "colors": {
+                    "official": "#52e252",
+                    "fastf1": "#00e700"
+                }
+            },
+            "williams": {
+                "short_name": "Williams",
+                "colors": {
+                    "official": "#64c4ff",
+                    "fastf1": "#00a0dd"
+                }
+            }
+        }
+    },
+    "2025": {
+        "compound_colors": {
+            "SOFT": "#da291c",
+            "MEDIUM": "#ffd12e",
+            "HARD": "#f0f0ec",
+            "INTERMEDIATE": "#43b02a",
+            "WET": "#0067ad",
+            "UNKNOWN": "#00ffff",
+            "TEST-UNKNOWN": "#434649"
+        },
+        "teams": {
+            "alpine": {
+                "short_name": "Alpine",
+                "colors": {
+                    "official": "#0093cc",
+                    "fastf1": "#ff87bc"
+                }
+            },
+            "aston martin": {
+                "short_name": "Aston Martin",
+                "colors": {
+                    "official": "#229971",
+                    "fastf1": "#00665f"
+                }
+            },
+            "ferrari": {
+                "short_name": "Ferrari",
+                "colors": {
+                    "official": "#e80020",
+                    "fastf1": "#e80020"
+                }
+            },
+            "haas": {
+                "short_name": "Haas",
+                "colors": {
+                    "official": "#b6babd",
+                    "fastf1": "#b6babd"
+                }
+            },
+            "mclaren": {
+                "short_name": "McLaren",
+                "colors": {
+                    "official": "#ff8000",
+                    "fastf1": "#ff8000"
+                }
+            },
+            "mercedes": {
+                "short_name": "Mercedes",
+                "colors": {
+                    "official": "#27f4d2",
+                    "fastf1": "#27f4d2"
+                }
+            },
+            "racing bulls": {
+                "short_name": "RB",
+                "colors": {
+                    "official": "#6692ff",
+                    "fastf1": "#fcd700"
+                }
+            },
+            "red bull": {
+                "short_name": "Red Bull",
+                "colors": {
+                    "official": "#3671c6",
+                    "fastf1": "#0600ef"
+                }
+            },
+            "kick sauber": {
+                "short_name": "Sauber",
+                "colors": {
+                    "official": "#52e252",
+                    "fastf1": "#00e700"
+                }
+            },
+            "williams": {
+                "short_name": "Williams",
+                "colors": {
+                    "official": "#64c4ff",
+                    "fastf1": "#00a0dd"
+                }
+            }
+        }
+    }
+}

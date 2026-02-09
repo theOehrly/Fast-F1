@@ -3,20 +3,16 @@ import pytest
 
 import fastf1
 import fastf1.plotting
-from fastf1.plotting._constants import (
-    season2023,
-    season2024,
-    season2025
-)
-from fastf1.plotting._constants.base import CompoundsConst
+from fastf1.plotting._backend import Constants
+from fastf1.plotting._base import CompoundTypes
 
 
-OFFICIAL_MERC_COLOR = season2023.Teams['mercedes'].TeamColor.Official
-OFFICIAL_RB_COLOR = season2023.Teams['red bull'].TeamColor.Official
-DEFAULT_MERC_COLOR = season2023.Teams['mercedes'].TeamColor.FastF1
-DEFAULT_RB_COLOR = season2023.Teams['red bull'].TeamColor.FastF1
-DEFAULT_2024_VCARB_COLOR = season2024.Teams['rb'].TeamColor.FastF1
-DEFAULT_2025_VCARB_COLOR = season2025.Teams['racing bulls'].TeamColor.FastF1
+OFFICIAL_MERC_COLOR = Constants['2023'].teams['mercedes'].colors.official
+OFFICIAL_RB_COLOR = Constants['2023'].teams['red bull'].colors.official
+DEFAULT_MERC_COLOR = Constants['2023'].teams['mercedes'].colors.fastf1
+DEFAULT_RB_COLOR = Constants['2023'].teams['red bull'].colors.fastf1
+DEFAULT_2024_VCARB_COLOR = Constants['2024'].teams['rb'].colors.fastf1
+DEFAULT_2025_VCARB_COLOR = Constants['2025'].teams['racing bulls'].colors.fastf1
 
 
 @pytest.mark.parametrize(
@@ -49,7 +45,7 @@ def test_internal_get_driver(identifier, expected, can_match_exact, use_exact):
         driver = fastf1.plotting._interface._get_driver(
             identifier, session, exact_match=use_exact
         )
-        assert driver.normalized_value == expected
+        assert driver.normalized_name == expected
 
 
 @pytest.mark.parametrize(
@@ -82,7 +78,7 @@ def test_internal_get_team(identifier, expected, can_match_exact, use_exact):
         team = fastf1.plotting._interface._get_team(
             identifier, session, exact_match=use_exact
         )
-        assert team.normalized_value == expected
+        assert team.normalized_name == expected
 
 
 def test_fuzzy_driver_team_key_error():
@@ -378,10 +374,10 @@ def test_get_driver_style_recursive():
 def test_get_compound_color():
     session = fastf1.get_session(2023, 10, 'R')
     assert (fastf1.plotting.get_compound_color('HARD', session)
-            == season2023.CompoundColors[CompoundsConst.Hard])
+            == Constants['2023'].compound_colors[CompoundTypes.Hard])
 
     assert (fastf1.plotting.get_compound_color('sOfT', session)
-            == season2023.CompoundColors[CompoundsConst.Soft])
+            == Constants['2023'].compound_colors[CompoundTypes.Soft])
 
     with pytest.raises(KeyError):
         fastf1.plotting.get_compound_color('HYPERSOFT', session)
@@ -389,8 +385,16 @@ def test_get_compound_color():
 
 def test_get_compound_mapping():
     session = fastf1.get_session(2023, 10, 'R')
-    assert (fastf1.plotting.get_compound_mapping(session)
-            == season2023.CompoundColors)
+    ref = {
+        "SOFT": "#da291c",
+        "MEDIUM": "#ffd12e",
+        "HARD": "#f0f0ec",
+        "INTERMEDIATE": "#43b02a",
+        "WET": "#0067ad",
+        "UNKNOWN": "#00ffff",
+        "TEST-UNKNOWN": "#434649"
+    }
+    assert fastf1.plotting.get_compound_mapping(session) == ref
 
 
 def test_get_driver_color_mapping():
@@ -472,15 +476,18 @@ def test_add_sorted_lapnumber_axis():
     legend = fastf1.plotting.add_sorted_driver_legend(ax, session)
 
     # sorting is generally done by driver number to guarantee consistency
-    # in 2023, VER was #1, so he is first, then followed by PER;
-    # Red Bull as a team before Mercedes, again because VER has the lower number
-    # within Mercedes, Hamilton has the lower number
+    # in 2023, VER was #1, so he comes before PER;
+    # within Mercedes, HAM has the lower number
+    # team order is incidental from order of constants
     assert ([txt.get_text() for txt in legend.texts]
-            == ['VER', 'PER', 'HAM', 'RUS'])
+            == ['HAM', 'RUS', 'VER', 'PER'])
 
 
 def test_override_team_constants():
     session = fastf1.get_session(2023, 10, 'R')
+
+    ref_session = fastf1.get_session(2023, 5, 'R')
+
     fastf1.plotting.override_team_constants(
         'Haas', session,
         short_name='Gene',
@@ -488,16 +495,25 @@ def test_override_team_constants():
         official_color='#bada55'
     )
 
-    assert fastf1.plotting.get_team_name('Haas', session) == 'Haas F1 Team'
-    assert fastf1.plotting.get_team_name('Haas', session, short=True) == 'Gene'
-
+    assert fastf1.plotting.get_team_name(
+        'Haas', session) == 'Haas F1 Team'
+    assert fastf1.plotting.get_team_name(
+        'Haas', session, short=True) == 'Gene'
     assert fastf1.plotting.get_team_color(
-        'Haas', session, colormap='fastf1'
-    ) == '#badbad'
-
+        'Haas', session, colormap='fastf1') == '#badbad'
     assert fastf1.plotting.get_team_color(
-        'Haas', session, colormap='official'
-    ) == '#bada55'
+        'Haas', session, colormap='official') == '#bada55'
+
+    # ensure that the changes do not propagate to other sessions, ensuring
+    # that the underlying constants are not modified
+    assert fastf1.plotting.get_team_name(
+        'Haas', ref_session) == 'Haas F1 Team'
+    assert fastf1.plotting.get_team_name(
+        'Haas', ref_session, short=True) == 'Haas'
+    assert fastf1.plotting.get_team_color(
+        'Haas', ref_session, colormap='fastf1') == '#b6babd'
+    assert fastf1.plotting.get_team_color(
+        'Haas', ref_session, colormap='official') == '#b6babd'
 
     # cleanup: explicitly clear the driver-team-mapping to avoid side effects
     # in other tests
