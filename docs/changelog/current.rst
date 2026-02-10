@@ -1,33 +1,66 @@
-What's new in v3.7.0
+What's new in v3.8.0
 --------------------
 
-(released 28/11/2025)
+(released 10/02/2026)
+
+
+Dependency Changes
+^^^^^^^^^^^^^^^^^^
+
+- Support for Python 3.9 is dropped. Python 3.10 is the new minimum version.
+
+- Pydantic is added as a new dependency.
+
+- The minimum required versions for selected dependencies are increased as follows:
+
+  - matplotlib>=3.8.0
+  - numpy>=1.26.0
+  - pandas>=2.1.1
+  - requests>=2.30.0
+  - scipy>=1.11.0
 
 
 New Features
 ^^^^^^^^^^^^
 
-- Python 3.14 is now officially supported.
+- Missing speed trap values are now filled in by FastF1 when possible (#834).
 
-- Major overhaul of the documentation with changes to the overall structure and design. Support for switching between
-  multiple documentation versions is available going forward from now.
+- A new submodule ``fastf1.exceptions`` is introduced. This submodule contains all public
+  custom exceptions going forward. Importing exceptions from other parts of FastF1 is deprecated.
 
-- The livetiming client now uses a new endpoint and protocol. This follows changes by Formula 1, who have
-  gradually phased out the old endpoints.
+- FastF1 is now able to auto-generate (with limitations) team name and color constants that are
+  required for full functionality of the ``fastf1.plotting`` submodule. This is done based on
+  data from the F1 API. It serves as a fallback in case of team (name) changes or when plotting
+  data of a future season where FastF1 has no built-in constants (yet).
+  Note that auto-generated team name constants may be imperfect. When auto-generated,
+  all color schemes will follow the 'official' color scheme. (#848)
 
-- Support for authentication with an F1TV Access/Pro/Premium subscription has been added. Authentication is only
-  required when using the new live timing client, since the new endpoints no longer allow unauthenticated access. This
-  change has no effect on the majority of users who only load data after a session has ended.
+- Preliminary team name and color constants for 2026 have been added. Further changes may be
+  made at the beginning of the season to better capture the teams identities and branding and
+  to make the color palette more distinguishable. (#848)
 
 
 Bug Fixes
 ^^^^^^^^^
 
-- Improved handling of unexpected data types in the Jolpica/Ergast API client to prevent crashes caused by
-  incorrect or unexpected external data. (#814)
+- Prevent support race drivers from being included in the driver list and result data. This
+  previously occurred in some edge cases due to bad source data. (#836)
 
-- Fixed a bug that caused the "auto-cast" feature of the Ergast API client to not cast values of any objects
-  that were contained inside a JSON array. This bug was only encountered when using raw responses instead of
-  DataFrames. (#797)
+- ``RateLimitExceededError`` is now raised as intended an no longer captured and hidden by
+  internal error handling (#748, #842).
 
-- Various bugs related to usage of the live timing client and loading of created recordings have been fixed.
+
+Deprecations
+^^^^^^^^^^^^
+
+- Importing ``ErgastError``, ``ErgastJsonError`` and ``ErgastInvalidRequestError`` from
+  ``fastf1.ergast.interface`` is deprecate. Import from ``fastf1.exceptions`` instead.
+
+- Importing ``NoLapDataError``, ``DataNotLoadedError`` and ``InvalidSessionError`` from
+  ``fastf1.core`` is deprecate. Import from ``fastf1.exceptions`` instead.
+
+- Importing ``RateLimitExceededError`` from ``fastf1`` is deprecated. Import from
+  ``fastf1.exceptions`` instead.
+
+
+Note: Deprecated API is removed two minor releases after its deprecation.
