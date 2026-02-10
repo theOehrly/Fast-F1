@@ -185,11 +185,6 @@ def _get_team_color(
         colormap: str = 'default',
         exact_match: bool = False
 ) -> str:
-    dtm = _get_driver_team_mapping(session)
-
-    if dtm.year not in Constants.keys():
-        raise ValueError(f"No team colors for year '{dtm.year}'")
-
     team = _get_team(
         identifier, session, exact_match=exact_match
     )

@@ -5,6 +5,7 @@ import fastf1
 import fastf1.plotting
 from fastf1.plotting._backend import Constants
 from fastf1.plotting._base import CompoundTypes
+from fastf1.testing import run_in_subprocess
 
 
 OFFICIAL_MERC_COLOR = Constants['2023'].teams['mercedes'].colors.official
@@ -530,3 +531,56 @@ def test_import_internal_mpl_lgend_arg_kwarg_parser():
     # causing a test failure.
     import matplotlib.legend
     _ = matplotlib.legend._parse_legend_args
+
+
+def test_unsupported_season():
+    # run in subprocess because test modifies constants
+    run_in_subprocess(_test_unsupported_season)
+
+
+def _test_unsupported_season():
+    # remove support for the 2023 season by deleting relevant constants
+    from fastf1.plotting._backend import Constants
+    Constants.pop("2023")
+
+    session = fastf1.get_session(2023, 10, "R")
+
+    # verify some team names
+
+    # since this is the first potting related function call, a user warning
+    # about the unsupported season must emitted
+    with pytest.warns(
+            UserWarning,
+            match="No built-in team name/color constants for 2023"
+    ):
+        names = fastf1.plotting.list_team_names(session)
+
+    assert 'Red Bull Racing' in names
+    assert 'Haas F1 Team' in names
+    assert 'Aston Martin' in names
+    assert len(names) == 10
+
+    # verify some generated short names
+    short_names = fastf1.plotting.list_team_names(session, short=True)
+    assert "Red Bull" in short_names
+    assert "Haas" in short_names
+    assert "Aston Martin" in short_names
+    assert len(short_names) == 10
+
+    # check that colors exist
+    assert fastf1.plotting.get_team_color(
+        "mercedes", session, colormap='official'
+    ) == OFFICIAL_MERC_COLOR
+
+    assert fastf1.plotting.get_team_color(
+        "red bull", session, colormap='official'
+    ) == OFFICIAL_RB_COLOR
+
+    # check that fastf1 color scheme will be equivalent to official
+    assert fastf1.plotting.get_team_color(
+        "mercedes", session, colormap='fastf1'
+    ) == OFFICIAL_MERC_COLOR
+
+    assert fastf1.plotting.get_team_color(
+        "red bull", session, colormap='fastf1'
+    ) == OFFICIAL_RB_COLOR

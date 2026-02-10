@@ -75,6 +75,7 @@ class TeamColorConstants(BaseModel):
 
 class TeamConstants(BaseModel):
     short_name: str
+    # a shortened recognizable team name intended for visualizations
     colors: TeamColorConstants
 
 
@@ -83,10 +84,12 @@ class SeasonConstants(BaseModel):
         dict[CompoundTypes, str],
         AfterValidator(color_dict_validator)
     ]
+
     teams: Annotated[
         dict[str, TeamConstants],
         AfterValidator(team_key_validator)
     ]
+    # keys are the normalized team names
 
 
 # ### models for full driver and team data
@@ -94,7 +97,9 @@ class SeasonConstants(BaseModel):
 
 class Team(TeamConstants):
     name: str = ''
+    # full team name
     normalized_name: str = ''
+    # reduced to most recognizable part, omitting "F1", "Racing", ...
     drivers: list["Driver"] = []
 
     def add_driver(self, driver: "Driver"):
