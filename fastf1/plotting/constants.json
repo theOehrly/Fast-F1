@@ -673,5 +673,96 @@
                 }
             }
         }
+    },
+    "2026": {
+        "compound_colors": {
+            "SOFT": "#da291c",
+            "MEDIUM": "#ffd12e",
+            "HARD": "#f0f0ec",
+            "INTERMEDIATE": "#43b02a",
+            "WET": "#0067ad",
+            "UNKNOWN": "#00ffff",
+            "TEST-UNKNOWN": "#434649"
+        },
+        "teams": {
+            "alpine": {
+                "short_name": "Alpine",
+                "colors": {
+                    "official": "#0093cc",
+                    "fastf1": "#ff87bc"
+                }
+            },
+            "aston martin": {
+                "short_name": "Aston Martin",
+                "colors": {
+                    "official": "#229971",
+                    "fastf1": "#00665f"
+                }
+            },
+            "audi": {
+                "short_name": "Audi",
+                "colors": {
+                    "official": "#ff2d00",
+                    "fastf1": "#ff2d00"
+                }
+            },
+            "cadillac": {
+                "short_name": "Cadillac",
+                "colors": {
+                    "official": "#444444",
+                    "fastf1": "#444444"
+                }
+            },
+            "ferrari": {
+                "short_name": "Ferrari",
+                "colors": {
+                    "official": "#e80020",
+                    "fastf1": "#e80020"
+                }
+            },
+            "haas": {
+                "short_name": "Haas",
+                "colors": {
+                    "official": "#b6babd",
+                    "fastf1": "#b6babd"
+                }
+            },
+            "mclaren": {
+                "short_name": "McLaren",
+                "colors": {
+                    "official": "#ff8000",
+                    "fastf1": "#ff8000"
+                }
+            },
+            "mercedes": {
+                "short_name": "Mercedes",
+                "colors": {
+                    "official": "#27f4d2",
+                    "fastf1": "#27f4d2"
+                }
+            },
+            "racing bulls": {
+                "short_name": "RB",
+                "colors": {
+                    "official": "#6692ff",
+                    "fastf1": "#fcd700"
+                }
+            },
+            "red bull": {
+                "short_name": "Red Bull",
+                "colors": {
+                    "official": "#3671c6",
+                    "fastf1": "#0600ef"
+                }
+            },
+            "williams": {
+                "short_name": "Williams",
+                "colors": {
+                    "official": "#64c4ff",
+                    "fastf1": "#00a0dd"
+                }
+            }
+        }
     }
+
 }
