@@ -80,7 +80,13 @@ def make_path(wname, wdate, sname, sdate):
         .replace("2024-11-03_Qualifying", "2024-11-02_Qualifying") \
         .replace("2025-02-26_Practice_1", "2025-02-26_Day_1") \
         .replace("2025-02-27_Practice_2", "2025-02-27_Day_2") \
-        .replace("2025-02-28_Practice_3", "2025-02-28_Day_3")
+        .replace("2025-02-28_Practice_3", "2025-02-28_Day_3") \
+        .replace("2026-02-11_Practice_1", "2026-02-11_Day_1") \
+        .replace("2026-02-12_Practice_2", "2026-02-12_Day_2") \
+        .replace("2026-02-13_Practice_3", "2026-02-13_Day_3") \
+        .replace("2026-02-18_Practice_1", "2026-02-18_Day_1") \
+        .replace("2026-02-19_Practice_2", "2026-02-19_Day_2") \
+        .replace("2026-02-20_Practice_3", "2026-02-20_Day_3")
 
     return path
 
@@ -1013,7 +1019,8 @@ def car_data(path, response=None, livedata=None):
                         ngear = entry['Cars'][drv]['Channels']['3']
                         throttle = entry['Cars'][drv]['Channels']['4']
                         brake = entry['Cars'][drv]['Channels']['5']
-                        drs = entry['Cars'][drv]['Channels']['45']
+                        drs = entry['Cars'][drv]['Channels'].get('45', 0)
+                        # drs is no longer included in 2026
 
                     except KeyError:
                         continue
