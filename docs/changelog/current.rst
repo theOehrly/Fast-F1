@@ -1,3 +1,16 @@
+What's new in v3.8.1
+--------------------
+
+(released 11/02/2026)
+
+
+Bug Fixes
+^^^^^^^^^
+
+- Patches to support 2026 Pre-Season Testing
+
+
+
 What's new in v3.8.0
 --------------------
 
