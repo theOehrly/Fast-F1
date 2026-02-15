@@ -1419,6 +1419,7 @@ class Session:
                 self._load_track_status_data(livedata=livedata)
                 self._load_laps_data(livedata=livedata)
                 self._add_first_lap_time_from_ergast()
+                self._fix_missing_laps_retired_on_track()
 
             if telemetry:
                 self._load_telemetry(livedata=livedata)
@@ -1437,7 +1438,6 @@ class Session:
                     "session."
                 )
 
-        self._fix_missing_laps_retired_on_track()
         self._set_laps_deleted_from_rcm()
         self._calculate_quali_like_session_results()
         self._calculate_race_like_session_results()
