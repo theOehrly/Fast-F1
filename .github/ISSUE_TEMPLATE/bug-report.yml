@@ -31,6 +31,12 @@ body:
 
 - type: textarea
   attributes:
+    label: "State your Fastf1 version number:"
+  validations:
+    required: true
+
+- type: textarea
+  attributes:
     label: "Error message:"
     description: >
       Please include the full output including the complete traceback and all logging output.
