@@ -892,10 +892,23 @@ def timing_app_data(path, response=None, livedata=None):
         row = entry[1]
         for driver_number in row['Lines']:
             if update := recursive_dict_get(row, 'Lines', driver_number, 'Stints'):
-                for stint_number, stint in enumerate(update):
-                    if isinstance(update, dict):
-                        stint_number = int(stint)
-                        stint = update[stint]
+                if isinstance(update, list):
+                    # 2018-2020 list format: the API re-broadcasts ALL
+                    # stints on every update. Only the last element is
+                    # the currently relevant stint; earlier elements are
+                    # historical re-broadcasts. Emit only the last entry
+                    # to match the modern dict format's behavior of
+                    # sending one stint per message. (ref: GH#841)
+                    if not update:
+                        continue
+                    stint_number = len(update) - 1
+                    stint = update[-1]
+                    items = [(stint_number, stint)]
+                else:
+                    items = [(int(k), update[k]) for k in update]
+
+                for stint_number, stint in items:
+
                     for key in data:
                         if key in stint:
                             val = stint[key]

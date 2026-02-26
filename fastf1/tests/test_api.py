@@ -251,6 +251,103 @@ def test_driver_list():
 
 # ########## special test cases ##########
 
+def test_timing_app_data_list_format_stints():
+    """Test that list-format Stints (used in 2018-2020 API) are parsed correctly.
+
+    In the 2018-2020 API format, the ``Stints`` field is sent as a list
+    containing ALL stints every time a tyre update is sent. The old code
+    would emit one row for EACH element in the list at the message
+    timestamp, causing ``__fix_tyre_info`` to misassign stints when two
+    different stints land at the same time.
+
+    The fix (GH#841) emits only the last (highest-index) element of each
+    list-format message, since earlier elements are historical
+    re-broadcasts.  This matches the modern dict format's behavior of
+    sending only the currently-updated stint per message.
+    """
+    # Simulate 2018-2020 API list-format: Driver 1 starts on SOFT (stint 0),
+    # pits to MEDIUM (stint 1).
+    response = [
+        # T=1min: start of race - only 1 stint in the list
+        ['1:00.000', {'Lines': {'1': {'Stints': [
+            {'Compound': 'SOFT', 'New': 'true', 'StartLaps': 0}
+        ]}}}],
+        # T=20min: mid-race update - still on stint 0, resends the full list
+        ['20:00.000', {'Lines': {'1': {'Stints': [
+            {'Compound': 'SOFT', 'New': 'true', 'StartLaps': 0, 'TotalLaps': 19}
+        ]}}}],
+        # T=30min: pit stop - list now contains BOTH stints
+        ['30:00.000', {'Lines': {'1': {'Stints': [
+            {'Compound': 'SOFT', 'New': 'true', 'StartLaps': 0, 'TotalLaps': 20},
+            {'Compound': 'MEDIUM', 'New': 'false', 'StartLaps': 0}
+        ]}}}],
+        # T=40min: after pit stop - both stints resent again
+        ['40:00.000', {'Lines': {'1': {'Stints': [
+            {'Compound': 'SOFT', 'New': 'true', 'StartLaps': 0, 'TotalLaps': 20},
+            {'Compound': 'MEDIUM', 'New': 'false', 'StartLaps': 0, 'TotalLaps': 10}
+        ]}}}],
+    ]
+
+    data = fastf1._api.timing_app_data('api/path', response=response)
+    drv1 = data[data['Driver'] == '1']
+
+    # With the new fix, each list message emits exactly one row (the last
+    # element).  So we expect 4 rows total:
+    #   T=1min  -> stint 0 (SOFT)     [last of 1-element list]
+    #   T=20min -> stint 0 (SOFT)     [last of 1-element list]
+    #   T=30min -> stint 1 (MEDIUM)   [last of 2-element list]
+    #   T=40min -> stint 1 (MEDIUM)   [last of 2-element list]
+    assert len(drv1) == 4, (
+        f"Expected 4 rows (one per message), got {len(drv1)}."
+    )
+
+    # Critical invariant: no two *different* stints share the same timestamp
+    for ts in drv1['Time'].unique():
+        stints_at_ts = drv1.loc[drv1['Time'] == ts, 'Stint'].unique()
+        assert len(stints_at_ts) == 1, (
+            f"Multiple different stints at timestamp {ts}: {stints_at_ts}. "
+            "This would trigger the __fix_tyre_info misassignment bug."
+        )
+
+    # First appearance timestamps are correct
+    stints = drv1.drop_duplicates(subset='Stint').sort_values('Stint').reset_index(drop=True)
+    assert stints.loc[0, 'Stint'] == 0
+    assert stints.loc[0, 'Compound'] == 'SOFT'
+    assert stints.loc[0, 'Time'] == pd.Timedelta(minutes=1)
+    assert stints.loc[1, 'Stint'] == 1
+    assert stints.loc[1, 'Compound'] == 'MEDIUM'
+    assert stints.loc[1, 'Time'] == pd.Timedelta(minutes=30)
+
+
+def test_timing_app_data_list_format_multi_element_same_timestamp():
+    """Regression: multi-element list must NOT emit multiple stints at once.
+
+    This covers the exact scenario from the 2018 Azerbaijan GP where five
+    drivers received a 2-element list at the same timestamp.  The old
+    code emitted *both* stints at that timestamp, which confused
+    ``__fix_tyre_info`` into merging them.
+    """
+    # Single message with a 2-element list (mirrors the real API data)
+    response = [
+        ['13:19.945', {'Lines': {'7': {'Stints': [
+            {'Compound': 'ULTRASOFT', 'New': 'false', 'TotalLaps': 4,
+             'StartLaps': 3, 'TyresNotChanged': '0'},
+            {'Compound': 'SOFT', 'New': 'true', 'TotalLaps': 0,
+             'StartLaps': 0, 'TyresNotChanged': '0'}
+        ]}}}],
+    ]
+
+    data = fastf1._api.timing_app_data('api/path', response=response)
+    drv = data[data['Driver'] == '7']
+
+    # Only the LAST element (stint 1 / SOFT) should be emitted
+    assert len(drv) == 1, (
+        f"Expected 1 row (only last element), got {len(drv)}."
+    )
+    assert drv.iloc[0]['Stint'] == 1
+    assert drv.iloc[0]['Compound'] == 'SOFT'
+
+
 def test_driver_list_contains_support_race(caplog):
     caplog.set_level(logging.WARNING)
     response = list()
