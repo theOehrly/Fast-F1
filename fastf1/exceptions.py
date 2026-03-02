@@ -49,7 +49,12 @@ class ErgastInvalidRequestError(ErgastError):
 
 class InvalidSessionError(Exception):
     """Raised if no session for the specified event name, type, and year
-    can be found."""
+    can be found.
+
+    .. deprecated:: v3.9.0
+
+        This exception is unused and will be removed in a future release.
+    """
 
     def __init__(self, *args):
         super().__init__("No matching session can be found.")
@@ -63,6 +68,13 @@ class NoLapDataError(Exception):
     def __init__(self, *args):
         super().__init__("Failed to load session because the API did not "
                          "provide any usable data.")
+
+
+class FuzzyMatchError(ValueError):
+    """
+    Raised if no fuzzy match could be found with sufficient confidence.
+    """
+    pass
 
 
 # ### Critical FastF1 Exceptions ###

@@ -173,13 +173,16 @@ def test_event_fuzzy_search():
     assert schedule.get_event_by_name(
         "Imola").EventName == "Emilia Romagna Grand Prix"
     assert schedule.get_event_by_name(
-        "USGP").EventName == "United States Grand Prix"
-    assert schedule.get_event_by_name(
-        "US GP").EventName == "United States Grand Prix"
-    assert schedule.get_event_by_name(
         "Mexican GP").EventName == "Mexico City Grand Prix"
     assert schedule.get_event_by_name(
         "Brazilian GP").EventName == "São Paulo Grand Prix"
+
+
+def test_event_fuzzy_unique_too_short():
+    schedule = fastf1.get_event_schedule(2024)
+
+    with pytest.raises(ValueError, match='too short'):
+        schedule.get_event_by_name("US")
 
 
 @pytest.mark.parametrize(

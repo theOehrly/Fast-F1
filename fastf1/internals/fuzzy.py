@@ -2,6 +2,8 @@ import warnings
 
 import numpy as np
 
+from fastf1.exceptions import FuzzyMatchError
+
 
 with warnings.catch_warnings():
     warnings.filterwarnings(
@@ -17,7 +19,7 @@ def fuzzy_matcher(
         reference: list[list[str]],
         abs_confidence: float = 0.0,
         rel_confidence: float = 0.0
-) -> (int, bool):
+) -> tuple[int, bool]:
     """
     Match a query string to a reference list of lists of strings using fuzzy
     string matching.
@@ -51,9 +53,8 @@ def fuzzy_matcher(
             raised.
 
     Returns:
-        (int, bool): Index of the best matching element in the
-            reference (outer) list and a boolean indicating if the match is
-            accurate or not.
+        Index of the best matching element in the reference (outer) list and
+        a boolean indicating if the match is accurate or not.
 
     """
     # Preprocess the query and reference strings
@@ -104,21 +105,23 @@ def fuzzy_matcher(
         mask = ((np.vectorize(count_dict.get)(reference) > 1)
                 & (ratios == max_ratio))
         ratios[mask] = 0
+        # update the max row ratios
+        max_row_ratios = np.max(ratios, axis=1)
 
     # get the index of the row that contains the maximum ratio
     max_index = np.argmax(ratios) // ratios.shape[1]
 
     # optional confidence checks
     if abs_confidence and (max_ratio < (abs_confidence * 100)):
-        raise KeyError(f"Found no match for '{query}' with sufficient "
-                       f"absolute confidence")
+        raise FuzzyMatchError(f"Found no match for '{query}' with sufficient "
+                              f"absolute confidence")
 
-    if rel_confidence and (max_ratio / np.partition(ratios.flatten(), -2)[-2]
+    if rel_confidence and (max_ratio / np.partition(max_row_ratios, -2)[-2]
                            < (1 + rel_confidence)):
         # max ratio divided by second-largest ratio is less
         # than 1 + rel_confidence
-        raise KeyError(f"Found no match for '{query}' with sufficient "
-                       f"relative confidence")
+        raise FuzzyMatchError(f"Found no match for '{query}' with sufficient "
+                              f"relative confidence")
 
     # return index as inaccurate match
     return max_index, False
