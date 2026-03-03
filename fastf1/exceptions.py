@@ -1,3 +1,4 @@
+import warnings
 
 
 # Exceptions Structure and Handling in FastF1
@@ -24,6 +25,16 @@
 # through the catch-all error handling.
 
 
+def __getattr__(name):
+    # TODO: remove in v3.11
+    if name == "InvalidSessionError":
+        warnings.warn(f"`{name}` is deprecated and will be removed in a "
+                      f"future version.")
+        return _InvalidSessionError
+
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
 # ### Default FastF1 Exceptions ###
 
 class DataNotLoadedError(Exception):
@@ -45,19 +56,6 @@ class ErgastJsonError(ErgastError):
 class ErgastInvalidRequestError(ErgastError):
     """The server rejected the request because it was invalid."""
     pass
-
-
-class InvalidSessionError(Exception):
-    """Raised if no session for the specified event name, type, and year
-    can be found.
-
-    .. deprecated:: v3.9.0
-
-        This exception is unused and will be removed in a future release.
-    """
-
-    def __init__(self, *args):
-        super().__init__("No matching session can be found.")
 
 
 class NoLapDataError(Exception):
@@ -92,3 +90,21 @@ class FastF1CriticalError(RuntimeError):
 class RateLimitExceededError(FastF1CriticalError):
     """Raised if a hard rate limit is exceeded for any API."""
     pass
+
+
+# ### Deprecated Exceptions ###
+
+# TODO: remove in v3.11
+InvalidSessionError: Exception
+"""Raised if no session for the specified event name, type, and year
+can be found.
+
+.. deprecated:: v3.9.0
+
+    This exception is unused and will be removed in a future release.
+"""
+
+
+class _InvalidSessionError(Exception):
+    def __init__(self, *args):
+        super().__init__("No matching session can be found.")

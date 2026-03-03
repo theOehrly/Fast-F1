@@ -38,14 +38,20 @@ from fastf1.mvapi import (
 from fastf1.utils import to_timedelta
 
 
-# TODO: remove in v3.10
 def __getattr__(name):
+    # TODO: remove in v3.10
     if name in ("NoLapDataError",
-                "DataNotLoadedError",
-                "InvalidSessionError"):
+                "DataNotLoadedError"):
 
         warnings.warn(f"Accessing `{name}` via `{__name__}` is deprecated. "
                       f"Use `fastf1.exceptions` instead.")
+
+        return getattr(exceptions, name)
+
+    # TODO: remove in v3.11
+    elif name == "InvalidSessionError":
+        warnings.warn(f"`{name}` is deprecated and will be removed in a "
+                      f"future version.")
 
         return getattr(exceptions, name)
 
