@@ -3,6 +3,7 @@ import pytest
 
 import fastf1
 import fastf1.plotting
+from fastf1.exceptions import FuzzyMatchError
 from fastf1.plotting._backend import Constants
 from fastf1.plotting._base import CompoundTypes
 from fastf1.testing import run_in_subprocess
@@ -85,10 +86,10 @@ def test_internal_get_team(identifier, expected, can_match_exact, use_exact):
 def test_fuzzy_driver_team_key_error():
     session = fastf1.get_session(2023, 10, 'R')
 
-    with pytest.raises(KeyError):
+    with pytest.raises(FuzzyMatchError):
         _ = fastf1.plotting._interface._get_team('andretti', session)
 
-    with pytest.raises(KeyError):
+    with pytest.raises(FuzzyMatchError):
         _ = fastf1.plotting._interface._get_driver('toto wolf', session)
 
 
