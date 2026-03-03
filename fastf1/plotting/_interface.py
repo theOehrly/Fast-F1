@@ -221,6 +221,14 @@ def get_team_name(
         short: if True, a shortened version of the team name will be returned
         exact_match: match the identifier exactly (case-insensitive, special
             characters are converted to their nearest ASCII equivalent)
+
+    Raises:
+        :class:`~fastf1.exceptions.FuzzyMatchError`: ``exact_match`` is
+            ``False`` and the identifier could not be matched with sufficient
+            confidence.
+
+        :class:`KeyError`: ``exact_match`` is ``True`` and no exact match for
+            the identifier exists.
     """
     team = _get_team(identifier, session, exact_match=exact_match)
 
@@ -251,6 +259,14 @@ def get_team_name_by_driver(
         short: if True, a shortened version of the team name will be returned
         exact_match: match the identifier exactly (case-insensitive, special
             characters are converted to their nearest ASCII equivalent)
+
+    Raises:
+        :class:`~fastf1.exceptions.FuzzyMatchError`: ``exact_match`` is
+            ``False`` and the identifier could not be matched with sufficient
+            confidence.
+
+        :class:`KeyError`: ``exact_match`` is ``True`` and no exact match for
+            the identifier exists.
     """
     driver = _get_driver(identifier, session, exact_match=exact_match)
     team = driver.team
@@ -285,6 +301,14 @@ def get_team_color(
 
     Returns:
         A hexadecimal RGB color code
+
+    Raises:
+        :class:`~fastf1.exceptions.FuzzyMatchError`: ``exact_match`` is
+            ``False`` and the identifier could not be matched with sufficient
+            confidence.
+
+        :class:`KeyError`: ``exact_match`` is ``True`` and no exact match for
+            the identifier exists.
     """
     return _get_team_color(identifier, session,
                            colormap=colormap,
@@ -303,6 +327,14 @@ def get_driver_name(
         session: the session for which the data should be obtained
         exact_match: match the identifier exactly (case-insensitive, special
             characters are converted to their nearest ASCII equivalent)
+
+    Raises:
+        :class:`~fastf1.exceptions.FuzzyMatchError`: ``exact_match`` is
+            ``False`` and the identifier could not be matched with sufficient
+            confidence.
+
+        :class:`KeyError`: ``exact_match`` is ``True`` and no exact match for
+            the identifier exists.
     """
     driver = _get_driver(identifier, session, exact_match=exact_match)
     return driver.name
@@ -325,6 +357,14 @@ def get_driver_abbreviation(
         session: the session for which the data should be obtained
         exact_match: match the identifier exactly (case-insensitive, special
             characters are converted to their nearest ASCII equivalent)
+
+    Raises:
+        :class:`~fastf1.exceptions.FuzzyMatchError`: ``exact_match`` is
+            ``False`` and the identifier could not be matched with sufficient
+            confidence.
+
+        :class:`KeyError`: ``exact_match`` is ``True`` and no exact match for
+            the identifier exists.
     """
     driver = _get_driver(identifier, session, exact_match=exact_match)
     return driver.abbreviation
@@ -342,6 +382,14 @@ def get_driver_names_by_team(
         session: the session for which the data should be obtained
         exact_match: match the identifier exactly (case-insensitive, special
             characters are converted to their nearest ASCII equivalent)
+
+    Raises:
+        :class:`~fastf1.exceptions.FuzzyMatchError`: ``exact_match`` is
+            ``False`` and the identifier could not be matched with sufficient
+            confidence.
+
+        :class:`KeyError`: ``exact_match`` is ``True`` and no exact match for
+            the identifier exists.
     """
     team = _get_team(identifier, session, exact_match=exact_match)
     return [driver.name for driver in team.drivers]
@@ -359,6 +407,14 @@ def get_driver_abbreviations_by_team(
         session: the session for which the data should be obtained
         exact_match: match the identifier exactly (case-insensitive, special
             characters are converted to their nearest ASCII equivalent)
+
+    Raises:
+        :class:`~fastf1.exceptions.FuzzyMatchError`: ``exact_match`` is
+            ``False`` and the identifier could not be matched with sufficient
+            confidence.
+
+        :class:`KeyError`: ``exact_match`` is ``True`` and no exact match for
+            the identifier exists.
     """
     team = _get_team(identifier, session, exact_match=exact_match)
     return [driver.abbreviation for driver in team.drivers]
@@ -396,6 +452,13 @@ def get_driver_color(
     Returns:
         A hexadecimal RGB color code
 
+    Raises:
+        :class:`~fastf1.exceptions.FuzzyMatchError`: ``exact_match`` is
+            ``False`` and the identifier could not be matched with sufficient
+            confidence.
+
+        :class:`KeyError`: ``exact_match`` is ``True`` and no exact match for
+            the identifier exists.
     """
     return _get_driver_color(identifier, session, colormap=colormap,
                              exact_match=exact_match)
@@ -552,6 +615,13 @@ def get_driver_style(
     Returns: a dictionary of plot style arguments that can be directly passed
         to a matplotlib plot function using the ``**`` expansion operator
 
+    Raises:
+        :class:`~fastf1.exceptions.FuzzyMatchError`: ``exact_match`` is
+            ``False`` and the identifier could not be matched with sufficient
+            confidence.
+
+        :class:`KeyError`: ``exact_match`` is ``True`` and no exact match for
+            the identifier exists.
 
     .. minigallery:: fastf1.plotting.get_driver_style
         :add-heading:
@@ -766,8 +836,12 @@ def add_sorted_driver_legend(
         *args: Matplotlib legend args
         **kwargs: Matplotlib legend kwargs
 
-     Returns:
+    Returns:
         ``matplotlib.legend.Legend``
+
+    Raises:
+        :class:`~fastf1.exceptions.FuzzyMatchError`: The labels in the legend
+            could not be matched to known drivers with sufficient confidence.
 
     .. minigallery:: fastf1.plotting.add_sorted_driver_legend
         :add-heading:

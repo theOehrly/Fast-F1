@@ -215,7 +215,7 @@ def get_event(
             fuzzy search.
 
     Raises:
-        :class:`~fastf1.exceptions.FuzzyMatchError` when ``exact_match`` is
+        :class:`~fastf1.exceptions.FuzzyMatchError`: ``exact_match`` is
             ``False`` and not match with sufficient confidence is found.
 
         :class:`ValueError`: ``gp`` is a string, ``exact_match`` is ``False``
@@ -225,7 +225,7 @@ def get_event(
         :class:`ValueError`: ``gp`` is an integer and the round number
             is invalid.
 
-        :class:`KeyError` when ``exact_match`` is ``True`` and no exact
+        :class:`KeyError`: ``exact_match`` is ``True`` and no exact
             match exists.
     """
     schedule = get_event_schedule(year=year,
