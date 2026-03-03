@@ -51,6 +51,7 @@ def get_session(
         identifier: int | str | None = None,
         *,
         backend: Literal['fastf1', 'f1timing', 'ergast'] | None = None,
+        exact_match: bool = False
 ) -> Session:
     """Create a :class:`~fastf1.core.Session` object based on year, event name
     and session identifier.
@@ -111,6 +112,9 @@ def get_session(
 
             For seasons older than 2018 ``'ergast'`` is always used.
 
+        exact_match: Match precisely the query, or default to
+            fuzzy search.
+
     Raises:
         :class:`~fastf1.exceptions.FuzzyMatchError`: ``exact_match`` is
             ``False`` and not match with sufficient confidence is found.
@@ -128,7 +132,7 @@ def get_session(
         :class:`KeyError`: ``exact_match`` is ``True`` and no exact
             match exists.
     """
-    event = get_event(year, gp, backend=backend)
+    event = get_event(year, gp, backend=backend, exact_match=exact_match)
     return event.get_session(identifier)
 
 
@@ -208,8 +212,7 @@ def get_event(
             For seasons older than 2018 ``'ergast'`` is always used.
 
         exact_match: Match precisely the query, or default to
-            fuzzy search. If no event is found with
-            ``exact_match=True``, the function will return None
+            fuzzy search.
 
     Raises:
         :class:`~fastf1.exceptions.FuzzyMatchError` when ``exact_match`` is
@@ -808,7 +811,7 @@ class EventSchedule(BaseDataFrame):
                 exact_match=True)``
                 will return the event for the British Grand Prix, whereas
                 ``.get_event_by_name("British", exact_match=True)``
-                will return ``None``
+                will raise a ``KeyError``
 
         Raises:
             :class:`~fastf1.exceptions.FuzzyMatchError` when ``exact_match``

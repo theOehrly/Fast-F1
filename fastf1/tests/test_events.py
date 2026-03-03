@@ -5,6 +5,7 @@ import pytest
 
 import fastf1.core
 import fastf1.events
+from fastf1.exceptions import FuzzyMatchError
 
 
 @pytest.mark.parametrize('backend', ['fastf1', 'f1timing', 'ergast'])
@@ -183,6 +184,30 @@ def test_event_fuzzy_unique_too_short():
 
     with pytest.raises(ValueError, match='too short'):
         schedule.get_event_by_name("US")
+
+
+def test_get_session_exceptions():
+    # fuzzy match confidence is too low
+    with pytest.raises(FuzzyMatchError, match="confidence"):
+        fastf1.get_session(2023, "This GP does not exist", "R")
+
+    # the unique part of the provided event name is too short
+    with pytest.raises(ValueError, match="too short"):
+        fastf1.get_session(2023, "Spa", "R")
+
+    # invalid round number
+    with pytest.raises(ValueError, match="Invalid round"):
+        fastf1.get_session(2023, 35, "R")
+
+    # invalid session identifier
+    with pytest.raises(ValueError, match="Invalid session"):
+        fastf1.get_session(2023, 10, 6)
+    with pytest.raises(ValueError, match="Invalid session"):
+        fastf1.get_session(2023, 10, "RR")
+
+    # no exact match
+    with pytest.raises(KeyError):
+        fastf1.get_session(2023, "Alaskan Grand Prix", "R", exact_match=True)
 
 
 @pytest.mark.parametrize(
