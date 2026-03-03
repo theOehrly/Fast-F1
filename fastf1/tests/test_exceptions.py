@@ -33,10 +33,6 @@ def test_legacy_import_warns():
 
     with pytest.warns(UserWarning,
                       match="Accessing .* via .* is deprecated"):
-        from fastf1.core import InvalidSessionError
-
-    with pytest.warns(UserWarning,
-                      match="Accessing .* via .* is deprecated"):
         from fastf1.core import NoLapDataError
 
     with pytest.warns(UserWarning,
@@ -51,7 +47,6 @@ def test_legacy_import_warns():
         ("fastf1.ergast.interface", "ErgastJsonError"),
         ("fastf1.ergast.interface", "ErgastInvalidRequestError"),
         ("fastf1.core", "DataNotLoadedError"),
-        ("fastf1.core", "InvalidSessionError"),
         ("fastf1.core", "NoLapDataError"),
         ("fastf1", "RateLimitExceededError"),
     ]
@@ -60,6 +55,30 @@ def test_legacy_access_warns(module, name):
     m = importlib.import_module(module)
     with pytest.warns(UserWarning,
                       match="Accessing .* via .* is deprecated"):
+        getattr(m, name)
+
+
+def test_deprecated_import_warns():
+    with pytest.warns(UserWarning,
+                      match="is deprecated and will be removed"):
+        from fastf1.exceptions import InvalidSessionError
+
+    with pytest.warns(UserWarning,
+                      match="is deprecated and will be removed"):
+        from fastf1.core import InvalidSessionError
+
+
+@pytest.mark.parametrize(
+    "module, name",
+    [
+        ("fastf1.exceptions", "InvalidSessionError"),
+        ("fastf1.core", "InvalidSessionError"),
+    ]
+)
+def test_deprecated_access_warns(module, name):
+    m = importlib.import_module(module)
+    with pytest.warns(UserWarning,
+                      match="is deprecated and will be removed"):
         getattr(m, name)
 
 

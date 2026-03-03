@@ -1,7 +1,6 @@
 import collections
 import datetime
 import json
-import warnings
 from typing import Literal
 
 import dateutil.parser
@@ -52,7 +51,7 @@ def get_session(
         identifier: int | str | None = None,
         *,
         backend: Literal['fastf1', 'f1timing', 'ergast'] | None = None,
-        force_ergast: bool = False,
+        exact_match: bool = False
 ) -> Session:
     """Create a :class:`~fastf1.core.Session` object based on year, event name
     and session identifier.
@@ -96,6 +95,7 @@ def get_session(
             see :ref:`event-session-identifier`
 
         backend: select a specific backend as data source, options:
+
             - ``'fastf1'``: FastF1's own backend, full support for 2018 to now
 
             - ``'f1timing'``: uses data from the F1 live timing API, sessions
@@ -112,10 +112,27 @@ def get_session(
 
             For seasons older than 2018 ``'ergast'`` is always used.
 
-        force_ergast: [Deprecated, use ``backend='ergast'``] Always use data
-            from the ergast database to create the event schedule
+        exact_match: Match precisely the query, or default to
+            fuzzy search.
+
+    Raises:
+        :class:`~fastf1.exceptions.FuzzyMatchError`: ``exact_match`` is
+            ``False`` and not match with sufficient confidence is found.
+
+        :class:`ValueError`: ``gp`` is a string, ``exact_match`` is ``False``
+            and the provided ``name`` is shorter than four characters after
+            common phrases like "Formula 1", "Grand Prix", etc. are removed.
+
+        :class:`ValueError`: ``gp`` is an integer and the round number
+            is invalid.
+
+        :class:`ValueError`: there exists no matching session for this event
+            or ``identifier`` is invalid
+
+        :class:`KeyError`: ``exact_match`` is ``True`` and no exact
+            match exists.
     """
-    event = get_event(year, gp, force_ergast=force_ergast, backend=backend)
+    event = get_event(year, gp, backend=backend, exact_match=exact_match)
     return event.get_session(identifier)
 
 
@@ -148,8 +165,6 @@ def get_testing_session(
             When no backend is specified, ``'fastf1'`` is used as a default and
             ``f1timing`` is used as a fallback in case the default
             is not available.
-
-    .. versionadded:: 2.2
     """
     event = get_testing_event(year, test_number, backend=backend)
     return event.get_session(session_number)
@@ -160,8 +175,6 @@ def get_event(
         gp: int | str,
         *,
         backend: Literal['fastf1', 'f1timing', 'ergast'] | None = None,
-        force_ergast: bool = False,
-        strict_search: bool = False,
         exact_match: bool = False
 ) -> "Event":
     """Create an :class:`~fastf1.events.Event` object for a specific
@@ -198,25 +211,30 @@ def get_event(
 
             For seasons older than 2018 ``'ergast'`` is always used.
 
-        force_ergast: [Deprecated, use ``backend='ergast'``] Always use data
-            from the ergast database to create the event schedule
-
-        strict_search: This argument is deprecated and planned for removal,
-            use the equivalent ``exact_match`` instead
-
         exact_match: Match precisely the query, or default to
-            fuzzy search. If no event is found with
-            ``exact_match=True``, the function will return None
+            fuzzy search.
 
-    .. versionadded:: 2.2
+    Raises:
+        :class:`~fastf1.exceptions.FuzzyMatchError`: ``exact_match`` is
+            ``False`` and not match with sufficient confidence is found.
+
+        :class:`ValueError`: ``gp`` is a string, ``exact_match`` is ``False``
+            and the provided ``name`` is shorter than four characters after
+            common phrases like "Formula 1", "Grand Prix", etc. are removed.
+
+        :class:`ValueError`: ``gp`` is an integer and the round number
+            is invalid.
+
+        :class:`KeyError`: ``exact_match`` is ``True`` and no exact
+            match exists.
     """
-    schedule = get_event_schedule(year=year, include_testing=False,
-                                  force_ergast=force_ergast,
+    schedule = get_event_schedule(year=year,
+                                  include_testing=False,
                                   backend=backend)
 
     if isinstance(gp, str):
         event = schedule.get_event_by_name(
-            gp, strict_search=strict_search, exact_match=exact_match)
+            gp, exact_match=exact_match)
     else:
         event = schedule.get_event_by_round(gp)
 
@@ -246,8 +264,6 @@ def get_testing_event(
             When no backend is specified, ``'fastf1'`` is used as a default and
             ``f1timing`` is used as a fallback in case the default
             is not available.
-
-    .. versionadded:: 2.2
     """
     if backend == 'ergast':
         raise ValueError("The 'ergast' backend does not support "
@@ -267,7 +283,6 @@ def get_event_schedule(
         *,
         include_testing: bool = True,
         backend: Literal['fastf1', 'f1timing', 'ergast'] | None = None,
-        force_ergast: bool = False
 ) -> "EventSchedule":
     """Create an :class:`~fastf1.events.EventSchedule` object for a specific
     season.
@@ -295,18 +310,7 @@ def get_event_schedule(
             is not available.
 
             For seasons older than 2018 ``'ergast'`` is always used.
-
-        force_ergast: [Deprecated, use ``backend='ergast'``] Always use data
-            from the ergast database to create the event schedule
-
-    .. versionadded:: 2.2
-
     """
-    if force_ergast:
-        warnings.warn("Option ``force_ergast`` has been deprecated, use"
-                      "``backend='ergast'`` instead")
-        backend = 'ergast'
-
     _backends_named_order = {
         'fastf1': _get_schedule_ff1,
         'f1timing': _get_schedule_from_f1_timing,
@@ -339,7 +343,6 @@ def get_events_remaining(
         *,
         include_testing: bool = True,
         backend: Literal['fastf1', 'f1timing', 'ergast'] | None = None,
-        force_ergast: bool = False
 ) -> 'EventSchedule':
     """
     Create an :class:`~fastf1.events.EventSchedule` object for remaining
@@ -368,18 +371,14 @@ def get_events_remaining(
             is not available.
 
             For seasons older than 2018 ``'ergast'`` is always used.
-
-        force_ergast: [Deprecated, use ``backend='ergast'``] Always use data
-            from the ergast database to create the event schedule
-
-    .. versionadded:: 2.3
     """
     if dt is None:
         dt = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
 
     events = get_event_schedule(
-        dt.year, include_testing=include_testing,
-        force_ergast=force_ergast, backend=backend
+        dt.year,
+        include_testing=include_testing,
+        backend=backend
     )
 
     if not include_testing:
@@ -653,8 +652,6 @@ class EventSchedule(BaseDataFrame):
         year: Championship year
         **kwargs: passed on to :class:`pandas.DataFrame` superclass
             (except 'columns' which is unsupported for the event schedule)
-
-    .. versionadded:: 2.2
     """
 
     _COLUMNS = {
@@ -714,7 +711,7 @@ class EventSchedule(BaseDataFrame):
             raise ValueError(f"Invalid round: {round}")
         return self[mask].iloc[0]
 
-    def _strict_event_search(self, name: str):
+    def _strict_event_search(self, name: str) -> "Event":
         """
         Match Event Name exactly, ignoring case.
         """
@@ -725,16 +722,22 @@ class EventSchedule(BaseDataFrame):
                 if event['EventName'].lower() == query:
                     return self.loc[i]
         else:
-            return None
+            raise KeyError(f"No exact event name for '{name}'!")
 
     def _fuzzy_event_search(self, name: str) -> "Event":
 
         def _remove_common_words(event_name):
-            common_words = ["formula 1", str(self.year), "grand prix", "gp"]
+            common_words = [
+                "formula 1", "formula1", str(self.year), "grand prix", "gp"
+            ]
             event_name = event_name.casefold()
 
             for word in common_words:
                 event_name = event_name.replace(word, "")
+
+            event_name = event_name.strip().rstrip()
+            while "  " in event_name:
+                event_name = event_name.replace("  ", " ")
 
             return event_name
 
@@ -753,9 +756,19 @@ class EventSchedule(BaseDataFrame):
         user_input = name
         name = _remove_common_words(name)
 
+        if len(name) < 4:
+            raise ValueError(
+                f'Unique part of the event name is too short! "{user_input}" '
+                f'simplifies to "{name}" but must be >=4 letters. Use a more '
+                f'descriptive event name.'
+            )
+
         reference = [_matcher_strings(event) for _, event in self.iterrows()]
 
-        index, exact = fuzzy_matcher(name, reference)
+        index, exact = fuzzy_matcher(name, reference,
+                                     abs_confidence=0.5,
+                                     rel_confidence=0.1)
+
         event = self.iloc[index]
 
         if not exact:
@@ -768,7 +781,6 @@ class EventSchedule(BaseDataFrame):
             self,
             name: str,
             *,
-            strict_search: bool = False,
             exact_match: bool = False
     ) -> "Event":
         """Get an :class:`Event` by its name.
@@ -792,21 +804,28 @@ class EventSchedule(BaseDataFrame):
                 ``.get_event_by_name("british")`` and
                 ``.get_event_by_name("silverstone")`` will both return the
                 event for the British Grand Prix.
-            strict_search: This argument is deprecated and planned for removal.
-                Use the equivalent ``exact_match`` instead
+
             exact_match: Search only for exact query matches
                 instead of using fuzzy search. For example,
                 ``.get_event_by_name("British Grand Prix",
                 exact_match=True)``
                 will return the event for the British Grand Prix, whereas
                 ``.get_event_by_name("British", exact_match=True)``
-                will return ``None``
+                will raise a ``KeyError``
+
+        Raises:
+            :class:`~fastf1.exceptions.FuzzyMatchError` when ``exact_match``
+                is ``False`` and not match with sufficient confidence is
+                found.
+
+            :class:`ValueError` when ``exact_match`` is ``False`` and the
+                provided ``name`` is shorter than four characters after common
+                phrases like "Formula 1", "Grand Prix", etc. are removed.
+
+            :class:`KeyError` when ``exact_match`` is ``True`` and no exact
+                match exists.
         """
-        if strict_search:
-            warnings.warn(("strict_search is deprecated and planned for "
-                           "removal, use the equivalent exact_match instead"),
-                          FutureWarning)
-        if strict_search or exact_match:
+        if exact_match:
             return self._strict_event_search(name)
         else:
             return self._fuzzy_event_search(name)
@@ -934,7 +953,6 @@ class Event(BaseSeries):
         Args:
             identifier: session name, abbreviation or number,
                 see :ref:`event-session-identifier`
-
 
         Raises:
             ValueError: No matching session or invalid identifier
