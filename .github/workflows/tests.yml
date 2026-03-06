@@ -33,20 +33,13 @@ jobs:
     name: Tests on ${{ matrix.python-version }} ${{ matrix.name-suffix }}
     steps:
       - name: Setup python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
+          cache: "pip"
 
       - name: Checkout repo
         uses: actions/checkout@v4
-
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: pip-cache-${{ hashFiles('requirements/*.txt') }}
-          restore-keys: |
-            pip-cache
 
       - name: Install python requirements
         run: |
@@ -94,20 +87,13 @@ jobs:
     name: Linting (Ruff)
     steps:
       - name: Setup python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
+          cache: "pip"
 
       - name: Checkout repo
         uses: actions/checkout@v4
-
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: pip-cache-${{ hashFiles('requirements/*.txt') }}
-          restore-keys: |
-            pip-cache
 
       - name: Install python requirements
         run: |
@@ -132,20 +118,13 @@ jobs:
 
     steps:
       - name: Setup python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
+          cache: "pip"
 
       - name: Checkout repo
         uses: actions/checkout@v4
-
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: pip-cache-${{ hashFiles('requirements/*.txt') }}
-          restore-keys: |
-            pip-cache
 
       - name: Install python requirements
         run: |
