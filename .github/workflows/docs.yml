@@ -61,23 +61,16 @@ jobs:
     name: Build Documentation
     runs-on: ubuntu-latest
     steps:
-      - name: Setup python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # fetch the complete repo history (for setuptools-scm)
 
-      - name: Cache pip
-        uses: actions/cache@v4
+      - name: Setup python
+        uses: actions/setup-python@v6
         with:
-          path: ~/.cache/pip
-          key: pip-cache-${{ hashFiles('requirements/*.txt') }}
-          restore-keys: |
-            pip-cache
+          python-version: '3.12'
+          cache: "pip"
 
       - name: Install python requirements
         run: |
