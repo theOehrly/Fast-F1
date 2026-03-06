@@ -32,14 +32,14 @@ jobs:
           - python-version: "3.14"
     name: Tests on ${{ matrix.python-version }} ${{ matrix.name-suffix }}
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
       - name: Setup python
         uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
-
-      - name: Checkout repo
-        uses: actions/checkout@v4
 
       - name: Install python requirements
         run: |
@@ -86,14 +86,14 @@ jobs:
     runs-on: ubuntu-latest
     name: Linting (Ruff)
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
       - name: Setup python
         uses: actions/setup-python@v6
         with:
           python-version: '3.12'
           cache: "pip"
-
-      - name: Checkout repo
-        uses: actions/checkout@v4
 
       - name: Install python requirements
         run: |
@@ -117,14 +117,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
       - name: Setup python
         uses: actions/setup-python@v6
         with:
           python-version: '3.12'
           cache: "pip"
-
-      - name: Checkout repo
-        uses: actions/checkout@v4
 
       - name: Install python requirements
         run: |
@@ -142,7 +142,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - name: Install dependencies

@@ -61,16 +61,16 @@ jobs:
     name: Build Documentation
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # fetch the complete repo history (for setuptools-scm)
+
       - name: Setup python
         uses: actions/setup-python@v6
         with:
           python-version: '3.12'
           cache: "pip"
-
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # fetch the complete repo history (for setuptools-scm)
 
       - name: Install python requirements
         run: |
