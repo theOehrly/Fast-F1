@@ -20,10 +20,19 @@ _time_string_matcher = re.compile(
 def date_from_ergast(d_str: Any) -> datetime.datetime | None:
     """Create a ``datetime.datetime`` object from a date stamp formatted
     like 'YYYY-MM-DD'."""
+    if not isinstance(d_str, str):
+        logger.debug(f"Failed to parse timestamp '{d_str}' in Ergast "
+                     f"response.")
+        return None
+
+    if not d_str:
+        # empty string
+        return None
+
     try:
         return datetime.datetime.strptime(d_str, "%Y-%m-%d")
     except (ValueError, TypeError):
-        logger.debug(f"Failed to parse date stamp '{d_str}' in Ergast"
+        logger.debug(f"Failed to parse date stamp '{d_str}' in Ergast "
                      f"response.")
         return None
 
@@ -41,16 +50,22 @@ def time_from_ergast(t_str: Any) -> datetime.time | None:
     # ``datetime.time.fromisoformat``
     #   - 12:34.2 -> not accepted because only on microsecond decimal is given
     #   - 12:34Z  -> 'Z' is not accepted as an alias of '+00:00' (utc)
-
-    try:
-        res = _time_string_matcher.match(t_str)
-    except TypeError:
-        res = None
-
-    if res is None:
-        logger.debug(f"Failed to parse timestamp '{t_str}' in Ergast"
+    if not isinstance(t_str, str):
+        logger.debug(f"Failed to parse timestamp '{t_str}' in Ergast "
                      f"response.")
         return None
+
+    if not t_str:
+        # empty string
+        return None
+
+    res = _time_string_matcher.match(t_str)
+
+    if res is None:
+        logger.debug(f"Failed to parse timestamp '{t_str}' in Ergast "
+                     f"response.")
+        return None
+
     elif res[1] and res[2] and res[3]:
         hour, minute, second = int(res[1][:-1]), int(res[2][:-1]), int(res[3])
     elif res[1] and res[3]:
@@ -75,7 +90,7 @@ def time_from_ergast(t_str: Any) -> datetime.time | None:
         return datetime.time(hour=hour, minute=minute, second=second,
                              microsecond=microsecond, tzinfo=tzinfo)
     except ValueError:
-        logger.debug(f"Failed to parse timestamp '{t_str}' in Ergast"
+        logger.debug(f"Failed to parse timestamp '{t_str}' in Ergast "
                      f"response.")
         return None
 
@@ -86,8 +101,12 @@ def timedelta_from_ergast(t_str: Any) -> datetime.timedelta | None:
     optional.
     """
     if not isinstance(t_str, str):
-        logger.debug(f"Failed to parse timestamp '{t_str}' in Ergast"
+        logger.debug(f"Failed to parse timestamp '{t_str}' in Ergast "
                      f"response.")
+        return None
+
+    if not t_str:
+        # empty string
         return None
 
     if t_str.startswith('-'):
