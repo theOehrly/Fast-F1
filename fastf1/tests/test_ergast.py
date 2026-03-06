@@ -26,12 +26,12 @@ from fastf1.ergast.structure import (
 
 def test_date_from_ergast():
     assert date_from_ergast('2022-10-25') == datetime.datetime(2022, 10, 25)
+    assert date_from_ergast('') is None
 
 
 @pytest.mark.parametrize(
     "date_string",
     (
-        "",
         "huh?",
         None
     )
@@ -122,6 +122,9 @@ def test_date_from_ergast_errors(date_string, caplog):
                            tzinfo=datetime.timezone.utc)),
             ("5.12",
              datetime.time(second=5, microsecond=120000)),
+
+
+            ("", None),
     )
 )
 def test_time_from_ergast(time_string, expected):
@@ -175,6 +178,8 @@ def test_time_from_ergast_errors(time_string, caplog):
 
             ("5.12",
              datetime.timedelta(seconds=5, microseconds=120000)),
+
+            ("", None),
     )
 )
 def test_timedelta_from_ergast(time_string, expected):
