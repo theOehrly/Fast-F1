@@ -915,7 +915,10 @@ def timing_app_data(path, response=None, livedata=None):
                     data['Driver'][-1] = driver_number
                     data['Stint'][-1] = stint_number
 
-    return pd.DataFrame(data)
+    df = pd.DataFrame(data)
+    df["Time"] = df["Time"].astype("timedelta64[ns]")
+
+    return df
 
 
 @Cache.api_request_wrapper
