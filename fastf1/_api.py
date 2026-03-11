@@ -892,10 +892,12 @@ def timing_app_data(path, response=None, livedata=None):
         row = entry[1]
         for driver_number in row['Lines']:
             if update := recursive_dict_get(row, 'Lines', driver_number, 'Stints'):
-                for stint_number, stint in enumerate(update):
-                    if isinstance(update, dict):
-                        stint_number = int(stint)
-                        stint = update[stint]
+                if isinstance(update, list):
+                    update = {str(stint_number): stint
+                              for stint_number, stint in enumerate(update)}
+                if isinstance(update, dict):
+                    for stint_number, stint in update.items():
+                        stint_number = int(stint_number)
                     for key in data:
                         if key in stint:
                             val = stint[key]

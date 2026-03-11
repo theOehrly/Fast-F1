@@ -266,6 +266,68 @@ def test_driver_list_contains_support_race(caplog):
     _, _, warn_message = caplog.record_tuples[0]
     assert warn_message.startswith("Skipping delayed declaration of driver")
 
+def test_timing_app_data_legacy_list_format():
+    """Stints in list format (legacy API, ~2018-2019) must be parsed correctly.
+    
+    Historic races return stints as a plain list instead of a dict with
+    string indices. Previously, this caused stints to be silently dropped.
+    See issue #863.
+    """
+    response = [
+        [
+            "00:05:00:000",
+            {
+                "Lines": {
+                    "1": {
+                        "Stints": [
+                            {"Compound": "SOFT", "New": "true",
+                             "TotalLaps": 0, "StartLaps": 0},
+                            {"Compound": "HARD", "New": "false",
+                             "TotalLaps": 10, "StartLaps": 10},
+                        ]
+                    }
+                }
+            }
+        ]
+    ]
+
+    data = fastf1._api.timing_app_data('api/path', response=response)
+
+    assert isinstance(data, pd.DataFrame)
+    assert len(data) == 2  # both stints must be present
+    assert list(data['Stint']) == [0, 1]
+    assert list(data['Compound']) == ['SOFT', 'HARD']
+    assert list(data['Driver']) == ['1', '1']
+
+
+def test_timing_app_data_modern_dict_format():
+    """Stints in dict format (modern API) must continue to work correctly."""
+    response = [
+        [
+            "00:05:00:000",
+            {
+                "Lines": {
+                    "1": {
+                        "Stints": {
+                            "0": {"Compound": "MEDIUM", "New": "true",
+                                  "TotalLaps": 0, "StartLaps": 0},
+                            "1": {"Compound": "HARD", "New": "false",
+                                  "TotalLaps": 20, "StartLaps": 20},
+                        }
+                    }
+                }
+            }
+        ]
+    ]
+
+    data = fastf1._api.timing_app_data('api/path', response=response)
+
+    assert isinstance(data, pd.DataFrame)
+    assert len(data) == 2  # both stints must be present
+    assert list(data['Stint']) == [0, 1]
+    assert list(data['Compound']) == ['MEDIUM', 'HARD']
+    assert list(data['Driver']) == ['1', '1']
+
 @pytest.mark.f1telapi
 def test_deleted_laps_not_marked_personal_best():
     # see issue #165
@@ -290,3 +352,20 @@ def test_personal_best_q_session_handled_individually():
     # If Quali session are not handled correctly individually, those laps are
     # not marked as personal best. (see issue #403)
     assert sum(ver['IsPersonalBest']) == 9
+
+@pytest.mark.f1telapi
+def test_timing_app_data_legacy_stints_baku_2018():
+    # Baku 2018 returns Stints as a list in the timing app API response
+    # (legacy format). Five drivers pitted on lap 1. Verify that stint 0
+    # is present for all of them, confirming no stints are silently dropped.
+    # Regression test for issue #863.
+    session = fastf1.get_session(2018, 'Azerbaijan', 'R')
+    data = fastf1._api.timing_app_data(session.api_path)
+
+    lap1_pitters = ['7', '14', '28', '9', '20']  # RAI, ALO, HAR, MAG, PER
+    for driver in lap1_pitters:
+        driver_stints = data[data['Driver'] == driver]['Stint'].unique()
+        assert 0 in driver_stints, (
+            f"Driver {driver} is missing stint 0 in Baku 2018 "
+            f"(legacy list format)"
+        )
