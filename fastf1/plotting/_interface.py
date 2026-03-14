@@ -682,10 +682,12 @@ def get_driver_style(
     else:
         try:
             custom_style = style[idx]
-        except IndexError:
-            raise ValueError(f"The provided custom style info does not "
-                             f"contain enough variants! (Has: {len(style)}, "
-                             f"Required: {idx})")
+        except IndexError as exc:
+            raise ValueError(
+                f"The provided custom style info does not "
+                f"contain enough variants! (Has: {len(style)}, "
+                f"Required: {idx})"
+            ) from exc
 
         if not isinstance(custom_style, dict):
             raise ValueError("The provided style info has an invalid format!")

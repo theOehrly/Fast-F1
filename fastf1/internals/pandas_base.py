@@ -16,7 +16,7 @@ import pandas as pd
 try:
     from pandas.core.internals import SingleBlockManager
 except ImportError as exc:
-    _mgr_instance = getattr(pd.Series(dtype=float), '_mgr')
+    _mgr_instance = pd.Series(dtype=float)._mgr
     if _mgr_instance is None:
         raise ImportError("Import of Pandas internals failed. You are likely "
                           "using a recently released version of Pandas that "
@@ -176,7 +176,7 @@ class _BaseSeriesConstructor(pd.Series):
         if isinstance(data, SingleBlockManager):
             obj = constructor._from_mgr(data, axes=data.axes)
         else:
-            obj = constructor(data=data, index=index, *args, **kwargs)
+            obj = constructor(*args, data=data, index=index, **kwargs)
 
         if parent is not None:
             # catch-all fix for some missing __finalize__ calls in Pandas

@@ -386,7 +386,7 @@ class Cache(metaclass=_MetaCache):
         if not os.path.exists(cache_dir):
             raise NotADirectoryError("Cache directory does not exist!")
 
-        for dirpath, dirnames, filenames in os.walk(cache_dir):
+        for dirpath, _dirnames, filenames in os.walk(cache_dir):
             for filename in filenames:
                 if filename.endswith('.ff1pkl'):
                     os.remove(os.path.join(dirpath, filename))
@@ -687,7 +687,7 @@ class Cache(metaclass=_MetaCache):
     @classmethod
     def _get_size(cls, start_path='.'):  # https://stackoverflow.com/questions/1392413/calculating-a-directorys-size-using-python # noqa: E501
         total_size = 0
-        for dirpath, dirnames, filenames in os.walk(start_path):
+        for dirpath, _dirnames, filenames in os.walk(start_path):
             for f in filenames:
                 fp = os.path.join(dirpath, f)
                 # skip if it is symbolic link

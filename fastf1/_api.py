@@ -229,7 +229,7 @@ def _extended_timing_data(path, response=None, livedata=None):
         if (drv_laps_data is None) or (drv_stream_data is None):
             continue
 
-        for i, split_time in enumerate(drv_session_split_times):
+        for i, _split_time in enumerate(drv_session_split_times):
             session_split_times[i] = min(drv_session_split_times[i],
                                          session_split_times[i])
 
@@ -330,7 +330,7 @@ def _align_laps(laps_data, stream_data):
     # delta is positive, our zero point is too late, and we need to shift all
     # deltas by the maximum delta to align them.
     max_delta = None
-    for drv, value in delta.items():
+    for _drv, value in delta.items():
         if (max_delta is None) or (value > max_delta):
             max_delta = value
 
@@ -821,7 +821,7 @@ def _stream_data_driver(driver_raw, empty_vals, drv):
 
             # create next row of data from the last values; there will always be one row too much at the end which is
             # removed again
-            for key, val in empty_vals.items():
+            for key, _val in empty_vals.items():
                 drv_data[key].append(drv_data[key][-1])
 
     for key in drv_data.keys():

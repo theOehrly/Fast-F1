@@ -49,7 +49,7 @@ def color_dict_validator(d: dict):
 
 def team_key_validator(d: dict[str, "TeamConstants"]):
     # ensure that team keys only contain lower case letters and spaces
-    for k, v in d.items():
+    for k, _v in d.items():
         if not k.replace(" ", "").isalpha():
             raise ValueError(
                 f"Invalid team key: {k} (only letters and spaces allowed)"

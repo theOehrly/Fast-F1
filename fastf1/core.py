@@ -1990,7 +1990,7 @@ class Session:
     def _add_track_status_to_laps(self, laps):
         # add track status information to each lap
 
-        track_status = getattr(self, '_track_status')
+        track_status = self._track_status
         if track_status is None:
             return
 
@@ -2029,7 +2029,7 @@ class Session:
 
                 laps.loc[sel, 'TrackStatus'] \
                     = laps.loc[sel, 'TrackStatus'].apply(
-                        lambda curr: _applicator(status, curr)
+                        lambda curr, s=status: _applicator(s, curr)
                 )
 
                 t = next_t
