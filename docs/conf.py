@@ -11,6 +11,7 @@
 import os.path
 import re
 import sys
+import tomllib
 import warnings
 from datetime import datetime
 
@@ -56,6 +57,16 @@ version = fastf1.__version__
 release = version
 copyright = f'{datetime.now().year}, Philipp Schäfer'
 html_title = f"{project} ({release})"
+
+with open(os.path.abspath('../pyproject.toml'), 'rb') as f:
+    pyproject = tomllib.load(f)
+
+python_requires = pyproject['project']['requires-python']
+min_python_version = python_requires.removeprefix(">=")
+
+rst_epilog = f"""
+.. |min_python_version| replace:: {min_python_version}
+"""
 
 # -- General configuration ---------------------------------------------------
 
