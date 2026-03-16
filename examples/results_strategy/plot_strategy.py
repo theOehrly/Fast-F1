@@ -52,7 +52,7 @@ for driver in drivers:
     driver_stints = stints.loc[stints["Driver"] == driver]
 
     previous_stint_end = 0
-    for idx, row in driver_stints.iterrows():
+    for _idx, row in driver_stints.iterrows():
         # each row contains the compound name and stint length
         # we can use these information to draw horizontal bars
         compound_color = fastf1.plotting.get_compound_color(row["Compound"],

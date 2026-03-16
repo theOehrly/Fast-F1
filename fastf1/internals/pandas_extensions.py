@@ -72,7 +72,7 @@ def _fallback_create_df(
         arrays: list[np.ndarray],
         columns: list
 ) -> DataFrame:
-    data = {col: arr for col, arr in zip(columns, arrays)}
+    data = {col: arr for col, arr in zip(columns, arrays, strict=True)}
     return DataFrame(data)
 
 

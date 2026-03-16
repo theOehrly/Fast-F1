@@ -876,7 +876,7 @@ def add_sorted_driver_legend(
     # same team will be next to each other and in the same order as their
     # styles are cycled.
     ref = list()
-    for hdl, lbl in zip(handles, labels):
+    for hdl, lbl in zip(handles, labels, strict=True):
         driver = _get_driver(lbl, session)
         team = driver.team
 

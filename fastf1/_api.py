@@ -1450,7 +1450,7 @@ def race_control_messages(path, response=None, livedata=None):
         for entry in messages:
             data['Time'].append(to_datetime(entry['Utc']))
 
-            for key, conv in zip(data_keys, converters):
+            for key, conv in zip(data_keys, converters, strict=True):
                 try:
                     data[key].append(conv(entry[key]))
                 except (KeyError, ValueError):
@@ -1514,7 +1514,7 @@ def lap_count(path, response=None, livedata=None):
     for entry in response:
         data['Time'].append(to_timedelta(entry[0]))
 
-        for key, conv in zip(data_keys, converters):
+        for key, conv in zip(data_keys, converters, strict=True):
             try:
                 data[key].append(conv(entry[1][key]))
             except (KeyError, ValueError):
@@ -1678,7 +1678,7 @@ def weather_data(path, response=None, livedata=None):
             continue
 
         data['Time'].append(to_timedelta(entry[0]))
-        for key, conv in zip(data_keys, converters):
+        for key, conv in zip(data_keys, converters, strict=True):
             try:
                 data[key].append(conv(row[key]))
             except (KeyError, ValueError):

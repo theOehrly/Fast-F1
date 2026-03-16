@@ -24,7 +24,7 @@ for i, year in enumerate(years_sorted):
     default_colors = list()
     official_colors = list()
 
-    for j, (name, team) in enumerate(teams.items()):
+    for j, (_name, team) in enumerate(teams.items()):
         x_labels.append(team.short_name)
         default_colors.append(team.colors.fastf1)
         official_colors.append(team.colors.official)

@@ -108,7 +108,6 @@ select = [
 ]
 ignore = [
     "B028",  # no-explicit-stacklevel — too noisy for warnings.warn
-    "B905",  # zip-without-explicit-strict — subjective
 ]
 
 [tool.ruff.lint.per-file-ignores]
