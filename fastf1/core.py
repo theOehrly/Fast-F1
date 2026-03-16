@@ -1990,7 +1990,7 @@ class Session:
     def _add_track_status_to_laps(self, laps):
         # add track status information to each lap
 
-        track_status = self._track_status
+        track_status = getattr(self, '_track_status', None)
         if track_status is None:
             return
 

@@ -16,7 +16,7 @@ import pandas as pd
 try:
     from pandas.core.internals import SingleBlockManager
 except ImportError as exc:
-    _mgr_instance = pd.Series(dtype=float)._mgr
+    _mgr_instance = getattr(pd.Series(dtype=float), '_mgr', None)
     if _mgr_instance is None:
         raise ImportError("Import of Pandas internals failed. You are likely "
                           "using a recently released version of Pandas that "
