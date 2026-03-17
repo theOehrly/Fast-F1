@@ -229,7 +229,7 @@ def _extended_timing_data(path, response=None, livedata=None):
         if (drv_laps_data is None) or (drv_stream_data is None):
             continue
 
-        for i, split_time in enumerate(drv_session_split_times):
+        for i in range(len(drv_session_split_times)):
             session_split_times[i] = min(drv_session_split_times[i],
                                          session_split_times[i])
 
@@ -330,7 +330,7 @@ def _align_laps(laps_data, stream_data):
     # delta is positive, our zero point is too late, and we need to shift all
     # deltas by the maximum delta to align them.
     max_delta = None
-    for drv, value in delta.items():
+    for value in delta.values():
         if (max_delta is None) or (value > max_delta):
             max_delta = value
 
@@ -821,7 +821,7 @@ def _stream_data_driver(driver_raw, empty_vals, drv):
 
             # create next row of data from the last values; there will always be one row too much at the end which is
             # removed again
-            for key, val in empty_vals.items():
+            for key in empty_vals:
                 drv_data[key].append(drv_data[key][-1])
 
     for key in drv_data.keys():
@@ -1450,7 +1450,7 @@ def race_control_messages(path, response=None, livedata=None):
         for entry in messages:
             data['Time'].append(to_datetime(entry['Utc']))
 
-            for key, conv in zip(data_keys, converters):
+            for key, conv in zip(data_keys, converters, strict=True):
                 try:
                     data[key].append(conv(entry[key]))
                 except (KeyError, ValueError):
@@ -1514,7 +1514,7 @@ def lap_count(path, response=None, livedata=None):
     for entry in response:
         data['Time'].append(to_timedelta(entry[0]))
 
-        for key, conv in zip(data_keys, converters):
+        for key, conv in zip(data_keys, converters, strict=True):
             try:
                 data[key].append(conv(entry[1][key]))
             except (KeyError, ValueError):
@@ -1678,7 +1678,7 @@ def weather_data(path, response=None, livedata=None):
             continue
 
         data['Time'].append(to_timedelta(entry[0]))
-        for key, conv in zip(data_keys, converters):
+        for key, conv in zip(data_keys, converters, strict=True):
             try:
                 data[key].append(conv(row[key]))
             except (KeyError, ValueError):

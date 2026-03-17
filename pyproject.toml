@@ -98,11 +98,16 @@ exclude = [
 [tool.ruff.lint]
 select = [
 #    "D", TODO: select and fix docstrings
+    "B",
     "E",
     "F",
+    "ISC",
     "W",
     "UP",
     "NPY201"
+]
+ignore = [
+    "B028",  # no-explicit-stacklevel — too noisy for warnings.warn
 ]
 
 [tool.ruff.lint.per-file-ignores]

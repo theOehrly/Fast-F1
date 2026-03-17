@@ -40,8 +40,10 @@ _SESSION_TYPE_ABBREVIATIONS = {
     'FP3': 'Practice 3'
 }
 
-_SCHEDULE_BASE_URL = "https://raw.githubusercontent.com/" \
-                     "theOehrly/f1schedule/master/"
+_SCHEDULE_BASE_URL = (
+    "https://raw.githubusercontent.com/"
+    "theOehrly/f1schedule/master/"
+)
 _HEADERS = {'User-Agent': f'FastF1/{__version_short__}'}
 
 
@@ -274,8 +276,10 @@ def get_testing_event(
     try:
         assert test_number >= 1
         return schedule.iloc[test_number - 1]
-    except (IndexError, AssertionError):
-        raise ValueError(f"Test event number {test_number} does not exist")
+    except (IndexError, AssertionError) as exc:
+        raise ValueError(
+            f"Test event number {test_number} does not exist"
+        ) from exc
 
 
 def get_event_schedule(
@@ -890,8 +894,10 @@ class Event(BaseSeries):
                 try:
                     session_name = \
                         _SESSION_TYPE_ABBREVIATIONS[identifier.upper()]
-                except KeyError:
-                    raise ValueError(f"Invalid session type '{identifier}'")
+                except KeyError as exc:
+                    raise ValueError(
+                        f"Invalid session type '{identifier}'"
+                    ) from exc
 
             # 'Sprint' was originally called 'Sprint Qualifying' only in the
             # old 'sprint' event format and renamed later; support the old
@@ -902,8 +908,10 @@ class Event(BaseSeries):
                 session_name = 'Sprint'
 
             if session_name not in self.values:
-                raise ValueError(f"Session type '{identifier}' does not "
-                                 f"exist for this event")
+                raise ValueError(
+                    f"Session type '{identifier}' does not "
+                    f"exist for this event"
+                ) from None
         else:
             # by number
             if (float(num).is_integer()
@@ -963,8 +971,10 @@ class Event(BaseSeries):
             # by name or abbreviation
             session_name = self.get_session_name(identifier)
             if session_name not in self.values:
-                raise ValueError(f"Session type '{identifier}' does not "
-                                 f"exist for this event")
+                raise ValueError(
+                    f"Session type '{identifier}' does not "
+                    f"exist for this event"
+                ) from None
         else:
             # by number
             if (float(num).is_integer()

@@ -92,8 +92,10 @@ def pytest_report_teststatus(report, config):
 
     if (report.when == 'teardown') and (Cache._request_counter > 0):
         name = report.location[0] + '::' + report.location[2]
-        line = f"{name} - uncached requests:\t" \
-               f"{Cache._request_counter}"
+        line = (
+            f"{name} - uncached requests:\t"
+            f"{Cache._request_counter}"
+        )
         report.sections.append(('Request Count', line))
         Cache._request_counter = 0
 

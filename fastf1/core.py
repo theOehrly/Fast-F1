@@ -1990,7 +1990,7 @@ class Session:
     def _add_track_status_to_laps(self, laps):
         # add track status information to each lap
 
-        track_status = getattr(self, '_track_status')
+        track_status = getattr(self, '_track_status', None)
         if track_status is None:
             return
 
@@ -2017,7 +2017,8 @@ class Session:
             t = track_status['Time'][0]
             status = track_status['Status'][0]
             for next_t, next_status in zip(track_status['Time'][1:],
-                                           track_status['Status'][1:]):
+                                           track_status['Status'][1:],
+                                           strict=True):
 
                 # Case A: The lap ends during the current status
                 sel = ((t <= laps['Time']) & (laps['Time'] <= next_t))
@@ -2029,7 +2030,7 @@ class Session:
 
                 laps.loc[sel, 'TrackStatus'] \
                     = laps.loc[sel, 'TrackStatus'].apply(
-                        lambda curr: _applicator(status, curr)
+                        lambda curr, s=status: _applicator(s, curr)
                 )
 
                 t = next_t
@@ -2220,7 +2221,7 @@ class Session:
                     corrected.loc[i, key] = value
 
         # reapply original dtypes per column
-        for col_name, dtype in zip(df.columns, df.dtypes):
+        for col_name, dtype in zip(df.columns, df.dtypes, strict=True):
             corrected[col_name] = corrected[col_name].astype(dtype)
 
         return corrected
@@ -2447,7 +2448,8 @@ class Session:
 
             if 'FirstName' in driver_info and 'LastName' in driver_info:
                 for first, last in zip(driver_info['FirstName'],
-                                       driver_info['LastName']):
+                                       driver_info['LastName'],
+                                       strict=True):
                     driver_info['FullName'].append(f"{first} {last}")
 
             # driver info is required for joining on index (used as index),

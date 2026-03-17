@@ -175,23 +175,27 @@ pio.renderers.default = 'sphinx_gallery_png'
 
 
 # -- matplotlib plot directive options ---------------------------------------
-plot_pre_code = f"import numpy as np;" \
-                f"from matplotlib import pyplot as plt;" \
-                f"plt.rcParams['figure.figsize'] = [8.0, 4.5];" \
-                f"import fastf1;" \
-                f"import fastf1.logger;" \
-                f"fastf1.Cache.enable_cache('{doc_cache}');" \
-                f"fastf1.logger.set_log_level('WARNING');"
+plot_pre_code = (
+    f"import numpy as np;"
+    f"from matplotlib import pyplot as plt;"
+    f"plt.rcParams['figure.figsize'] = [8.0, 4.5];"
+    f"import fastf1;"
+    f"import fastf1.logger;"
+    f"fastf1.Cache.enable_cache('{doc_cache}');"
+    f"fastf1.logger.set_log_level('WARNING');"
+)
 
 plot_include_source = True
 plot_html_show_source_link = False
 
 
 # -- doctest directive options -----------------------------------------------
-doctest_global_setup = f"import fastf1;" \
-                       f"import fastf1.logger;" \
-                       f"fastf1.Cache.enable_cache('{doc_cache}');" \
-                       f"fastf1.logger.set_log_level('WARNING');"
+doctest_global_setup = (
+    f"import fastf1;"
+    f"import fastf1.logger;"
+    f"fastf1.Cache.enable_cache('{doc_cache}');"
+    f"fastf1.logger.set_log_level('WARNING');"
+)
 
 
 # -- sphinx gallery configuration --------------------------------------------

@@ -101,7 +101,7 @@ def fuzzy_matcher(
         # get counts of all unique ratios and remove all that are not unique
         # in the array by setting them to zero
         unique, counts = np.unique(reference, return_counts=True)
-        count_dict = dict(zip(unique, counts))
+        count_dict = dict(zip(unique, counts, strict=True))
         mask = ((np.vectorize(count_dict.get)(reference) > 1)
                 & (ratios == max_ratio))
         ratios[mask] = 0
