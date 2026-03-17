@@ -11,7 +11,7 @@ fig = plt.figure(figsize=(10, 3 * n))
 # slightly paranoid, sort years explicitly (order is not necessarily
 # guaranteed in the internal code)
 years_sorted = [str(year) for year in
-                sorted((int(year) for year in Constants.keys()), reverse=True)]
+                sorted((int(year) for year in Constants), reverse=True)]
 
 # generate one axis/graphic for each year
 for i, year in enumerate(years_sorted):

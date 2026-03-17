@@ -267,7 +267,9 @@ def _lap_timings_flatten_by_rename(nested: dict, category: dict, flat: dict, *,
 # ################################
 # ### root category finalizers ###
 
-def _merge_dicts_of_lists(data):
+def _merge_dicts_of_lists(
+        data: list[dict[Any, list[Any]]]
+    ) -> dict[Any, list[Any]]:
     """:meta-private:
     Transform a list of equally keyed dictionaries that only contain lists into
     a single dictionary containing these list joined together.
@@ -287,7 +289,7 @@ def _merge_dicts_of_lists(data):
 
     for _ in range(len(data) - 1):
         _tmp = data.pop(1)
-        for key in data[0].keys():
+        for key in data[0]:
             data[0][key].extend(_tmp.pop(key))
 
     return data[0]

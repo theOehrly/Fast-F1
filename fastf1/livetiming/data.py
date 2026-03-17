@@ -239,7 +239,7 @@ class LiveTimingData:
         """
         if not self._files_read:
             self.load()
-        return name in self.data.keys()
+        return name in self.data
 
     def list_categories(self):
         """

@@ -35,7 +35,7 @@ def messages_from_raw(r: Iterable):
             continue
         messages = data['M'] if 'M' in data and len(data['M']) > 0 else {}
         for inner_data in messages:
-            hub = inner_data['H'] if 'H' in inner_data else ''
+            hub = inner_data.get("H", "")
             if hub.lower() == 'streaming':
                 # method = inner_data['M']
                 message = inner_data['A']
@@ -128,7 +128,7 @@ class SignalRClient:
 
         if isinstance(msg, CompletionMessage):
             data = []
-            for key in msg.result.keys():
+            for key in msg.result.keys():  # noqa: SIM118
                 data.append([key, json.dumps(msg.result[key]), ''])
             formatted = '\n'.join(map(str, data))
 
@@ -154,7 +154,7 @@ class SignalRClient:
         self.logger.info("Connection closed")
 
     def _run(self):
-        self._output_file = open(self.filename, self.filemode)
+        self._output_file = open(self.filename, self.filemode)  # noqa: SIM115
 
         # Pre-negotiate to the get a valid AWSALBCORS header token
         r = requests.options(self._negotiate_url, headers=self.headers)

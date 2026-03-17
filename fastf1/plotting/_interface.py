@@ -67,7 +67,7 @@ def _get_driver_fuzzy(identifier: str, session: Session) -> Driver:
         return dtm.drivers_by_normalized[identifier]
 
     # check for exact partial string match
-    for normalized_driver in dtm.drivers_by_normalized.keys():
+    for normalized_driver in dtm.drivers_by_normalized:
         if identifier in normalized_driver:
             return dtm.drivers_by_normalized[normalized_driver]
 
@@ -118,7 +118,7 @@ def _get_team_fuzzy(identifier: str, session: Session) -> Team:
         identifier = identifier.replace(word, "").strip()
 
     # check for an exact team name match
-    if identifier in dtm.teams_by_normalized.keys():
+    if identifier in dtm.teams_by_normalized:
         return dtm.teams_by_normalized[identifier]
 
     # check full match with full team name or for exact partial string
@@ -152,7 +152,7 @@ def _get_team_exact(identifier: str, session: Session) -> Team:
     identifier = _normalize_string(identifier).lower()
 
     # check for an exact normalized team name match
-    if identifier in dtm.teams_by_normalized.keys():
+    if identifier in dtm.teams_by_normalized:
         return dtm.teams_by_normalized[identifier]
 
     # check full match with full team name
@@ -789,10 +789,9 @@ def list_team_names(session: Session, *, short: bool = False) -> list[str]:
     dtm = _get_driver_team_mapping(session)
 
     if short:
-        return list(team.short_name
-                    for team in dtm.teams_by_normalized.values())
+        return [team.short_name for team in dtm.teams_by_normalized.values()]
 
-    return list(team.name for team in dtm.teams_by_normalized.values())
+    return [team.name for team in dtm.teams_by_normalized.values()]
 
 
 def list_driver_abbreviations(session: Session) -> list[str]:
@@ -804,13 +803,13 @@ def list_driver_abbreviations(session: Session) -> list[str]:
 def list_driver_names(session: Session) -> list[str]:
     """Returns a list of full names of all drivers in the ``session``."""
     dtm = _get_driver_team_mapping(session)
-    return list(driver.name for driver in dtm.drivers_by_normalized.values())
+    return [driver.name for driver in dtm.drivers_by_normalized.values()]
 
 
 def list_compounds(session: Session) -> list[str]:
     """Returns a list of all compound names for this season (not session)."""
     year = str(session.event['EventDate'].year)
-    return [e.value for e in Constants[year].compound_colors.keys()]
+    return [e.value for e in Constants[year].compound_colors]
 
 
 def add_sorted_driver_legend(

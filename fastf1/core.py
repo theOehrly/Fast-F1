@@ -948,7 +948,7 @@ class Telemetry(BaseDataFrame):
 
         Distance is in meters
         """
-        if not all([col in self.columns for col in ('Speed', 'Time')]):
+        if not all(col in self.columns for col in ('Speed', 'Time')):
             raise ValueError("Telemetry does not contain required channels "
                              "'Time' and 'Speed'.")
         if self.size != 0:
@@ -1710,7 +1710,7 @@ class Session:
 
             if drv_laps['LapNumber'].max() == self.total_laps:
                 # total laps completed, don't add another one
-                if ('Finished' == next_statuses['Status']).any():
+                if ('Finished' == next_statuses['Status']).any():  # noqa: SIM300 (Pandas series operation)
                     # warn if total laps reached before race finished
                     race_end = next_statuses[
                         next_statuses['Status'] == 'Finished'
@@ -2051,7 +2051,7 @@ class Session:
         # For races, lap times are also available on Ergast -> add the
         # first lap time from there
 
-        if not self.name == 'Race':
+        if self.name != 'Race':
             return
 
         # load lap times for first lap from Ergast and add driver number

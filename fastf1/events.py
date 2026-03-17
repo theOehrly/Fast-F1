@@ -414,7 +414,7 @@ def _get_schedule_ff1(year):
 
     data = dict()
     json_data = json.loads(response.text)
-    for key in json_data.keys():
+    for key in json_data.keys():  # noqa: SIM118 (iterating on JSON)
         data[key] = list(json_data[key].values())
 
     # convert gmt offset to timedelta
@@ -521,7 +521,7 @@ def _get_schedule_from_f1_timing(year: int):
 
         data['F1ApiSupport'].append(True)
 
-        for i in range(0, 5):
+        for i in range(5):
             # parse the up to five sessions for each event
             try:
                 session = sessions[i]
@@ -633,7 +633,7 @@ def _get_schedule_from_ergast(year) -> "EventSchedule":
             data['Session5'].append('Race')
             data['Session5DateUtc'].append(date)
 
-        data['F1ApiSupport'].append(True if year >= 2018 else False)
+        data['F1ApiSupport'].append(year >= 2018)
         # simplified; this is only true most of the time
 
     df = pd.DataFrame(data)
@@ -722,9 +722,8 @@ class EventSchedule(BaseDataFrame):
 
         query = name.lower()
         for i, event in self.iterrows():
-            if 'EventName' in event:
-                if event['EventName'].lower() == query:
-                    return self.loc[i]
+            if 'EventName' in event and event["EventName"].lower() == query:
+                return self.loc[i]
         else:
             raise KeyError(f"No exact event name for '{name}'!")
 

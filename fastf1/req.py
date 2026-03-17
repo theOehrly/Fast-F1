@@ -75,9 +75,9 @@ class _CallsPerIntervalLimitRaise:
 
     def limit(self):
         self._timestamps.append(time.time())
-        if len(self._timestamps) == self._timestamps.maxlen:
-            if self._timestamps[0] > (time.time() - self._interval):
-                raise RateLimitExceededError(self._info)
+        if (len(self._timestamps) == self._timestamps.maxlen and
+            self._timestamps[0] > (time.time() - self._interval)):
+            raise RateLimitExceededError(self._info)
 
 
 class _SessionWithRateLimiting(requests.Session):
@@ -116,7 +116,6 @@ class _CachedSessionWithRateLimiting(CacheMixin, _SessionWithRateLimiting):
     """Equivalent of ``requests_cache.CachedSession```but using
     :class:`_SessionWithRateLimiting` as base instead of ``requests.Session``.
     """
-    pass
 
 
 class _MetaCache(type):
@@ -345,10 +344,7 @@ class Cache(metaclass=_MetaCache):
         # get cached
 
         # workaround for Ergast returning error with status code 200
-        if 'Unable to select database' in response.text:
-            return False
-
-        return True
+        return "Unable to select database" not in response.text
 
     @classmethod
     def clear_cache(cls, cache_dir=None, deep=False):
@@ -422,7 +418,8 @@ class Cache(metaclass=_MetaCache):
 
                     # file exists already, try to load it
                     try:
-                        cached = pickle.load(open(cache_file_path, 'rb'))
+                        with open(cache_file_path, 'rb') as cache_file:
+                            cached = pickle.load(cache_file)
                     except:  # noqa: E722 (bare except)
                         # don't like the bare exception clause but who knows
                         # which dependency will raise which internal exception
@@ -490,16 +487,14 @@ class Cache(metaclass=_MetaCache):
         # check if cached data is ok or needs to be downloaded again
         if cls._FORCE_RENEW:
             return False
-        elif cls._IGNORE_VERSION:
-            return True
-        elif cached['version'] == cls._API_CORE_VERSION:
+        elif cls._IGNORE_VERSION or cached['version'] == cls._API_CORE_VERSION:
             return True
         return False
 
     @classmethod
     def _write_cache(cls, data, cache_file_path, **kwargs):
         new_cached = dict(
-            **{'version': cls._API_CORE_VERSION, 'data': data},
+            version=cls._API_CORE_VERSION, data=data,
             **kwargs
         )
         with open(cache_file_path, 'wb') as cache_file_obj:
@@ -667,10 +662,7 @@ class Cache(metaclass=_MetaCache):
             ``(None, None)``. The cache size is given in bytes.
         """
         path = cls._CACHE_DIR
-        if path is not None:
-            size = cls._get_size(path)
-        else:
-            size = None
+        size = cls._get_size(path) if path else None
 
         return path, size
 

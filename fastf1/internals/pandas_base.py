@@ -88,7 +88,7 @@ class BaseDataFrame(pd.DataFrame):
                 cast = True
                 if self[col].isna().all():
                     # empty column, set appropriate NA-type
-                    if isinstance(_type, str) and not (_type == 'object'):
+                    if isinstance(_type, str) and _type != 'object':
                         # type given as string, e.g. 'datetime64[ns]'
                         self[col] = pd.Series(dtype=_type)
                     elif type(None) in typing.get_args(_type):

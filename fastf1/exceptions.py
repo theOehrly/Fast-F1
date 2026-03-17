@@ -40,22 +40,18 @@ def __getattr__(name):
 class DataNotLoadedError(Exception):
     """Raised if an attempt is made to access data that has not been loaded
     yet."""
-    pass
 
 
 class ErgastError(Exception):
     """Base class for Ergast API errors."""
-    pass
 
 
 class ErgastJsonError(ErgastError):
     """The response returned by the server could not be parsed."""
-    pass
 
 
 class ErgastInvalidRequestError(ErgastError):
     """The server rejected the request because it was invalid."""
-    pass
 
 
 class NoLapDataError(Exception):
@@ -72,7 +68,6 @@ class FuzzyMatchError(ValueError):
     """
     Raised if no fuzzy match could be found with sufficient confidence.
     """
-    pass
 
 
 # ### Critical FastF1 Exceptions ###
@@ -84,12 +79,10 @@ class FastF1CriticalError(RuntimeError):
     """
     # Exceptions deriving from this base class must only be used in data
     # processing code. They must never be handled by FastF1.
-    pass
 
 
 class RateLimitExceededError(FastF1CriticalError):
     """Raised if a hard rate limit is exceeded for any API."""
-    pass
 
 
 # ### Deprecated Exceptions ###

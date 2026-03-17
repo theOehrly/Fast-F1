@@ -197,7 +197,6 @@ class ErgastResultSeries(BaseSeries):
 
     Currently, no extra functionality is implemented.
     """
-    pass
 
 
 class ErgastRawResponse(ErgastResponseMixin, list):

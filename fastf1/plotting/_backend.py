@@ -32,7 +32,7 @@ def _load_drivers_from_f1_livetiming(
     driver_info = fastf1._api.driver_info(api_path)
 
     teams = {}
-    if year in Constants.keys():
+    if year in Constants:
         # pre-populate teams from constants if the year is supported
         for normalized_name, team_consts in Constants[year].teams.items():
             teams[normalized_name] = Team(

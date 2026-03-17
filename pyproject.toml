@@ -104,10 +104,15 @@ select = [
     "ISC",
     "W",
     "UP",
-    "NPY201"
+    "NPY201",
+    "C4",
+    "PIE",
+    "SIM",
 ]
+
 ignore = [
     "B028",  # no-explicit-stacklevel — too noisy for warnings.warn
+    "C408",  # noisy diff (list() vs [] literal etc.)
 ]
 
 [tool.ruff.lint.per-file-ignores]
