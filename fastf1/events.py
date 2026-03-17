@@ -412,13 +412,13 @@ def _get_schedule_ff1(year):
         headers=_HEADERS
     )
 
-    data = dict()
+    data = {}
     json_data = json.loads(response.text)
     for key in json_data.keys():  # noqa: SIM118 (iterating on JSON)
         data[key] = list(json_data[key].values())
 
     # convert gmt offset to timedelta
-    gmt_offset = list()
+    gmt_offset = []
     for go in data.pop('gmt_offset'):
         if go is None:
             gmt_offset.append(datetime.timedelta(0))
@@ -477,7 +477,7 @@ def _get_schedule_from_f1_timing(year: int):
         data['OfficialEventName'].append(event['OfficialName'])
 
         # select only valid sessions
-        sessions = list()
+        sessions = []
         for ses in event['Sessions']:
             if (ses.get('Key') != -1) and ses.get('Name'):
                 sessions.append(ses)
@@ -745,7 +745,7 @@ class EventSchedule(BaseDataFrame):
             return event_name
 
         def _matcher_strings(ev):
-            strings = list()
+            strings = []
             if ('Location' in ev) and ev['Location']:
                 strings.append(ev['Location'].casefold())
             if ('Country' in ev) and ev['Country']:

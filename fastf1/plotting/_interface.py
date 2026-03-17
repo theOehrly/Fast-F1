@@ -25,7 +25,7 @@ from fastf1.plotting._base import (
 
 
 _DEFAULT_COLOR_MAP: Literal['fastf1', 'official'] = 'fastf1'
-_DRIVER_TEAM_MAPPINGS = dict()
+_DRIVER_TEAM_MAPPINGS = {}
 
 
 def _get_driver_team_mapping(
@@ -661,7 +661,7 @@ def get_driver_style(
     if isinstance(style, str):
         style = [style]
 
-    plot_style = dict()
+    plot_style = {}
 
     if isinstance(style[0], str):
         # generate the plot style based on the provided keyword
@@ -874,7 +874,7 @@ def add_sorted_driver_legend(
     # based on the team_idx and driver_idx. As a result, drivers from the
     # same team will be next to each other and in the same order as their
     # styles are cycled.
-    ref = list()
+    ref = []
     for hdl, lbl in zip(handles, labels, strict=True):
         driver = _get_driver(lbl, session)
         team = driver.team
@@ -887,8 +887,8 @@ def add_sorted_driver_legend(
     # sort based only on team_idx and driver_idx (i.e. first two entries)
     ref.sort(key=lambda e: e[:2])
 
-    handles_new = list()
-    labels_new = list()
+    handles_new = []
+    labels_new = []
     for elem in ref:
         handles_new.append(elem[2])
         labels_new.append(elem[3])

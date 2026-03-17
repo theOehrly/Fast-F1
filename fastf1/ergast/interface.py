@@ -445,7 +445,7 @@ class Ergast:
             stop_number: int | None = None,
             standings_position: int | None = None
     ) -> str:
-        selectors = list()
+        selectors = []
 
         if season is not None:
             selectors.append(f"/{season}")
@@ -573,7 +573,7 @@ class Ergast:
 
         if result_type == 'pandas':
             # result element description remains in query result
-            result_element_data = list()
+            result_element_data = []
             if subcategory is not None:
                 for i in range(len(query_result)):
                     result_element_data.append(

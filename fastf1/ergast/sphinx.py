@@ -49,7 +49,7 @@ class ApiMappingDirective(Directive):
         # response that matches the name of the excluded category is skipped
         # when building the object. This is used to create split
         # representations for description and content of MultiResponse objects.
-        result = dict()
+        result = {}
 
         for name, mapping in category['map'].items():
             # get the nicely readable name of the data type after auto casting

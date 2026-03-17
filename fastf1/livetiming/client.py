@@ -21,7 +21,7 @@ def messages_from_raw(r: Iterable):
     Args:
         r: Iterable containing raw SignalR responses.
     """
-    ret = list()
+    ret = []
     errorcount = 0
     for data in r:
         # fix F1's not json compliant data

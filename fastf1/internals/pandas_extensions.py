@@ -105,7 +105,7 @@ def _unsafe_create_df_fast(
         len(index), len(columns), index=index, columns=columns
     )
 
-    block_values = list()
+    block_values = []
     for n, arr in enumerate(arrays):
         values = arr.reshape(-1, 1).T
         nb = new_block_2d(values, placement=BlockPlacement(n))

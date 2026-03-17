@@ -132,10 +132,10 @@ def get_circuit_info(*, year: int, circuit_key: int) -> CircuitInfo | None:
         _logger.warning("Failed to load circuit info")
         return None
 
-    ret = list()
+    ret = []
     for cat in ('corners', 'marshalLights', 'marshalSectors'):
-        rows = list()
-        array = data.get(cat) or list()
+        rows = []
+        array = data.get(cat) or []
         for entry in array:
             rows.append((
                 float(entry.get('trackPosition', {}).get('x', 0.0)),

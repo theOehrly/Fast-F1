@@ -13,7 +13,7 @@ from fastf1.plotting._base import (
 )
 
 
-Constants: dict[str, SeasonConstants] = dict()
+Constants: dict[str, SeasonConstants] = {}
 
 json_path = files("fastf1.plotting").joinpath("constants.json")
 content = json_path.read_text(encoding="utf-8")

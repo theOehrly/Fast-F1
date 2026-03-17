@@ -226,7 +226,7 @@ def _flatten_inline_list_of_dicts(nested: list, category: dict, flat: dict, *,
     # add the resulting lists to the flattened result dict
     for name, mapping in category['map'].items():
         # generate list of values for each mapping
-        joined = list()
+        joined = []
         for item in nested:
             if name not in item:
                 continue
