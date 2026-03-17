@@ -120,7 +120,7 @@ class BaseDataFrame(pd.DataFrame):
         # has a reference to this self (i.e. the object from which the slice
         # is created) as a class property
         # type(...) returns a new subclass of a Series
-        return type('_DynamicBaseSeriesConstructor',  # noqa: return type
+        return type('_DynamicBaseSeriesConstructor',
                     (_BaseSeriesConstructor,),
                     {'__meta_created_from': self})
 

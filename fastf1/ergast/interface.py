@@ -92,7 +92,7 @@ class ErgastResponseMixin:
         if n_last >= int(self._response_headers.get("total", 0)):
             raise ValueError("No more data after this response.")
 
-        return self._ergast_constructor()._build_default_result(  # noqa: access to builtin
+        return self._ergast_constructor()._build_default_result(
             **self._query_metadata,
             selectors=self._selectors,
             limit=int(self._response_headers.get("limit")),
@@ -116,7 +116,7 @@ class ErgastResponseMixin:
         limit = int(self._response_headers.get("limit", 0))
         new_offset = max(n_first - limit, 0)
 
-        return self._ergast_constructor()._build_default_result(  # noqa: access to builtin
+        return self._ergast_constructor()._build_default_result(
             **self._query_metadata,
             selectors=self._selectors,
             limit=int(self._response_headers.get("limit")),
