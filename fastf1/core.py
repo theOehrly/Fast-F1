@@ -1501,10 +1501,22 @@ class Session:
 
             is_generated = False
             if not len(d1):
+                # check if this driver is a DNS (did not start) by
+                # looking at whether their Position is NaN in results
+                is_dns = (
+                    driver in self._results.index
+                    and pd.isna(
+                        self._results.loc[driver, 'Position']
+                    )
+                )
+                if is_dns:
+                    _logger.info(
+                        f"Skipping DNS driver {driver}"
+                    )
+                    continue
+
                 if self.name in self._RACE_LIKE_SESSIONS and len(d2):
                     # add data for drivers who crashed on the very first lap
-                    # as a downside, this potentially adds a nonexistent lap
-                    # for drivers who could not start the race
                     is_generated = True
                     result = d1.copy()
                     result.reset_index(drop=True, inplace=True)
