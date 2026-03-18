@@ -11,7 +11,7 @@ fig = plt.figure(figsize=(10, 3 * n))
 # slightly paranoid, sort years explicitly (order is not necessarily
 # guaranteed in the internal code)
 years_sorted = [str(year) for year in
-                sorted((int(year) for year in Constants.keys()), reverse=True)]
+                sorted((int(year) for year in Constants), reverse=True)]
 
 # generate one axis/graphic for each year
 for i, year in enumerate(years_sorted):
@@ -19,10 +19,10 @@ for i, year in enumerate(years_sorted):
 
     ax = fig.add_subplot(n, 1, i + 1)
 
-    x_labels = list()
-    x_ranges = list()
-    default_colors = list()
-    official_colors = list()
+    x_labels = []
+    x_ranges = []
+    default_colors = []
+    official_colors = []
 
     for j, team in enumerate(teams.values()):
         x_labels.append(team.short_name)

@@ -92,7 +92,7 @@ class ErgastResponseMixin:
         if n_last >= int(self._response_headers.get("total", 0)):
             raise ValueError("No more data after this response.")
 
-        return self._ergast_constructor()._build_default_result(  # noqa: access to builtin
+        return self._ergast_constructor()._build_default_result(
             **self._query_metadata,
             selectors=self._selectors,
             limit=int(self._response_headers.get("limit")),
@@ -116,7 +116,7 @@ class ErgastResponseMixin:
         limit = int(self._response_headers.get("limit", 0))
         new_offset = max(n_first - limit, 0)
 
-        return self._ergast_constructor()._build_default_result(  # noqa: access to builtin
+        return self._ergast_constructor()._build_default_result(
             **self._query_metadata,
             selectors=self._selectors,
             limit=int(self._response_headers.get("limit")),
@@ -197,7 +197,6 @@ class ErgastResultSeries(BaseSeries):
 
     Currently, no extra functionality is implemented.
     """
-    pass
 
 
 class ErgastRawResponse(ErgastResponseMixin, list):
@@ -446,7 +445,7 @@ class Ergast:
             stop_number: int | None = None,
             standings_position: int | None = None
     ) -> str:
-        selectors = list()
+        selectors = []
 
         if season is not None:
             selectors.append(f"/{season}")
@@ -574,7 +573,7 @@ class Ergast:
 
         if result_type == 'pandas':
             # result element description remains in query result
-            result_element_data = list()
+            result_element_data = []
             if subcategory is not None:
                 for i in range(len(query_result)):
                     result_element_data.append(

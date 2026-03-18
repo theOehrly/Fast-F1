@@ -1,3 +1,4 @@
+import contextlib
 import json
 import threading
 import urllib.parse
@@ -180,10 +181,8 @@ def clear_auth_token():
     """Clear the authentication token."""
     global _subscription_token
     _subscription_token = None
-    try:
+    with contextlib.suppress(FileNotFoundError):
         AUTH_DATA_FILE.unlink()
-    except FileNotFoundError:
-        pass
 
 
 def print_auth_status():

@@ -34,7 +34,7 @@ print(drivers)
 # from these laps, sort them by lap time and have pandas reindex them to
 # number them nicely by starting position.
 
-list_fastest_laps = list()
+list_fastest_laps = []
 for drv in drivers:
     drvs_fastest_lap = session.laps.pick_drivers(drv).pick_fastest()
     list_fastest_laps.append(drvs_fastest_lap)
@@ -62,7 +62,7 @@ print(fastest_laps[['Driver', 'LapTime', 'LapTimeDelta']])
 
 ##############################################################################
 # Finally, we'll create a list of team colors per lap to color our plot.
-team_colors = list()
+team_colors = []
 for _index, lap in fastest_laps.iterlaps():
     color = fastf1.plotting.get_team_color(lap['Team'], session=session)
     team_colors.append(color)

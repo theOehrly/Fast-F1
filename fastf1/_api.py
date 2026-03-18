@@ -205,23 +205,23 @@ def _extended_timing_data(path, response=None, livedata=None):
     _logger.info("Parsing timing data...")
 
     # split up response per driver for easier iteration and processing later
-    resp_per_driver = dict()
+    resp_per_driver = {}
     for entry in response:
         if (len(entry) < 2) or 'Lines' not in entry[1]:
             continue
         for drv in entry[1]['Lines']:
-            if drv not in resp_per_driver.keys():
+            if drv not in resp_per_driver:
                 resp_per_driver[drv] = [(entry[0], entry[1]['Lines'][drv])]
             else:
                 resp_per_driver[drv].append((entry[0], entry[1]['Lines'][drv]))
 
     # create empty data dicts and populate them with data from all drivers after that
-    laps_data = {key: list() for key, val in EMPTY_LAPS.items()}
-    stream_data = {key: list() for key, val in EMPTY_STREAM.items()}
+    laps_data = {key: [] for key, val in EMPTY_LAPS.items()}
+    stream_data = {key: [] for key, val in EMPTY_STREAM.items()}
 
     session_split_times = [datetime.timedelta(days=1), ] * 3
 
-    for drv in resp_per_driver.keys():
+    for drv in resp_per_driver:
         drv_laps_data, drv_session_split_times \
             = _laps_data_driver(resp_per_driver[drv], EMPTY_LAPS, drv)
         drv_stream_data = _stream_data_driver(resp_per_driver[drv], EMPTY_STREAM, drv)
@@ -233,10 +233,10 @@ def _extended_timing_data(path, response=None, livedata=None):
             session_split_times[i] = min(drv_session_split_times[i],
                                          session_split_times[i])
 
-        for key in EMPTY_LAPS.keys():
+        for key in EMPTY_LAPS:
             laps_data[key].extend(drv_laps_data[key])
 
-        for key in EMPTY_STREAM.keys():
+        for key in EMPTY_STREAM:
             stream_data[key].extend(drv_stream_data[key])
 
     laps_data = pd.DataFrame(laps_data)
@@ -258,11 +258,11 @@ def _align_laps(laps_data, stream_data):
     if pd.isnull(stream_data['GapToLeader']).all():
         return  # no data to align on
 
-    expected_gap = dict()
-    delta = dict()
+    expected_gap = {}
+    delta = {}
     n_laps = laps_data['NumberOfLaps'].max()
 
-    for offset in range(0, n_laps):
+    for offset in range(n_laps):
         leader = None
 
         # drivers still running on this lap
@@ -286,7 +286,7 @@ def _align_laps(laps_data, stream_data):
             gap_str = _get_gap_str_for_drv(drv, offset, laps_data, stream_data)
             if 'LAP' in gap_str:
                 leader = drv
-            elif drv not in delta.keys():
+            elif drv not in delta:
                 eg = to_timedelta(gap_str)
                 if eg is not None:
                     # cannot work with "+ 1 Lap" and similar
@@ -304,7 +304,7 @@ def _align_laps(laps_data, stream_data):
             delta[leader] = datetime.timedelta(0)
         ref_zero = delta[leader]
 
-        for drv in expected_gap.keys():
+        for drv in expected_gap:
             if drv in delta:
                 continue  # driver already has a delta, skip
 
@@ -339,14 +339,12 @@ def _align_laps(laps_data, stream_data):
     if max_delta < datetime.timedelta(0):
         max_delta = datetime.timedelta(0)
 
-    for drv in delta.keys():
-        delta[drv] -= max_delta
-
     # Subtract the delta between actual gap and currently calculated gap
     # from each drivers timestamps to align them.
-    for drv in delta.keys():
+    for drv in delta:
         if delta[drv] is None:
             continue
+        delta[drv] -= max_delta
         laps_data.loc[laps_data['Driver'] == drv, 'Time'] += delta[drv]
 
     if unaligned_drivers:
@@ -382,7 +380,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
          dictionary of laps data for this driver
     """
 
-    integrity_errors = list()
+    integrity_errors = []
 
     # do a quick first pass over the data to find out when laps start and end
     # this is needed so we can work with a more efficient "look ahead" on the main pass
@@ -434,7 +432,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
     # api_lapcnt does not count backwards even if the source data does
     in_past = False  # flag for when the data went back in time
 
-    personal_best_lap_times = list()
+    personal_best_lap_times = []
 
     session_split_times = [datetime.timedelta(0)]
     # start times of (sub)sessions (Q1, Q2, Q3)
@@ -548,10 +546,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
     def data_in_lap(lap_n):
         relevant = ('Sector1Time', 'Sector2Time', 'Sector3Time', 'SpeedI1', 'SpeedI2',
                     'SpeedFL', 'SpeedST', 'LapTime')
-        for col in relevant:
-            if not pd.isnull(drv_data[col][lap_n]):
-                return True
-        return False
+        return any(not pd.isnull(drv_data[col][lap_n]) for col in relevant)
 
     # 'NumberOfLaps' always introduces a new lap (can be a previous one) but sometimes there is one more lap at the end
     # in this case the data will be added as usual above, lap count and pit stops are added here and the 'Time' is
@@ -562,13 +557,13 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         drv_data['Driver'][lapcnt] = drv
     else:  # if there was no more data after the last lap count increase,
         # delete the last empty record
-        for key in drv_data.keys():
+        for key in drv_data:
             drv_data[key] = drv_data[key][:-1]
     if not data_in_lap(0):  # remove first lap if there's no data;
         # "pseudo outlap" that didn't exist
-        for key in drv_data.keys():
+        for key in drv_data:
             drv_data[key] = drv_data[key][1:]
-        drv_data['NumberOfLaps'] = list(map(lambda n: n - 1, drv_data['NumberOfLaps']))  # reduce each lap count by one
+        drv_data['NumberOfLaps'] = [i - 1 for i in drv_data['NumberOfLaps']]  # reduce each lap count by one
 
     if not drv_data['Time']:
         # ensure that there is still data left after potentially removing a lap
@@ -576,7 +571,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
 
     for i in range(len(drv_data['Time'])):
         sector_sum = datetime.timedelta(0)
-        na_sectors = list()  # list of keys for missing sector times
+        na_sectors = []  # list of keys for missing sector times
         for key in ('Sector1Time', 'Sector2Time', 'Sector3Time'):
             st = drv_data[key][i]
             if pd.isna(st):
@@ -662,7 +657,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         if not pd.isnull(drv_data['PitInTime'][-1]):
             drv_data['Time'][-1] = drv_data['PitInTime'][-1]
         else:
-            for key in drv_data.keys():
+            for key in drv_data:
                 drv_data[key] = drv_data[key][:-1]
 
     if not drv_data['Time']:
@@ -721,7 +716,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
     # been deleted.
     # This is just best effort but not exhaustive as it can only handle lap
     # times that were deleted quickly (before the next personal best was set).
-    _corrected_personal_best_lap_times = list()
+    _corrected_personal_best_lap_times = []
     # list is only used for backreference within the loop
     cur_sn = len(session_split_times) - 1
     # current (sub)session number, personal best lap times need to be
@@ -731,13 +726,13 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             # transitioned into the previous (sub)session (reverse iteration!)
             # reset the reference list, so time are considered individually
             cur_sn -= 1
-            _corrected_personal_best_lap_times = list()
+            _corrected_personal_best_lap_times = []
 
-        if _corrected_personal_best_lap_times:
-            if pb_lap_time in _corrected_personal_best_lap_times:
-                continue
-            elif pb_lap_time < min(_corrected_personal_best_lap_times):
-                continue
+        if _corrected_personal_best_lap_times and (
+            pb_lap_time in _corrected_personal_best_lap_times or
+            pb_lap_time < min(_corrected_personal_best_lap_times)
+        ):
+            continue
 
         _corrected_personal_best_lap_times.append(pb_lap_time)
 
@@ -824,7 +819,7 @@ def _stream_data_driver(driver_raw, empty_vals, drv):
             for key in empty_vals:
                 drv_data[key].append(drv_data[key][-1])
 
-    for key in drv_data.keys():
+    for key in drv_data:
         drv_data[key] = drv_data[key][:-1]  # remove very last row again
 
     return drv_data
@@ -902,7 +897,7 @@ def timing_app_data(path, response=None, livedata=None):
                             if key == 'LapTime':
                                 val = to_timedelta(val)
                             elif key == 'New':
-                                val = True if val == 'true' else False
+                                val = val == 'true'
                             data[key].append(val)
                         else:
                             data[key].append(None)
@@ -989,7 +984,7 @@ def car_data(path, response=None, livedata=None):
 
     ts_length = 12  # length of timestamp: len('00:00:00:000')
 
-    data = dict()
+    data = {}
     decode_error_count = 0
 
     for record in response:
@@ -1011,7 +1006,7 @@ def car_data(path, response=None, livedata=None):
                 for drv in entry['Cars']:
                     if drv not in data:
                         # initialize dict entry for this driver
-                        data[drv] = list()
+                        data[drv] = []
 
                     try:
                         rpm = entry['Cars'][drv]['Channels']['0']
@@ -1154,7 +1149,7 @@ def position_data(path, response=None, livedata=None):
     columns = ['Time', 'Date', 'Status', 'X', 'Y', 'Z',
                'Source']  # correct order required!
 
-    data = dict()
+    data = {}
     decode_error_count = 0
 
     for record in response:
@@ -1176,7 +1171,7 @@ def position_data(path, response=None, livedata=None):
                 for drv in sample['Entries']:
                     if drv not in data:
                         # initialize dict entry for this driver
-                        data[drv] = list()
+                        data[drv] = []
 
                     try:
                         x = sample['Entries'][drv]['X']
@@ -1667,7 +1662,7 @@ def weather_data(path, response=None, livedata=None):
     data_keys = ('AirTemp', 'Humidity', 'Pressure', 'Rainfall',
                  'TrackTemp', 'WindDirection', 'WindSpeed')
     converters = (float, float, float,
-                  lambda v: True if v == '1' else False,  # rain: str -> bool
+                  lambda v: v == '1',  # rain: str -> bool
                   float, int, float)
 
     for entry in response:
@@ -1783,7 +1778,7 @@ def fetch_page(path, name):
             else:
                 decode_error_count = 0
                 tl = 12  # length of timestamp: len('00:00:00:000')
-                ret = list()
+                ret = []
                 for e in records:
                     try:
                         ret.append([e[:tl], parse(e[tl:], zipped=is_z)])

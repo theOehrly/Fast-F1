@@ -68,7 +68,7 @@ def fuzzy_matcher(
     # substring of a feature string, return this index as accurate match.
     full_partial_match_indices = []
     for i, feature_strings in enumerate(reference):
-        if any([query in val for val in feature_strings]):
+        if any(query in val for val in feature_strings):
             full_partial_match_indices.append(i)
 
     if len(full_partial_match_indices) == 1:
@@ -82,10 +82,7 @@ def fuzzy_matcher(
 
     # If we have multiple substring matches, we only fuzzy match on these,
     # else we fuzzy match on all reference tuples
-    if full_partial_match_indices:
-        candidate_indices = full_partial_match_indices
-    else:
-        candidate_indices = range(len(reference))
+    candidate_indices = full_partial_match_indices or range(len(reference))
 
     # Calculate the fuzz ratio for each feature string in each reference tuple
     for i in candidate_indices:

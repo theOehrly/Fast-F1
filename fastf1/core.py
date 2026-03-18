@@ -238,7 +238,7 @@ class Telemetry(BaseDataFrame):
         When calling ``self.join`` metadata will be propagated from self to the
         joined dataframe.
         """
-        meta = dict()
+        meta = {}
         for var in self._metadata:
             meta[var] = getattr(self, var)
         ret = super().join(*args, **kwargs)
@@ -252,7 +252,7 @@ class Telemetry(BaseDataFrame):
         When calling ``self.merge`` metadata will be propagated from self to
         the merged dataframe.
         """
-        meta = dict()
+        meta = {}
         for var in self._metadata:
             meta[var] = getattr(self, var)
         ret = super().merge(*args, **kwargs)
@@ -451,7 +451,7 @@ class Telemetry(BaseDataFrame):
         # necessary for example because merging produces NaN values which
         # would cause an int column to become float, but it can be converted
         # back to int after interpolating missing values
-        dtype_map = dict()
+        dtype_map = {}
         for df in data, other:
             for col in df.columns:
                 if col not in dtype_map:
@@ -494,7 +494,7 @@ class Telemetry(BaseDataFrame):
         else:
             frq = pd.Timedelta(seconds=1/frequency)
 
-            resampled_columns = dict()
+            resampled_columns = {}
 
             for ch in self._CHANNELS:
                 if ch not in merged.columns:
@@ -948,7 +948,7 @@ class Telemetry(BaseDataFrame):
 
         Distance is in meters
         """
-        if not all([col in self.columns for col in ('Speed', 'Time')]):
+        if not all(col in self.columns for col in ('Speed', 'Time')):
             raise ValueError("Telemetry does not contain required channels "
                              "'Time' and 'Speed'.")
         if self.size != 0:
@@ -1710,7 +1710,7 @@ class Session:
 
             if drv_laps['LapNumber'].max() == self.total_laps:
                 # total laps completed, don't add another one
-                if ('Finished' == next_statuses['Status']).any():
+                if ('Finished' == next_statuses['Status']).any():  # noqa: SIM300 (Pandas series operation)
                     # warn if total laps reached before race finished
                     race_end = next_statuses[
                         next_statuses['Status'] == 'Finished'
@@ -1839,7 +1839,7 @@ class Session:
         # This way, the deletion message can be ignored on the main pass which
         # means that we do not need to preserve the state of a lap (e.g.
         # 'IsPersonalBest') in case we'd need to reinstate it again.
-        reinstated_laps = list()
+        reinstated_laps = []
         for _, row in self._race_control_messages.iterrows():
             reinstated_match = msg_pattern_reinstated.match(row['Message'])
             if reinstated_match:
@@ -2051,7 +2051,7 @@ class Session:
         # For races, lap times are also available on Ergast -> add the
         # first lap time from there
 
-        if not self.name == 'Race':
+        if self.name != 'Race':
             return
 
         # load lap times for first lap from Ergast and add driver number
@@ -2073,7 +2073,7 @@ class Session:
 
         # set the first lap time for each driver individually
         # (.merge, .update, ... not easily usable because not shared index)
-        failed_drvs = list()
+        failed_drvs = []
         for _, row in first_lap_times.iterrows():
             drv = row['DriverNumber']
             try:
@@ -2236,7 +2236,7 @@ class Session:
         """
         # TODO: check for outliers in lap start position
         for drv in self.drivers:
-            is_accurate = list()
+            is_accurate = []
             prev_lap = None
             integrity_errors = 0
             for _, lap in self.laps[self.laps['DriverNumber'] == drv] \
@@ -2624,8 +2624,8 @@ class Session:
 
         self._calculate_t0_date(car_data, pos_data)
 
-        self._car_data = dict()
-        self._pos_data = dict()
+        self._car_data = {}
+        self._pos_data = {}
 
         for (src, processed) in ((car_data, self._car_data),
                                  (pos_data, self._pos_data)):
@@ -2721,7 +2721,7 @@ class Session:
         """
         date_offset = None
 
-        data = list()
+        data = []
         for tds in tel_data_sets:
             data.extend(list(tds.values()))
 
@@ -2847,7 +2847,7 @@ class Laps(BaseDataFrame):
         When calling ``self.join`` metadata will be propagated from self to the
         joined dataframe.
         """
-        meta = dict()
+        meta = {}
         for var in self._metadata:
             meta[var] = getattr(self, var)
         ret = super().join(*args, **kwargs)
@@ -2861,7 +2861,7 @@ class Laps(BaseDataFrame):
         When calling ``self.merge`` metadata will be propagated from self to
         the merged dataframe.
         """
-        meta = dict()
+        meta = {}
         for var in self._metadata:
             meta[var] = getattr(self, var)
         ret = super().merge(*args, **kwargs)
@@ -3425,7 +3425,7 @@ class Laps(BaseDataFrame):
             # note that after a red flag, a session can be 'Started' as well.
             # Therefore, it is necessary to check for red flags and ignore
             # the first 'Started' entry after a red flag.
-            split_times = list()
+            split_times = []
             session_suspended = False
             for _, row in self.session.session_status.iterrows():
                 if row['Status'] == 'Started':

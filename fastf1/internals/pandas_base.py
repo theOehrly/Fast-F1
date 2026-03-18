@@ -88,7 +88,7 @@ class BaseDataFrame(pd.DataFrame):
                 cast = True
                 if self[col].isna().all():
                     # empty column, set appropriate NA-type
-                    if isinstance(_type, str) and not (_type == 'object'):
+                    if isinstance(_type, str) and _type != 'object':
                         # type given as string, e.g. 'datetime64[ns]'
                         self[col] = pd.Series(dtype=_type)
                     elif type(None) in typing.get_args(_type):
@@ -120,7 +120,7 @@ class BaseDataFrame(pd.DataFrame):
         # has a reference to this self (i.e. the object from which the slice
         # is created) as a class property
         # type(...) returns a new subclass of a Series
-        return type('_DynamicBaseSeriesConstructor',  # noqa: return type
+        return type('_DynamicBaseSeriesConstructor',
                     (_BaseSeriesConstructor,),
                     {'__meta_created_from': self})
 

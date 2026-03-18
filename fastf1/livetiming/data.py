@@ -55,7 +55,7 @@ class LiveTimingData:
         # file names
         self.files = files
         # parsed data
-        self.data = dict()
+        self.data = {}
         # number of json errors
         self.errorcount = 0
         # flag for automatic data loading on first access
@@ -239,7 +239,7 @@ class LiveTimingData:
         """
         if not self._files_read:
             self.load()
-        return name in self.data.keys()
+        return name in self.data
 
     def list_categories(self):
         """

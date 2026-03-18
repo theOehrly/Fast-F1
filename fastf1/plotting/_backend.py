@@ -13,7 +13,7 @@ from fastf1.plotting._base import (
 )
 
 
-Constants: dict[str, SeasonConstants] = dict()
+Constants: dict[str, SeasonConstants] = {}
 
 json_path = files("fastf1.plotting").joinpath("constants.json")
 content = json_path.read_text(encoding="utf-8")
@@ -32,7 +32,7 @@ def _load_drivers_from_f1_livetiming(
     driver_info = fastf1._api.driver_info(api_path)
 
     teams = {}
-    if year in Constants.keys():
+    if year in Constants:
         # pre-populate teams from constants if the year is supported
         for normalized_name, team_consts in Constants[year].teams.items():
             teams[normalized_name] = Team(

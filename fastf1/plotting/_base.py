@@ -126,9 +126,9 @@ class DriverTeamMapping(BaseModel):
     year: str
     teams: list[Team]
 
-    drivers_by_normalized: dict[str, Driver] = dict()
-    drivers_by_abbreviation: dict[str, Driver] = dict()
-    teams_by_normalized: dict[str, Team] = dict()
+    drivers_by_normalized: dict[str, Driver] = {}
+    drivers_by_abbreviation: dict[str, Driver] = {}
+    teams_by_normalized: dict[str, Team] = {}
 
     def model_post_init(self, *args):
         super().model_post_init(*args)
