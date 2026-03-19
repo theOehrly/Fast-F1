@@ -38,8 +38,12 @@ def __getattr__(name):
 # ### Default FastF1 Exceptions ###
 
 class DataNotLoadedError(Exception):
-    """Raised if an attempt is made to access data that has not been loaded
-    yet."""
+    """Raised if an attempt is made to access data that has not been
+    loaded yet.
+
+    Call :func:`Session.load() <fastf1.core.Session.load>` before
+    accessing session data.
+    """
 
 
 class ErgastError(Exception):
@@ -55,9 +59,8 @@ class ErgastInvalidRequestError(ErgastError):
 
 
 class NoLapDataError(Exception):
-    """
-    Raised if the API request does not fail, but there is no usable data
-    after processing the result.
+    """Raised if the API request does not fail, but there is no usable
+    data after processing the result.
     """
     def __init__(self, *args):
         super().__init__("Failed to load session because the API did not "
@@ -65,20 +68,21 @@ class NoLapDataError(Exception):
 
 
 class FuzzyMatchError(ValueError):
-    """
-    Raised if no fuzzy match could be found with sufficient confidence.
+    """Raised if no fuzzy match could be found with sufficient
+    confidence.
     """
 
 
 # ### Critical FastF1 Exceptions ###
 
 class FastF1CriticalError(RuntimeError):
-    """Base class for unrecoverable exceptions that occur during internal
-    data processing. These exceptions are always raised to the user and data
-    processing is terminated.
+    """Base class for unrecoverable exceptions that occur during
+    internal data processing.
+
+    These exceptions always propagate to the user and terminate data
+    processing. Subclasses must only be raised in data processing code
+    and must never be caught by FastF1 itself.
     """
-    # Exceptions deriving from this base class must only be used in data
-    # processing code. They must never be handled by FastF1.
 
 
 class RateLimitExceededError(FastF1CriticalError):
