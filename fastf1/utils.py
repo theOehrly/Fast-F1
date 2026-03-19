@@ -109,9 +109,25 @@ def delta_time(
 
 
 def recursive_dict_get(d: dict, *keys: str, default_none: bool = False):
-    """Recursive dict get. Can take an arbitrary number of keys and returns an
-    empty dict if any key does not exist.
-    https://stackoverflow.com/a/28225747"""
+    """Recursive dict get.
+
+    Traverses a nested dictionary using the provided keys in order and
+    returns the value at the final key. Returns an empty dict if any
+    intermediate key does not exist.
+
+    Args:
+        d: The dictionary to traverse.
+        *keys: One or more keys to look up in sequence.
+        default_none: If True, return ``None`` instead of an empty
+            dict when a key is not found. Defaults to False.
+
+    Returns:
+        The value found at the end of the key path, an empty dict if
+        any key is missing (or ``None`` if ``default_none=True``).
+
+    References:
+        https://stackoverflow.com/a/28225747
+    """
     ret = reduce(lambda c, k: c.get(k, {}), keys, d)
     if default_none and ret == {}:
         return None
@@ -138,7 +154,13 @@ def to_timedelta(x: str | datetime.timedelta) \
             - `8:45:46` (hours, minutes, seconds)
 
     Args:
-        x: timestamp
+        x: A time string in one of the permissible formats, or an
+            existing :class:`datetime.timedelta` object.
+
+    Returns:
+        A :class:`datetime.timedelta` representing the parsed time, or
+        ``None`` if the input is ``None``, an empty string, or cannot
+        be parsed.
     """
     # this is faster than using pd.timedelta on a string
     if isinstance(x, str) and len(x):
@@ -196,7 +218,13 @@ def to_datetime(x: str | datetime.datetime) \
             - `2020-12-13T13:27:15`
 
     Args:
-        x: timestamp
+        x: A datetime string in one of the permissible formats, or an
+            existing :class:`datetime.datetime` object.
+
+    Returns:
+        A :class:`datetime.datetime` representing the parsed timestamp,
+        or ``None`` if the input is ``None``, an empty string, or
+        cannot be parsed.
     """
     if isinstance(x, str) and x:
         try:
