@@ -1507,9 +1507,11 @@ class Session:
 
             is_generated = False
             if not len(d1):
-                # A driver with no timing data who never lined up on the
-                # grid (no PitOutTime before session start) is a DNS.
-                if driver not in drivers_on_grid:
+                # A driver with no timing data, no tyre app data, and no
+                # PitOutTime before session start never lined up on the
+                # grid and is a DNS. Drivers who crashed on lap 1 will
+                # still have tyre app data or a grid PitOutTime entry.
+                if driver not in drivers_on_grid and not len(d2):
                     _logger.info(
                         f"Skipping DNS driver {driver}"
                     )
