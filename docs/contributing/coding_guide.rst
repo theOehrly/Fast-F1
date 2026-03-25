@@ -11,6 +11,8 @@ documentation.
 Summary for PR authors
 ======================
 
+Before submitting a pull request to FastF1, please read the :ref:`ai-policy`.
+
 .. note::
 
    * We value contributions from people with all levels of experience. In
@@ -21,6 +23,7 @@ Summary for PR authors
    * Be patient with reviewers. We try our best to respond quickly, but we
      have limited bandwidth. If there is no feedback within a couple of days,
      please ping us by posting a comment to your PR.
+   * Do not submit fully AI generated pull requests.
 
 When making a PR, pay attention to:
 
