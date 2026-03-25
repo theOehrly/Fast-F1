@@ -1474,10 +1474,16 @@ class Session:
         useful = app_data[['Driver', 'Time', 'Compound', 'StartLaps', 'New',
                            'Stint']]
 
+        # Drivers who lined up on the grid have a PitOutTime on their
+        # first lap that is earlier than the session start. Capture this
+        # before clearing the values so we can tell starters from DNS
+        # drivers later without relying on results data.
+        grid_mask = (data["PitOutTime"] < self.session_start_time) & \
+                    (data["NumberOfLaps"] == 1)
+        drivers_on_grid = set(data.loc[grid_mask, "Driver"].unique())
+
         # remove first lap pitout time if it is before session_start_time
-        mask = (data["PitOutTime"] < self.session_start_time) & \
-               (data["NumberOfLaps"] == 1)
-        data.loc[mask, 'PitOutTime'] = np.timedelta64("NaT")
+        data.loc[grid_mask, 'PitOutTime'] = np.timedelta64("NaT")
 
         drivers = self.drivers
         if not drivers:
@@ -1501,15 +1507,9 @@ class Session:
 
             is_generated = False
             if not len(d1):
-                # check if this driver is a DNS (did not start) by
-                # looking at whether their Position is NaN in results
-                is_dns = (
-                    driver in self._results.index
-                    and pd.isna(
-                        self._results.loc[driver, 'Position']
-                    )
-                )
-                if is_dns:
+                # A driver with no timing data who never lined up on the
+                # grid (no PitOutTime before session start) is a DNS.
+                if driver not in drivers_on_grid:
                     _logger.info(
                         f"Skipping DNS driver {driver}"
                     )
