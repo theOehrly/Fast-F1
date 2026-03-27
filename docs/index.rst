@@ -182,3 +182,8 @@ the Formula 1 companies. F1, FORMULA ONE, FORMULA 1, FIA FORMULA ONE WORLD
 CHAMPIONSHIP, GRAND PRIX and related marks are trade marks of Formula One
 Licensing B.V.
 
+=========
+AI Policy
+=========
+
+Please read our :doc:`AI Policy <ai_policy>` before submitting pull requests.
