@@ -134,7 +134,6 @@ def get_circuit_info(*, year: int, circuit_key: int) -> CircuitInfo | None:
 
     ret = []
     for cat in ('corners', 'marshalLights', 'marshalSectors'):
-        rows = []
         array = data.get(cat) or []
         rows = [
             (
