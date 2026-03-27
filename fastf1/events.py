@@ -474,10 +474,11 @@ def _get_schedule_from_f1_timing(year: int):
         data['OfficialEventName'].append(event['OfficialName'])
 
         # select only valid sessions
-        sessions = []
-        for ses in event['Sessions']:
-            if (ses.get('Key') != -1) and ses.get('Name'):
-                sessions.append(ses)
+        sessions = [
+            ses for ses in event["Sessions"]
+            if ses.get('Key') != -1
+            and ses.get('Name')
+        ]
 
         n_events = min(len(sessions), 5)
         # number of events, usually 3 for testing, 5 for race weekends

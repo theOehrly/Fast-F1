@@ -571,13 +571,11 @@ class Ergast:
             )
 
         if result_type == 'pandas':
-            # result element description remains in query result
-            result_element_data = []
             if subcategory is not None:
-                for i in range(len(query_result)):
-                    result_element_data.append(
-                        query_result[i].pop(subcategory['name'])
-                    )
+                result_element_data = [
+                    query_result[i].pop(subcategory['name'])
+                    for i in range(len(query_result))
+                ]
                 return ErgastMultiResponse(
                     response_headers=resp, query_filters=body,
                     metadata=query_metadata, selectors=selectors,

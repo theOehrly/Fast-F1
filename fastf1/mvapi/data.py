@@ -136,15 +136,16 @@ def get_circuit_info(*, year: int, circuit_key: int) -> CircuitInfo | None:
     for cat in ('corners', 'marshalLights', 'marshalSectors'):
         rows = []
         array = data.get(cat) or []
-        for entry in array:
-            rows.append((
+        rows = [
+            (
                 float(entry.get('trackPosition', {}).get('x', 0.0)),
                 float(entry.get('trackPosition', {}).get('y', 0.0)),
                 int(entry.get('number', 0)),
                 str(entry.get('letter', "")),
                 float(entry.get('angle', 0.0)),
                 np.nan
-            ))
+            ) for entry in array
+        ]
         ret.append(
             pd.DataFrame(
                 rows,

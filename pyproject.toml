@@ -110,11 +110,13 @@ select = [
     "SIM",
     "RET",
     "A",
+    "PERF",
 ]
 
 ignore = [
     "B028",    # no-explicit-stacklevel — too noisy for warnings.warn
     "A002",    # public method parameter names require proper deprecation
+    "PERF203", # necessary for API response parsing
 ]
 
 [tool.ruff.lint.per-file-ignores]
