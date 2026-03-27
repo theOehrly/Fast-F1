@@ -108,6 +108,7 @@ select = [
     "C4",
     "PIE",
     "SIM",
+    "RET",
 ]
 
 ignore = [

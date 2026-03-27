@@ -232,8 +232,7 @@ class ErgastRawResponse(ErgastResponseMixin, list):
         # has the same structure. Iterate over all elements and call the
         # recursive _auto_cast method to convert data types
         query_result = copy.deepcopy(query_result)  # TODO: efficiency?
-        query_result = cls._auto_cast(query_result, category)
-        return query_result
+        return cls._auto_cast(query_result, category)
 
     @classmethod
     def _auto_cast(cls, data, category):
@@ -587,13 +586,12 @@ class Ergast:
                     category=category, subcategory=subcategory,
                     auto_cast=auto_cast
                 )
-            else:
-                return ErgastSimpleResponse(
-                    response_headers=resp, query_filters=body,
-                    metadata=query_metadata, selectors=selectors,
-                    response=query_result, category=category,
-                    auto_cast=auto_cast
-                )
+            return ErgastSimpleResponse(
+                response_headers=resp, query_filters=body,
+                metadata=query_metadata, selectors=selectors,
+                response=query_result, category=category,
+                auto_cast=auto_cast
+            )
 
     def _build_default_result(
             self, *,

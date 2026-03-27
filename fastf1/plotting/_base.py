@@ -143,6 +143,5 @@ class DriverTeamMapping(BaseModel):
 def _normalize_string(name: str) -> str:
     # removes accents from a string and returns the closest possible
     # ascii representation (https://stackoverflow.com/a/518232)
-    stripped = ''.join(c for c in unicodedata.normalize('NFD', name)
+    return ''.join(c for c in unicodedata.normalize('NFD', name)
                        if unicodedata.category(c) != 'Mn')
-    return stripped

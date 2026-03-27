@@ -159,10 +159,9 @@ class LiveTimingData:
 
     def _fix_json(self, elem):
         # fix F1's not json compliant data
-        elem = elem.replace("'", '"') \
+        return elem.replace("'", '"') \
             .replace('True', 'true') \
             .replace('False', 'false')
-        return elem
 
     def _add_to_category(self, cat, entry):
         if cat not in self.data:

@@ -174,10 +174,9 @@ class ApiMappingDirective(Directive):
         # print the flattened data nicely formatted as a table (use str
         # representation of a dataframe for this)
         # remove the last line (unnecessary info about dataframe)
-        result_str = '\n'.join(
+        return '\n'.join(
             str(pd.DataFrame(flat).iloc[0]).split('\n')[:-1]
         )
-        return result_str
 
 
 def setup(app):

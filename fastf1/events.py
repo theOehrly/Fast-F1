@@ -386,8 +386,7 @@ def get_events_remaining(
     )
 
     if not include_testing:
-        result = events.loc[events["Session5DateUtc"] >= dt]
-        return result
+        return events.loc[events["Session5DateUtc"] >= dt]
 
     indexes_to_drop = []
     for idx, event in events.iterrows():
@@ -399,8 +398,7 @@ def get_events_remaining(
         if session_date <= dt:
             indexes_to_drop.append(idx)
 
-    result = events.drop(index=indexes_to_drop)
-    return result
+    return events.drop(index=indexes_to_drop)
 
 
 @soft_exceptions("FastF1 schedule",
@@ -458,8 +456,7 @@ def _get_schedule_ff1(year):
                    for col in df.columns}
     df = df.rename(columns=col_renames)
 
-    schedule = EventSchedule(df, year=year, _force_default_cols=True)
-    return schedule
+    return EventSchedule(df, year=year, _force_default_cols=True)
 
 
 @soft_exceptions("F1 API schedule",
@@ -545,8 +542,7 @@ def _get_schedule_from_f1_timing(year: int):
         ev_date = ev_date.replace(hour=0, minute=0, second=0)
         data['EventDate'].append(ev_date)
 
-    schedule = EventSchedule(data, year=year, _force_default_cols=True)
-    return schedule
+    return EventSchedule(data, year=year, _force_default_cols=True)
 
 
 @soft_exceptions("Ergast API Schedule",
@@ -637,8 +633,7 @@ def _get_schedule_from_ergast(year) -> "EventSchedule":
         # simplified; this is only true most of the time
 
     df = pd.DataFrame(data)
-    schedule = EventSchedule(df, year=year, _force_default_cols=True)
-    return schedule
+    return EventSchedule(df, year=year, _force_default_cols=True)
 
 
 class EventSchedule(BaseDataFrame):
@@ -830,8 +825,7 @@ class EventSchedule(BaseDataFrame):
         """
         if exact_match:
             return self._strict_event_search(name)
-        else:
-            return self._fuzzy_event_search(name)
+        return self._fuzzy_event_search(name)
 
 
 class Event(BaseSeries):
@@ -944,15 +938,14 @@ class Event(BaseSeries):
         if not mask.any():
             raise ValueError(f"Session type '{identifier}' does not exist "
                              f"for this event")
-        else:
-            _name = mask.idxmax()
-            date_utc = self[f"{_name}DateUtc"]
-            date = self[f"{_name}Date"]
-            if (not utc) and pd.isnull(date) and (not pd.isnull(date_utc)):
-                raise ValueError("Local timestamp is not available")
-            if utc:
-                return date_utc
-            return date
+        _name = mask.idxmax()
+        date_utc = self[f"{_name}DateUtc"]
+        date = self[f"{_name}Date"]
+        if (not utc) and pd.isnull(date) and (not pd.isnull(date_utc)):
+            raise ValueError("Local timestamp is not available")
+        if utc:
+            return date_utc
+        return date
 
     def get_session(self, identifier: int | str) -> "Session":
         """Return a session from this event.

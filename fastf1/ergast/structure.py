@@ -66,7 +66,7 @@ def time_from_ergast(t_str: Any) -> datetime.time | None:
                      f"response.")
         return None
 
-    elif res[1] and res[2] and res[3]:
+    if res[1] and res[2] and res[3]:
         hour, minute, second = int(res[1][:-1]), int(res[2][:-1]), int(res[3])
     elif res[1] and res[3]:
         hour, minute, second = 0, int(res[1][:-1]), int(res[3])

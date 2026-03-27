@@ -154,11 +154,9 @@ def get_circuit_info(*, year: int, circuit_key: int) -> CircuitInfo | None:
 
     rotation = float(data.get('rotation', 0.0))
 
-    circuit_info = CircuitInfo(
+    return CircuitInfo(
         corners=ret[0],
         marshal_lights=ret[1],
         marshal_sectors=ret[2],
         rotation=rotation
     )
-
-    return circuit_info
