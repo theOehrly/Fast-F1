@@ -127,9 +127,11 @@ class SignalRClient:
         self._t_last_message = time.time()
 
         if isinstance(msg, CompletionMessage):
-            data = []
-            for key in msg.result.keys():  # noqa: SIM118
-                data.append([key, json.dumps(msg.result[key]), ''])
+            data = [
+                [
+                    key, json.dumps(msg.result[key]), ''
+                ] for key in msg.result.keys()  # noqa: SIM118
+            ]
             formatted = '\n'.join(map(str, data))
 
         elif isinstance(msg, list):

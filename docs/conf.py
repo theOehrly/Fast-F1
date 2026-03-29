@@ -55,7 +55,7 @@ project = 'FastF1'
 # author = 'Oehrly'
 version = fastf1.__version__
 release = version
-copyright = f'{datetime.now().year}, Philipp Schäfer'
+copyright = f'{datetime.now().year}, Philipp Schäfer'  # noqa: A001
 html_title = f"{project} ({release})"
 
 with open(os.path.abspath('../pyproject.toml'), 'rb') as f:

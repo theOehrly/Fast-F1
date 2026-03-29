@@ -194,10 +194,9 @@ def _get_team_color(
 
     if colormap == 'fastf1':
         return team.colors.fastf1
-    elif colormap == 'official':
+    if colormap == 'official':
         return team.colors.official
-    else:
-        raise ValueError(f"Invalid colormap '{colormap}'")
+    raise ValueError(f"Invalid colormap '{colormap}'")
 
 
 def get_team_name(

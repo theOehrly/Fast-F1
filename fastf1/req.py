@@ -431,24 +431,23 @@ class Cache(metaclass=_MetaCache):
                         _logger.info(f"Using cached data for {func_name}")
                         return cached['data']
 
-                    else:
-                        # cached data needs to be downloaded again and updated
-                        _logger.info(f"Updating cache for {func_name}...")
-                        data = func(api_path, **func_kwargs)
+                    # cached data needs to be downloaded again and updated
+                    _logger.info(f"Updating cache for {func_name}...")
+                    data = func(api_path, **func_kwargs)
 
-                        if data is not None:
-                            cls._write_cache(data, cache_file_path)
-                            _logger.info("Cache updated!")
-                            return data
+                    if data is not None:
+                        cls._write_cache(data, cache_file_path)
+                        _logger.info("Cache updated!")
+                        return data
 
-                        _logger.critical(
-                            "A cache update is required but the data failed "
-                            "to download. Cannot continue!\nYou may force to "
-                            "ignore a cache version mismatch by using the "
-                            "`ignore_version=True` keyword when enabling the "
-                            "cache (not recommended)."
-                        )
-                        exit()
+                    _logger.critical(
+                        "A cache update is required but the data failed "
+                        "to download. Cannot continue!\nYou may force to "
+                        "ignore a cache version mismatch by using the "
+                        "`ignore_version=True` keyword when enabling the "
+                        "cache (not recommended)."
+                    )
+                    exit()
 
                 else:  # cached data does not yet exist for this api request
                     _logger.info(f"No cached data found for {func_name}. "
@@ -479,17 +478,17 @@ class Cache(metaclass=_MetaCache):
             os.makedirs(cache_dir_path)
 
         file_name = name + '.ff1pkl'
-        cache_file_path = os.path.join(cache_dir_path, file_name)
-        return cache_file_path
+        return os.path.join(cache_dir_path, file_name)
 
     @classmethod
     def _data_ok_for_use(cls, cached):
         # check if cached data is ok or needs to be downloaded again
         if cls._FORCE_RENEW:
             return False
-        elif cls._IGNORE_VERSION or cached['version'] == cls._API_CORE_VERSION:
-            return True
-        return False
+        return (
+            cls._IGNORE_VERSION or
+            cached['version'] == cls._API_CORE_VERSION
+        )
 
     @classmethod
     def _write_cache(cls, data, cache_file_path, **kwargs):
@@ -507,14 +506,12 @@ class Cache(metaclass=_MetaCache):
             tmp = os.path.expanduser("~/.cache")
             if os.path.exists(tmp):
                 return r"~/.cache/fastf1"
-            else:
-                return r"~/.fastf1"
-        elif sys.platform == "darwin":
+            return r"~/.fastf1"
+        if sys.platform == "darwin":
             return r"~/Library/Caches/fastf1"
-        elif sys.platform == "win32":
+        if sys.platform == "win32":
             return r"%LOCALAPPDATA%\Temp\fastf1"
-        else:
-            return None
+        return None
 
     @classmethod
     def _enable_default_cache(cls):

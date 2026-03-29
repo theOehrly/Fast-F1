@@ -121,7 +121,7 @@ def _verify_jwt(
     public_key = RSAAlgorithm.from_jwk(jwk)
 
     # Verify and decode the token
-    payload = jwt.decode(
+    return jwt.decode(
         token,
         key=public_key,
         algorithms="RS256",
@@ -130,8 +130,6 @@ def _verify_jwt(
         verify=verify,
         options=options
     )
-
-    return payload
 
 
 def get_auth_token():

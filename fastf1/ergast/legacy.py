@@ -40,9 +40,8 @@ def fetch_day(year, gp, day):
 def _parse_json_response(r):
     if r.status_code == 200:
         return json.loads(r.content.decode('utf-8'))
-    else:
-        warnings.warn(f"Request returned: {r.status_code}")
-        return None
+    warnings.warn(f"Request returned: {r.status_code}")
+    return None
 
 
 def _parse_ergast(data):

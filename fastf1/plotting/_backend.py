@@ -123,11 +123,10 @@ def _generate_team(team_name: str, team_color: str) -> Team:
         official=team_color,
         fastf1=team_color,
     )
-    team = Team(
+
+    return Team(
         name=team_name,
         normalized_name=normalized_name,
         short_name=short_team_name,
         colors=team_colors
     )
-
-    return team

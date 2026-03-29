@@ -79,8 +79,7 @@ def _fallback_create_df(
 def _fallback_if_unsupported(func):
     if not CREATE_DF_FAST:
         return _fallback_create_df
-    else:
-        return func
+    return func
 
 
 @_fallback_if_unsupported
@@ -117,6 +116,4 @@ def _unsafe_create_df_fast(
             block_values, [columns, index], verify_integrity=False
     )
 
-    df = DataFrame(mgr)
-
-    return df
+    return DataFrame(mgr)

@@ -76,7 +76,7 @@ def make_path(wname, wdate, sname, sdate):
     path = '/static/' + smooth_operator.replace(' ', '_')
     # Workaround for Brazil Qualifying on sunday (#652), TODO: fix properly
     # and workaround for pre-season testing 2025
-    path = path \
+    return path \
         .replace("2024-11-03_Qualifying", "2024-11-02_Qualifying") \
         .replace("2025-02-26_Practice_1", "2025-02-26_Day_1") \
         .replace("2025-02-27_Practice_2", "2025-02-27_Day_2") \
@@ -87,8 +87,6 @@ def make_path(wname, wdate, sname, sdate):
         .replace("2026-02-18_Practice_1", "2026-02-18_Day_1") \
         .replace("2026-02-19_Practice_2", "2026-02-19_Day_2") \
         .replace("2026-02-20_Practice_3", "2026-02-20_Day_3")
-
-    return path
 
 
 # define all empty columns for timing data
@@ -356,8 +354,7 @@ def _get_gap_str_for_drv(drv, idx, laps_data, stream_data):
     first_time = laps_data[laps_data['Driver'] == drv].iloc[idx]['Time']
     ref_idx = (stream_data[stream_data['Driver'] == drv]['Time']
                - first_time).abs().idxmin()
-    gap_str = stream_data.loc[ref_idx]['GapToLeader']
-    return gap_str
+    return stream_data.loc[ref_idx]['GapToLeader']
 
 
 def _laps_data_driver(driver_raw, empty_vals, drv):
@@ -1775,25 +1772,22 @@ def fetch_page(path, name):
             if name in ('position', 'car_data'):
                 # Special case to improve memory efficiency
                 return records
-            else:
-                decode_error_count = 0
-                tl = 12  # length of timestamp: len('00:00:00:000')
-                ret = []
-                for e in records:
-                    try:
-                        ret.append([e[:tl], parse(e[tl:], zipped=is_z)])
-                    except json.JSONDecodeError:
-                        decode_error_count += 1
-                        continue
-                if decode_error_count > 0:
-                    _logger.warning(f"Failed to decode {decode_error_count}"
-                                    f" messages ({len(records)} messages "
-                                    f"total)")
-                return ret
-        else:
-            return parse(raw, is_z)
-    else:
-        return None
+            decode_error_count = 0
+            tl = 12  # length of timestamp: len('00:00:00:000')
+            ret = []
+            for e in records:
+                try:
+                    ret.append([e[:tl], parse(e[tl:], zipped=is_z)])
+                except json.JSONDecodeError:
+                    decode_error_count += 1
+                    continue
+            if decode_error_count > 0:
+                _logger.warning(f"Failed to decode {decode_error_count}"
+                                f" messages ({len(records)} messages "
+                                f"total)")
+            return ret
+        return parse(raw, is_z)
+    return None
 
 
 def parse(text: str, zipped: bool = False) -> str | dict:
