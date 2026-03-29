@@ -537,7 +537,7 @@ class Ergast:
             table: str,
             category: dict,
             subcategory: dict | None,
-            result_type: Literal['pandas', 'raw'] | None = None,
+            result_type: Literal['pandas', 'raw'],
             auto_cast: bool | None = None,
             limit: int | None = None,
             offset: int | None = None,
@@ -570,26 +570,26 @@ class Ergast:
                 auto_cast=auto_cast
             )
 
-        if result_type == 'pandas':
-            if subcategory is not None:
-                result_element_data = [
-                    query_result[i].pop(subcategory['name'])
-                    for i in range(len(query_result))
-                ]
-                return ErgastMultiResponse(
-                    response_headers=resp, query_filters=body,
-                    metadata=query_metadata, selectors=selectors,
-                    response_description=query_result,
-                    response_data=result_element_data,
-                    category=category, subcategory=subcategory,
-                    auto_cast=auto_cast
-                )
-            return ErgastSimpleResponse(
+        # result_type = "pandas"
+        if subcategory is not None:
+            result_element_data = [
+                query_result[i].pop(subcategory['name'])
+                for i in range(len(query_result))
+            ]
+            return ErgastMultiResponse(
                 response_headers=resp, query_filters=body,
                 metadata=query_metadata, selectors=selectors,
-                response=query_result, category=category,
+                response_description=query_result,
+                response_data=result_element_data,
+                category=category, subcategory=subcategory,
                 auto_cast=auto_cast
             )
+        return ErgastSimpleResponse(
+            response_headers=resp, query_filters=body,
+            metadata=query_metadata, selectors=selectors,
+            response=query_result, category=category,
+            auto_cast=auto_cast
+        )
 
     def _build_default_result(
             self, *,
