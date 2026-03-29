@@ -1496,8 +1496,14 @@ class Session:
             if d2.shape[0] != len(d2['Stint'].unique()):
                 # tyre info includes correction messages that need to be
                 # applied before continuing
-                pit_in_times = list(d1['PitInTime'].dropna().unique())
-                d2 = self.__fix_tyre_info(d2, pit_in_times)
+
+                # Find all laps where a driver went into the pits. Their end
+                # times mark the end of each stint.
+                stint_split_times = d1.loc[
+                    ~pd.isnull(d1["PitInTime"]), "Time"
+                ].to_list()
+
+                d2 = self.__fix_tyre_info(d2, stint_split_times)
 
             is_generated = False
             if not len(d1):
@@ -2136,23 +2142,50 @@ class Session:
             self._session_start_time = None
         self._session_status = pd.DataFrame(session_status)
 
-    def __fix_tyre_info(self, df: pd.DataFrame, pit_in_times: list):
-        # ### Part 1: detect and fix incorrectly incremented stint counter
+    def __fix_tyre_info(self, df: pd.DataFrame, stint_split_times: list):
+        did_pit_in_session = bool(stint_split_times)
+
+        # add an artificial start and end time to the stint split times so
+        # that two subsequent timestamps always bracket a stint
+        stint_brackets = [
+            pd.Timedelta(0), *stint_split_times, pd.Timedelta(days=1)
+        ]
+
+        # ### Problem 1: Detect bunched up tyre data messages at the start
+        #                of a session and adjust their timestamps.
+        # ref: GH#863
+        if (did_pit_in_session
+                and not (df['Time'] < self.session_start_time).any()):
+            # TODO: assumption may only be true for races?
+            # No tyre data messages were registered before the start of the
+            # session. This points towards a delay in the transmission of the
+            # data. Check if messages for multiple stints are bunched up with
+            # the same timestamp at the beginning of the data stream.
+
+            first_ts = df['Time'].iloc[0]
+            delayed_stints = df.loc[df['Time'] == first_ts, 'Stint'].unique()
+
+            # If there are any delayed stints, set the timestamps of the
+            # message(s) for these stints to the start of the corresponding
+            # stint + 1 ms so that they are just within the stint bracket.
+            for n in delayed_stints:
+                df.loc[
+                    (df['Stint'] == n) & (df['Time'] == first_ts), 'Time'
+                ] = stint_brackets[n] + pd.Timedelta(milliseconds=1)
+
+        # ### Problem 2: detect and fix incorrectly incremented stint counter
         # ref: GH#715, GH#742
 
         # Pad pit in times with zero and a sufficiently far away value
         # such that two subsequent values in the list always bracket one
         # "stint". (The source data considers each drive through the pit as the
         # beginning of a new stint, independent of tyres being changed)
-        pit_in_times = [
-            pd.Timedelta(0), *pit_in_times, pd.Timedelta(days=1)
-        ]
 
         stint = 0  # stints are counted starting at zero in the source data
         fixed_stint_errors = False
-        for i in range(len(pit_in_times) - 1):
-            t_start = pit_in_times[i]
-            t_end = pit_in_times[i + 1]
+        for i in range(len(stint_brackets) - 1):
+            t_start = stint_brackets[i]
+            t_end = stint_brackets[i + 1]
 
             # Check if for any tyre data message in the current stint, the
             # stint counter is higher than the current stint. This would be
