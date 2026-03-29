@@ -33,6 +33,7 @@ necessarily require writing code at all. For example:
    testing.rst
    documenting_fastf1.rst
    coding_guide.rst
+   ai_policy.rst
 
 
 **Acknowledgement**: This contribution guide is heavily based on and in large
