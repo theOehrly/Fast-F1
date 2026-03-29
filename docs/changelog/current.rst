@@ -1,3 +1,18 @@
+What's new in v3.8.2
+--------------------
+
+(released 29/03/2026)
+
+
+Bug Fixes
+^^^^^^^^^
+
+- Fixed a bug that caused crash laps to be duplicated when telemetry data was loaded separately after laps
+  data had already been loaded (#852) (by @sheehanr).
+
+- Cleanly handle empty timestamps in responses from the Jolpica-F1 API (#868).
+
+
 What's new in v3.8.1
 --------------------
 
