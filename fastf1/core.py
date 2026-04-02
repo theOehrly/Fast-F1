@@ -1594,7 +1594,7 @@ class Session:
         if df is None:
             raise exceptions.NoLapDataError
 
-        laps = df.reset_index(drop=True)  # noqa: F821
+        laps = df.reset_index(drop=True)
 
         # rename some columns
         laps.rename(columns={'Driver': 'DriverNumber',
