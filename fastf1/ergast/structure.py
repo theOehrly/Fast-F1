@@ -20,10 +20,19 @@ _time_string_matcher = re.compile(
 def date_from_ergast(d_str: Any) -> datetime.datetime | None:
     """Create a ``datetime.datetime`` object from a date stamp formatted
     like 'YYYY-MM-DD'."""
+    if not isinstance(d_str, str):
+        logger.debug(f"Failed to parse timestamp '{d_str}' in Ergast "
+                     f"response.")
+        return None
+
+    if not d_str:
+        # empty string
+        return None
+
     try:
         return datetime.datetime.strptime(d_str, "%Y-%m-%d")
     except (ValueError, TypeError):
-        logger.debug(f"Failed to parse date stamp '{d_str}' in Ergast"
+        logger.debug(f"Failed to parse date stamp '{d_str}' in Ergast "
                      f"response.")
         return None
 
@@ -41,17 +50,23 @@ def time_from_ergast(t_str: Any) -> datetime.time | None:
     # ``datetime.time.fromisoformat``
     #   - 12:34.2 -> not accepted because only on microsecond decimal is given
     #   - 12:34Z  -> 'Z' is not accepted as an alias of '+00:00' (utc)
-
-    try:
-        res = _time_string_matcher.match(t_str)
-    except TypeError:
-        res = None
-
-    if res is None:
-        logger.debug(f"Failed to parse timestamp '{t_str}' in Ergast"
+    if not isinstance(t_str, str):
+        logger.debug(f"Failed to parse timestamp '{t_str}' in Ergast "
                      f"response.")
         return None
-    elif res[1] and res[2] and res[3]:
+
+    if not t_str:
+        # empty string
+        return None
+
+    res = _time_string_matcher.match(t_str)
+
+    if res is None:
+        logger.debug(f"Failed to parse timestamp '{t_str}' in Ergast "
+                     f"response.")
+        return None
+
+    if res[1] and res[2] and res[3]:
         hour, minute, second = int(res[1][:-1]), int(res[2][:-1]), int(res[3])
     elif res[1] and res[3]:
         hour, minute, second = 0, int(res[1][:-1]), int(res[3])
@@ -75,7 +90,7 @@ def time_from_ergast(t_str: Any) -> datetime.time | None:
         return datetime.time(hour=hour, minute=minute, second=second,
                              microsecond=microsecond, tzinfo=tzinfo)
     except ValueError:
-        logger.debug(f"Failed to parse timestamp '{t_str}' in Ergast"
+        logger.debug(f"Failed to parse timestamp '{t_str}' in Ergast "
                      f"response.")
         return None
 
@@ -86,8 +101,12 @@ def timedelta_from_ergast(t_str: Any) -> datetime.timedelta | None:
     optional.
     """
     if not isinstance(t_str, str):
-        logger.debug(f"Failed to parse timestamp '{t_str}' in Ergast"
+        logger.debug(f"Failed to parse timestamp '{t_str}' in Ergast "
                      f"response.")
+        return None
+
+    if not t_str:
+        # empty string
         return None
 
     if t_str.startswith('-'):
@@ -207,7 +226,7 @@ def _flatten_inline_list_of_dicts(nested: list, category: dict, flat: dict, *,
     # add the resulting lists to the flattened result dict
     for name, mapping in category['map'].items():
         # generate list of values for each mapping
-        joined = list()
+        joined = []
         for item in nested:
             if name not in item:
                 continue
@@ -248,7 +267,9 @@ def _lap_timings_flatten_by_rename(nested: dict, category: dict, flat: dict, *,
 # ################################
 # ### root category finalizers ###
 
-def _merge_dicts_of_lists(data):
+def _merge_dicts_of_lists(
+        data: list[dict[Any, list[Any]]]
+    ) -> dict[Any, list[Any]]:
     """:meta-private:
     Transform a list of equally keyed dictionaries that only contain lists into
     a single dictionary containing these list joined together.
@@ -268,7 +289,7 @@ def _merge_dicts_of_lists(data):
 
     for _ in range(len(data) - 1):
         _tmp = data.pop(1)
-        for key in data[0].keys():
+        for key in data[0]:
             data[0][key].extend(_tmp.pop(key))
 
     return data[0]

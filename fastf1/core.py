@@ -38,14 +38,20 @@ from fastf1.mvapi import (
 from fastf1.utils import to_timedelta
 
 
-# TODO: remove in v3.10
 def __getattr__(name):
+    # TODO: remove in v3.10
     if name in ("NoLapDataError",
-                "DataNotLoadedError",
-                "InvalidSessionError"):
+                "DataNotLoadedError"):
 
         warnings.warn(f"Accessing `{name}` via `{__name__}` is deprecated. "
                       f"Use `fastf1.exceptions` instead.")
+
+        return getattr(exceptions, name)
+
+    # TODO: remove in v3.11
+    if name == "InvalidSessionError":
+        warnings.warn(f"`{name}` is deprecated and will be removed in a "
+                      f"future version.")
 
         return getattr(exceptions, name)
 
@@ -232,7 +238,7 @@ class Telemetry(BaseDataFrame):
         When calling ``self.join`` metadata will be propagated from self to the
         joined dataframe.
         """
-        meta = dict()
+        meta = {}
         for var in self._metadata:
             meta[var] = getattr(self, var)
         ret = super().join(*args, **kwargs)
@@ -246,7 +252,7 @@ class Telemetry(BaseDataFrame):
         When calling ``self.merge`` metadata will be propagated from self to
         the merged dataframe.
         """
-        meta = dict()
+        meta = {}
         for var in self._metadata:
             meta[var] = getattr(self, var)
         ret = super().merge(*args, **kwargs)
@@ -280,9 +286,7 @@ class Telemetry(BaseDataFrame):
                 i_right_pad = np.max(np.where(mask))
             mask[i_left_pad: i_right_pad + 1] = True
 
-        data_slice = self.loc[mask].copy()
-
-        return data_slice
+        return self.loc[mask].copy()
 
     def slice_by_lap(
             self,
@@ -445,7 +449,7 @@ class Telemetry(BaseDataFrame):
         # necessary for example because merging produces NaN values which
         # would cause an int column to become float, but it can be converted
         # back to int after interpolating missing values
-        dtype_map = dict()
+        dtype_map = {}
         for df in data, other:
             for col in df.columns:
                 if col not in dtype_map:
@@ -488,7 +492,7 @@ class Telemetry(BaseDataFrame):
         else:
             frq = pd.Timedelta(seconds=1/frequency)
 
-            resampled_columns = dict()
+            resampled_columns = {}
 
             for ch in self._CHANNELS:
                 if ch not in merged.columns:
@@ -614,11 +618,8 @@ class Telemetry(BaseDataFrame):
             Telemetry({'Date': new_date_ref}).__finalize__(self),
             frequency='original'
         )
-
         mask = combined_tel['Date'].isin(new_date_ref)
-        new_tel = combined_tel.loc[mask, :].copy()
-
-        return new_tel
+        return combined_tel.loc[mask, :].copy()
 
     def fill_missing(self):
         """Calculate missing values in self.
@@ -942,16 +943,14 @@ class Telemetry(BaseDataFrame):
 
         Distance is in meters
         """
-        if not all([col in self.columns for col in ('Speed', 'Time')]):
+        if not all(col in self.columns for col in ('Speed', 'Time')):
             raise ValueError("Telemetry does not contain required channels "
                              "'Time' and 'Speed'.")
         if self.size != 0:
             dt = self['Time'].dt.total_seconds().diff()
             dt.iloc[0] = self['Time'].iloc[0].total_seconds()
-            ds = self['Speed'] / 3.6 * dt
-            return ds
-        else:
-            return pd.Series()
+            return self['Speed'] / 3.6 * dt
+        return pd.Series()
 
     def integrate_distance(self):
         """Return the distance driven since the first sample of self.
@@ -967,8 +966,7 @@ class Telemetry(BaseDataFrame):
         ds = self.calculate_differential_distance()
         if not ds.empty:
             return ds.cumsum()
-        else:
-            return pd.Series()
+        return pd.Series()
 
     def calculate_driver_ahead(self, return_reference: bool = False):
         """Calculate driver ahead and distance to driver ahead.
@@ -1704,7 +1702,7 @@ class Session:
 
             if drv_laps['LapNumber'].max() == self.total_laps:
                 # total laps completed, don't add another one
-                if ('Finished' == next_statuses['Status']).any():
+                if ('Finished' == next_statuses['Status']).any():  # noqa: SIM300 (Pandas series operation)
                     # warn if total laps reached before race finished
                     race_end = next_statuses[
                         next_statuses['Status'] == 'Finished'
@@ -1833,7 +1831,7 @@ class Session:
         # This way, the deletion message can be ignored on the main pass which
         # means that we do not need to preserve the state of a lap (e.g.
         # 'IsPersonalBest') in case we'd need to reinstate it again.
-        reinstated_laps = list()
+        reinstated_laps = []
         for _, row in self._race_control_messages.iterrows():
             reinstated_match = msg_pattern_reinstated.match(row['Message'])
             if reinstated_match:
@@ -1984,7 +1982,7 @@ class Session:
     def _add_track_status_to_laps(self, laps):
         # add track status information to each lap
 
-        track_status = getattr(self, '_track_status')
+        track_status = getattr(self, '_track_status', None)
         if track_status is None:
             return
 
@@ -1994,8 +1992,7 @@ class Session:
         def _applicator(new_status, current_status):
             if new_status not in current_status:
                 return current_status + new_status
-            else:
-                return current_status
+            return current_status
 
         # -- Track Status Timeline
         #           --> (status before) --|--- status ---|-- next_status -->
@@ -2011,7 +2008,8 @@ class Session:
             t = track_status['Time'][0]
             status = track_status['Status'][0]
             for next_t, next_status in zip(track_status['Time'][1:],
-                                           track_status['Status'][1:]):
+                                           track_status['Status'][1:],
+                                           strict=True):
 
                 # Case A: The lap ends during the current status
                 sel = ((t <= laps['Time']) & (laps['Time'] <= next_t))
@@ -2023,7 +2021,7 @@ class Session:
 
                 laps.loc[sel, 'TrackStatus'] \
                     = laps.loc[sel, 'TrackStatus'].apply(
-                        lambda curr: _applicator(status, curr)
+                        lambda curr, s=status: _applicator(s, curr)
                 )
 
                 t = next_t
@@ -2044,7 +2042,7 @@ class Session:
         # For races, lap times are also available on Ergast -> add the
         # first lap time from there
 
-        if not self.name == 'Race':
+        if self.name != 'Race':
             return
 
         # load lap times for first lap from Ergast and add driver number
@@ -2066,7 +2064,7 @@ class Session:
 
         # set the first lap time for each driver individually
         # (.merge, .update, ... not easily usable because not shared index)
-        failed_drvs = list()
+        failed_drvs = []
         for _, row in first_lap_times.iterrows():
             drv = row['DriverNumber']
             try:
@@ -2214,7 +2212,7 @@ class Session:
                     corrected.loc[i, key] = value
 
         # reapply original dtypes per column
-        for col_name, dtype in zip(df.columns, df.dtypes):
+        for col_name, dtype in zip(df.columns, df.dtypes, strict=True):
             corrected[col_name] = corrected[col_name].astype(dtype)
 
         return corrected
@@ -2229,7 +2227,7 @@ class Session:
         """
         # TODO: check for outliers in lap start position
         for drv in self.drivers:
-            is_accurate = list()
+            is_accurate = []
             prev_lap = None
             integrity_errors = 0
             for _, lap in self.laps[self.laps['DriverNumber'] == drv] \
@@ -2441,7 +2439,8 @@ class Session:
 
             if 'FirstName' in driver_info and 'LastName' in driver_info:
                 for first, last in zip(driver_info['FirstName'],
-                                       driver_info['LastName']):
+                                       driver_info['LastName'],
+                                       strict=True):
                     driver_info['FullName'].append(f"{first} {last}")
 
             # driver info is required for joining on index (used as index),
@@ -2471,7 +2470,7 @@ class Session:
                     self.event.year, self.event.RoundNumber
                 )
 
-            elif session_name == 'Qualifying':
+            if session_name == 'Qualifying':
                 return self._ergast.get_qualifying_results(
                     self.event.year, self.event.RoundNumber
                 )
@@ -2479,18 +2478,17 @@ class Session:
             # double condition because of reuse of the "Sprint Qualifying" name
             # for a race-like session in 2018 and a quali-like session in 2024+
             # Ergast only supports the race-like sprint results.
-            elif ('Sprint' in session_name
+            if ('Sprint' in session_name
                     and session_name in self._RACE_LIKE_SESSIONS):
                 return self._ergast.get_sprint_results(
                     self.event.year, self.event.RoundNumber
                 )
 
-            else:
-                # TODO: Use Ergast when it supports quali-like sprint results
-                # return self._ergast.get_sprint_shootout_results(
-                #     self.event.year, self.event.RoundNumber
-                # )
-                return None
+            # TODO: Use Ergast when it supports quali-like sprint results
+            # return self._ergast.get_sprint_shootout_results(
+            #     self.event.year, self.event.RoundNumber
+            # )
+            return None
 
         response = _get_data()
 
@@ -2616,8 +2614,8 @@ class Session:
 
         self._calculate_t0_date(car_data, pos_data)
 
-        self._car_data = dict()
-        self._pos_data = dict()
+        self._car_data = {}
+        self._pos_data = {}
 
         for (src, processed) in ((car_data, self._car_data),
                                  (pos_data, self._pos_data)):
@@ -2713,7 +2711,7 @@ class Session:
         """
         date_offset = None
 
-        data = list()
+        data = []
         for tds in tel_data_sets:
             data.extend(list(tds.values()))
 
@@ -2839,7 +2837,7 @@ class Laps(BaseDataFrame):
         When calling ``self.join`` metadata will be propagated from self to the
         joined dataframe.
         """
-        meta = dict()
+        meta = {}
         for var in self._metadata:
             meta[var] = getattr(self, var)
         ret = super().join(*args, **kwargs)
@@ -2853,7 +2851,7 @@ class Laps(BaseDataFrame):
         When calling ``self.merge`` metadata will be propagated from self to
         the merged dataframe.
         """
-        meta = dict()
+        meta = {}
         for var in self._metadata:
             meta[var] = getattr(self, var)
         ret = super().merge(*args, **kwargs)
@@ -2937,11 +2935,10 @@ class Laps(BaseDataFrame):
             raise ValueError("Cannot slice telemetry because self contains "
                              "Laps of multiple drivers!")
         drv_num = drv_num[0]
-        car_data = self.session.car_data[drv_num] \
+
+        return self.session.car_data[drv_num] \
             .slice_by_lap(self, **kwargs) \
             .reset_index(drop=True)
-
-        return car_data
 
     def get_pos_data(self, **kwargs) -> Telemetry:
         """
@@ -2968,10 +2965,9 @@ class Laps(BaseDataFrame):
             raise ValueError("Cannot slice telemetry because self contains "
                              "Laps of multiple drivers!")
         drv_num = drv_num[0]
-        pos_data = self.session.pos_data[drv_num] \
+        return self.session.pos_data[drv_num] \
             .slice_by_lap(self, **kwargs) \
             .reset_index(drop=True)
-        return pos_data
 
     def get_weather_data(self) -> pd.DataFrame:
         """Return weather data for each lap in self.
@@ -3132,8 +3128,7 @@ class Laps(BaseDataFrame):
         identifier = str(identifier)
         if identifier.isdigit():
             return self[self['DriverNumber'] == identifier]
-        else:
-            return self[self['Driver'] == identifier]
+        return self[self['Driver'] == identifier]
 
     def pick_drivers(self,
                      identifiers: int | str | Iterable[int | str]
@@ -3315,18 +3310,17 @@ class Laps(BaseDataFrame):
         """
         if how == 'equals':
             return self[self['TrackStatus'] == status]
-        elif how == 'contains':
+        if how == 'contains':
             return self[self['TrackStatus'].str.contains(status, regex=False)]
-        elif how == 'excludes':
+        if how == 'excludes':
             return self[~self['TrackStatus'].str.contains(status, regex=False)]
-        elif how == 'any':
+        if how == 'any':
             return self[self['TrackStatus'].str.contains('|'.join(status),
                                                          regex=True)]
-        elif how == 'none':
+        if how == 'none':
             return self[~self['TrackStatus'].str.contains('|'.join(status),
                                                           regex=True)]
-        else:
-            raise ValueError(f"Invalid value '{how}' for kwarg 'how'")
+        raise ValueError(f"Invalid value '{how}' for kwarg 'how'")
 
     def pick_wo_box(self) -> "Laps":
         """Return all laps which are NOT in laps or out laps.
@@ -3357,13 +3351,12 @@ class Laps(BaseDataFrame):
         """
         if which == 'in':
             return self[~pd.isnull(self['PitInTime'])]
-        elif which == 'out':
+        if which == 'out':
             return self[~pd.isnull(self['PitOutTime'])]
-        elif which == 'both':
+        if which == 'both':
             return self[~pd.isnull(self['PitInTime'])
                         | ~pd.isnull(self['PitOutTime'])]
-        else:
-            raise ValueError(f"Invalid value '{which}' for kwarg 'which'")
+        raise ValueError(f"Invalid value '{which}' for kwarg 'which'")
 
     def pick_not_deleted(self) -> "Laps":
         """Return all laps whose lap times are NOT deleted.
@@ -3373,11 +3366,10 @@ class Laps(BaseDataFrame):
         """
         if 'Deleted' in self.columns:
             return self[~self['Deleted']]
-        else:
-            raise exceptions.DataNotLoadedError(
-                "The Deleted column is only available when race control "
-                "messages are loaded. See `Session.load`"
-            )
+        raise exceptions.DataNotLoadedError(
+            "The Deleted column is only available when race control "
+            "messages are loaded. See `Session.load`"
+        )
 
     def pick_accurate(self) -> "Laps":
         """Return all laps which pass the accuracy validation check
@@ -3405,7 +3397,7 @@ class Laps(BaseDataFrame):
         """
         if self.session.name not in self.session._QUALI_LIKE_SESSIONS:
             raise ValueError("Session is not a qualifying session!")
-        elif self.session.session_status is None:
+        if self.session.session_status is None:
             raise ValueError("Session status data is unavailable!")
 
         if self.session._session_split_times:
@@ -3417,7 +3409,7 @@ class Laps(BaseDataFrame):
             # note that after a red flag, a session can be 'Started' as well.
             # Therefore, it is necessary to check for red flags and ignore
             # the first 'Started' entry after a red flag.
-            split_times = list()
+            split_times = []
             session_suspended = False
             for _, row in self.session.session_status.iterrows():
                 if row['Status'] == 'Started':
@@ -3590,10 +3582,9 @@ class Lap(BaseSeries):
         Returns:
             instance of :class:`Telemetry`
         """
-        car_data = self.session.car_data[self['DriverNumber']] \
+        return self.session.car_data[self['DriverNumber']] \
             .slice_by_lap(self, **kwargs) \
             .reset_index(drop=True)
-        return car_data
 
     def get_pos_data(self, **kwargs) -> Telemetry:
         """Pos data for all laps in `self`
@@ -3608,11 +3599,9 @@ class Lap(BaseSeries):
         Returns:
             instance of :class:`Telemetry`
         """
-        pos_data = self.session.pos_data[self['DriverNumber']] \
+        return self.session.pos_data[self['DriverNumber']] \
             .slice_by_lap(self, **kwargs) \
             .reset_index(drop=True)
-
-        return pos_data
 
     def get_weather_data(self) -> pd.Series:
         """Return weather data for this lap.

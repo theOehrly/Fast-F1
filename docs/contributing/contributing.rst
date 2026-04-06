@@ -8,6 +8,9 @@ Contributing
 The community around FastF1 is slowly building and everyone is welcome to
 contribute to the project.
 
+.. note::
+    Before making contributions to FastF1, please read the :ref:`ai-policy`.
+
 
 Submitting a bug report
 =======================

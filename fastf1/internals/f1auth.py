@@ -1,3 +1,4 @@
+import contextlib
 import json
 import threading
 import urllib.parse
@@ -120,7 +121,7 @@ def _verify_jwt(
     public_key = RSAAlgorithm.from_jwk(jwk)
 
     # Verify and decode the token
-    payload = jwt.decode(
+    return jwt.decode(
         token,
         key=public_key,
         algorithms="RS256",
@@ -129,8 +130,6 @@ def _verify_jwt(
         verify=verify,
         options=options
     )
-
-    return payload
 
 
 def get_auth_token():
@@ -180,10 +179,8 @@ def clear_auth_token():
     """Clear the authentication token."""
     global _subscription_token
     _subscription_token = None
-    try:
+    with contextlib.suppress(FileNotFoundError):
         AUTH_DATA_FILE.unlink()
-    except FileNotFoundError:
-        pass
 
 
 def print_auth_status():

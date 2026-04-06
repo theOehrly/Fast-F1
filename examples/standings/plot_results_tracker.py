@@ -83,7 +83,10 @@ fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey',
 fig.update_xaxes(showgrid=False, showline=False)    # And remove vertical grid
 fig.update_layout(plot_bgcolor='rgba(0,0,0,0)')     # White background
 fig.update_layout(coloraxis_showscale=False)        # Remove legend
-fig.update_layout(xaxis=dict(side='top'))           # x-axis on top
-fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))  # Remove border margins
-fig
+fig.update_layout(xaxis={'side': 'top'})           # x-axis on top
+fig.update_layout(
+    margin={
+    'l': 0, 'r': 0, 'b': 0, 't': 0
+    }
+)  # Remove border margins
 show(fig)

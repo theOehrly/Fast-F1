@@ -16,7 +16,7 @@ import pandas as pd
 try:
     from pandas.core.internals import SingleBlockManager
 except ImportError as exc:
-    _mgr_instance = getattr(pd.Series(dtype=float), '_mgr')
+    _mgr_instance = getattr(pd.Series(dtype=float), '_mgr', None)
     if _mgr_instance is None:
         raise ImportError("Import of Pandas internals failed. You are likely "
                           "using a recently released version of Pandas that "
@@ -88,7 +88,7 @@ class BaseDataFrame(pd.DataFrame):
                 cast = True
                 if self[col].isna().all():
                     # empty column, set appropriate NA-type
-                    if isinstance(_type, str) and not (_type == 'object'):
+                    if isinstance(_type, str) and _type != 'object':
                         # type given as string, e.g. 'datetime64[ns]'
                         self[col] = pd.Series(dtype=_type)
                     elif type(None) in typing.get_args(_type):
@@ -120,7 +120,7 @@ class BaseDataFrame(pd.DataFrame):
         # has a reference to this self (i.e. the object from which the slice
         # is created) as a class property
         # type(...) returns a new subclass of a Series
-        return type('_DynamicBaseSeriesConstructor',  # noqa: return type
+        return type('_DynamicBaseSeriesConstructor',
                     (_BaseSeriesConstructor,),
                     {'__meta_created_from': self})
 
@@ -176,7 +176,7 @@ class _BaseSeriesConstructor(pd.Series):
         if isinstance(data, SingleBlockManager):
             obj = constructor._from_mgr(data, axes=data.axes)
         else:
-            obj = constructor(data=data, index=index, *args, **kwargs)
+            obj = constructor(*args, data=data, index=index, **kwargs)
 
         if parent is not None:
             # catch-all fix for some missing __finalize__ calls in Pandas

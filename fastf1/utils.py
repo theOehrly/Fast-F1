@@ -115,8 +115,7 @@ def recursive_dict_get(d: dict, *keys: str, default_none: bool = False):
     ret = reduce(lambda c, k: c.get(k, {}), keys, d)
     if default_none and ret == {}:
         return None
-    else:
-        return ret
+    return ret
 
 
 def to_timedelta(x: str | datetime.timedelta) \

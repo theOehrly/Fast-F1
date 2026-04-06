@@ -2,6 +2,8 @@ import warnings
 
 import numpy as np
 
+from fastf1.exceptions import FuzzyMatchError
+
 
 with warnings.catch_warnings():
     warnings.filterwarnings(
@@ -17,7 +19,7 @@ def fuzzy_matcher(
         reference: list[list[str]],
         abs_confidence: float = 0.0,
         rel_confidence: float = 0.0
-) -> (int, bool):
+) -> tuple[int, bool]:
     """
     Match a query string to a reference list of lists of strings using fuzzy
     string matching.
@@ -51,9 +53,8 @@ def fuzzy_matcher(
             raised.
 
     Returns:
-        (int, bool): Index of the best matching element in the
-            reference (outer) list and a boolean indicating if the match is
-            accurate or not.
+        Index of the best matching element in the reference (outer) list and
+        a boolean indicating if the match is accurate or not.
 
     """
     # Preprocess the query and reference strings
@@ -67,7 +68,7 @@ def fuzzy_matcher(
     # substring of a feature string, return this index as accurate match.
     full_partial_match_indices = []
     for i, feature_strings in enumerate(reference):
-        if any([query in val for val in feature_strings]):
+        if any(query in val for val in feature_strings):
             full_partial_match_indices.append(i)
 
     if len(full_partial_match_indices) == 1:
@@ -81,10 +82,7 @@ def fuzzy_matcher(
 
     # If we have multiple substring matches, we only fuzzy match on these,
     # else we fuzzy match on all reference tuples
-    if full_partial_match_indices:
-        candidate_indices = full_partial_match_indices
-    else:
-        candidate_indices = range(len(reference))
+    candidate_indices = full_partial_match_indices or range(len(reference))
 
     # Calculate the fuzz ratio for each feature string in each reference tuple
     for i in candidate_indices:
@@ -100,25 +98,27 @@ def fuzzy_matcher(
         # get counts of all unique ratios and remove all that are not unique
         # in the array by setting them to zero
         unique, counts = np.unique(reference, return_counts=True)
-        count_dict = dict(zip(unique, counts))
+        count_dict = dict(zip(unique, counts, strict=True))
         mask = ((np.vectorize(count_dict.get)(reference) > 1)
                 & (ratios == max_ratio))
         ratios[mask] = 0
+        # update the max row ratios
+        max_row_ratios = np.max(ratios, axis=1)
 
     # get the index of the row that contains the maximum ratio
     max_index = np.argmax(ratios) // ratios.shape[1]
 
     # optional confidence checks
     if abs_confidence and (max_ratio < (abs_confidence * 100)):
-        raise KeyError(f"Found no match for '{query}' with sufficient "
-                       f"absolute confidence")
+        raise FuzzyMatchError(f"Found no match for '{query}' with sufficient "
+                              f"absolute confidence")
 
-    if rel_confidence and (max_ratio / np.partition(ratios.flatten(), -2)[-2]
+    if rel_confidence and (max_ratio / np.partition(max_row_ratios, -2)[-2]
                            < (1 + rel_confidence)):
         # max ratio divided by second-largest ratio is less
         # than 1 + rel_confidence
-        raise KeyError(f"Found no match for '{query}' with sufficient "
-                       f"relative confidence")
+        raise FuzzyMatchError(f"Found no match for '{query}' with sufficient "
+                              f"relative confidence")
 
     # return index as inaccurate match
     return max_index, False

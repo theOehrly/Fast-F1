@@ -1,7 +1,7 @@
 Installation
 ============
 
-FastF1 requires Python 3.9 or higher.
+FastF1 requires Python |min_python_version| or higher.
 It is recommended to install FastF1 using `pip`:
 
 .. code-block:: bash

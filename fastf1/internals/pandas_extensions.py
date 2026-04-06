@@ -72,15 +72,14 @@ def _fallback_create_df(
         arrays: list[np.ndarray],
         columns: list
 ) -> DataFrame:
-    data = {col: arr for col, arr in zip(columns, arrays)}
+    data = dict(zip(columns, arrays, strict=True))
     return DataFrame(data)
 
 
 def _fallback_if_unsupported(func):
     if not CREATE_DF_FAST:
         return _fallback_create_df
-    else:
-        return func
+    return func
 
 
 @_fallback_if_unsupported
@@ -105,7 +104,7 @@ def _unsafe_create_df_fast(
         len(index), len(columns), index=index, columns=columns
     )
 
-    block_values = list()
+    block_values = []
     for n, arr in enumerate(arrays):
         values = arr.reshape(-1, 1).T
         nb = new_block_2d(values, placement=BlockPlacement(n))
@@ -117,6 +116,4 @@ def _unsafe_create_df_fast(
             block_values, [columns, index], verify_integrity=False
     )
 
-    df = DataFrame(mgr)
-
-    return df
+    return DataFrame(mgr)

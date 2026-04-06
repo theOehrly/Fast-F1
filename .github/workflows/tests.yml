@@ -32,21 +32,14 @@ jobs:
           - python-version: "3.14"
     name: Tests on ${{ matrix.python-version }} ${{ matrix.name-suffix }}
     steps:
-      - name: Setup python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Cache pip
-        uses: actions/cache@v4
+      - name: Setup python
+        uses: actions/setup-python@v6
         with:
-          path: ~/.cache/pip
-          key: pip-cache-${{ hashFiles('requirements/*.txt') }}
-          restore-keys: |
-            pip-cache
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
 
       - name: Install python requirements
         run: |
@@ -93,21 +86,14 @@ jobs:
     runs-on: ubuntu-latest
     name: Linting (Ruff)
     steps:
-      - name: Setup python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Cache pip
-        uses: actions/cache@v4
+      - name: Setup python
+        uses: actions/setup-python@v6
         with:
-          path: ~/.cache/pip
-          key: pip-cache-${{ hashFiles('requirements/*.txt') }}
-          restore-keys: |
-            pip-cache
+          python-version: '3.12'
+          cache: "pip"
 
       - name: Install python requirements
         run: |
@@ -131,21 +117,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Setup python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Cache pip
-        uses: actions/cache@v4
+      - name: Setup python
+        uses: actions/setup-python@v6
         with:
-          path: ~/.cache/pip
-          key: pip-cache-${{ hashFiles('requirements/*.txt') }}
-          restore-keys: |
-            pip-cache
+          python-version: '3.12'
+          cache: "pip"
 
       - name: Install python requirements
         run: |
@@ -163,7 +142,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - name: Install dependencies

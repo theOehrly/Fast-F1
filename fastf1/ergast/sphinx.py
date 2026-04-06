@@ -49,7 +49,7 @@ class ApiMappingDirective(Directive):
         # response that matches the name of the excluded category is skipped
         # when building the object. This is used to create split
         # representations for description and content of MultiResponse objects.
-        result = dict()
+        result = {}
 
         for name, mapping in category['map'].items():
             # get the nicely readable name of the data type after auto casting
@@ -174,10 +174,9 @@ class ApiMappingDirective(Directive):
         # print the flattened data nicely formatted as a table (use str
         # representation of a dataframe for this)
         # remove the last line (unnecessary info about dataframe)
-        result_str = '\n'.join(
+        return '\n'.join(
             str(pd.DataFrame(flat).iloc[0]).split('\n')[:-1]
         )
-        return result_str
 
 
 def setup(app):

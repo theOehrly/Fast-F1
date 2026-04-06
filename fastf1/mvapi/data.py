@@ -132,19 +132,19 @@ def get_circuit_info(*, year: int, circuit_key: int) -> CircuitInfo | None:
         _logger.warning("Failed to load circuit info")
         return None
 
-    ret = list()
+    ret = []
     for cat in ('corners', 'marshalLights', 'marshalSectors'):
-        rows = list()
-        array = data.get(cat) or list()
-        for entry in array:
-            rows.append((
+        array = data.get(cat) or []
+        rows = [
+            (
                 float(entry.get('trackPosition', {}).get('x', 0.0)),
                 float(entry.get('trackPosition', {}).get('y', 0.0)),
                 int(entry.get('number', 0)),
                 str(entry.get('letter', "")),
                 float(entry.get('angle', 0.0)),
                 np.nan
-            ))
+            ) for entry in array
+        ]
         ret.append(
             pd.DataFrame(
                 rows,
@@ -154,11 +154,9 @@ def get_circuit_info(*, year: int, circuit_key: int) -> CircuitInfo | None:
 
     rotation = float(data.get('rotation', 0.0))
 
-    circuit_info = CircuitInfo(
+    return CircuitInfo(
         corners=ret[0],
         marshal_lights=ret[1],
         marshal_sectors=ret[2],
         rotation=rotation
     )
-
-    return circuit_info

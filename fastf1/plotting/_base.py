@@ -49,13 +49,13 @@ def color_dict_validator(d: dict):
 
 def team_key_validator(d: dict[str, "TeamConstants"]):
     # ensure that team keys only contain lower case letters and spaces
-    for k, v in d.items():
-        if not k.replace(" ", "").isalpha():
+    for key in d:
+        if not key.replace(" ", "").isalpha():
             raise ValueError(
-                f"Invalid team key: {k} (only letters and spaces allowed)"
+                f"Invalid team key: {key} (only letters and spaces allowed)"
             )
-        if not k.islower():
-            raise ValueError(f"Invalid team key: {k} (must be lower case)")
+        if not key.islower():
+            raise ValueError(f"Invalid team key: {key} (must be lower case)")
     return d
 
 
@@ -126,9 +126,9 @@ class DriverTeamMapping(BaseModel):
     year: str
     teams: list[Team]
 
-    drivers_by_normalized: dict[str, Driver] = dict()
-    drivers_by_abbreviation: dict[str, Driver] = dict()
-    teams_by_normalized: dict[str, Team] = dict()
+    drivers_by_normalized: dict[str, Driver] = {}
+    drivers_by_abbreviation: dict[str, Driver] = {}
+    teams_by_normalized: dict[str, Team] = {}
 
     def model_post_init(self, *args):
         super().model_post_init(*args)
@@ -143,6 +143,5 @@ class DriverTeamMapping(BaseModel):
 def _normalize_string(name: str) -> str:
     # removes accents from a string and returns the closest possible
     # ascii representation (https://stackoverflow.com/a/518232)
-    stripped = ''.join(c for c in unicodedata.normalize('NFD', name)
+    return ''.join(c for c in unicodedata.normalize('NFD', name)
                        if unicodedata.category(c) != 'Mn')
-    return stripped

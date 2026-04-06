@@ -1,3 +1,4 @@
+import warnings
 
 
 # Exceptions Structure and Handling in FastF1
@@ -24,35 +25,33 @@
 # through the catch-all error handling.
 
 
+def __getattr__(name):
+    # TODO: remove in v3.11
+    if name == "InvalidSessionError":
+        warnings.warn(f"`{name}` is deprecated and will be removed in a "
+                      f"future version.")
+        return _InvalidSessionError
+
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
 # ### Default FastF1 Exceptions ###
 
 class DataNotLoadedError(Exception):
     """Raised if an attempt is made to access data that has not been loaded
     yet."""
-    pass
 
 
 class ErgastError(Exception):
     """Base class for Ergast API errors."""
-    pass
 
 
 class ErgastJsonError(ErgastError):
     """The response returned by the server could not be parsed."""
-    pass
 
 
 class ErgastInvalidRequestError(ErgastError):
     """The server rejected the request because it was invalid."""
-    pass
-
-
-class InvalidSessionError(Exception):
-    """Raised if no session for the specified event name, type, and year
-    can be found."""
-
-    def __init__(self, *args):
-        super().__init__("No matching session can be found.")
 
 
 class NoLapDataError(Exception):
@@ -65,6 +64,12 @@ class NoLapDataError(Exception):
                          "provide any usable data.")
 
 
+class FuzzyMatchError(ValueError):
+    """
+    Raised if no fuzzy match could be found with sufficient confidence.
+    """
+
+
 # ### Critical FastF1 Exceptions ###
 
 class FastF1CriticalError(RuntimeError):
@@ -74,9 +79,25 @@ class FastF1CriticalError(RuntimeError):
     """
     # Exceptions deriving from this base class must only be used in data
     # processing code. They must never be handled by FastF1.
-    pass
 
 
 class RateLimitExceededError(FastF1CriticalError):
     """Raised if a hard rate limit is exceeded for any API."""
-    pass
+
+
+# ### Deprecated Exceptions ###
+
+# TODO: remove in v3.11
+InvalidSessionError: Exception
+"""Raised if no session for the specified event name, type, and year
+can be found.
+
+.. deprecated:: v3.9.0
+
+    This exception is unused and will be removed in a future release.
+"""
+
+
+class _InvalidSessionError(Exception):
+    def __init__(self, *args):
+        super().__init__("No matching session can be found.")

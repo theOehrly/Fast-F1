@@ -25,7 +25,7 @@ from fastf1.plotting._base import (
 
 
 _DEFAULT_COLOR_MAP: Literal['fastf1', 'official'] = 'fastf1'
-_DRIVER_TEAM_MAPPINGS = dict()
+_DRIVER_TEAM_MAPPINGS = {}
 
 
 def _get_driver_team_mapping(
@@ -67,7 +67,7 @@ def _get_driver_fuzzy(identifier: str, session: Session) -> Driver:
         return dtm.drivers_by_normalized[identifier]
 
     # check for exact partial string match
-    for normalized_driver in dtm.drivers_by_normalized.keys():
+    for normalized_driver in dtm.drivers_by_normalized:
         if identifier in normalized_driver:
             return dtm.drivers_by_normalized[normalized_driver]
 
@@ -118,7 +118,7 @@ def _get_team_fuzzy(identifier: str, session: Session) -> Team:
         identifier = identifier.replace(word, "").strip()
 
     # check for an exact team name match
-    if identifier in dtm.teams_by_normalized.keys():
+    if identifier in dtm.teams_by_normalized:
         return dtm.teams_by_normalized[identifier]
 
     # check full match with full team name or for exact partial string
@@ -152,7 +152,7 @@ def _get_team_exact(identifier: str, session: Session) -> Team:
     identifier = _normalize_string(identifier).lower()
 
     # check for an exact normalized team name match
-    if identifier in dtm.teams_by_normalized.keys():
+    if identifier in dtm.teams_by_normalized:
         return dtm.teams_by_normalized[identifier]
 
     # check full match with full team name
@@ -194,10 +194,9 @@ def _get_team_color(
 
     if colormap == 'fastf1':
         return team.colors.fastf1
-    elif colormap == 'official':
+    if colormap == 'official':
         return team.colors.official
-    else:
-        raise ValueError(f"Invalid colormap '{colormap}'")
+    raise ValueError(f"Invalid colormap '{colormap}'")
 
 
 def get_team_name(
@@ -221,6 +220,14 @@ def get_team_name(
         short: if True, a shortened version of the team name will be returned
         exact_match: match the identifier exactly (case-insensitive, special
             characters are converted to their nearest ASCII equivalent)
+
+    Raises:
+        :class:`~fastf1.exceptions.FuzzyMatchError`: ``exact_match`` is
+            ``False`` and the identifier could not be matched with sufficient
+            confidence.
+
+        :class:`KeyError`: ``exact_match`` is ``True`` and no exact match for
+            the identifier exists.
     """
     team = _get_team(identifier, session, exact_match=exact_match)
 
@@ -251,6 +258,14 @@ def get_team_name_by_driver(
         short: if True, a shortened version of the team name will be returned
         exact_match: match the identifier exactly (case-insensitive, special
             characters are converted to their nearest ASCII equivalent)
+
+    Raises:
+        :class:`~fastf1.exceptions.FuzzyMatchError`: ``exact_match`` is
+            ``False`` and the identifier could not be matched with sufficient
+            confidence.
+
+        :class:`KeyError`: ``exact_match`` is ``True`` and no exact match for
+            the identifier exists.
     """
     driver = _get_driver(identifier, session, exact_match=exact_match)
     team = driver.team
@@ -285,6 +300,14 @@ def get_team_color(
 
     Returns:
         A hexadecimal RGB color code
+
+    Raises:
+        :class:`~fastf1.exceptions.FuzzyMatchError`: ``exact_match`` is
+            ``False`` and the identifier could not be matched with sufficient
+            confidence.
+
+        :class:`KeyError`: ``exact_match`` is ``True`` and no exact match for
+            the identifier exists.
     """
     return _get_team_color(identifier, session,
                            colormap=colormap,
@@ -303,6 +326,14 @@ def get_driver_name(
         session: the session for which the data should be obtained
         exact_match: match the identifier exactly (case-insensitive, special
             characters are converted to their nearest ASCII equivalent)
+
+    Raises:
+        :class:`~fastf1.exceptions.FuzzyMatchError`: ``exact_match`` is
+            ``False`` and the identifier could not be matched with sufficient
+            confidence.
+
+        :class:`KeyError`: ``exact_match`` is ``True`` and no exact match for
+            the identifier exists.
     """
     driver = _get_driver(identifier, session, exact_match=exact_match)
     return driver.name
@@ -325,6 +356,14 @@ def get_driver_abbreviation(
         session: the session for which the data should be obtained
         exact_match: match the identifier exactly (case-insensitive, special
             characters are converted to their nearest ASCII equivalent)
+
+    Raises:
+        :class:`~fastf1.exceptions.FuzzyMatchError`: ``exact_match`` is
+            ``False`` and the identifier could not be matched with sufficient
+            confidence.
+
+        :class:`KeyError`: ``exact_match`` is ``True`` and no exact match for
+            the identifier exists.
     """
     driver = _get_driver(identifier, session, exact_match=exact_match)
     return driver.abbreviation
@@ -342,6 +381,14 @@ def get_driver_names_by_team(
         session: the session for which the data should be obtained
         exact_match: match the identifier exactly (case-insensitive, special
             characters are converted to their nearest ASCII equivalent)
+
+    Raises:
+        :class:`~fastf1.exceptions.FuzzyMatchError`: ``exact_match`` is
+            ``False`` and the identifier could not be matched with sufficient
+            confidence.
+
+        :class:`KeyError`: ``exact_match`` is ``True`` and no exact match for
+            the identifier exists.
     """
     team = _get_team(identifier, session, exact_match=exact_match)
     return [driver.name for driver in team.drivers]
@@ -359,6 +406,14 @@ def get_driver_abbreviations_by_team(
         session: the session for which the data should be obtained
         exact_match: match the identifier exactly (case-insensitive, special
             characters are converted to their nearest ASCII equivalent)
+
+    Raises:
+        :class:`~fastf1.exceptions.FuzzyMatchError`: ``exact_match`` is
+            ``False`` and the identifier could not be matched with sufficient
+            confidence.
+
+        :class:`KeyError`: ``exact_match`` is ``True`` and no exact match for
+            the identifier exists.
     """
     team = _get_team(identifier, session, exact_match=exact_match)
     return [driver.abbreviation for driver in team.drivers]
@@ -396,6 +451,13 @@ def get_driver_color(
     Returns:
         A hexadecimal RGB color code
 
+    Raises:
+        :class:`~fastf1.exceptions.FuzzyMatchError`: ``exact_match`` is
+            ``False`` and the identifier could not be matched with sufficient
+            confidence.
+
+        :class:`KeyError`: ``exact_match`` is ``True`` and no exact match for
+            the identifier exists.
     """
     return _get_driver_color(identifier, session, colormap=colormap,
                              exact_match=exact_match)
@@ -552,6 +614,13 @@ def get_driver_style(
     Returns: a dictionary of plot style arguments that can be directly passed
         to a matplotlib plot function using the ``**`` expansion operator
 
+    Raises:
+        :class:`~fastf1.exceptions.FuzzyMatchError`: ``exact_match`` is
+            ``False`` and the identifier could not be matched with sufficient
+            confidence.
+
+        :class:`KeyError`: ``exact_match`` is ``True`` and no exact match for
+            the identifier exists.
 
     .. minigallery:: fastf1.plotting.get_driver_style
         :add-heading:
@@ -591,7 +660,7 @@ def get_driver_style(
     if isinstance(style, str):
         style = [style]
 
-    plot_style = dict()
+    plot_style = {}
 
     if isinstance(style[0], str):
         # generate the plot style based on the provided keyword
@@ -612,10 +681,12 @@ def get_driver_style(
     else:
         try:
             custom_style = style[idx]
-        except IndexError:
-            raise ValueError(f"The provided custom style info does not "
-                             f"contain enough variants! (Has: {len(style)}, "
-                             f"Required: {idx})")
+        except IndexError as exc:
+            raise ValueError(
+                f"The provided custom style info does not "
+                f"contain enough variants! (Has: {len(style)}, "
+                f"Required: {idx})"
+            ) from exc
 
         if not isinstance(custom_style, dict):
             raise ValueError("The provided style info has an invalid format!")
@@ -717,10 +788,9 @@ def list_team_names(session: Session, *, short: bool = False) -> list[str]:
     dtm = _get_driver_team_mapping(session)
 
     if short:
-        return list(team.short_name
-                    for team in dtm.teams_by_normalized.values())
+        return [team.short_name for team in dtm.teams_by_normalized.values()]
 
-    return list(team.name for team in dtm.teams_by_normalized.values())
+    return [team.name for team in dtm.teams_by_normalized.values()]
 
 
 def list_driver_abbreviations(session: Session) -> list[str]:
@@ -732,13 +802,13 @@ def list_driver_abbreviations(session: Session) -> list[str]:
 def list_driver_names(session: Session) -> list[str]:
     """Returns a list of full names of all drivers in the ``session``."""
     dtm = _get_driver_team_mapping(session)
-    return list(driver.name for driver in dtm.drivers_by_normalized.values())
+    return [driver.name for driver in dtm.drivers_by_normalized.values()]
 
 
 def list_compounds(session: Session) -> list[str]:
     """Returns a list of all compound names for this season (not session)."""
     year = str(session.event['EventDate'].year)
-    return [e.value for e in Constants[year].compound_colors.keys()]
+    return [e.value for e in Constants[year].compound_colors]
 
 
 def add_sorted_driver_legend(
@@ -766,8 +836,12 @@ def add_sorted_driver_legend(
         *args: Matplotlib legend args
         **kwargs: Matplotlib legend kwargs
 
-     Returns:
+    Returns:
         ``matplotlib.legend.Legend``
+
+    Raises:
+        :class:`~fastf1.exceptions.FuzzyMatchError`: The labels in the legend
+            could not be matched to known drivers with sufficient confidence.
 
     .. minigallery:: fastf1.plotting.add_sorted_driver_legend
         :add-heading:
@@ -799,8 +873,8 @@ def add_sorted_driver_legend(
     # based on the team_idx and driver_idx. As a result, drivers from the
     # same team will be next to each other and in the same order as their
     # styles are cycled.
-    ref = list()
-    for hdl, lbl in zip(handles, labels):
+    ref = []
+    for hdl, lbl in zip(handles, labels, strict=True):
         driver = _get_driver(lbl, session)
         team = driver.team
 
@@ -812,8 +886,8 @@ def add_sorted_driver_legend(
     # sort based only on team_idx and driver_idx (i.e. first two entries)
     ref.sort(key=lambda e: e[:2])
 
-    handles_new = list()
-    labels_new = list()
+    handles_new = []
+    labels_new = []
     for elem in ref:
         handles_new.append(elem[2])
         labels_new.append(elem[3])

@@ -19,7 +19,7 @@ Data Loading Exceptions
 .. autoclass:: fastf1.exceptions.DataNotLoadedError
     :show-inheritance:
 
-.. autoclass:: fastf1.exceptions.InvalidSessionError
+.. autoclass:: fastf1.exceptions.FuzzyMatchError
     :show-inheritance:
 
 .. autoclass:: fastf1.exceptions.NoLapDataError
@@ -46,3 +46,4 @@ Legacy Exceptions (deprecated)
 
 .. autoclass:: fastf1._api.SessionNotAvailableError
 
+.. autoclass:: fastf1.exceptions.InvalidSessionError

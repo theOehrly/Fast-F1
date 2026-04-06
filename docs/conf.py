@@ -11,6 +11,7 @@
 import os.path
 import re
 import sys
+import tomllib
 import warnings
 from datetime import datetime
 
@@ -54,8 +55,18 @@ project = 'FastF1'
 # author = 'Oehrly'
 version = fastf1.__version__
 release = version
-copyright = f'{datetime.now().year}, Philipp Schäfer'
+copyright = f'{datetime.now().year}, Philipp Schäfer'  # noqa: A001
 html_title = f"{project} ({release})"
+
+with open(os.path.abspath('../pyproject.toml'), 'rb') as f:
+    pyproject = tomllib.load(f)
+
+python_requires = pyproject['project']['requires-python']
+min_python_version = python_requires.removeprefix(">=")
+
+rst_epilog = f"""
+.. |min_python_version| replace:: {min_python_version}
+"""
 
 # -- General configuration ---------------------------------------------------
 
@@ -164,23 +175,27 @@ pio.renderers.default = 'sphinx_gallery_png'
 
 
 # -- matplotlib plot directive options ---------------------------------------
-plot_pre_code = f"import numpy as np;" \
-                f"from matplotlib import pyplot as plt;" \
-                f"plt.rcParams['figure.figsize'] = [8.0, 4.5];" \
-                f"import fastf1;" \
-                f"import fastf1.logger;" \
-                f"fastf1.Cache.enable_cache('{doc_cache}');" \
-                f"fastf1.logger.set_log_level('WARNING');"
+plot_pre_code = (
+    f"import numpy as np;"
+    f"from matplotlib import pyplot as plt;"
+    f"plt.rcParams['figure.figsize'] = [8.0, 4.5];"
+    f"import fastf1;"
+    f"import fastf1.logger;"
+    f"fastf1.Cache.enable_cache('{doc_cache}');"
+    f"fastf1.logger.set_log_level('WARNING');"
+)
 
 plot_include_source = True
 plot_html_show_source_link = False
 
 
 # -- doctest directive options -----------------------------------------------
-doctest_global_setup = f"import fastf1;" \
-                       f"import fastf1.logger;" \
-                       f"fastf1.Cache.enable_cache('{doc_cache}');" \
-                       f"fastf1.logger.set_log_level('WARNING');"
+doctest_global_setup = (
+    f"import fastf1;"
+    f"import fastf1.logger;"
+    f"fastf1.Cache.enable_cache('{doc_cache}');"
+    f"fastf1.logger.set_log_level('WARNING');"
+)
 
 
 # -- sphinx gallery configuration --------------------------------------------

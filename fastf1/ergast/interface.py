@@ -92,7 +92,7 @@ class ErgastResponseMixin:
         if n_last >= int(self._response_headers.get("total", 0)):
             raise ValueError("No more data after this response.")
 
-        return self._ergast_constructor()._build_default_result(  # noqa: access to builtin
+        return self._ergast_constructor()._build_default_result(
             **self._query_metadata,
             selectors=self._selectors,
             limit=int(self._response_headers.get("limit")),
@@ -116,7 +116,7 @@ class ErgastResponseMixin:
         limit = int(self._response_headers.get("limit", 0))
         new_offset = max(n_first - limit, 0)
 
-        return self._ergast_constructor()._build_default_result(  # noqa: access to builtin
+        return self._ergast_constructor()._build_default_result(
             **self._query_metadata,
             selectors=self._selectors,
             limit=int(self._response_headers.get("limit")),
@@ -197,7 +197,6 @@ class ErgastResultSeries(BaseSeries):
 
     Currently, no extra functionality is implemented.
     """
-    pass
 
 
 class ErgastRawResponse(ErgastResponseMixin, list):
@@ -233,8 +232,7 @@ class ErgastRawResponse(ErgastResponseMixin, list):
         # has the same structure. Iterate over all elements and call the
         # recursive _auto_cast method to convert data types
         query_result = copy.deepcopy(query_result)  # TODO: efficiency?
-        query_result = cls._auto_cast(query_result, category)
-        return query_result
+        return cls._auto_cast(query_result, category)
 
     @classmethod
     def _auto_cast(cls, data, category):
@@ -446,7 +444,7 @@ class Ergast:
             stop_number: int | None = None,
             standings_position: int | None = None
     ) -> str:
-        selectors = list()
+        selectors = []
 
         if season is not None:
             selectors.append(f"/{season}")
@@ -539,7 +537,7 @@ class Ergast:
             table: str,
             category: dict,
             subcategory: dict | None,
-            result_type: Literal['pandas', 'raw'] | None = None,
+            result_type: Literal['pandas', 'raw'],
             auto_cast: bool | None = None,
             limit: int | None = None,
             offset: int | None = None,
@@ -572,29 +570,26 @@ class Ergast:
                 auto_cast=auto_cast
             )
 
-        if result_type == 'pandas':
-            # result element description remains in query result
-            result_element_data = list()
-            if subcategory is not None:
-                for i in range(len(query_result)):
-                    result_element_data.append(
-                        query_result[i].pop(subcategory['name'])
-                    )
-                return ErgastMultiResponse(
-                    response_headers=resp, query_filters=body,
-                    metadata=query_metadata, selectors=selectors,
-                    response_description=query_result,
-                    response_data=result_element_data,
-                    category=category, subcategory=subcategory,
-                    auto_cast=auto_cast
-                )
-            else:
-                return ErgastSimpleResponse(
-                    response_headers=resp, query_filters=body,
-                    metadata=query_metadata, selectors=selectors,
-                    response=query_result, category=category,
-                    auto_cast=auto_cast
-                )
+        # result_type = "pandas"
+        if subcategory is not None:
+            result_element_data = [
+                query_result[i].pop(subcategory['name'])
+                for i in range(len(query_result))
+            ]
+            return ErgastMultiResponse(
+                response_headers=resp, query_filters=body,
+                metadata=query_metadata, selectors=selectors,
+                response_description=query_result,
+                response_data=result_element_data,
+                category=category, subcategory=subcategory,
+                auto_cast=auto_cast
+            )
+        return ErgastSimpleResponse(
+            response_headers=resp, query_filters=body,
+            metadata=query_metadata, selectors=selectors,
+            response=query_result, category=category,
+            auto_cast=auto_cast
+        )
 
     def _build_default_result(
             self, *,

@@ -53,10 +53,10 @@ sns.boxplot(
     hue="Team",
     order=team_order,
     palette=team_palette,
-    whiskerprops=dict(color="white"),
-    boxprops=dict(edgecolor="white"),
-    medianprops=dict(color="grey"),
-    capprops=dict(color="white"),
+    whiskerprops={'color': "white"},
+    boxprops={'edgecolor': "white"},
+    medianprops={'color': "grey"},
+    capprops={'color': "white"},
 )
 
 plt.title("2023 British Grand Prix")

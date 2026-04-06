@@ -55,7 +55,7 @@ class LiveTimingData:
         # file names
         self.files = files
         # parsed data
-        self.data = dict()
+        self.data = {}
         # number of json errors
         self.errorcount = 0
         # flag for automatic data loading on first access
@@ -159,10 +159,9 @@ class LiveTimingData:
 
     def _fix_json(self, elem):
         # fix F1's not json compliant data
-        elem = elem.replace("'", '"') \
+        return elem.replace("'", '"') \
             .replace('True', 'true') \
             .replace('False', 'false')
-        return elem
 
     def _add_to_category(self, cat, entry):
         if cat not in self.data:
@@ -239,7 +238,7 @@ class LiveTimingData:
         """
         if not self._files_read:
             self.load()
-        return name in self.data.keys()
+        return name in self.data
 
     def list_categories(self):
         """
