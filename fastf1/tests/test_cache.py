@@ -43,7 +43,7 @@ def _test_cache_used_and_clear(tmpdir):
         with open('fastf1/testing/reference_data/'
                   'schedule_2020.json', 'rb') as fobj:
             content = fobj.read()
-        mocker.get('https://raw.githubusercontent.com/theOehrly/f1schedule/'
+        mocker.get('https://cdn.jsdelivr.net/gh/theOehrly/f1schedule@'
                    'master/schedule_2020.json',
                    content=content, status_code=200)
 

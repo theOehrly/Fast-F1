@@ -41,8 +41,8 @@ _SESSION_TYPE_ABBREVIATIONS = {
 }
 
 _SCHEDULE_BASE_URL = (
-    "https://raw.githubusercontent.com/"
-    "theOehrly/f1schedule/master/"
+    "https://cdn.jsdelivr.net/gh/"
+    "theOehrly/f1schedule@master/"
 )
 _HEADERS = {'User-Agent': f'FastF1/{__version_short__}'}
 
