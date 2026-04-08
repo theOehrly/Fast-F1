@@ -87,7 +87,7 @@ def pytest_collection_modifyitems(config, items):
 # ########## request counter ############
 
 
-def pytest_report_teststatus(report, config):
+def pytest_report_teststatus(report, config):  # noqa: ARG001
     from fastf1 import Cache
 
     if (report.when == 'teardown') and (Cache._request_counter > 0):
@@ -100,7 +100,7 @@ def pytest_report_teststatus(report, config):
         Cache._request_counter = 0
 
 
-def pytest_terminal_summary(terminalreporter, exitstatus, config):
+def pytest_terminal_summary(terminalreporter, exitstatus, config):  # noqa: ARG001
     reports = terminalreporter.getreports('')
     content = os.linesep.join(
         text for report in reports for secname, text in report.sections
@@ -149,7 +149,7 @@ def fastf1_setup():
 
 
 @pytest.fixture(autouse=True)
-def automock_terminal_size(doctest_namespace):
+def automock_terminal_size(doctest_namespace):  # noqa: ARG001
     # Patch terminal width for pytest output to ensure consistent output for
     # doctests in all environments. This is especially important for the
     # formatting of Pandas DataFrames.
@@ -158,4 +158,4 @@ def automock_terminal_size(doctest_namespace):
     # Requiring the doctest_namespace fixture ensures that the patch also
     # applies to doctests.
     import shutil
-    shutil.get_terminal_size = lambda *args, **kwargs: (80, 24)
+    shutil.get_terminal_size = lambda *_args, **_kwargs: (80, 24)

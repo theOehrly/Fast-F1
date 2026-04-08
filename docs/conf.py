@@ -199,7 +199,7 @@ doctest_global_setup = (
 
 
 # -- sphinx gallery configuration --------------------------------------------
-def sphinx_gallery_setup(gallery_conf, fname):
+def sphinx_gallery_setup(gallery_conf, fname):  # noqa: ARG001
     import fastf1
     import fastf1.logger
     fastf1.Cache.enable_cache(doc_cache)
