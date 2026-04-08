@@ -107,8 +107,14 @@ jobs:
 
       - name: Run tests
         run: |
-          # ruff with default config
-          ruff check .
+          # ruff check with default config
+          # pipe stderr through grep to catch warnings that ruff
+          # does not turn into errors (e.g. invalid noqa directives)
+          ruff check . 2>&1 | tee /tmp/ruff_output.txt
+          if grep -qi "warning" /tmp/ruff_output.txt; then
+            echo "error: ruff emitted warnings (see above)"
+            exit 1
+          fi
 
 
   run-isort-test:

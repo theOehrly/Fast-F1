@@ -1,10 +1,8 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    # Ruff version.
-    rev: v0.12.7
+    rev: v0.15.8
     hooks:
-      # Run the linter.
-      - id: ruff
+      - id: ruff-check
 
   - repo: https://github.com/pycqa/isort
     rev: 6.0.1

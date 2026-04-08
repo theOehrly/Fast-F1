@@ -111,6 +111,7 @@ select = [
     "RET",
     "A",
     "PERF",
+    "RUF100",
 ]
 
 ignore = [

@@ -20,7 +20,7 @@ from fastf1.plotting._interface import (  # noqa: F401
     override_team_constants,
     set_default_colormap
 )
-from fastf1.plotting._plotting import setup_mpl  # noqa: F401
+from fastf1.plotting._plotting import setup_mpl
 
 
 __all__ = [
