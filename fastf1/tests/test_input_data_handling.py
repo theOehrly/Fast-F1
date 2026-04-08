@@ -1,6 +1,7 @@
 # test some known special cases
 
 import logging
+import weakref
 
 import pandas as pd
 import pytest
@@ -70,6 +71,16 @@ def test_no_extra_lap_if_race_not_started():
     session.load(telemetry=False, weather=False)
     assert session.laps.size
     assert session.laps.pick_drivers('TSU').size == 0
+
+
+@pytest.mark.f1telapi
+def test_no_extra_lap_if_race_not_started_2():
+    # Tyre data is present for PIA, NOR, BOR, ALB, but none of them actually
+    # started the race.
+    session = fastf1.get_session(2026, "China", "R")
+    session.load(telemetry=False, weather=False)
+
+    assert session.laps.pick_drivers(['PIA', 'NOR', 'BOR', 'ALB']).size == 0
 
 
 @pytest.mark.f1telapi

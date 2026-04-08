@@ -1493,6 +1493,15 @@ class Session:
 
             is_generated = False
             if not len(d1):
+
+                if ((r := getattr(self, '_results', None)) is not None
+                        and (r.loc[driver, 'ClassifiedPosition'] == 'W')):
+                    # If a driver withdrew from the race before the start,
+                    # there will be no lap data.
+                    # Determining this reliably requires result data which
+                    # is not always available.
+                    continue
+
                 if self.name in self._RACE_LIKE_SESSIONS and len(d2):
                     # add data for drivers who crashed on the very first lap
                     # as a downside, this potentially adds a nonexistent lap
