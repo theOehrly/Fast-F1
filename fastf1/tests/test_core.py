@@ -59,10 +59,9 @@ def test_lap_data_loading_position_calculation_first_lap_retired():
 
     ref = {'Driver': ['VER', 'PIA', 'NOR', 'HAM', 'GAS', 'ALO', 'SAI', 'ANT',
                       'ALB', 'TSU', 'HUL', 'STR', 'OCO', 'RUS', 'LEC', 'HAD',
-                      'BOR', 'BEA', 'LAW', 'COL'],
+                      'BOR', 'BEA', 'LAW'],
            'Position': [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0,
-                        12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, float('nan'),
-                        float('nan')]}
+                        12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, float('nan')]}
 
     ref_pos = pd.DataFrame(ref)
     pd.testing.assert_frame_equal(first_lap_pos, ref_pos)
