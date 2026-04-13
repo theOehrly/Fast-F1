@@ -2158,6 +2158,7 @@ class Session:
         # ref: GH#863
         if (self.name in self._RACE_LIKE_SESSIONS
                 and did_pit_in_session
+                and (self.session_start_time is not None)
                 and not (df['Time'] < self.session_start_time).any()):
             # No tyre data messages were registered before the start of the
             # session. This points towards a delay in the transmission of the
