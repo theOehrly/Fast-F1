@@ -313,3 +313,20 @@ def test_tyre_data_incorrect_stint_counter(year, round_, session, drv, stints):
                 .pick_laps(range(start, end + 1))['Compound']
                 == compound
         ).all()
+
+
+@pytest.mark.f1telapi
+def test_compounds_correct_after_delayed_tyre_data():
+    # Tyre data was delayed and messages were bunched up with equivalent
+    # timestamp after the start of the session. This requires special case
+    # handling to ensure that the tyre data is still correctly assigned to
+    # the correct laps. (GH#863)
+
+    session = fastf1.get_session(2018, 'Azerbaijan', 'R')
+    session.load(telemetry=True)
+
+    compounds = (session.laps.pick_drivers('ALO')['Compound']
+                 .value_counts().to_dict())
+
+    # In case of incorrect handling, the supersoft stint would be missing.
+    assert compounds == {"SOFT": 39, "ULTRASOFT": 11, "SUPERSOFT": 1}

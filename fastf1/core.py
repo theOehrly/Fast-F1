@@ -2152,15 +2152,17 @@ class Session:
         ]
 
         # ### Problem 1: Detect bunched up tyre data messages at the start
-        #                of a session and adjust their timestamps.
+        #                of a race session and adjust their timestamps.
         # ref: GH#863
-        if (did_pit_in_session
+        if (self.name in self._RACE_LIKE_SESSIONS
+                and did_pit_in_session
                 and not (df['Time'] < self.session_start_time).any()):
-            # TODO: assumption may only be true for races?
             # No tyre data messages were registered before the start of the
             # session. This points towards a delay in the transmission of the
             # data. Check if messages for multiple stints are bunched up with
             # the same timestamp at the beginning of the data stream.
+            # In non-race sessions, this should be ignored since drivers
+            # frequently only leave the pits after the session has started.
 
             first_ts = df['Time'].iloc[0]
             delayed_stints = df.loc[df['Time'] == first_ts, 'Stint'].unique()
