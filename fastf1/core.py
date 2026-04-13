@@ -2145,8 +2145,10 @@ class Session:
     def __fix_tyre_info(self, df: pd.DataFrame, stint_split_times: list):
         did_pit_in_session = bool(stint_split_times)
 
-        # add an artificial start and end time to the stint split times so
-        # that two subsequent timestamps always bracket a stint
+        # Add an artificial start and end time to the stint split times so
+        # that two subsequent timestamps always bracket a stint.
+        # (The source data considers each drive through the pit lane as the
+        # beginning of a new stint, independent of tyres being changed)
         stint_brackets = [
             pd.Timedelta(0), *stint_split_times, pd.Timedelta(days=1)
         ]
@@ -2165,23 +2167,22 @@ class Session:
             # frequently only leave the pits after the session has started.
 
             first_ts = df['Time'].iloc[0]
-            delayed_stints = df.loc[df['Time'] == first_ts, 'Stint'].unique()
+            stints_at_first_ts = df.loc[
+                df['Time'] == first_ts, 'Stint'].unique()
 
-            # If there are any delayed stints, set the timestamps of the
-            # message(s) for these stints to the start of the corresponding
-            # stint + 1 ms so that they are just within the stint bracket.
-            for n in delayed_stints:
-                df.loc[
-                    (df['Stint'] == n) & (df['Time'] == first_ts), 'Time'
-                ] = stint_brackets[n] + pd.Timedelta(milliseconds=1)
+            # corrections are necessary if multiple stints are bunched up at
+            # the same first timestamp
+            if len(stints_at_first_ts) > 1:
+                # If there are any delayed stints, set the timestamps of the
+                # messages for these stints to the start of the corresponding
+                # stint + 1 ms so that they are just within the stint bracket.
+                for n in stints_at_first_ts:
+                    df.loc[
+                        (df['Stint'] == n) & (df['Time'] == first_ts), 'Time'
+                    ] = stint_brackets[n] + pd.Timedelta(milliseconds=1)
 
         # ### Problem 2: detect and fix incorrectly incremented stint counter
         # ref: GH#715, GH#742
-
-        # Pad pit in times with zero and a sufficiently far away value
-        # such that two subsequent values in the list always bracket one
-        # "stint". (The source data considers each drive through the pit as the
-        # beginning of a new stint, independent of tyres being changed)
 
         stint = 0  # stints are counted starting at zero in the source data
         fixed_stint_errors = False

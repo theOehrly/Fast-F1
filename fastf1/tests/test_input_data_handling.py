@@ -323,7 +323,7 @@ def test_compounds_correct_after_delayed_tyre_data():
     # the correct laps. (GH#863)
 
     session = fastf1.get_session(2018, 'Azerbaijan', 'R')
-    session.load(telemetry=True)
+    session.load(telemetry=False, weather=False)
 
     compounds = (session.laps.pick_drivers('ALO')['Compound']
                  .value_counts().to_dict())
