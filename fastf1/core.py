@@ -1337,7 +1337,7 @@ class Session:
         return self._get_property_warn_not_loaded('_race_control_messages')
 
     @property
-    def session_start_time(self) -> pd.Timedelta:
+    def session_start_time(self) -> pd.Timedelta | None:
         """:class:`pandas.Timedelta`: Session time at which the session was
         started according to the session status data. This is not the
         time at which the session is scheduled to be started!
