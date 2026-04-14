@@ -1245,8 +1245,8 @@ class Session:
         return self._get_property_warn_not_loaded('_session_info')
 
     @property
-    def drivers(self):
-        """:class:`list`: List of all drivers that took part in this
+    def drivers(self) -> list[str]:
+        """List of all drivers that took part in this
         session; contains driver numbers as string.
 
         Data is available after calling `Session.load`
@@ -1280,7 +1280,7 @@ class Session:
         return self._get_property_warn_not_loaded('_total_laps')
 
     @property
-    def weather_data(self):
+    def weather_data(self) -> pd.DataFrame:
         """Dataframe containing weather data for this session as received
         from the api. See :func:`fastf1.api.weather_data` for available data
         channels. Each data channel is one row of the dataframe.
@@ -1310,8 +1310,8 @@ class Session:
         return self._get_property_warn_not_loaded('_pos_data')
 
     @property
-    def session_status(self):
-        """:class:`pandas.Dataframe`: Session status data as returned by
+    def session_status(self) -> pd.DataFrame:
+        """Session status data as returned by
         :func:`fastf1.api.session_status_data`
 
         Data is available after calling `Session.load` with ``laps=True``
@@ -1319,8 +1319,8 @@ class Session:
         return self._get_property_warn_not_loaded('_session_status')
 
     @property
-    def track_status(self):
-        """:class:`pandas.Dataframe`: Track status data as returned by
+    def track_status(self) -> pd.DataFrame:
+        """Track status data as returned by
         :func:`fastf1.api.track_status_data`
 
         Data is available after calling `Session.load` with ``laps=True``
@@ -1328,8 +1328,8 @@ class Session:
         return self._get_property_warn_not_loaded('_track_status')
 
     @property
-    def race_control_messages(self):
-        """:class:`pandas.Dataframe`: Race Control messages as returned by
+    def race_control_messages(self) -> pd.DataFrame:
+        """Race Control messages as returned by
         :func:`fastf1.api.race_control_messages`
 
         Data is available after calling `Session.load` with ``messages=True``
@@ -1337,19 +1337,19 @@ class Session:
         return self._get_property_warn_not_loaded('_race_control_messages')
 
     @property
-    def session_start_time(self) -> pd.Timedelta:
-        """:class:`pandas.Timedelta`: Session time at which the session was
-        started according to the session status data. This is not the
-        time at which the session is scheduled to be started!
+    def session_start_time(self) -> pd.Timedelta | None:
+        """Session time at which the session was started according to the
+        session status data. This is not the time at which the session is
+        scheduled to be started!
 
         Data is available after calling `Session.load` with ``laps=True``
         """
         return self._get_property_warn_not_loaded('_session_start_time')
 
     @property
-    def t0_date(self):
-        """:class:`pandas.Datetime`: Date timestamp which marks the beginning
-        of the data stream (the moment at which the session time is zero).
+    def t0_date(self) -> pd.Timestamp | None:
+        """Date timestamp which marks the beginning of the data stream
+        (the moment at which the session time is zero).
 
         Data is available after calling `Session.load` with ``telemetry=True``
         """
