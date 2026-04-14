@@ -59,7 +59,7 @@ class NoLapDataError(Exception):
     Raised if the API request does not fail, but there is no usable data
     after processing the result.
     """
-    def __init__(self, *args):
+    def __init__(self, *_args):
         super().__init__("Failed to load session because the API did not "
                          "provide any usable data.")
 
@@ -99,5 +99,5 @@ can be found.
 
 
 class _InvalidSessionError(Exception):
-    def __init__(self, *args):
+    def __init__(self, *_args):
         super().__init__("No matching session can be found.")
