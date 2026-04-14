@@ -45,7 +45,18 @@ session_new.load()
 
 
 def get_average_speed(session, distance_array):
-    """Interpolates speed for Top 10 drivers and returns the average."""
+    """Interpolates speed for Top 10 drivers and returns the average.
+
+    Args:
+        session (fastf1.core.Session): The loaded FastF1 session
+            object containing the telemetry and lap data.
+        distance_array (np.ndarray): A 1D numpy array of distances
+            used as the common grid for mathematical interpolation.
+
+    Returns:
+        np.ndarray: A 1D numpy array containing the calculated average
+        speeds corresponding to each point in the distance_array.
+    """
     speeds = []
     top_10_drivers = session.results["Abbreviation"][:10]
 
