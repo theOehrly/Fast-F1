@@ -884,10 +884,17 @@ def timing_app_data(path, response=None, livedata=None):
         row = entry[1]
         for driver_number in row['Lines']:
             if update := recursive_dict_get(row, 'Lines', driver_number, 'Stints'):
-                for stint_number, stint in enumerate(update):
-                    if isinstance(update, dict):
-                        stint_number = int(stint)
-                        stint = update[stint]
+
+                # Stints sometimes are given in a list format. This only seems
+                # to happen at the start of a session:
+                # {'Lines': {'5': {'Stints': [{'LapTime': '3:09.319', ...}, ...]}}}
+                # Convert this representation to the dict format for processing.
+                if isinstance(update, list):
+                    update = {str(i): stint for i, stint in enumerate(update)}
+
+                # Process the dict format
+                # {'Lines': {'3': {'Stints': {'0': {'LapTime': '3:09.041', ...}, ...}}}}
+                for stint_number, stint in update.items():
                     for key in data:
                         if key in stint:
                             val = stint[key]
@@ -905,7 +912,7 @@ def timing_app_data(path, response=None, livedata=None):
 
                     data['Time'][-1] = time
                     data['Driver'][-1] = driver_number
-                    data['Stint'][-1] = stint_number
+                    data['Stint'][-1] = int(stint_number)
 
     return pd.DataFrame(data)
 
