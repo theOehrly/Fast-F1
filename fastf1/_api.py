@@ -887,13 +887,14 @@ def timing_app_data(path, response=None, livedata=None):
 
                 # Stints sometimes are given in a list format. This only seems
                 # to happen at the start of a session:
-                # {'Lines': {'5': {'Stints': [{'LapTime': '3:09.319', ...}, ...]}}}
+                # {'Stints': [{'LapTime': '3:09.319', ...}, ...]}
+                # See GH#903, GH#863
                 # Convert this representation to the dict format for processing.
                 if isinstance(update, list):
                     update = {str(i): stint for i, stint in enumerate(update)}
 
                 # Process the dict format
-                # {'Lines': {'3': {'Stints': {'0': {'LapTime': '3:09.041', ...}, ...}}}}
+                # {'Stints': {'0': {'LapTime': '3:09.041', ...}, ...}}
                 for stint_number, stint in update.items():
                     for key in data:
                         if key in stint:
