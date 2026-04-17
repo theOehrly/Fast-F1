@@ -18,7 +18,7 @@ import fastf1.plotting
 ##############################################################################
 # Enable FastF1's plotting settings (dark theme etc.)
 
-fastf1.plotting.setup_mpl()
+fastf1.plotting.setup_mpl(color_scheme="fastf1")
 
 ##############################################################################
 # Define the session parameters. We compare the Qualifying sessions
@@ -44,7 +44,9 @@ session_new.load()
 # a mathematical average.
 
 
-def get_average_speed(session, distance_array):
+def get_average_speed(
+    session: fastf1.core.Session, distance_array: np.ndarray
+):
     """Interpolates speed for Top 10 drivers and returns the average.
 
     Args:
