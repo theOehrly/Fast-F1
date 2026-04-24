@@ -230,14 +230,27 @@ def get_event(
         :class:`KeyError`: ``exact_match`` is ``True`` and no exact
             match exists.
     """
-    schedule = get_event_schedule(year=year,
-                                  include_testing=False,
-                                  backend=backend)
-
     if isinstance(gp, str):
-        event = schedule.get_event_by_name(
-            gp, exact_match=exact_match)
+        # Check for exact match against testing events first, before
+        # fuzzy searching race events. This prevents names like
+        # 'Pre-Season Testing' from being incorrectly fuzzy-matched
+        # to a race event (e.g. Singapore GP). Fixes #851.
+        full_schedule = get_event_schedule(year=year,
+                                           include_testing=True,
+                                           backend=backend)
+        testing_only = full_schedule[full_schedule.is_testing()]
+        if len(testing_only) > 0:
+            try:
+                return testing_only._strict_event_search(gp)
+            except KeyError:
+                pass  # no exact testing match, fall through to fuzzy search
+
+        schedule = full_schedule[~full_schedule.is_testing()]
+        event = schedule.get_event_by_name(gp, exact_match=exact_match)
     else:
+        schedule = get_event_schedule(year=year,
+                                      include_testing=False,
+                                      backend=backend)
         event = schedule.get_event_by_round(gp)
 
     return event

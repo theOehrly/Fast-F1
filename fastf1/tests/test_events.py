@@ -62,6 +62,22 @@ def test_get_event_round_zero():
     with pytest.raises(ValueError, match="testing event by round number"):
         fastf1.get_event(2021, 0)
 
+def test_get_event_pre_season_testing():
+    """Regression test for GH#851.
+
+    'Pre-Season Testing' was incorrectly fuzzy-matched to Singapore GP
+    because get_event() excluded testing events before searching.
+    """
+    event = fastf1.get_event(2026, 'Pre-Season Testing')
+    assert event['EventFormat'] == 'testing'
+    assert 'testing' in event['EventName'].casefold()
+
+
+def test_get_session_pre_season_testing():
+    """Regression test for GH#851 - session level check."""
+    session = fastf1.get_session(2026, 'Pre-Season Testing', 'Practice 1')
+    assert session.event['EventFormat'] == 'testing'
+    assert session.name == 'Practice 1'
 
 def test_get_testing_event():
     # 0 is not a valid number for a testing event
