@@ -1589,12 +1589,13 @@ def driver_info(path, response=None, livedata=None):
             if not isinstance(patch, dict):
                 continue  # unexpected data format
 
-            if drv_num not in drivers:
-                if to_timedelta(ts) < new_driver_cutoff:
-                    drivers[drv_num] = {}
-                else:
+            if to_timedelta(ts) > new_driver_cutoff:
+                if drv_num not in drivers:
                     delayed_drivers.add(drv_num)
-                    continue
+                continue
+
+            if drv_num not in drivers:
+                drivers[drv_num] = {}
 
             for key, val in patch.items():
                 if key not in default_keys:
