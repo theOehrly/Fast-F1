@@ -3337,6 +3337,38 @@ class Laps(BaseDataFrame):
 
         return self[self['Compound'].isin([i.upper() for i in compounds])]
 
+    def pick_stint(self, stint: int) -> "Laps":
+        """Return all laps in self which were done in a specific stint.
+        ::
+
+            stint_1_laps = session_laps.pick_stint(1)
+
+        Args:
+            stint: Stint number (1-indexed). Stint 1 is the first stint
+                of the race.
+
+        Returns:
+            instance of :class:`Laps`
+        """
+        return self[self['Stint'] == stint]
+
+    def pick_stints(self, stints: int | Iterable[int]) -> "Laps":
+        """Return all laps in self which were done in some specific stints.
+        ::
+
+            first_two_stints = session_laps.pick_stints([1, 2])
+
+        Args:
+            stints: Stint number or iterable of stint numbers (1-indexed).
+
+        Returns:
+            instance of :class:`Laps`
+        """
+        if isinstance(stints, int):
+            return self[self['Stint'] == stints]
+
+        return self[self['Stint'].isin(stints)]
+
     def pick_track_status(self, status: str, how: str = 'equals') -> "Laps":
         """Return all laps set under a specific track status.
 
