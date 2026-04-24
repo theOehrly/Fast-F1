@@ -23,6 +23,22 @@ def test_constructor_sliced():
     single = laps.iloc[:2].iloc[0]
     assert isinstance(single, fastf1.core.Lap)
 
+def test_pick_stints():
+    laps = fastf1.core.Laps({'Stint': [1, 1, 2, 2, 3, 3]})
+
+    # single int input
+    result = laps.pick_stints(1)
+    assert (result['Stint'] == 1).all()
+    assert len(result) == 2
+
+    # list input
+    result = laps.pick_stints([1, 2])
+    assert result['Stint'].isin([1, 2]).all()
+    assert len(result) == 4
+
+    # combined should equal sum of individuals
+    assert len(laps.pick_stints([1, 2])) == \
+        len(laps.pick_stints(1)) + len(laps.pick_stints(2))
 
 def test_base_class_view_laps():
     laps = fastf1.core.Laps()

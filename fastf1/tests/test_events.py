@@ -221,7 +221,6 @@ def test_event_is_testing(backend, no_testing_support):
     else:
         assert fastf1.get_testing_event(2022, 1, backend=backend).is_testing()
     assert not fastf1.get_event(2022, 1, backend=backend).is_testing()
-def test_pick_stints():
     session = fastf1.get_session(2024, 'Bahrain', 'R')
     session.load(telemetry=False, weather=False, messages=False)
     laps = session.laps

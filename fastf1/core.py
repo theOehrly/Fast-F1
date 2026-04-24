@@ -3337,25 +3337,6 @@ class Laps(BaseDataFrame):
 
         return self[self['Compound'].isin([i.upper() for i in compounds])]
 
-def test_pick_stints():
-    session = fastf1.get_session(2024, 'Bahrain', 'R')
-    session.load(telemetry=False, weather=False, messages=False)
-    laps = session.laps
-
-    # single int input
-    result = laps.pick_stints(1)
-    assert (result['Stint'] == 1).all()
-    assert len(result) > 0
-
-    # list input
-    result = laps.pick_stints([1, 2])
-    assert result['Stint'].isin([1, 2]).all()
-    assert len(result) > 0
-
-    # list result should equal sum of individual stints
-    assert len(laps.pick_stints([1, 2])) == \
-        len(laps.pick_stints(1)) + len(laps.pick_stints(2))
-
     def pick_stints(self, stints: int | Iterable[int]) -> "Laps":
         """Return all laps in self which were done in some specific stints.
         ::
