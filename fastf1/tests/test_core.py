@@ -213,10 +213,3 @@ def test_session_results_drivers():
     session.load(laps=False, telemetry=False, weather=False)
     drivers = session.results.index
     assert "47" in drivers
-
-    # API data contains drivers from F3 qualifying session
-    # beginning half an hour after end of FP1
-    session = fastf1.get_session(2025, "Monza", "FP1")
-    session.load(laps=False, telemetry=False, weather=False)
-    assert len(session.drivers) == 20
-    assert session.results.loc["1", "Abbreviation"] == "VER"

@@ -1585,14 +1585,12 @@ def driver_info(path, response=None, livedata=None):
             continue
         if not isinstance(content, dict):
             continue  # unexpected data format
+        if to_timedelta(ts) > new_driver_cutoff:
+            delayed_drivers.update(drv_num for drv_num in content if drv_num not in drivers)
+            continue
         for drv_num, patch in content.items():
             if not isinstance(patch, dict):
                 continue  # unexpected data format
-
-            if to_timedelta(ts) > new_driver_cutoff:
-                if drv_num not in drivers:
-                    delayed_drivers.add(drv_num)
-                continue
 
             if drv_num not in drivers:
                 drivers[drv_num] = {}
