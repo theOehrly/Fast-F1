@@ -221,25 +221,24 @@ def test_event_is_testing(backend, no_testing_support):
     else:
         assert fastf1.get_testing_event(2022, 1, backend=backend).is_testing()
     assert not fastf1.get_event(2022, 1, backend=backend).is_testing()
-
-def test_pick_stint():
+def test_pick_stints():
     session = fastf1.get_session(2024, 'Bahrain', 'R')
     session.load(telemetry=False, weather=False, messages=False)
     laps = session.laps
 
-    stint1 = laps.pick_stint(1)
-    assert (stint1['Stint'] == 1).all()
-    assert len(stint1) > 0
+    # single int input
+    result = laps.pick_stints(1)
+    assert (result['Stint'] == 1).all()
+    assert len(result) > 0
 
-    stint2 = laps.pick_stint(2)
-    assert (stint2['Stint'] == 2).all()
-    assert len(stint2) > 0
+    # list input
+    result = laps.pick_stints([1, 2])
+    assert result['Stint'].isin([1, 2]).all()
+    assert len(result) > 0
 
-    # stint 1 and 2 combined should not overlap
-    assert len(stint1) + len(stint2) == len(laps.pick_stints([1, 2]))
-
-
-def test_pick_stints():
+    # list result should equal sum of individual stints
+    assert len(laps.pick_stints([1, 2])) == \
+        len(laps.pick_stints(1)) + len(laps.pick_stints(2))
     session = fastf1.get_session(2024, 'Bahrain', 'R')
     session.load(telemetry=False, weather=False, messages=False)
     laps = session.laps

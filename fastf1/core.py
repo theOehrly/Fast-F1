@@ -3337,20 +3337,24 @@ class Laps(BaseDataFrame):
 
         return self[self['Compound'].isin([i.upper() for i in compounds])]
 
-    def pick_stint(self, stint: int) -> "Laps":
-        """Return all laps in self which were done in a specific stint.
-        ::
+def test_pick_stints():
+    session = fastf1.get_session(2024, 'Bahrain', 'R')
+    session.load(telemetry=False, weather=False, messages=False)
+    laps = session.laps
 
-            stint_1_laps = session_laps.pick_stint(1)
+    # single int input
+    result = laps.pick_stints(1)
+    assert (result['Stint'] == 1).all()
+    assert len(result) > 0
 
-        Args:
-            stint: Stint number (1-indexed). Stint 1 is the first stint
-                of the race.
+    # list input
+    result = laps.pick_stints([1, 2])
+    assert result['Stint'].isin([1, 2]).all()
+    assert len(result) > 0
 
-        Returns:
-            instance of :class:`Laps`
-        """
-        return self[self['Stint'] == stint]
+    # list result should equal sum of individual stints
+    assert len(laps.pick_stints([1, 2])) == \
+        len(laps.pick_stints(1)) + len(laps.pick_stints(2))
 
     def pick_stints(self, stints: int | Iterable[int]) -> "Laps":
         """Return all laps in self which were done in some specific stints.
