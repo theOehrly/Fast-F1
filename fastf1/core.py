@@ -1694,6 +1694,12 @@ class Session:
 
         any_new = False
         for drv in self.laps['DriverNumber'].unique():
+            try:
+                drv_status = self.session.results.loc[drv, 'Status']
+                if drv_status.upper() in ['DNS', 'DID NOT START']:
+                    continue 
+            except (KeyError, AttributeError):
+                pass
             drv_laps = self._laps[self.laps['DriverNumber'] == drv]
 
             if (len(drv_laps) == 1) and drv_laps['FastF1Generated'].iloc[0]:
