@@ -15,6 +15,7 @@ from typing import (
 
 import numpy as np
 import pandas as pd
+from requests import session
 
 import fastf1
 from fastf1 import _api as api
@@ -1694,6 +1695,12 @@ class Session:
 
         any_new = False
         for drv in self.laps['DriverNumber'].unique():
+            try:
+                drv_status=self.session.results.loc[session.results['DriverBNumber']==drv,'Status'].iloc(0)
+                if drv.status() in ('DNS','DID NOT START'):
+                    continue
+            except(IndexError,AttributeError,KeyError):
+                pass
             drv_laps = self._laps[self.laps['DriverNumber'] == drv]
 
             if (len(drv_laps) == 1) and drv_laps['FastF1Generated'].iloc[0]:
@@ -3150,12 +3157,12 @@ class Laps(BaseDataFrame):
 
         return self[self["LapNumber"].isin(lap_numbers)]
 
-    def pick_driver(self, identifier: int | str) -> "Laps":
+    def pick_drivers(self, identifier: int | str) -> "Laps":
         """Return all laps of a specific driver in self based on the driver's
         three letters identifier or based on the driver number.
 
         .. deprecated:: 3.1.0
-            pick_driver is deprecated and will be removed in a future release.
+            pick_drivers is deprecated and will be removed in a future release.
             Use :func:`pick_drivers` instead.
 
             perez_laps = session_laps.pick_drivers('PER')
@@ -3168,7 +3175,7 @@ class Laps(BaseDataFrame):
         Returns:
             instance of :class:`Laps`
         """
-        warnings.warn(("pick_driver is deprecated and will be removed"
+        warnings.warn(("pick_drivers is deprecated and will be removed"
                        " in a future release. Use pick_drivers instead."),
                       FutureWarning)
         identifier = str(identifier)
