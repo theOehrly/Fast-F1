@@ -1694,7 +1694,11 @@ class Session:
 
         any_new = False
         for drv in self.laps['DriverNumber'].unique():
-            drv_laps = self._laps[self.laps['DriverNumber'] == drv]
+            drv_status = str(self.session.results.loc[drv, 'Status']).upper()
+            if drv_status in ['DNS', 'DID NOT START']:
+                continue
+
+            drv_laps = self._laps[self._laps['DriverNumber'] == drv]
 
             if (len(drv_laps) == 1) and drv_laps['FastF1Generated'].iloc[0]:
                 # there is only one lap which was added by FastF1, don't
