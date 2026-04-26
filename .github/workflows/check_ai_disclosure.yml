@@ -1,0 +1,23 @@
+name: Check AI Disclosure
+
+on:
+  pull_request_target:
+    types: [ opened ]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  check-ai-disclosure:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for AI Disclosure
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! echo "$PR_BODY" | grep -qi "AI Disclosure"; then
+            gh pr close "$PR_NUMBER" --repo ${{ github.repository }} --comment 'Please review Fastf1's [AI policy](https://docs.fastf1.dev/contributing/ai_policy.html), and then reopen this PR with the required AI disclosure as a part of the description.'
+          fi
