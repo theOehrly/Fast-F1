@@ -2,7 +2,7 @@ name: Check AI Disclosure
 
 on:
   pull_request_target:
-    types: [ opened ]
+    types: [ opened, edited ]
 
 permissions:
   pull-requests: write
@@ -19,5 +19,5 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if ! echo "$PR_BODY" | grep -qi "AI Disclosure"; then
-            gh pr close "$PR_NUMBER" --repo ${{ github.repository }} --comment 'Please review Fastf1's [AI policy](https://docs.fastf1.dev/contributing/ai_policy.html), and then reopen this PR with the required AI disclosure as a part of the description.'
+            gh pr comment "$PR_NUMBER" --repo ${{ github.repository }} --body "Your PR description is missing the required AI disclosure. Please review Fastf1's [AI policy](https://docs.fastf1.dev/contributing/ai_policy.html), and then update your PR to include a section titled AI Disclosure (verbatim). PRs without AI disclosures will not be reviewed."
           fi
