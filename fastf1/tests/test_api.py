@@ -251,6 +251,7 @@ def test_driver_list():
 
 # ########## special test cases ##########
 
+@pytest.mark.f1telapi
 def test_driver_list_contains_support_race(caplog):
     caplog.set_level(logging.WARNING)
     response = list()
@@ -265,6 +266,14 @@ def test_driver_list_contains_support_race(caplog):
     assert len(caplog.record_tuples) == 1
     _, _, warn_message = caplog.record_tuples[0]
     assert warn_message.startswith("Skipping delayed declaration of driver")
+
+    # API data contains drivers from F3 qualifying session
+    # beginning half an hour after end of FP1
+    session = fastf1.get_session(2025, "Monza", "FP1")
+    session.load(laps=False, telemetry=False, weather=False)
+    assert len(session.drivers) == 20
+    # check F1 driver data is not overwritten
+    assert session.results.loc["1", "Abbreviation"] == "VER"
 
 @pytest.mark.f1telapi
 def test_deleted_laps_not_marked_personal_best():
