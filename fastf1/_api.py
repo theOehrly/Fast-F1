@@ -1585,7 +1585,7 @@ def driver_info(path, response=None, livedata=None):
             continue
         if not isinstance(content, dict):
             continue  # unexpected data format
-        if to_timedelta(ts) > new_driver_cutoff:
+        if (td := to_timedelta(ts)) is not None and td > new_driver_cutoff:
             delayed_drivers.update(drv_num for drv_num in content if drv_num not in drivers)
             continue
         for drv_num, patch in content.items():
