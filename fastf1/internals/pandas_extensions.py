@@ -35,6 +35,7 @@ def create_df_fast(
         *,
         arrays: list[np.ndarray],
         columns: list,
+        str_dtype_columns: list[str] | None = None,
         fallback: bool = True
 ) -> DataFrame:
     """Implements fast creation of DataFrames.
@@ -58,7 +59,7 @@ def create_df_fast(
 
     """
     try:
-        return _unsafe_create_df_fast(arrays, columns)
+        return _unsafe_create_df_fast(arrays, columns, str_dtype_columns)
     except Exception as exc:
         if not fallback:
             raise exc
@@ -85,7 +86,8 @@ def _fallback_if_unsupported(func):
 @_fallback_if_unsupported
 def _unsafe_create_df_fast(
         arrays: list[np.ndarray],
-        columns: list
+        columns: list,
+        str_dtype_columns: list[str] | None = None
 ) -> DataFrame:
     # Implements parts of pandas' internal DataFrame creation mechanics
     # but skipping unnecessary tests and most importantly sanitization and
@@ -116,4 +118,12 @@ def _unsafe_create_df_fast(
             block_values, [columns, index], verify_integrity=False
     )
 
-    return DataFrame(mgr)
+    df = DataFrame(mgr)
+
+    if str_dtype_columns:
+        from pandas import StringDtype
+        str_dtype = StringDtype(na_value=np.nan)
+        for col in str_dtype_columns:
+            df[col] = df[col].astype(str_dtype)
+
+    return df

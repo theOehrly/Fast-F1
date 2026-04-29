@@ -1077,7 +1077,8 @@ def car_data(path, response=None, livedata=None):
         data[drv] = create_df_fast(
             arrays=[time, date,
                     rpm, speed, ngear, throttle, brake, drs, source],
-            columns=columns
+            columns=columns,
+            str_dtype_columns=['Source']
         )
 
         if (most_complete_ref is None) \
@@ -1242,7 +1243,8 @@ def position_data(path, response=None, livedata=None):
 
         data[drv] = create_df_fast(
             arrays=[time, date, status, x, y, z, source],
-            columns=columns
+            columns=columns,
+            str_dtype_columns=['Source']
         )
 
         # check length of dataframe; sometimes there can be missing data
