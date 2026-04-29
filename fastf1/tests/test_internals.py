@@ -1,3 +1,4 @@
+import datetime
 from typing import Optional
 
 import numpy as np
@@ -22,16 +23,29 @@ def test_pandas_base_internal_imports():
 
 
 def test_fast_df_creation():
-    data = {'A': [1, 2, 3], 'B': [1.0, 2.0, 3.0], 3: ['a', 'b', 'c']}
+    data = {'int': [1, 2, 3],
+            'float': [1.0, 2.0, 3.0],
+            'str': ['a', 'b', 'c'],
+            'td': [datetime.timedelta(seconds=10),
+                   datetime.timedelta(seconds=20),
+                   datetime.timedelta(seconds=30)],
+            'dt': [datetime.datetime(2026, 4, 28, 22, 59, 34, 154),
+                   datetime.datetime(2026, 4, 28, 22, 59, 34, 359),
+                   datetime.datetime(2026, 4, 28, 22, 59, 34, 687)]}
 
     # need to explicitly force numpy dtypes to match pandas defaults
-    dtypes = ['int64', 'float64', 'object']
+    dtypes = ['int64',
+              'float64',
+              'object',
+              'timedelta64[us]',
+              'datetime64[us]',]
 
     df_safe = pd.DataFrame(data)
 
     arrays = list(np.array(d, dtype=t) for d, t in zip(data.values(), dtypes))
     df_fast = _unsafe_create_df_fast(
-        arrays=arrays, columns=list(data.keys())
+        arrays=arrays, columns=list(data.keys()),
+        str_dtype_columns=['str', ]
     )
 
     pd.testing.assert_frame_equal(df_safe, df_fast)
