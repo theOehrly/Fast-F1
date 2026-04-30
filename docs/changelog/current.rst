@@ -1,3 +1,26 @@
+What's new in v3.9.0
+--------------------------
+
+(released 01/05/2026)
+
+Removals
+^^^^^^^^
+
+- The deprecated function ``fastf1.utils.delta_time`` has been removed. It
+  was deprecated in v3.0.0 because it produced inaccurate results (#884).
+
+
+Deprecations
+^^^^^^^^^^^^
+
+- ``fastf1.utils.recursive_dict_get``, ``fastf1.utils.to_datetime`` and
+  ``fastf1.utils.to_timedelta`` are deprecated. They were never intended to
+  be part of the public API. The implementations have been moved to the
+  internal ``fastf1._utils`` module. The public names continue to work and
+  forward to the internal implementations, but emit a ``DeprecationWarning``
+  and will be removed in a future release (#884).
+
+
 What's new in v3.8.3
 --------------------
 

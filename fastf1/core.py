@@ -22,6 +22,7 @@ from fastf1 import (
     ergast,
     exceptions
 )
+from fastf1._utils import to_timedelta
 from fastf1.internals.pandas_base import (
     BaseDataFrame,
     BaseSeries
@@ -35,7 +36,6 @@ from fastf1.mvapi import (
     CircuitInfo,
     get_circuit_info
 )
-from fastf1.utils import to_timedelta
 
 
 def __getattr__(name):
