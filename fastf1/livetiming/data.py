@@ -6,11 +6,11 @@ import json
 import warnings
 from datetime import timedelta
 
-from fastf1.logger import get_logger
-from fastf1.utils import (
+from fastf1._utils import (
     recursive_dict_get,
     to_datetime
 )
+from fastf1.logger import get_logger
 
 
 _logger = get_logger(__name__)
