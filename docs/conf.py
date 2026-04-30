@@ -37,9 +37,6 @@ if ERGAST_BACKEND_OVERRIDE:
 warnings.filterwarnings(action='ignore',
                         message=r'`fastf1.api` will be considered private .*')
 warnings.filterwarnings(action='ignore',
-                        message=r'`utils.delta_time` is considered '
-                                r'deprecated.*')
-warnings.filterwarnings(action='ignore',
                         message=r'(COMPOUND_COLORS|DRIVER_COLORS|'
                                 r'DRIVER_TRANSLATE|TEAM_COLORS|TEAM_TRANSLATE|'
                                 r'COLOR_PALETTE) is deprecated and.*')
