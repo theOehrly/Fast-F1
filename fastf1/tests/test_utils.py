@@ -28,7 +28,8 @@ def test_to_timedelta():
 
     ]
     for ts, expected in cases:
-        with pytest.warns(DeprecationWarning):
+        with pytest.warns(DeprecationWarning,                                                                                                                                                                                            
+                            match="fastf1.utils.to_timedelta"): 
             assert to_timedelta(ts) == expected
 
 
@@ -50,7 +51,8 @@ def test_to_datetime():
          datetime.datetime(2020, 12, 13, 13, 27, 15, 0))
     ]
     for ts, expected in cases:
-        with pytest.warns(DeprecationWarning):
+        with pytest.warns(DeprecationWarning,
+                            match="fastf1.utils.to_datetime"):
             assert to_datetime(ts) == expected
 
 
