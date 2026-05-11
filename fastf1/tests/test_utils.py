@@ -28,8 +28,10 @@ def test_to_timedelta():
 
     ]
     for ts, expected in cases:
-        with pytest.warns(DeprecationWarning,                                                                                                                                                                                            
-                            match="fastf1.utils.to_timedelta"): 
+        with pytest.warns(
+            DeprecationWarning,
+            match="fastf1.utils.to_timedelta"
+        ):
             assert to_timedelta(ts) == expected
 
 
