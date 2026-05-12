@@ -84,7 +84,7 @@ Important Notes
   See :class:`fastf1.req.Cache` for details on how to configure a custom
   cache directory. One simple way is to add the following line to your code::
 
-    fastf1.Cache.enable_cache('path/to/cache/directory')
+    fastf1.Cache.configure(cache_dir='path/to/cache/directory')
 
 - You need to force a cache update if you modify the
   :class:`~fastf1.livetiming.data.LiveTimingData` (e.g. by adding a second
@@ -93,7 +93,7 @@ Important Notes
 
   You can force-refresh the cache::
 
-    fastf1.Cache.enable_cache('path/to/cache/directory', force_renew=True)
+    fastf1.Cache.configure(cache_dir='path/to/cache/directory', force_renew=True)
 
   You only need to use ``forece_renew=True`` once after modifying the
   input data.

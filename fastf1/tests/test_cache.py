@@ -13,7 +13,7 @@ def test_enable_cache(tmpdir):
 
 
 def _test_enable_cache(tmpdir):
-    Cache.enable_cache(tmpdir)
+    Cache.configure(cache_dir=tmpdir)
 
 
 def test_cache_used_and_clear(tmpdir):
@@ -38,7 +38,7 @@ def _test_cache_used_and_clear(tmpdir):
         # ci mode does not propagate to subprocess on windows
 
         # enable fastf1's own pickle cache
-        Cache.enable_cache(tmpdir, use_requests_cache=False)
+        Cache.configure(cache_dir=tmpdir, use_requests_cache=False)
 
         with open('fastf1/testing/reference_data/'
                   'schedule_2020.json', 'rb') as fobj:
