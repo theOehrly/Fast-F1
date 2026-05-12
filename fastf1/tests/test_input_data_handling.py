@@ -25,7 +25,7 @@ def _test_ergast_lookup_fail(cache_dir):
     # special, relevant on Linux only.
     # debug=True does not propagate to subprocess on windows
 
-    fastf1.Cache.enable_cache(cache_dir)
+    fastf1.Cache.configure(cache_dir=cache_dir)
     log_handle = fastf1.testing.capture_log()
 
     # ergast lookup fails if data is requested to soon after a session ends

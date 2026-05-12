@@ -98,7 +98,7 @@ def reference_laps_data():
     # provides a reference instance of session and laps to tests which
     # require it
     import fastf1
-    fastf1.Cache.enable_cache("test_cache/")
+    fastf1.Cache.configure(cache_dir="test_cache/")
     session = fastf1.get_session(2020, 'Italy', 'R')
     session.load()
     return session, session.laps
@@ -110,11 +110,11 @@ def fastf1_setup():
     from fastf1.logger import LoggingManager
 
     try:
-        fastf1.Cache.enable_cache('test_cache')  # use specific cache directory
+        fastf1.Cache.configure(cache_dir='test_cache')
     except NotADirectoryError:
         # create the test cache and re-enable
         os.mkdir('test_cache')
-        fastf1.Cache.enable_cache('test_cache')
+        fastf1.Cache.configure(cache_dir='test_cache')
 
     LoggingManager.debug = True  # raise all exceptions
 

@@ -181,7 +181,7 @@ plot_pre_code = (
     f"plt.rcParams['figure.figsize'] = [8.0, 4.5];"
     f"import fastf1;"
     f"import fastf1.logger;"
-    f"fastf1.Cache.enable_cache('{doc_cache}');"
+    f"fastf1.Cache.configure(cache_dir='{doc_cache}');"
     f"fastf1.logger.set_log_level('WARNING');"
 )
 
@@ -193,7 +193,7 @@ plot_html_show_source_link = False
 doctest_global_setup = (
     f"import fastf1;"
     f"import fastf1.logger;"
-    f"fastf1.Cache.enable_cache('{doc_cache}');"
+    f"fastf1.Cache.configure(cache_dir='{doc_cache}');"
     f"fastf1.logger.set_log_level('WARNING');"
 )
 
@@ -202,7 +202,7 @@ doctest_global_setup = (
 def sphinx_gallery_setup(gallery_conf, fname):  # noqa: ARG001
     import fastf1
     import fastf1.logger
-    fastf1.Cache.enable_cache(doc_cache)
+    fastf1.Cache.configure(cache_dir=doc_cache)
     fastf1.logger.set_log_level('WARNING')
 
 

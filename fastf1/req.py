@@ -8,7 +8,10 @@ import re
 import sys
 import time
 import warnings
-from typing import Literal
+from typing import (
+    Any,
+    Literal
+)
 
 import requests
 from requests_cache import CacheMixin
@@ -104,6 +107,8 @@ class _SessionWithRateLimiting(requests.Session):
         # patches rate limiting into `requests.send`
         for pattern, limiters in self._RATE_LIMITS.items():
             # match url pattern
+            if request.url is None:
+                continue
             if pattern.match(request.url):
                 for lim in limiters:
                     # apply all defined limiters
@@ -139,7 +144,7 @@ class Cache(metaclass=_MetaCache):
     The default cache directory is defined, in order of precedence, in one
     of the following ways:
 
-    #. A call to :func:`enable_cache`
+    #. A call to :func:`configure`
     #. The value of the environment variable ``FASTF1_CACHE``
     #. An OS dependent default cache directory
 
@@ -150,6 +155,7 @@ class Cache(metaclass=_MetaCache):
 
     .. autosummary::
         enable_cache
+        configure
         clear_cache
         get_cache_info
         disabled
@@ -175,21 +181,22 @@ class Cache(metaclass=_MetaCache):
     You can explicitly configure right at the beginning of your script:
 
         >>> import fastf1
-        >>> fastf1.Cache.enable_cache('path/to/cache')  # doctest: +SKIP
+        >>> fastf1.Cache.configure(cache_dir='path/to/cache')  # doctest: +SKIP
         # change cache directory to an existing empty directory on your machine
         >>> session = fastf1.get_session(2021, 5, 'Q')
         >>> # ...
 
-    When doing this, :func:`enable_cache` must be called right after your
+    When doing this, :func:`configure` must be called right after your
     imports and before any other FastF1 related functionality is called to
     ensure that the cache is configured correctly.
 
     An alternative way to set the cache directory is to configure an
     environment variable `FASTF1_CACHE`. However, this value will be
-    ignored if `Cache.enable_cache()` is called.
+    ignored if a different cache directory is configured via
+    `Cache.configure()`.
 
     If no explicit location is provided, Fast-F1 will use a default location
-    depending on operating system.
+    depending on the operating system.
 
     - Windows: `%LOCALAPPDATA%\\\\Temp\\\\fastf1`
     - macOS: `~/Library/Caches/fastf1`
@@ -197,7 +204,7 @@ class Cache(metaclass=_MetaCache):
 
     Cached data can be deleted at any time to reclaim disk space. However,
     this also means you will have to redownload the same data again if you
-    need which will lead to reduced performance.
+    need, which will lead to reduced performance.
     """
     _CACHE_DIR = None
     # version of the api parser code (unrelated to release version number)
@@ -207,43 +214,58 @@ class Cache(metaclass=_MetaCache):
 
     _requests_session_cached: _CachedSessionWithRateLimiting | None = None
     _requests_session: requests.Session = _SessionWithRateLimiting()
-    _default_cache_enabled = False  # flag to ensure that warning about disabled cache is logged once only # noqa: E501
+    _no_cached_warned = False  # flag to ensure that warning about disabled cache is logged once only # noqa: E501
     _tmp_disabled = False
     _ci_mode = False
 
     @classmethod
     def enable_cache(
-            cls, cache_dir: str, ignore_version: bool = False,
+            cls,
+            cache_dir: str,
+            ignore_version: bool = False,
             force_renew: bool = False,
             use_requests_cache: bool = True):
         """Enables the API cache.
 
-        Args:
-            cache_dir: Path to the directory which should be used to store
-                cached data. Path needs to exist.
-            ignore_version: Ignore if cached data was created with a different
-                version of the API parser (not recommended: this can cause
-                crashes or unrecognized errors as incompatible data may be
-                loaded)
-            force_renew: Ignore existing cached data. Download data and update
-                the cache instead.
-            use_requests_cache: Do caching of the raw GET and POST requests.
+        .. deprecated:: 3.9.0
+
+            :func:`enable_cache` will be removed in a future version.
+            Use :func:`configure` instead.`
+
         """
-        # Allow users to use paths such as %LOCALAPPDATA%
-        cache_dir = os.path.expandvars(cache_dir)
+        warnings.warn("`.enable_cache` is deprecated and will be removed in a"
+                      "future version. Use `.configure` instead.",
+                      FutureWarning)
 
-        # Allow users to use paths such as ~user or ~/
-        cache_dir = os.path.expanduser(cache_dir)
+        cls.configure(
+            cache_dir=cache_dir,
+            ignore_version=ignore_version,
+            force_renew=force_renew,
+            use_requests_cache=use_requests_cache
+        )
 
-        if not os.path.exists(cache_dir):
-            raise NotADirectoryError("Cache directory does not exist! Please "
-                                     "check for typos or create it first.")
+    @classmethod
+    def configure(
+        cls, *,
+        cache_dir: str | None = None,
+        force_renew: bool = False,
+        ignore_version: bool = False,
+        use_requests_cache: bool = True
+    ):
+        sanitized_cached_dir = cls._ensure_cache_directory(cache_dir)
+        if sanitized_cached_dir is None:
+            return
+
         cls._CACHE_DIR = cache_dir
         cls._IGNORE_VERSION = ignore_version
         cls._FORCE_RENEW = force_renew
+
         if use_requests_cache:
+            req_cache_file = os.path.join(
+                sanitized_cached_dir, 'fastf1_http_cache'
+            )
             cls._requests_session_cached = _CachedSessionWithRateLimiting(
-                cache_name=os.path.join(cache_dir, 'fastf1_http_cache'),
+                cache_name=req_cache_file,
                 backend='sqlite',
                 allowable_methods=('GET', 'POST'),
                 expire_after=datetime.timedelta(hours=12),
@@ -262,14 +284,14 @@ class Cache(metaclass=_MetaCache):
         enabled. Else, `requests.Session().get()` will be called without any
         caching.
         """
-        cls._enable_default_cache()
+        cls._ensure_caching()
         if (cls._requests_session_cached is None) or cls._tmp_disabled:
             return cls._requests_session.get(url, **kwargs)
 
         if cls._ci_mode:
             # try to return a cached response first
-            resp = cls._cached_request(
-                'GET', url, only_if_cached=True, **kwargs)
+            mod_kwargs = {**kwargs, 'only_if_cached': True}
+            resp = cls._cached_request('GET', url, **mod_kwargs)
             # 504 indicates that no cached response was found
             if resp.status_code != 504:
                 return resp
@@ -285,14 +307,14 @@ class Cache(metaclass=_MetaCache):
         enabled. Else, `requests.Session().get()` will be called without any
         caching.
         """
-        cls._enable_default_cache()
+        cls._ensure_caching()
         if (cls._requests_session_cached is None) or cls._tmp_disabled:
             return cls._requests_session.post(url, **kwargs)
 
         if cls._ci_mode:
             # try to return a cached response first
-            resp = cls._cached_request(
-                'POST', url, only_if_cached=True, **kwargs)
+            mod_kwargs = {**kwargs, 'only_if_cached': True}
+            resp = cls._cached_request('POST', url, **mod_kwargs)
             # 504 indicates that no cached response was found
             if resp.status_code != 504:
                 return resp
@@ -304,7 +326,13 @@ class Cache(metaclass=_MetaCache):
                         method: Literal['GET', 'POST'],
                         url: str,
                         **kwargs):
+        if cls._requests_session_cached is None:
+            raise RuntimeError("A cached request was attempted but the cache "
+                               "is not enabled.")
 
+        # catch TypeError raised by outdated requests-cache version if the
+        # cache was created with a newer version
+        # github.com/requests-cache/requests-cache/issues/973
         if method == 'GET':
             func = cls._requests_session_cached.get
         elif method == 'POST':
@@ -312,9 +340,6 @@ class Cache(metaclass=_MetaCache):
         else:
             raise ValueError("Invalid method. Must be 'GET' or 'POST'.")
 
-        # catch TypeError raised by outdated requests-cache version if the
-        # cache was created with a newer version
-        # github.com/requests-cache/requests-cache/issues/973
         try:
             response = func(url, **kwargs)
         except TypeError:
@@ -325,14 +350,18 @@ class Cache(metaclass=_MetaCache):
         return response
 
     @classmethod
-    def delete_response(cls, url):
+    def delete_response(cls, url: str):
         """Deletes a single cached response from the cache, if caching is
         enabled. If caching is not enabled, this call is ignored."""
         if cls._requests_session_cached is not None:
             cls._requests_session_cached.cache.delete(urls=[url])
 
     @classmethod
-    def clear_cache(cls, cache_dir=None, deep=False):
+    def clear_cache(
+            cls,
+            cache_dir: str | None = None,
+            deep: bool = False
+    ):
         """Clear all cached data.
 
         Deletes all files in the cache directory. By default, it will clear
@@ -355,25 +384,23 @@ class Cache(metaclass=_MetaCache):
                 cached data.
             deep (bool): Clear the requests cache (stage 1) too.
         """
-        if cache_dir is None:
-            if cls._CACHE_DIR is None:
-                cache_dir = cls._get_default_cache_path()
-            else:
-                cache_dir = cls._CACHE_DIR
+        if cache_dir is None and cls._CACHE_DIR is not None:
+            sanitized_cache_dir = cls._CACHE_DIR
+        else:
+            sanitized_cache_dir = cls._ensure_cache_directory(cache_dir)
 
-        # We need to expand the directory to support ~/
-        cache_dir = os.path.expandvars(cache_dir)
-        cache_dir = os.path.expanduser(cache_dir)
-        if not os.path.exists(cache_dir):
-            raise NotADirectoryError("Cache directory does not exist!")
+        if sanitized_cache_dir is None:
+            raise ValueError("Unable to clear cache. Could not determine "
+                             "cache directory.")
 
-        for dirpath, _dirnames, filenames in os.walk(cache_dir):
+        for dirpath, _dirnames, filenames in os.walk(sanitized_cache_dir):
             for filename in filenames:
                 if filename.endswith('.ff1pkl'):
                     os.remove(os.path.join(dirpath, filename))
 
         if deep:
-            cache_db_path = os.path.join(cache_dir, 'fastf1_http_cache.sqlite')
+            cache_db_path = os.path.join(sanitized_cache_dir,
+                                         'fastf1_http_cache.sqlite')
             if os.path.exists(cache_db_path):
                 os.remove(cache_db_path)
 
@@ -409,6 +436,9 @@ class Cache(metaclass=_MetaCache):
                         # don't like the bare exception clause but who knows
                         # which dependency will raise which internal exception
                         # after it was updated
+                        cached = None
+
+                    if not isinstance(cached, dict):
                         cached = None
 
                     if (cached is not None) and cls._data_ok_for_use(cached):
@@ -447,16 +477,14 @@ class Cache(metaclass=_MetaCache):
                     exit()
 
             else:  # cache was not enabled
-                if not cls._tmp_disabled:
-                    cls._enable_default_cache()
                 return func(api_path, **func_kwargs)
 
         return _cached_api_request
 
     @classmethod
-    def _get_cache_file_path(cls, api_path, name):
+    def _get_cache_file_path(cls, api_path: str, name: str):
         # extend the cache dir path using the api path and a file name
-        # leading '/static/' is dropped form api path
+        # leading '/static/' is dropped from api path
         cache_dir_path = os.path.join(cls._CACHE_DIR, api_path[8:])
         if not os.path.exists(cache_dir_path):
             # create subfolders if they don't yet exist
@@ -466,7 +494,7 @@ class Cache(metaclass=_MetaCache):
         return os.path.join(cache_dir_path, file_name)
 
     @classmethod
-    def _data_ok_for_use(cls, cached):
+    def _data_ok_for_use(cls, cached: dict):
         # check if cached data is ok or needs to be downloaded again
         if cls._FORCE_RENEW:
             return False
@@ -476,7 +504,12 @@ class Cache(metaclass=_MetaCache):
         )
 
     @classmethod
-    def _write_cache(cls, data, cache_file_path, **kwargs):
+    def _write_cache(
+            cls,
+            data: Any,
+            cache_file_path: str,
+            **kwargs
+    ):
         new_cached = dict(
             version=cls._API_CORE_VERSION, data=data,
             **kwargs
@@ -485,56 +518,86 @@ class Cache(metaclass=_MetaCache):
             pickle.dump(new_cached, cache_file_obj)
 
     @classmethod
-    def _get_default_cache_path(cls):
+    def _get_default_cache_path(cls) -> str | None:
         if sys.platform == "linux":
             # If .cache exists we will use it. Otherwise, ~/
             tmp = os.path.expanduser("~/.cache")
             if os.path.exists(tmp):
-                return r"~/.cache/fastf1"
-            return r"~/.fastf1"
-        if sys.platform == "darwin":
-            return r"~/Library/Caches/fastf1"
-        if sys.platform == "win32":
-            return r"%LOCALAPPDATA%\Temp\fastf1"
-        return None
+                cache_dir = r"~/.cache/fastf1"
+            cache_dir = r"~/.fastf1"
+        elif sys.platform == "darwin":
+            cache_dir = r"~/Library/Caches/fastf1"
+        elif sys.platform == "win32":
+            cache_dir = r"%LOCALAPPDATA%\Temp\fastf1"
+        else:
+            # unknown platform, unable to get cache directory
+            return None
+
+        cache_dir = os.path.expandvars(cache_dir)
+        cache_dir = os.path.expanduser(cache_dir)
+        if not os.path.exists(cache_dir):
+            try:
+                os.mkdir(cache_dir, mode=0o0700)
+            except Exception as err:
+                _logger.error(
+                    f"Failed to create cache directory "
+                    f"{cache_dir}. Error {err}"
+                )
+                raise
+
+        return cache_dir
 
     @classmethod
-    def _enable_default_cache(cls):
-        if not cls._CACHE_DIR and not cls._default_cache_enabled:
-            cache_dir = None
-            if "FASTF1_CACHE" in os.environ:
-                cache_dir = os.environ.get("FASTF1_CACHE")
-            else:
-                cache_dir = cls._get_default_cache_path()
+    def _ensure_cache_directory(
+            cls,
+            user_cache_dir: str| None = None
+    ) -> str | None:
+        if user_cache_dir is not None:
+            # Allow users to use paths such as %LOCALAPPDATA%
+            cache_dir = str(os.path.expandvars(user_cache_dir))
+        elif "FASTF1_CACHE" in os.environ:
+            cache_dir = os.environ.get("FASTF1_CACHE")
+        else:
+            cache_dir = cls._get_default_cache_path()
 
-            if cache_dir is not None:
-                # Ensure the default cache folder exists
-                cache_dir = os.path.expandvars(cache_dir)
-                cache_dir = os.path.expanduser(cache_dir)
-                if not os.path.exists(cache_dir):
-                    try:
-                        os.mkdir(cache_dir, mode=0o0700)
-                    except Exception as err:
-                        _logger.error(f"Failed to create cache directory "
-                                      f"{cache_dir}. Error {err}")
-                        raise
+        if cache_dir is None:
+            warnings.warn(
+                f"Failed to get a default cache path "
+                f"(platform={sys.platform}). "
+                f"Please configure the cache directory manually."
+            )
+            return None
 
-                # Enable cache with default
-                cls.enable_cache(cache_dir)
-                _logger.warning(
-                    f"DEFAULT CACHE ENABLED! "
-                    f"({cls._convert_size(cls._get_size(cache_dir))}) "
-                    f"{cache_dir}"
-                )
-            else:
+        # Allow users to use paths such as ~user or ~/
+        cache_dir = os.path.expanduser(cache_dir)
+
+        if not os.path.exists(cache_dir):
+            raise NotADirectoryError("Cache directory does not exist! Please "
+                                     "check for typos or create it first.")
+
+        return cache_dir
+
+    @classmethod
+    def _ensure_caching(cls):
+        if not cls._CACHE_DIR and not cls._no_cached_warned:
+            cls.configure()  # enable using defaults
+
+            if not cls._CACHE_DIR:
                 # warn only once and only if cache is not enabled
                 _logger.warning(
                     "\n\nNO CACHE! Api caching has not been enabled! \n\t"
                     "It is highly recommended to enable this feature for much "
                     "faster data loading!\n\t"
-                    "Use `fastf1.Cache.enable_cache('path/to/cache/')`\n")
+                    "Use `fastf1.Cache.configure(...)`\n")
 
-                cls._default_cache_enabled = True
+                cls._no_cached_warned = True
+                return
+
+            _logger.warning(
+                f"DEFAULT CACHE ENABLED! "
+                f"({cls._convert_size(cls._get_size(cls._CACHE_DIR))}) "
+                f"{cls._CACHE_DIR}"
+            )
 
     @classmethod
     def disabled(cls):
@@ -576,7 +639,7 @@ class Cache(metaclass=_MetaCache):
 
         .. warning::
             To enable the cache it needs to be configured properly. You need
-            to call :func`enable_cache` once to enable the cache initially.
+            to call :func`configure` once to enable the cache initially.
             :func:`set_enabled` and :func:`set_disabled` only serve to
             (temporarily) disable the cache for specific parts of code that
             should be run without caching.
@@ -596,7 +659,7 @@ class Cache(metaclass=_MetaCache):
 
         .. note::
 
-            This function must be called after :func:`enable_cache` when
+            This function must be called after :func:`configure` when
             using a custom cache directory.
 
         Args:
@@ -604,7 +667,7 @@ class Cache(metaclass=_MetaCache):
                 or 'disabled' (``False``)
         """
         if cls._requests_session_cached is None:
-            cls._enable_default_cache()
+            cls._ensure_caching()
         cls._requests_session_cached.settings.only_if_cached = enabled
 
     @classmethod
@@ -632,7 +695,7 @@ class Cache(metaclass=_MetaCache):
 
         .. note::
 
-            This function must be called after :func:`enable_cache` when
+            This function must be called after :func:`configure` when
             using a custom cache directory.
         """
         warnings.warn("CI mode is deprecated and will be removed in a "
@@ -656,7 +719,7 @@ class Cache(metaclass=_MetaCache):
         return path, size
 
     @classmethod
-    def _convert_size(cls, size_bytes):  # https://stackoverflow.com/questions/5194057/better-way-to-convert-file-sizes-in-python # noqa: E501
+    def _convert_size(cls, size_bytes: int):  # https://stackoverflow.com/questions/5194057/better-way-to-convert-file-sizes-in-python # noqa: E501
         if size_bytes == 0:
             return "0B"
         size_name = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
@@ -666,7 +729,7 @@ class Cache(metaclass=_MetaCache):
         return f"{s} {size_name[i]}"
 
     @classmethod
-    def _get_size(cls, start_path='.'):  # https://stackoverflow.com/questions/1392413/calculating-a-directorys-size-using-python # noqa: E501
+    def _get_size(cls, start_path: str = '.'):  # https://stackoverflow.com/questions/1392413/calculating-a-directorys-size-using-python # noqa: E501
         total_size = 0
         for dirpath, _dirnames, filenames in os.walk(start_path):
             for f in filenames:
