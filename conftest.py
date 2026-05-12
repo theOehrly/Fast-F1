@@ -144,7 +144,6 @@ def fastf1_setup():
         os.mkdir('test_cache')
         fastf1.Cache.enable_cache('test_cache')
 
-    fastf1.Cache.ci_mode(True)  # only request uncached data
     LoggingManager.debug = True  # raise all exceptions
 
 
