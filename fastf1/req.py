@@ -248,8 +248,7 @@ class Cache(metaclass=_MetaCache):
                 allowable_methods=('GET', 'POST'),
                 expire_after=datetime.timedelta(hours=12),
                 cache_control=True,
-                stale_if_error=True,
-                filter_fn=cls._custom_cache_filter
+                stale_if_error=True
             )
             if force_renew:
                 cls._requests_session_cached.cache.clear()
@@ -331,14 +330,6 @@ class Cache(metaclass=_MetaCache):
         enabled. If caching is not enabled, this call is ignored."""
         if cls._requests_session_cached is not None:
             cls._requests_session_cached.cache.delete(urls=[url])
-
-    @staticmethod
-    def _custom_cache_filter(response: requests.Response):
-        # this function provides custom filtering to decide which responses
-        # get cached
-
-        # workaround for Ergast returning error with status code 200
-        return "Unable to select database" not in response.text
 
     @classmethod
     def clear_cache(cls, cache_dir=None, deep=False):
