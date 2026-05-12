@@ -640,11 +640,18 @@ class Cache(metaclass=_MetaCache):
         no parsed data is cached. This means that the API parser code is
         always executed and not skipped due to caching.
 
+        .. deprecated:: v3.9.0
+
+            This function is deprecated and will be removed in a future
+            release.
+
         .. note::
 
             This function must be called after :func:`enable_cache` when
             using a custom cache directory.
         """
+        warnings.warn("CI mode is deprecated and will be removed in a "
+                      "future release.", FutureWarning)
         cls._ci_mode = enabled
 
     @classmethod
