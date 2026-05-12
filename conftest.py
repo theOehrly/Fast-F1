@@ -70,7 +70,7 @@ def pytest_collection_modifyitems(config, items):
                 item.add_marker(skip_ergast)
 
     # only test documentation and project structure
-    if config.getoption('--prj-doc'):
+    if config.getoption("--prj-doc"):
         skip_non_prj = pytest.mark.skip(reason="--prj-doc given: run only "
                                                "project structure and "
                                                "documentation tests")
