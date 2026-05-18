@@ -17,7 +17,8 @@ def _test_enable_cache(tmpdir):
 
 
 def test_cache_used_and_clear(tmpdir):
-    fastf1.testing.run_in_subprocess(_test_cache_used_and_clear, tmpdir)
+    fastf1.testing.run_in_subprocess(_test_cache_used_and_clear, tmpdir,
+                                     use_default_cache=False)
 
 
 def _test_cache_used_and_clear(tmpdir):
@@ -31,11 +32,6 @@ def _test_cache_used_and_clear(tmpdir):
     with requests_mock.Mocker() as mocker:
         # create a custom requests session here so that requests_mock is
         # properly used
-
-        Cache.ci_mode(False)
-        LoggingManager.debug = True
-        # special, relevant on Linux only.
-        # ci mode does not propagate to subprocess on windows
 
         # enable fastf1's own pickle cache
         Cache.configure(cache_dir=tmpdir, use_requests_cache=False)

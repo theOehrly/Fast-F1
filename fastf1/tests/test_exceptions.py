@@ -83,7 +83,8 @@ def test_deprecated_access_warns(module, name):
 
 
 def test_soft_exceptions_catch_and_warn():
-    run_in_subprocess(_test_soft_exceptions_catch_and_warn)
+    run_in_subprocess(_test_soft_exceptions_catch_and_warn,
+                      raise_soft_exceptions=False)
 
 
 def _test_soft_exceptions_catch_and_warn():
