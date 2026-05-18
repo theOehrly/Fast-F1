@@ -2,6 +2,11 @@ import os
 
 import pytest
 
+from fastf1.testing import (
+    enable_terminal_size_mock,
+    enable_test_cache
+)
+
 
 ERGAST_BACKEND_OVERRIDE = os.environ.get("FASTF1_TEST_ERGAST_BACKEND_OVERRIDE")
 
@@ -106,27 +111,17 @@ def reference_laps_data():
 
 @pytest.fixture(autouse=True)
 def fastf1_setup():
-    import fastf1
     from fastf1.logger import LoggingManager
 
-    try:
-        fastf1.Cache.configure(cache_dir='test_cache')
-    except NotADirectoryError:
-        # create the test cache and re-enable
-        os.mkdir('test_cache')
-        fastf1.Cache.configure(cache_dir='test_cache')
+    enable_test_cache()
 
     LoggingManager.debug = True  # raise all exceptions
 
 
 @pytest.fixture(autouse=True)
 def automock_terminal_size(doctest_namespace):  # noqa: ARG001
-    # Patch terminal width for pytest output to ensure consistent output for
-    # doctests in all environments. This is especially important for the
-    # formatting of Pandas DataFrames.
     # Patching inside an autouse=True fixture ensures that it is applied to
     # all tests but not to the pytest result output in the terminal.
     # Requiring the doctest_namespace fixture ensures that the patch also
     # applies to doctests.
-    import shutil
-    shutil.get_terminal_size = lambda *_args, **_kwargs: (80, 24)
+    enable_terminal_size_mock()

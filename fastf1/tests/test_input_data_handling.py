@@ -1,7 +1,6 @@
 # test some known special cases
 
 import logging
-import weakref
 
 import pandas as pd
 import pytest
@@ -16,16 +15,11 @@ from fastf1.testing.reference_values import LAP_DTYPES
 @pytest.mark.f1telapi
 def test_ergast_lookup_fail():
     cache_dir = fastf1.Cache._CACHE_DIR
-    fastf1.testing.run_in_subprocess(_test_ergast_lookup_fail, cache_dir)
+    fastf1.testing.run_in_subprocess(_test_ergast_lookup_fail,
+                                     raise_soft_exceptions=False)
 
 
-def _test_ergast_lookup_fail(cache_dir):
-    from fastf1.logger import LoggingManager
-    LoggingManager.debug = False
-    # special, relevant on Linux only.
-    # debug=True does not propagate to subprocess on windows
-
-    fastf1.Cache.configure(cache_dir=cache_dir)
+def _test_ergast_lookup_fail():
     log_handle = fastf1.testing.capture_log()
 
     # ergast lookup fails if data is requested to soon after a session ends
