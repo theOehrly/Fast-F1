@@ -4,6 +4,7 @@
 import io
 import logging
 import multiprocessing
+from typing import Callable
 
 
 _MP_CONFIGURED = False
@@ -15,12 +16,40 @@ class SubprocessTestError(Exception):
     pass
 
 
-def run_in_subprocess(func, *args, **kwargs):
+def subprocess_wrapper(*func_args,
+                       __func,
+                       __use_default_cache,
+                       __mock_terminal_size,
+                       __raise_soft_exceptions,
+                       **func_kwargs):
+    if __use_default_cache:
+        enable_test_cache()
+    if __mock_terminal_size:
+        enable_terminal_size_mock()
+    if __raise_soft_exceptions:
+        from fastf1.logger import LoggingManager
+        LoggingManager.debug = True  # raise all exceptions
+    __func(*func_args, **func_kwargs)
+
+
+def run_in_subprocess(
+        func: Callable,
+        *args,
+        use_default_cache: bool = True,
+        raise_soft_exceptions: bool = True,
+        mock_terminal_size: bool = True,
+        **kwargs):
     """Runs a function in a subprocess.
 
     Args:
         func (callable): The test function that is run
         *args (any): passed on to func
+        use_default_cache (bool, optional): Configure the default cache
+            equivalently to non-subprocess tests.
+        raise_soft_exceptions (bool, optional): Raise soft exceptions
+            equivalently to non-subprocess tests.
+        mock_terminal_size (bool, optional): Configure the terminal size mock
+            equivalently to non-subprocess tests.
         **kwargs (any) passed on to func
 
     Raises:
@@ -33,7 +62,15 @@ def run_in_subprocess(func, *args, **kwargs):
         # process is created cleanly with no inherited state in all cases
         _MP_CONFIGURED = True
 
-    prcs = multiprocessing.Process(target=func, args=args, kwargs=kwargs)
+    # inject internal arguments for wrapper configuration
+    kwargs.update({'__func': func,
+                   '__use_default_cache': use_default_cache,
+                   '__mock_terminal_size': mock_terminal_size,
+                   '__raise_soft_exceptions': raise_soft_exceptions})
+
+    prcs = multiprocessing.Process(
+        target=subprocess_wrapper, args=args, kwargs=kwargs
+    )
     prcs.start()
     prcs.join()
     if prcs.exitcode != 0:
@@ -86,3 +123,28 @@ def capture_log(level=logging.INFO):
     logger.addHandler(stream_handler)
 
     return LogOutputHandle(stream_handler, stream)
+
+
+def enable_test_cache():
+    import os
+
+    import fastf1
+
+    try:
+        fastf1.Cache.configure(cache_dir='test_cache')
+    except NotADirectoryError:
+        # create the test cache and re-enable
+        os.mkdir('test_cache')
+        fastf1.Cache.configure(cache_dir='test_cache')
+
+    # Ensure that tests make no actual requests and only run with prepared
+    # test data for reliability and repeatability.
+    fastf1.Cache.offline_mode(True)
+
+
+def enable_terminal_size_mock():
+    # Patch terminal width for pytest output to ensure consistent output for
+    # doctests in all environments. This is especially important for the
+    # formatting of Pandas DataFrames.
+    import shutil
+    shutil.get_terminal_size = lambda *_args, **_kwargs: (80, 24)
