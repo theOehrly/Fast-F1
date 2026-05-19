@@ -16,11 +16,17 @@ class SubprocessTestError(Exception):
     pass
 
 
+class AllStatusCodes(tuple):
+    def __contains__(self, item):
+        return True
+
+
 def subprocess_wrapper(*func_args,
                        __func,
                        __use_default_cache,
                        __mock_terminal_size,
                        __raise_soft_exceptions,
+                       __patch_cache_error_responses,
                        **func_kwargs):
     if __use_default_cache:
         enable_test_cache()
@@ -29,6 +35,14 @@ def subprocess_wrapper(*func_args,
     if __raise_soft_exceptions:
         from fastf1.logger import LoggingManager
         LoggingManager.debug = True  # raise all exceptions
+    if __patch_cache_error_responses:
+        from fastf1 import Cache
+        cache_settings = Cache._requests_session_cached.settings
+
+        # cache expected error response so that tests can be run offline
+        cache_settings.allowable_codes = AllStatusCodes()
+        cache_settings.cache_control = False
+
     __func(*func_args, **func_kwargs)
 
 
@@ -38,6 +52,7 @@ def run_in_subprocess(
         use_default_cache: bool = True,
         raise_soft_exceptions: bool = True,
         mock_terminal_size: bool = True,
+        patch_cache_error_responses: bool = False,
         **kwargs):
     """Runs a function in a subprocess.
 
@@ -50,11 +65,17 @@ def run_in_subprocess(
             equivalently to non-subprocess tests.
         mock_terminal_size (bool, optional): Configure the terminal size mock
             equivalently to non-subprocess tests.
+        patch_cache_error_responses (bool, optional): Patches the default cache
+            to also cache error responses. Requires ``use_default_cache=True``.
         **kwargs (any) passed on to func
 
     Raises:
         SubprocessTestError: The subprocess finished with a non-zero exitcode
     """
+    if patch_cache_error_responses and not use_default_cache:
+        raise ValueError("Argument `patch_cache_error_responses` requires "
+                         "`use_default_cache=True`")
+
     global _MP_CONFIGURED
     if not _MP_CONFIGURED:
         multiprocessing.set_start_method('spawn')
@@ -63,10 +84,13 @@ def run_in_subprocess(
         _MP_CONFIGURED = True
 
     # inject internal arguments for wrapper configuration
-    kwargs.update({'__func': func,
-                   '__use_default_cache': use_default_cache,
-                   '__mock_terminal_size': mock_terminal_size,
-                   '__raise_soft_exceptions': raise_soft_exceptions})
+    kwargs.update({
+        '__func': func,
+        '__use_default_cache': use_default_cache,
+        '__mock_terminal_size': mock_terminal_size,
+        '__raise_soft_exceptions': raise_soft_exceptions,
+        '__patch_cache_error_responses': patch_cache_error_responses
+    })
 
     prcs = multiprocessing.Process(
         target=subprocess_wrapper, args=args, kwargs=kwargs
