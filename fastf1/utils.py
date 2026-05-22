@@ -2,7 +2,7 @@
 
 The functions in this module were never intended to be part of the public
 API; see issue #884 for more details. They remain importable for backwards
-compatibility but emit a :class:`DeprecationWarning` and forward to the
+compatibility but emit a :class:`FutureWarning` and forward to the
 implementations in :mod:`fastf1._utils`. They will be removed in a future
 release.
 """
@@ -31,7 +31,7 @@ def recursive_dict_get(d: dict, *keys: str, default_none: bool = False):
     """
     warnings.warn(
         _DEPRECATION_MSG.format(name="recursive_dict_get"),
-        DeprecationWarning,
+        FutureWarning,
         stacklevel=2,
     )
     return _recursive_dict_get(d, *keys, default_none=default_none)
@@ -64,7 +64,7 @@ def to_timedelta(x: str | datetime.timedelta) \
     """
     warnings.warn(
         _DEPRECATION_MSG.format(name="to_timedelta"),
-        DeprecationWarning,
+        FutureWarning,
         stacklevel=2,
     )
     return _to_timedelta(x)
@@ -97,7 +97,7 @@ def to_datetime(x: str | datetime.datetime) \
     """
     warnings.warn(
         _DEPRECATION_MSG.format(name="to_datetime"),
-        DeprecationWarning,
+        FutureWarning,
         stacklevel=2,
     )
     return _to_datetime(x)
