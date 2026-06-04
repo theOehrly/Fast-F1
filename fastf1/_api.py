@@ -663,6 +663,11 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
 
     # more lap sync, this time check which lap triggered with the lowest latency
     for i in range(len(drv_data['Time']) - 1, 0, -1):
+        if pd.isna(drv_data['LapTime'][i]):
+            # LapTime can be NaT for formation laps and other special cases
+            # (e.g., standing restarts after red flags). In these cases, no
+            # lap time sync adjustment should be performed.
+            continue
         if (new_time := drv_data['Time'][i] - drv_data['LapTime'][i]) < \
                 drv_data['Time'][i - 1]:
             if i > 1 and new_time < drv_data['Time'][i - 2]:
@@ -675,6 +680,11 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         if (pd.isnull(drv_data['Time'][i])
                 or pd.isnull(drv_data['LapTime'][i + 1])):
             # lap not usable, missing critical values; more checks follow
+            continue
+        if pd.isna(drv_data['LapTime'][i]):
+            # LapTime can be NaT for formation laps and other special cases
+            # (e.g., standing restarts after red flags). Skip time adjustment
+            # for this lap since its lap time is not valid.
             continue
 
         if (new_time := drv_data['Time'][i] + drv_data['LapTime'][i+1]) \
