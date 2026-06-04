@@ -2444,6 +2444,30 @@ class Session:
                 self._results.loc[missing_drivers,
                                   ('Position', 'GridPosition')] = np.nan
 
+            # Fill in missing TeamId values by looking up teammates
+            # This handles cases where Ergast has no entry for a driver
+            # (e.g., DNS'd drivers) but F1 API has their TeamName
+            if 'TeamId' in self._results.columns and 'TeamName' in self._results.columns:
+                # Build mapping of TeamName -> TeamId from drivers who have both
+                team_id_map: dict = {}
+                for idx in self._results.index:
+                    team_name = self._results.loc[idx, 'TeamName']
+                    team_id = self._results.loc[idx, 'TeamId']
+                    if (pd.notna(team_name) and pd.notna(team_id)
+                            and str(team_id).lower() != 'nan'):
+                        team_id_map[team_name] = team_id
+
+                # Apply mapping to fill missing TeamId values
+                mask = (
+                    self._results['TeamId'].isna()
+                    | (self._results['TeamId'].astype(str).str.lower() == 'nan')
+                ) & self._results['TeamName'].notna()
+
+                for idx in self._results[mask].index:
+                    team_name = self._results.loc[idx, 'TeamName']
+                    if team_name in team_id_map:
+                        self._results.loc[idx, 'TeamId'] = team_id_map[team_name]
+
         if (dupl_mask := self._results.index.duplicated()).any():
             dupl_drv = list(self._results.index[dupl_mask])
             _logger.warning(f"Session results contain duplicate entries for "
