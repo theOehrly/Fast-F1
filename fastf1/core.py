@@ -2467,10 +2467,12 @@ class Session:
                 'Tla': 'Abbreviation',
                 'TeamName': 'TeamName',
                 'TeamColour': 'TeamColor',
+                'TeamId': 'TeamId',
                 'FirstName': 'FirstName',
                 'LastName': 'LastName',
                 'HeadshotUrl': 'HeadshotUrl',
-                'CountryCode': 'CountryCode'
+                'CountryCode': 'CountryCode',
+                'DriverId': 'DriverId'
             }.items():
                 for entry in f1di.values():
                     driver_info[key2].append(entry.get(key1))
