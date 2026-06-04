@@ -30,21 +30,21 @@ from fastf1.utils import (
 _logger = get_logger(__name__)
 
 _SESSION_TYPE_ABBREVIATIONS = {
-    'R': 'Race',
-    'Q': 'Qualifying',
-    'S': 'Sprint',
-    'SQ': 'Sprint Qualifying',
-    'SS': 'Sprint Shootout',
-    'FP1': 'Practice 1',
-    'FP2': 'Practice 2',
-    'FP3': 'Practice 3'
+    "R": "Race",
+    "Q": "Qualifying",
+    "S": "Sprint",
+    "SQ": "Sprint Qualifying",
+    "SS": "Sprint Shootout",
+    "FP1": "Practice 1",
+    "FP2": "Practice 2",
+    "FP3": "Practice 3"
 }
 
 _SCHEDULE_BASE_URL = (
     "https://raw.githubusercontent.com/"
     "theOehrly/f1schedule/master/"
 )
-_HEADERS = {'User-Agent': f'FastF1/{__version_short__}'}
+_HEADERS = {"User-Agent": f"FastF1/{__version_short__}"}
 
 
 def get_session(
@@ -52,7 +52,7 @@ def get_session(
         gp: str | int,
         identifier: int | str | None = None,
         *,
-        backend: Literal['fastf1', 'f1timing', 'ergast'] | None = None,
+        backend: Literal["fastf1", "f1timing", "ergast"] | None = None,
         exact_match: bool = False
 ) -> Session:
     """Create a :class:`~fastf1.core.Session` object based on year, event name
@@ -143,7 +143,7 @@ def get_testing_session(
         test_number: int,
         session_number: int,
         *,
-        backend: Literal['fastf1', 'f1timing'] | None = None
+        backend: Literal["fastf1", "f1timing"] | None = None
 ) -> Session:
     """Create a :class:`~fastf1.core.Session` object for testing sessions
     based on year, test  event number and session number.
@@ -176,7 +176,7 @@ def get_event(
         year: int,
         gp: int | str,
         *,
-        backend: Literal['fastf1', 'f1timing', 'ergast'] | None = None,
+        backend: Literal["fastf1", "f1timing", "ergast"] | None = None,
         exact_match: bool = False
 ) -> "Event":
     """Create an :class:`~fastf1.events.Event` object for a specific
@@ -247,7 +247,7 @@ def get_testing_event(
         year: int,
         test_number: int,
         *,
-        backend: Literal['fastf1', 'f1timing'] | None = None
+        backend: Literal["fastf1", "f1timing"] | None = None
 ) -> "Event":
     """Create a :class:`fastf1.events.Event` object for testing sessions
     based on year and test event number.
@@ -267,7 +267,7 @@ def get_testing_event(
             ``f1timing`` is used as a fallback in case the default
             is not available.
     """
-    if backend == 'ergast':
+    if backend == "ergast":
         raise ValueError("The 'ergast' backend does not support "
                          "testing events!")
     schedule = get_event_schedule(year=year, backend=backend)
@@ -286,7 +286,7 @@ def get_event_schedule(
         year: int,
         *,
         include_testing: bool = True,
-        backend: Literal['fastf1', 'f1timing', 'ergast'] | None = None,
+        backend: Literal["fastf1", "f1timing", "ergast"] | None = None,
 ) -> "EventSchedule":
     """Create an :class:`~fastf1.events.EventSchedule` object for a specific
     season.
@@ -316,15 +316,15 @@ def get_event_schedule(
             For seasons older than 2018 ``'ergast'`` is always used.
     """
     _backends_named_order = {
-        'fastf1': _get_schedule_ff1,
-        'f1timing': _get_schedule_from_f1_timing,
-        'ergast': _get_schedule_from_ergast
+        "fastf1": _get_schedule_ff1,
+        "f1timing": _get_schedule_from_f1_timing,
+        "ergast": _get_schedule_from_ergast
     }
 
     if backend is not None:
         _backends = [_backends_named_order[backend]]
     elif year < 2018:
-        _backends = [_backends_named_order['ergast']]
+        _backends = [_backends_named_order["ergast"]]
     else:
         _backends = list(_backends_named_order.values())
 
@@ -346,8 +346,8 @@ def get_events_remaining(
         dt: datetime.datetime | None = None,
         *,
         include_testing: bool = True,
-        backend: Literal['fastf1', 'f1timing', 'ergast'] | None = None,
-) -> 'EventSchedule':
+        backend: Literal["fastf1", "f1timing", "ergast"] | None = None,
+) -> "EventSchedule":
     """
     Create an :class:`~fastf1.events.EventSchedule` object for remaining
     season.
@@ -417,7 +417,7 @@ def _get_schedule_ff1(year):
 
     # convert gmt offset to timedelta
     gmt_offset = []
-    for go in data.pop('gmt_offset'):
+    for go in data.pop("gmt_offset"):
         if go is None:
             gmt_offset.append(datetime.timedelta(0))
         else:
@@ -428,15 +428,15 @@ def _get_schedule_ff1(year):
 
     # create additional columns for UTC timestamps
     for n in range(5):
-        data[f'session{n+1}_date_Utc'] = [None, ] * length
+        data[f"session{n+1}_date_Utc"] = [None, ] * length
 
     # convert and set all timestamps
     for i in range(length):
-        data['event_date'][i] = to_datetime(data['event_date'][i]) \
+        data["event_date"][i] = to_datetime(data["event_date"][i]) \
             .replace(hour=0, minute=0, second=0)
 
         for j in range(5):
-            date = to_datetime(data[f'session{j+1}_date'][i])
+            date = to_datetime(data[f"session{j+1}_date"][i])
             if date is None:
                 date_utc = None
             else:
@@ -447,12 +447,12 @@ def _get_schedule_ff1(year):
                 date_utc = date.astimezone(datetime.timezone.utc) \
                     .replace(tzinfo=None)
 
-            data[f'session{j+1}_date'][i] = pd.Timestamp(date)
-            data[f'session{j+1}_date_Utc'][i] = pd.Timestamp(date_utc)
+            data[f"session{j+1}_date"][i] = pd.Timestamp(date)
+            data[f"session{j+1}_date_Utc"][i] = pd.Timestamp(date_utc)
 
     df = pd.DataFrame(data)
     # change column names from snake_case to UpperCamelCase
-    col_renames = {col: ''.join([s.capitalize() for s in col.split('_')])
+    col_renames = {col: "".join([s.capitalize() for s in col.split("_")])
                    for col in df.columns}
     df = df.rename(columns=col_renames)
 
@@ -464,84 +464,84 @@ def _get_schedule_ff1(year):
                  _logger)
 def _get_schedule_from_f1_timing(year: int):
     # create an event schedule using data from the F1 API
-    response = fastf1._api.season_schedule(f'/static/{year}/')
+    response = fastf1._api.season_schedule(f"/static/{year}/")
     data = collections.defaultdict(list)
 
     for event in response:
-        data['Country'].append(event['Country']['Name'])
-        data['Location'].append(event['Location'])
-        data['EventName'].append(event['Name'])
-        data['OfficialEventName'].append(event['OfficialName'])
+        data["Country"].append(event["Country"]["Name"])
+        data["Location"].append(event["Location"])
+        data["EventName"].append(event["Name"])
+        data["OfficialEventName"].append(event["OfficialName"])
 
         # select only valid sessions
         sessions = [
             ses for ses in event["Sessions"]
-            if ses.get('Key') != -1
-            and ses.get('Name')
+            if ses.get("Key") != -1
+            and ses.get("Name")
         ]
 
         n_events = min(len(sessions), 5)
         # number of events, usually 3 for testing, 5 for race weekends
         # in special cases there are additional unrelated events
 
-        if 'test' in event['Name'].lower():
-            data['EventFormat'].append('testing')
-            data['RoundNumber'].append(0)
+        if "test" in event["Name"].lower():
+            data["EventFormat"].append("testing")
+            data["RoundNumber"].append(0)
 
         elif year <= 2020:
-            data['EventFormat'].append('conventional')
-            data['RoundNumber'].append(event['Number'])
+            data["EventFormat"].append("conventional")
+            data["RoundNumber"].append(event["Number"])
 
         elif year in (2021, 2022):
-            if sessions[3]['Name'] == 'Sprint Qualifying':
+            if sessions[3]["Name"] == "Sprint Qualifying":
                 # fix for 2021 where Sprint was called Sprint Qualifying
-                sessions[3]['Name'] = 'Sprint'
+                sessions[3]["Name"] = "Sprint"
 
-            if sessions[3]['Name'] == 'Sprint':
-                data['EventFormat'].append('sprint')
+            if sessions[3]["Name"] == "Sprint":
+                data["EventFormat"].append("sprint")
             else:
-                data['EventFormat'].append('conventional')
-            data['RoundNumber'].append(event['Number'])
+                data["EventFormat"].append("conventional")
+            data["RoundNumber"].append(event["Number"])
 
         elif year == 2023:
-            if sessions[2]['Name'] == 'Sprint Shootout':
-                data['EventFormat'].append('sprint_shootout')
+            if sessions[2]["Name"] == "Sprint Shootout":
+                data["EventFormat"].append("sprint_shootout")
             else:
-                data['EventFormat'].append('conventional')
-            data['RoundNumber'].append(event['Number'])
+                data["EventFormat"].append("conventional")
+            data["RoundNumber"].append(event["Number"])
 
         elif year >= 2024:
-            if sessions[1]['Name'] == 'Sprint Qualifying':
-                data['EventFormat'].append('sprint_qualifying')
+            if sessions[1]["Name"] == "Sprint Qualifying":
+                data["EventFormat"].append("sprint_qualifying")
             else:
-                data['EventFormat'].append('conventional')
-            data['RoundNumber'].append(event['Number'])
+                data["EventFormat"].append("conventional")
+            data["RoundNumber"].append(event["Number"])
 
-        data['F1ApiSupport'].append(True)
+        data["F1ApiSupport"].append(True)
 
         for i in range(5):
             # parse the up to five sessions for each event
             try:
                 session = sessions[i]
             except IndexError:
-                data[f'Session{i+1}'].append(None)
-                data[f'Session{i+1}Date'].append(None)
-                data[f'Session{i+1}DateUtc'].append(None)
+                data[f"Session{i+1}"].append(None)
+                data[f"Session{i+1}Date"].append(None)
+                data[f"Session{i+1}DateUtc"].append(None)
             else:
-                data[f'Session{i+1}'].append(session['Name'])
+                data[f"Session{i+1}"].append(session["Name"])
                 # save timestamp as tz-aware local time and non-tz-aware utc
-                date = to_datetime(session['StartDate'])
-                gmt_offset = to_timedelta(session['GmtOffset'])
+                date = to_datetime(session["StartDate"])
+                gmt_offset = to_timedelta(session["GmtOffset"])
                 date = date.replace(tzinfo=datetime.timezone(gmt_offset))
                 date_utc = date.astimezone(datetime.timezone.utc) \
                     .replace(tzinfo=None)
-                data[f'Session{i+1}Date'].append(pd.Timestamp(date))
-                data[f'Session{i+1}DateUtc'].append(pd.Timestamp(date_utc))
+                data[f"Session{i+1}Date"].append(pd.Timestamp(date))
+                data[f"Session{i+1}DateUtc"].append(pd.Timestamp(date_utc))
 
         # set the event date to the date of the last session
-        ev_date = data[f'Session{n_events}DateUtc'][-1]
+        ev_date = data[f"Session{n_events}DateUtc"][-1]
         ev_date = ev_date.replace(hour=0, minute=0, second=0)
-        data['EventDate'].append(ev_date)
+        data["EventDate"].append(ev_date)
 
     return EventSchedule(data, year=year, _force_default_cols=True)
 
@@ -554,15 +554,15 @@ def _get_schedule_from_ergast(year) -> "EventSchedule":
     season = fastf1.ergast.fetch_season(year)
     data = collections.defaultdict(list)
     for rnd in season:
-        data['RoundNumber'].append(int(rnd.get('round')))
-        data['Country'].append(
-            recursive_dict_get(rnd, 'Circuit', 'Location', 'country')
+        data["RoundNumber"].append(int(rnd.get("round")))
+        data["Country"].append(
+            recursive_dict_get(rnd, "Circuit", "Location", "country")
         )
-        data['Location'].append(
-            recursive_dict_get(rnd, 'Circuit', 'Location', 'locality')
+        data["Location"].append(
+            recursive_dict_get(rnd, "Circuit", "Location", "locality")
         )
-        data['EventName'].append(rnd.get('raceName'))
-        data['OfficialEventName'].append("")
+        data["EventName"].append(rnd.get("raceName"))
+        data["OfficialEventName"].append("")
 
         try:
             date = pd.to_datetime(
@@ -570,67 +570,67 @@ def _get_schedule_from_ergast(year) -> "EventSchedule":
             ).tz_localize(None)
         except dateutil.parser.ParserError:
             date = pd.Timestamp(pd.NaT)
-        data['EventDate'].append(date)
+        data["EventDate"].append(date)
 
-        if 'Sprint' in rnd:
+        if "Sprint" in rnd:
             # Ergast doesn't support sprint shootout format yet
             if year in (2021, 2022):
-                _format = 'sprint'
-                session_names = ['Practice 1', 'Qualifying', 'Practice 2',
-                                 'Sprint', 'Race']
+                _format = "sprint"
+                session_names = ["Practice 1", "Qualifying", "Practice 2",
+                                 "Sprint", "Race"]
             elif year == 2023:
-                _format = 'sprint_shootout'
-                session_names = ['Practice 1', 'Qualifying', 'Sprint Shootout',
-                                 'Sprint', 'Race']
+                _format = "sprint_shootout"
+                session_names = ["Practice 1", "Qualifying", "Sprint Shootout",
+                                 "Sprint", "Race"]
             else:
-                _format = 'sprint_qualifying'
-                session_names = ['Practice 1', 'Sprint Qualifying', 'Sprint',
-                                 'Qualifying', 'Race']
+                _format = "sprint_qualifying"
+                session_names = ["Practice 1", "Sprint Qualifying", "Sprint",
+                                 "Qualifying", "Race"]
 
-            data['EventFormat'].append(_format)
+            data["EventFormat"].append(_format)
 
-            data['Session1'].append(session_names[0])
-            data['Session1DateUtc'].append(
-                date.floor('D') - pd.Timedelta(days=2))
+            data["Session1"].append(session_names[0])
+            data["Session1DateUtc"].append(
+                date.floor("D") - pd.Timedelta(days=2))
 
-            data['Session2'].append(session_names[1])
-            data['Session2DateUtc'].append(
-                date.floor('D') - pd.Timedelta(days=2))
+            data["Session2"].append(session_names[1])
+            data["Session2DateUtc"].append(
+                date.floor("D") - pd.Timedelta(days=2))
 
-            data['Session3'].append(session_names[2])
-            data['Session3DateUtc'].append(
-                date.floor('D') - pd.Timedelta(days=1))
+            data["Session3"].append(session_names[2])
+            data["Session3DateUtc"].append(
+                date.floor("D") - pd.Timedelta(days=1))
 
-            data['Session4'].append(session_names[3])
-            data['Session4DateUtc'].append(
-                date.floor('D') - pd.Timedelta(days=1))
+            data["Session4"].append(session_names[3])
+            data["Session4DateUtc"].append(
+                date.floor("D") - pd.Timedelta(days=1))
 
-            data['Session5'].append(session_names[4])
-            data['Session5DateUtc'].append(date)
+            data["Session5"].append(session_names[4])
+            data["Session5DateUtc"].append(date)
 
         else:
-            data['EventFormat'].append("conventional")
+            data["EventFormat"].append("conventional")
 
-            data['Session1'].append('Practice 1')
-            data['Session1DateUtc'].append(
-                date.floor('D') - pd.Timedelta(days=2))
+            data["Session1"].append("Practice 1")
+            data["Session1DateUtc"].append(
+                date.floor("D") - pd.Timedelta(days=2))
 
-            data['Session2'].append('Practice 2')
-            data['Session2DateUtc'].append(
-                date.floor('D') - pd.Timedelta(days=2))
+            data["Session2"].append("Practice 2")
+            data["Session2DateUtc"].append(
+                date.floor("D") - pd.Timedelta(days=2))
 
-            data['Session3'].append('Practice 3')
-            data['Session3DateUtc'].append(
-                date.floor('D') - pd.Timedelta(days=1))
+            data["Session3"].append("Practice 3")
+            data["Session3DateUtc"].append(
+                date.floor("D") - pd.Timedelta(days=1))
 
-            data['Session4'].append('Qualifying')
-            data['Session4DateUtc'].append(
-                date.floor('D') - pd.Timedelta(days=1))
+            data["Session4"].append("Qualifying")
+            data["Session4DateUtc"].append(
+                date.floor("D") - pd.Timedelta(days=1))
 
-            data['Session5'].append('Race')
-            data['Session5DateUtc'].append(date)
+            data["Session5"].append("Race")
+            data["Session5DateUtc"].append(date)
 
-        data['F1ApiSupport'].append(year >= 2018)
+        data["F1ApiSupport"].append(year >= 2018)
         # simplified; this is only true most of the time
 
     df = pd.DataFrame(data)
@@ -655,32 +655,32 @@ class EventSchedule(BaseDataFrame):
     """
 
     _COLUMNS = {
-        'RoundNumber': int,
-        'Country': str,
-        'Location': str,
-        'OfficialEventName': str,
-        'EventDate': 'datetime64[ns]',
-        'EventName': str,
-        'EventFormat': str,
-        'Session1': str,
-        'Session1Date': object,  # tz-aware datetime.datetime
-        'Session1DateUtc': 'datetime64[ns]',
-        'Session2': str,
-        'Session2Date': object,
-        'Session2DateUtc': 'datetime64[ns]',
-        'Session3': str,
-        'Session3Date': object,
-        'Session3DateUtc': 'datetime64[ns]',
-        'Session4': str,
-        'Session4Date': object,
-        'Session4DateUtc': 'datetime64[ns]',
-        'Session5': str,
-        'Session5Date': object,
-        'Session5DateUtc': 'datetime64[ns]',
-        'F1ApiSupport': bool
+        "RoundNumber": int,
+        "Country": str,
+        "Location": str,
+        "OfficialEventName": str,
+        "EventDate": "datetime64[ns]",
+        "EventName": str,
+        "EventFormat": str,
+        "Session1": str,
+        "Session1Date": object,  # tz-aware datetime.datetime
+        "Session1DateUtc": "datetime64[ns]",
+        "Session2": str,
+        "Session2Date": object,
+        "Session2DateUtc": "datetime64[ns]",
+        "Session3": str,
+        "Session3Date": object,
+        "Session3DateUtc": "datetime64[ns]",
+        "Session4": str,
+        "Session4Date": object,
+        "Session4DateUtc": "datetime64[ns]",
+        "Session5": str,
+        "Session5Date": object,
+        "Session5DateUtc": "datetime64[ns]",
+        "F1ApiSupport": bool
     }
 
-    _metadata = ['year']
+    _metadata = ["year"]
 
     def __init__(self, *args, year: int = 0, **kwargs):
 
@@ -694,7 +694,7 @@ class EventSchedule(BaseDataFrame):
     def is_testing(self):
         """Return `True` or `False`, depending on whether each event is a
         testing event."""
-        return pd.Series(self['EventFormat'] == 'testing')
+        return pd.Series(self["EventFormat"] == "testing")
 
     def get_event_by_round(self, round: int) -> "Event":
         """Get an :class:`Event` by its round number.
@@ -706,7 +706,7 @@ class EventSchedule(BaseDataFrame):
         """
         if round == 0:
             raise ValueError("Cannot get testing event by round number!")
-        mask = self['RoundNumber'] == round
+        mask = self["RoundNumber"] == round
         if not mask.any():
             raise ValueError(f"Invalid round: {round}")
         return self[mask].iloc[0]
@@ -718,7 +718,7 @@ class EventSchedule(BaseDataFrame):
 
         query = name.lower()
         for i, event in self.iterrows():
-            if 'EventName' in event and event["EventName"].lower() == query:
+            if "EventName" in event and event["EventName"].lower() == query:
                 return self.loc[i]
         else:
             raise KeyError(f"No exact event name for '{name}'!")
@@ -742,13 +742,13 @@ class EventSchedule(BaseDataFrame):
 
         def _matcher_strings(ev):
             strings = []
-            if ('Location' in ev) and ev['Location']:
-                strings.append(ev['Location'].casefold())
-            if ('Country' in ev) and ev['Country']:
-                strings.append(ev['Country'].casefold())
-            if ('EventName' in ev) and ev['EventName']:
+            if ("Location" in ev) and ev["Location"]:
+                strings.append(ev["Location"].casefold())
+            if ("Country" in ev) and ev["Country"]:
+                strings.append(ev["Country"].casefold())
+            if ("EventName" in ev) and ev["EventName"]:
                 strings.append(_remove_common_words(ev["EventName"]))
-            if ('OfficialEventName' in ev) and ev['OfficialEventName']:
+            if ("OfficialEventName" in ev) and ev["OfficialEventName"]:
                 strings.append(_remove_common_words(ev["OfficialEventName"]))
             return strings
 
@@ -844,7 +844,7 @@ class Event(BaseSeries):
     Args:
           year: Championship year
     """
-    _metadata = ['year']
+    _metadata = ["year"]
 
     def __init__(self, *args, year: int = None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -853,7 +853,7 @@ class Event(BaseSeries):
     def is_testing(self) -> bool:
         """Return `True` or `False`, depending on whether this event is a
         testing event."""
-        return self['EventFormat'] == 'testing'
+        return self["EventFormat"] == "testing"
 
     def get_session_name(self, identifier) -> str:
         """Return the full session name of a specific session from this event.
@@ -897,9 +897,9 @@ class Event(BaseSeries):
             # old 'sprint' event format and renamed later; support the old
             # name for backwards compatibility by silently correcting to the
             # new name
-            if ((session_name == 'Sprint Qualifying')
+            if ((session_name == "Sprint Qualifying")
                     and (self.year in (2021, 2022))):
-                session_name = 'Sprint'
+                session_name = "Sprint"
 
             if session_name not in self.values:
                 raise ValueError(
@@ -910,7 +910,7 @@ class Event(BaseSeries):
             # by number
             if (float(num).is_integer()
                     and (num := int(num)) in (1, 2, 3, 4, 5)):
-                session_name = self[f'Session{num}']
+                session_name = self[f"Session{num}"]
             else:
                 raise ValueError(f"Invalid session type '{num}'")
             if not session_name:
@@ -933,8 +933,8 @@ class Event(BaseSeries):
             ValueError: No matching session or invalid identifier
         """
         session_name = self.get_session_name(identifier)
-        relevant_columns = self.loc[['Session1', 'Session2', 'Session3',
-                                     'Session4', 'Session5']]
+        relevant_columns = self.loc[["Session1", "Session2", "Session3",
+                                     "Session4", "Session5"]]
         mask = (relevant_columns == session_name)
         if not mask.any():
             raise ValueError(f"Session type '{identifier}' does not exist "
@@ -972,7 +972,7 @@ class Event(BaseSeries):
             # by number
             if (float(num).is_integer()
                     and (num := int(num)) in (1, 2, 3, 4, 5)):
-                session_name = self[f'Session{num}']
+                session_name = self[f"Session{num}"]
             else:
                 raise ValueError(f"Invalid session type '{num}'")
             if not session_name:
@@ -984,27 +984,27 @@ class Event(BaseSeries):
 
     def get_race(self) -> "Session":
         """Return the race session."""
-        return self.get_session('Race')
+        return self.get_session("Race")
 
     def get_qualifying(self) -> "Session":
         """Return the qualifying session."""
-        return self.get_session('Qualifying')
+        return self.get_session("Qualifying")
 
     def get_sprint(self) -> "Session":
         """Return the sprint session."""
-        return self.get_session('Sprint')
+        return self.get_session("Sprint")
 
     def get_sprint_shootout(self) -> "Session":
         """Return the sprint shootout session."""
-        return self.get_session('Sprint Shootout')
+        return self.get_session("Sprint Shootout")
 
     def get_sprint_qualifying(self) -> "Session":
         """Return the sprint qualifying session."""
-        return self.get_session('Sprint Qualifying')
+        return self.get_session("Sprint Qualifying")
 
     def get_practice(self, number: int) -> "Session":
         """Return the specified practice session.
         Args:
             number: 1, 2 or 3 - Free practice session number
         """
-        return self.get_session(f'Practice {number}')
+        return self.get_session(f"Practice {number}")

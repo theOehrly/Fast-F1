@@ -26,19 +26,19 @@ def messages_from_raw(r: Iterable):
     for data in r:
         # fix F1's not json compliant data
         data = data.replace("'", '"') \
-            .replace('True', 'true') \
-            .replace('False', 'false')
+            .replace("True", "true") \
+            .replace("False", "false")
         try:
             data = json.loads(data)
         except json.JSONDecodeError:
             errorcount += 1
             continue
-        messages = data['M'] if 'M' in data and len(data['M']) > 0 else {}
+        messages = data["M"] if "M" in data and len(data["M"]) > 0 else {}
         for inner_data in messages:
             hub = inner_data.get("H", "")
-            if hub.lower() == 'streaming':
+            if hub.lower() == "streaming":
                 # method = inner_data['M']
-                message = inner_data['A']
+                message = inner_data["A"]
                 ret.append(message)
 
     return ret, errorcount
@@ -77,13 +77,13 @@ class SignalRClient:
             authentication. This may only work for some sessions or may only
             return empty or partial data.
     """
-    _connection_url = 'wss://livetiming.formula1.com/signalrcore'
-    _negotiate_url = 'https://livetiming.formula1.com/signalrcore/negotiate'
+    _connection_url = "wss://livetiming.formula1.com/signalrcore"
+    _negotiate_url = "https://livetiming.formula1.com/signalrcore/negotiate"
 
 
     def __init__(self,
                  filename: str,
-                 filemode: str = 'w',
+                 filemode: str = "w",
                  debug: bool = False,
                  timeout: int = 60,
                  logger: Optional = None,
@@ -115,7 +115,7 @@ class SignalRClient:
             logging.basicConfig(
                 format="%(asctime)s - %(levelname)s: %(message)s"
             )
-            self.logger = logging.getLogger('SignalR')
+            self.logger = logging.getLogger("SignalR")
             self.logger.setLevel(logging.INFO)
         else:
             self.logger = logger
@@ -129,10 +129,10 @@ class SignalRClient:
         if isinstance(msg, CompletionMessage):
             data = [
                 [
-                    key, json.dumps(msg.result[key]), ''
+                    key, json.dumps(msg.result[key]), ""
                 ] for key in msg.result.keys()  # noqa: SIM118
             ]
-            formatted = '\n'.join(map(str, data))
+            formatted = "\n".join(map(str, data))
 
         elif isinstance(msg, list):
             formatted = str(msg)
@@ -142,7 +142,7 @@ class SignalRClient:
             return
 
         try:
-            self._output_file.write(formatted + '\n')
+            self._output_file.write(formatted + "\n")
             self._output_file.flush()
         except Exception:
             self.logger.exception("Exception while writing message to file")
@@ -179,7 +179,7 @@ class SignalRClient:
 
         self._connection.on_open(self._on_connect)
         self._connection.on_close(self._on_close)
-        self._connection.on('feed', self._on_message)
+        self._connection.on("feed", self._on_message)
 
         self._connection.start()
 

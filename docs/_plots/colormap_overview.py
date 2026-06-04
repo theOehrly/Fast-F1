@@ -38,7 +38,7 @@ for i, year in enumerate(years_sorted):
     # configure y axis and label
     ax.set_ylim((0.5, 2.5))
     ax.set_yticks([1, 2])
-    ax.set_yticklabels(['official', 'default'])
+    ax.set_yticklabels(["official", "default"])
 
     # configure x axis and label
     ax.set_xlim((0.5, len(x_ranges) + 0.5))
@@ -46,10 +46,10 @@ for i, year in enumerate(years_sorted):
     ax.set_xticklabels(x_labels)
 
     # disable frame around axis
-    ax.spines['top'].set_visible(False)
-    ax.spines['bottom'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_visible(False)
+    ax.spines["top"].set_visible(False)
+    ax.spines["bottom"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["left"].set_visible(False)
 
     # disable tick markers everywhere, label x axis at the top
     ax.tick_params(top=False, labeltop=True, bottom=False, labelbottom=False,
@@ -57,19 +57,19 @@ for i, year in enumerate(years_sorted):
 
     # set tick label text color (grey, so it works on light and dark theme and
     # isn't too distracting next to the colors)
-    ax.tick_params(colors='#787878')
+    ax.tick_params(colors="#787878")
 
     # set background color within axes
     # (transparent, fallback white if transparency not supported)
-    ax.set_facecolor('#ffffff00')
+    ax.set_facecolor("#ffffff00")
 
     # set axes title (grey, so it works on light and dark theme and
     # isn't too distracting next to the colors)
-    ax.set_title(year, color='#787878')
+    ax.set_title(year, color="#787878")
 
 # set background color for figure/margins around axes
 # (transparent, fallback white if transparency not supported)
-fig.patch.set_facecolor('#ffffff00')
+fig.patch.set_facecolor("#ffffff00")
 
 # adjust margins between and around axes
 plt.subplots_adjust(top=0.95, bottom=0.05, left=0.1, right=0.95, hspace=0.5)

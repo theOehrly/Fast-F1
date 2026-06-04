@@ -36,9 +36,9 @@ _logger = get_logger(__name__)
 
 class AuthHandler(BaseHTTPRequestHandler):
     def _send_cors_headers(self):
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
 
     def do_OPTIONS(self):
         self.send_response(200)
@@ -46,17 +46,17 @@ class AuthHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_POST(self):
-        if self.path == '/auth':
-            content_length = int(self.headers['Content-Length'])
+        if self.path == "/auth":
+            content_length = int(self.headers["Content-Length"])
             post_data = self.rfile.read(content_length)
-            data = json.loads(post_data.decode('utf-8'))
+            data = json.loads(post_data.decode("utf-8"))
 
             cookie = data.get("loginSession")
             decoded_string = urllib.parse.unquote(cookie)
             parsed_data = json.loads(decoded_string)
 
             self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
+            self.send_header("Content-Type", "application/json")
             self._send_cors_headers()
             self.end_headers()
             self.wfile.write(json.dumps({"status": "ok"}).encode())
@@ -68,13 +68,13 @@ class AuthHandler(BaseHTTPRequestHandler):
 
 
 def _run_auth_server():
-    server_address = ('127.0.0.1', 0)
+    server_address = ("127.0.0.1", 0)
     httpd = HTTPServer(server_address, AuthHandler)
     port = httpd.server_port
 
-    print(f'Please open the following URL in your browser to '
-          f'authenticate FastF1 with your Formula1/F1TV account:\n'
-          f'https://f1login.fastf1.dev?port={port}\n')
+    print(f"Please open the following URL in your browser to "
+          f"authenticate FastF1 with your Formula1/F1TV account:\n"
+          f"https://f1login.fastf1.dev?port={port}\n")
 
     _auth_finished.clear()
     t = threading.Thread(target=httpd.serve_forever)
@@ -98,8 +98,8 @@ def _get_jwk_from_jwks_uri(jwks_uri, kid):
     jwks = response.json()
 
     # Find the key with the matching 'kid'
-    for key in jwks['keys']:
-        if key['kid'] == kid:
+    for key in jwks["keys"]:
+        if key["kid"] == kid:
             return key
     raise ValueError("Public key not found in JWKS for given kid.")
 
@@ -114,7 +114,7 @@ def _verify_jwt(
 ):
     # Decode headers to get the kid
     unverified_header = jwt.get_unverified_header(token)
-    kid = unverified_header.get('kid')
+    kid = unverified_header.get("kid")
     jwk = _get_jwk_from_jwks_uri(jwks_uri, kid)
 
     # Convert JWK to public key
@@ -169,7 +169,7 @@ def get_auth_token():
         if _subscription_token is None:
             print("Authentication failed. Please try again.")
         else:
-            with open(AUTH_DATA_FILE, 'w') as f:
+            with open(AUTH_DATA_FILE, "w") as f:
                 f.write(_subscription_token)
 
     return _subscription_token
@@ -195,9 +195,9 @@ def print_auth_status():
         decoded = _verify_jwt(_subscription_token,
                               JWKS_URL,
                               verify=False,
-                              options={'verify_signature': False})
+                              options={"verify_signature": False})
 
-        if (exp := decoded.get('exp')) and exp < datetime.now().timestamp():
+        if (exp := decoded.get("exp")) and exp < datetime.now().timestamp():
             token_status = "EXPIRED"
         else:
             token_status = f"Expires {datetime.fromtimestamp(exp)} (UTC)"

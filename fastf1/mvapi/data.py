@@ -75,7 +75,7 @@ class CircuitInfo:
         # get merged reference telemetry and limit to data source 'pos' so that
         # only position values are used that are not interpolated
         try:
-            tel = reference_lap.get_telemetry(frequency='original')
+            tel = reference_lap.get_telemetry(frequency="original")
         except fastf1.exceptions.DataNotLoadedError:
             _logger.warning("Failed to generate marker distance information: "
                             "telemetry data has not been loaded")
@@ -86,13 +86,13 @@ class CircuitInfo:
                             "telemetry data is empty")
             return
 
-        tel = tel[tel['Source'] == 'pos']
+        tel = tel[tel["Source"] == "pos"]
         # create a numpy array of xy track coordinates
-        xy_ref_array = tel.loc[:, ('X', 'Y')].to_numpy()
+        xy_ref_array = tel.loc[:, ("X", "Y")].to_numpy()
 
         for df in (self.corners, self.marshal_sectors, self.marshal_lights):
             # create a numpy array of xy marker arrays
-            marker_xy_array = df.loc[:, ('X', 'Y')].to_numpy()
+            marker_xy_array = df.loc[:, ("X", "Y")].to_numpy()
 
             n_markers = marker_xy_array.shape[0]
 
@@ -113,8 +113,8 @@ class CircuitInfo:
 
             # get the best distance value for each marker from the telemetry
             # data and add them to the marker data frame
-            distances = tel.iloc[indices]['Distance'].to_list()
-            df['Distance'] = distances
+            distances = tel.iloc[indices]["Distance"].to_list()
+            df["Distance"] = distances
 
 
 def get_circuit_info(*, year: int, circuit_key: int) -> CircuitInfo | None:
@@ -133,26 +133,26 @@ def get_circuit_info(*, year: int, circuit_key: int) -> CircuitInfo | None:
         return None
 
     ret = []
-    for cat in ('corners', 'marshalLights', 'marshalSectors'):
+    for cat in ("corners", "marshalLights", "marshalSectors"):
         array = data.get(cat) or []
         rows = [
             (
-                float(entry.get('trackPosition', {}).get('x', 0.0)),
-                float(entry.get('trackPosition', {}).get('y', 0.0)),
-                int(entry.get('number', 0)),
-                str(entry.get('letter', "")),
-                float(entry.get('angle', 0.0)),
+                float(entry.get("trackPosition", {}).get("x", 0.0)),
+                float(entry.get("trackPosition", {}).get("y", 0.0)),
+                int(entry.get("number", 0)),
+                str(entry.get("letter", "")),
+                float(entry.get("angle", 0.0)),
                 np.nan
             ) for entry in array
         ]
         ret.append(
             pd.DataFrame(
                 rows,
-                columns=['X', 'Y', 'Number', 'Letter', 'Angle', 'Distance']
+                columns=["X", "Y", "Number", "Letter", "Angle", "Distance"]
             )
         )
 
-    rotation = float(data.get('rotation', 0.0))
+    rotation = float(data.get("rotation", 0.0))
 
     return CircuitInfo(
         corners=ret[0],
