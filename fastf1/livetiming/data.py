@@ -7,7 +7,7 @@ import warnings
 from datetime import timedelta
 
 from fastf1.logger import get_logger
-from fastf1.utils import (
+from fastf1.internals._utils import (
     recursive_dict_get,
     to_datetime
 )

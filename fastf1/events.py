@@ -20,7 +20,7 @@ from fastf1.logger import (
     soft_exceptions
 )
 from fastf1.req import Cache
-from fastf1.utils import (
+from fastf1.internals._utils import (
     recursive_dict_get,
     to_datetime,
     to_timedelta

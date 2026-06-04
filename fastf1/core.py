@@ -35,7 +35,7 @@ from fastf1.mvapi import (
     CircuitInfo,
     get_circuit_info
 )
-from fastf1.utils import to_timedelta
+from fastf1.internals._utils import to_timedelta
 
 
 def __getattr__(name):
