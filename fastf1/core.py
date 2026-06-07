@@ -1190,9 +1190,11 @@ class Session:
             # in 2021, 'Sprint Qualifying' was used as the name for a race-like
             # session that set the grid for the main race
             self._QUALI_LIKE_SESSIONS = ('Qualifying', 'Sprint Shootout')
+            self._PRACTICE_LIKE_SESSIONS = ('Practice 1', 'Practice 2', 'Practice 3')
         else:
             self._RACE_LIKE_SESSIONS = ('Race', 'Sprint')
             self._QUALI_LIKE_SESSIONS = ('Qualifying', 'Sprint Qualifying')
+            self._PRACTICE_LIKE_SESSIONS = ('Practice 1', 'Practice 2', 'Practice 3')
             # starting from 2024, 'Sprint Qualifying' is the name for the
             # qualifying-like session that sets the grid for the Sprint
             # (previously, this was called 'Sprint Shootout')
@@ -1439,6 +1441,7 @@ class Session:
         self._set_laps_deleted_from_rcm()
         self._calculate_quali_like_session_results()
         self._calculate_race_like_session_results()
+        self._calculate_practice_like_session_results()
 
         _logger.info(f"Finished loading data for {len(self.drivers)} "
                      f"drivers: {self.drivers}")
@@ -1939,6 +1942,48 @@ class Session:
         "Failed to calculate race results from lap times!",
         _logger,
     )
+
+    def _calculate_practice_like_session_results(self, force=False):
+        """Try to calculate practice results from lap times if no results are
+        available
+
+        Args:
+            force (bool): Force calculation of practice results even if
+            results are already available, (default: False)"""
+
+        if self.name not in self._PRACTICE_LIKE_SESSIONS:
+            return
+
+        if not hasattr(self, '_laps'):
+            return
+
+        if not self.results['Position'].isna().all() and not force:
+            # Don't do anything if results are already available
+            # unless force is True
+            return
+        
+        best_laps = (
+            self._laps.loc[~self._laps['LapTime'].isna() & ~self._laps['Deleted']]
+            .groupby('DriverNumber')
+            .agg({'LapTime': 'min'})
+            .rename(columns={'LapTime': 'Time'})
+            .sort_values(by='Time')
+            .reset_index()
+        )
+
+        best_laps['Position'] = (best_laps.index + 1).astype('float64')
+        best_laps = best_laps.set_index('DriverNumber')
+
+        self.results.loc[:, ['Time', 'Position']] = best_laps[['Time', 'Position']]
+        self.results.sort_values(by=['Position'], inplace=True)
+
+        if self.laps['Deleted'].dtype.name != 'bool':
+            _logger.warning(
+                "Cannot calculate practice results: missing information "
+                "about deleted laps. Make sure that race control messages are "
+                "being loaded."
+            )
+
     def _calculate_race_like_session_results(self, force=False):
         """
         Try to calculate race results from lap times if no results are
@@ -3790,7 +3835,7 @@ class SessionResults(BaseDataFrame):
 
         - ``Time`` | :class:`pd.Timedelta` |
           The drivers total race time (values only given if session is
-          'Race', 'Sprint', 'Sprint Shootout' or 'Sprint Qualifying' and the
+          'Race', 'Sprint', 'Sprint Shootout', 'Sprint Qualifying', or 'Free Practice' and the
           driver was not more than one lap behind the leader)
 
         - ``Status`` | :class:`str` |
