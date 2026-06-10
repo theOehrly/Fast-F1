@@ -343,13 +343,13 @@ def test_merge_dicts_of_lists(data, expected):
         ['races', {'season': 2022},
          f"{BASE_URL}/2022/races.json"],
 
-        ['results', {'season': 2022, 'round': '10'},
+        ['results', {'season': 2022, 'round_number': '10'},
          f"{BASE_URL}/2022/10/results.json"],
 
-        ['sprint', {'season': 2022, 'round': '4'},
+        ['sprint', {'season': 2022, 'round_number': '4'},
          f"{BASE_URL}/2022/4/sprint.json"],
 
-        ['qualifying', {'season': 2022, 'round': '10'},
+        ['qualifying', {'season': 2022, 'round_number': '10'},
          f"{BASE_URL}/2022/10/qualifying.json"],
 
         # special cases where endpoint name matches selector and the endpoint
@@ -390,20 +390,20 @@ def test_merge_dicts_of_lists(data, expected):
         ['constructorStandings', {'season': 2022, 'standings_position': '1'},
          f"{BASE_URL}/2022/constructorStandings/1.json"],
 
-        ['laps', {'season': 2022, 'round': 10},
+        ['laps', {'season': 2022, 'round_number': 10},
          f"{BASE_URL}/2022/10/laps.json"],
 
-        ['laps', {'season': 2022, 'round': 10, 'lap_number': 1},
+        ['laps', {'season': 2022, 'round_number': 10, 'lap_number': 1},
          f"{BASE_URL}/2022/10/laps/1.json"],
 
-        ['pitstops', {'season': 2022, 'round': 10},
+        ['pitstops', {'season': 2022, 'round_number': 10},
          f"{BASE_URL}/2022/10/pitstops.json"],
 
-        ['pitstops', {'season': 2022, 'round': 10, 'stop_number': '1'},
+        ['pitstops', {'season': 2022, 'round_number': 10, 'stop_number': '1'},
          f"{BASE_URL}/2022/10/pitstops/1.json"],
 
         # endpoint/selector combination in other request
-        ['pitstops', {'season': 2022, 'round': 10, 'lap_number': 1},
+        ['pitstops', {'season': 2022, 'round_number': 10, 'lap_number': 1},
          f"{BASE_URL}/2022/10/laps/1/pitstops.json"],
 
         ['circuits', {'driver': 'alonso', 'constructor': 'alpine'},
@@ -426,7 +426,7 @@ def test_ergast_response_mixin():
                       'subcategory': API.RaceResults,
                       'result_type': 'raw', 'auto_cast': False}
 
-    selectors = {'season': 2022, 'round': None, 'circuit': None,
+    selectors = {'season': 2022, 'round_number': None, 'circuit': None,
                  'constructor': None, 'driver': None, 'grid_position': None,
                  'fastest_rank': None, 'status': None}
 

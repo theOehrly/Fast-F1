@@ -432,7 +432,7 @@ class Ergast:
     def _build_url(
             endpoint: str,
             season: Literal['current'] | int = None,
-            round: Literal['last'] | int = None,
+            round_number: Literal['last'] | int = None,
             circuit: str | None = None,
             constructor: str | None = None,
             driver: str | None = None,
@@ -448,8 +448,8 @@ class Ergast:
 
         if season is not None:
             selectors.append(f"/{season}")
-        if round is not None:
-            selectors.append(f"/{round}")
+        if round_number is not None:
+            selectors.append(f"/{round_number}")
         if grid_position is not None:
             selectors.append(f"/grid/{grid_position}")
         if fastest_rank is not None:
@@ -727,7 +727,7 @@ class Ergast:
             ``result_type`` parameter
         """
         selectors = {'season': season,
-                     'round': round,
+                     'round_number': round,
                      'circuit': circuit,
                      'constructor': constructor,
                      'driver': driver,
@@ -794,7 +794,7 @@ class Ergast:
             ``result_type`` parameter
         """
         selectors = {'season': season,
-                     'round': round,
+                     'round_number': round,
                      'circuit': circuit,
                      'constructor': constructor,
                      'driver': driver,
@@ -861,7 +861,7 @@ class Ergast:
             ``result_type`` parameter
         """
         selectors = {'season': season,
-                     'round': round,
+                     'round_number': round,
                      'circuit': circuit,
                      'constructor': constructor,
                      'driver': driver,
@@ -926,7 +926,7 @@ class Ergast:
             ``result_type`` parameter
         """
         selectors = {'season': season,
-                     'round': round,
+                     'round_number': round,
                      'constructor': constructor,
                      'driver': driver,
                      'grid_position': grid_position,
@@ -992,7 +992,7 @@ class Ergast:
             ``result_type`` parameter
         """
         selectors = {'season': season,
-                     'round': round,
+                     'round_number': round,
                      'circuit': circuit,
                      'constructor': constructor,
                      'driver': driver,
@@ -1066,7 +1066,7 @@ class Ergast:
             ``result_type`` parameter
         """
         selectors = {'season': season,
-                     'round': round,
+                     'round_number': round,
                      'circuit': circuit,
                      'constructor': constructor,
                      'driver': driver,
@@ -1134,7 +1134,7 @@ class Ergast:
             ``result_type`` parameter
         """
         selectors = {'season': season,
-                     'round': round,
+                     'round_number': round,
                      'circuit': circuit,
                      'constructor': constructor,
                      'driver': driver,
@@ -1200,7 +1200,7 @@ class Ergast:
             ``result_type`` parameter
         """
         selectors = {'season': season,
-                     'round': round,
+                     'round_number': round,
                      'circuit': circuit,
                      'constructor': constructor,
                      'driver': driver,
@@ -1256,7 +1256,7 @@ class Ergast:
             ``result_type`` parameter
         """
         selectors = {'season': season,
-                     'round': round,
+                     'round_number': round,
                      'driver': driver,
                      'standings_position': standings_position}
 
@@ -1309,7 +1309,7 @@ class Ergast:
             ``result_type`` parameter
         """
         selectors = {'season': season,
-                     'round': round,
+                     'round_number': round,
                      'constructor': constructor,
                      'standings_position': standings_position}
 
@@ -1362,7 +1362,7 @@ class Ergast:
             ``result_type`` parameter
         """
         selectors = {'season': season,
-                     'round': round,
+                     'round_number': round,
                      'driver': driver,
                      'lap_number': lap_number}
 
@@ -1416,7 +1416,7 @@ class Ergast:
             ``result_type`` parameter
         """
         selectors = {'season': season,
-                     'round': round,
+                     'round_number': round,
                      'driver': driver,
                      'lap_number': lap_number,
                      'stop_number': stop_number}
