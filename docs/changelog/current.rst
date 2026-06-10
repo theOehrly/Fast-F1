@@ -11,6 +11,10 @@ Deprecations
   deprecated and will be removed in a future version. Use ``round_number``
   instead. (#890)
 
+- The ``round`` keyword argument is deprecated for all ``Ergast`` data request
+  methods that accept it (e.g. ``get_race_results``, ``get_driver_standings``,
+  ``get_lap_times``). Use ``round_number`` instead. (#890)
+
 What's new in v3.8.3
 --------------------
 

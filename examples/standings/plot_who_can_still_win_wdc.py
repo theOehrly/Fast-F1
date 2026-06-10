@@ -27,7 +27,7 @@ ROUND = 12
 # Reference https://docs.fastf1.dev/ergast.html#fastf1.ergast.Ergast.get_driver_standings
 def get_drivers_standings():
     ergast = Ergast()
-    standings = ergast.get_driver_standings(season=SEASON, round=ROUND)
+    standings = ergast.get_driver_standings(season=SEASON, round_number=ROUND)
     return standings.content[0]
 
 
