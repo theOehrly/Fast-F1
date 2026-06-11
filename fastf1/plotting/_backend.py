@@ -59,7 +59,11 @@ def _load_drivers_from_f1_livetiming(
     for num in sorted(driver_info.keys()):
         driver_entry = driver_info[num]
         team_name = driver_entry.get('TeamName')
-        team_color = f"#{driver_entry.get('TeamColour').lower()}"
+        team_color_raw = driver_entry.get('TeamColour')
+        if team_color_raw is None:
+            team_color = "#000000"
+        else:
+            team_color = f"#{team_color_raw.lower()}"
         abbreviation = driver_entry.get('Tla', '')
         name = ' '.join((driver_entry.get('FirstName', ''),
                          driver_entry.get('LastName', '')))
