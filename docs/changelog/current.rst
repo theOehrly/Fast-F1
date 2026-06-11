@@ -1,3 +1,16 @@
+What's new in v3.9.0
+--------------------
+
+(in development)
+
+
+Deprecations
+^^^^^^^^^^^^
+
+- The ``round`` keyword argument of ``EventSchedule.get_event_by_round`` is
+  deprecated and will be removed in a future version. Use ``round_number``
+  instead. (#890)
+
 What's new in v3.8.3
 --------------------
 
