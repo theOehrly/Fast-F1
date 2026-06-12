@@ -1537,7 +1537,7 @@ class Ergast:
                       *,
                       round: Literal['last'] | int | None = None
                       ) -> ErgastMultiResponse | ErgastRawResponse:
-        """Get sprint results for one or multiple sprints.
+        """Get lap times for one or multiple sessions.
 
         .. deprecated:: 3.9.0
             The ``round`` keyword argument is deprecated, use
