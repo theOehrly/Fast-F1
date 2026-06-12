@@ -60,15 +60,18 @@ def _load_drivers_from_f1_livetiming(
         driver_entry = driver_info[num]
         team_name = driver_entry.get('TeamName')
         team_color_raw = driver_entry.get('TeamColour')
-        if team_color_raw is None:
-            team_color = "#000000"
-        else:
+        team_color = None
+        if team_color_raw:
             team_color = f"#{team_color_raw.lower()}"
         abbreviation = driver_entry.get('Tla', '')
         name = ' '.join((driver_entry.get('FirstName', ''),
                          driver_entry.get('LastName', '')))
 
-        if not abbreviation.strip() or not name.strip():
+        if (
+            not abbreviation.strip()
+            or not name.strip()
+            or not (team_name and team_name.strip())
+        ):
             _logger.warning(
                 "Skipping driver with incomplete data while generating "
                 "driver-team mapping for plotting constants."
@@ -80,9 +83,18 @@ def _load_drivers_from_f1_livetiming(
         for normalized_name, team in teams.items():
             if normalized_name in normalized_full_team_name:
                 team.name = team_name
-                team.colors.official = team_color
+                if team_color is not None:
+                    team.colors.official = team_color
                 break
         else:
+            if team_color is None:
+                _logger.warning(
+                    "Skipping driver with incomplete team color while "
+                    "generating driver-team mapping for plotting constants."
+                )
+                _logger.debug(f"Skipping driver entry: {driver_entry}")
+                continue
+
             team = _generate_team(team_name, team_color)
 
             _logger.warning(f"Auto-generating unknown team: {team.name}")
