@@ -343,13 +343,13 @@ def test_merge_dicts_of_lists(data, expected):
         ['races', {'season': 2022},
          f"{BASE_URL}/2022/races.json"],
 
-        ['results', {'season': 2022, 'round': '10'},
+        ['results', {'season': 2022, 'round_number': '10'},
          f"{BASE_URL}/2022/10/results.json"],
 
-        ['sprint', {'season': 2022, 'round': '4'},
+        ['sprint', {'season': 2022, 'round_number': '4'},
          f"{BASE_URL}/2022/4/sprint.json"],
 
-        ['qualifying', {'season': 2022, 'round': '10'},
+        ['qualifying', {'season': 2022, 'round_number': '10'},
          f"{BASE_URL}/2022/10/qualifying.json"],
 
         # special cases where endpoint name matches selector and the endpoint
@@ -390,20 +390,20 @@ def test_merge_dicts_of_lists(data, expected):
         ['constructorStandings', {'season': 2022, 'standings_position': '1'},
          f"{BASE_URL}/2022/constructorStandings/1.json"],
 
-        ['laps', {'season': 2022, 'round': 10},
+        ['laps', {'season': 2022, 'round_number': 10},
          f"{BASE_URL}/2022/10/laps.json"],
 
-        ['laps', {'season': 2022, 'round': 10, 'lap_number': 1},
+        ['laps', {'season': 2022, 'round_number': 10, 'lap_number': 1},
          f"{BASE_URL}/2022/10/laps/1.json"],
 
-        ['pitstops', {'season': 2022, 'round': 10},
+        ['pitstops', {'season': 2022, 'round_number': 10},
          f"{BASE_URL}/2022/10/pitstops.json"],
 
-        ['pitstops', {'season': 2022, 'round': 10, 'stop_number': '1'},
+        ['pitstops', {'season': 2022, 'round_number': 10, 'stop_number': '1'},
          f"{BASE_URL}/2022/10/pitstops/1.json"],
 
         # endpoint/selector combination in other request
-        ['pitstops', {'season': 2022, 'round': 10, 'lap_number': 1},
+        ['pitstops', {'season': 2022, 'round_number': 10, 'lap_number': 1},
          f"{BASE_URL}/2022/10/laps/1/pitstops.json"],
 
         ['circuits', {'driver': 'alonso', 'constructor': 'alpine'},
@@ -426,7 +426,7 @@ def test_ergast_response_mixin():
                       'subcategory': API.RaceResults,
                       'result_type': 'raw', 'auto_cast': False}
 
-    selectors = {'season': 2022, 'round': None, 'circuit': None,
+    selectors = {'season': 2022, 'round_number': None, 'circuit': None,
                  'constructor': None, 'driver': None, 'grid_position': None,
                  'fastest_rank': None, 'status': None}
 
@@ -752,3 +752,43 @@ def test_ergast_api_endpoints_multi_response():
     assert result.content[0].shape[1] == 26  # correct dataframe shape
     assert 'fastestLapTime' in result.content[0].columns  # columns renamed
     assert result.content[0]['fastestLapTime'].dtype == '<m8[ns]'  # casting
+
+
+@pytest.mark.parametrize(
+    "method_name",
+    ('get_race_schedule', 'get_driver_info', 'get_constructor_info',
+     'get_circuits', 'get_finishing_status', 'get_race_results',
+     'get_qualifying_results', 'get_sprint_results', 'get_driver_standings',
+     'get_constructor_standings', 'get_lap_times', 'get_pit_stops')
+)
+def test_ergast_round_deprecated_kwarg(method_name):
+    # capture the selectors instead of making an actual request
+    class ErgastTest(Ergast):
+        test_build_args = {}
+
+        def _build_default_result(self, **kwargs):
+            ErgastTest.test_build_args = kwargs
+
+    method = getattr(ErgastTest(), method_name)
+
+    # Deprecated `round` kwarg still works but emits FutureWarning
+    with pytest.warns(FutureWarning, match="deprecated"):
+        method(2022, round=2)
+    assert ErgastTest.test_build_args['selectors']['round_number'] == 2
+    # Passing both raises ValueError (and emits the warning first)
+    with (
+        pytest.warns(FutureWarning, match="deprecated"),
+        pytest.raises(ValueError, match="Cannot pass both"),
+    ):
+        method(2022, round_number=2, round=2)
+
+
+@pytest.mark.parametrize("method_name", ('get_lap_times', 'get_pit_stops'))
+def test_ergast_round_required_kwarg(method_name):
+    # `round` is mandatory for these methods; passing neither raises before
+    # any request is made
+    method = getattr(Ergast(), method_name)
+
+    # Passing neither raises ValueError
+    with pytest.raises(ValueError, match="missing 1 required argument"):
+        method(2022)

@@ -432,7 +432,7 @@ class Ergast:
     def _build_url(
             endpoint: str,
             season: Literal['current'] | int = None,
-            round: Literal['last'] | int = None,
+            round_number: Literal['last'] | int = None,
             circuit: str | None = None,
             constructor: str | None = None,
             driver: str | None = None,
@@ -448,8 +448,8 @@ class Ergast:
 
         if season is not None:
             selectors.append(f"/{season}")
-        if round is not None:
-            selectors.append(f"/{round}")
+        if round_number is not None:
+            selectors.append(f"/{round_number}")
         if grid_position is not None:
             selectors.append(f"/grid/{grid_position}")
         if fastest_rank is not None:
@@ -682,7 +682,7 @@ class Ergast:
     def get_race_schedule(
             self,
             season: Literal['current'] | int,
-            round: Literal['last'] | int | None = None,
+            round_number: Literal['last'] | int | None = None,
             circuit: str | None = None,
             constructor: str | None = None,
             driver: str | None = None,
@@ -693,9 +693,15 @@ class Ergast:
             result_type: Literal['pandas', 'raw'] | None = None,
             auto_cast: bool | None = None,
             limit: int | None = None,
-            offset: int | None = None
+            offset: int | None = None,
+            *,
+            round: Literal['last'] | int | None = None
     ) -> ErgastSimpleResponse | ErgastRawResponse:
         """Get a list of races.
+
+        .. deprecated:: 3.9.0
+            The ``round`` keyword argument is deprecated, use
+            ``round_number`` instead.
 
         See: https://ergast.com/mrd/methods/schedule/
 
@@ -704,7 +710,7 @@ class Ergast:
 
         Args:
             season: select a season by its year (default: all, oldest first)
-            round: select a round by its number (default: all)
+            round_number: select a round by its number (default: all)
             circuit: select a circuit by its circuit id (default: all)
             constructor: select a constructor by its constructor id
                 (default: all)
@@ -726,8 +732,22 @@ class Ergast:
             :class:`~interface.ErgastRawResponse`, depending on the
             ``result_type`` parameter
         """
+        if round is not None:
+            warnings.warn(
+                "The `round` keyword argument is deprecated and will be "
+                "removed in a future version. Use `round_number` instead.",
+                FutureWarning,
+                stacklevel=2,
+            )
+            if round_number is not None:
+                raise ValueError(
+                    "Cannot pass both `round_number` and `round`. "
+                    "Use `round_number` only; `round` is deprecated."
+                )
+            round_number = round
+
         selectors = {'season': season,
-                     'round': round,
+                     'round_number': round_number,
                      'circuit': circuit,
                      'constructor': constructor,
                      'driver': driver,
@@ -749,7 +769,7 @@ class Ergast:
     def get_driver_info(
             self,
             season: Literal['current'] | int | None = None,
-            round: Literal['last'] | int | None = None,
+            round_number: Literal['last'] | int | None = None,
             circuit: str | None = None,
             constructor: str | None = None,
             driver: str | None = None,
@@ -760,9 +780,15 @@ class Ergast:
             result_type: Literal['pandas', 'raw'] | None = None,
             auto_cast: bool | None = None,
             limit: int | None = None,
-            offset: int | None = None
+            offset: int | None = None,
+            *,
+            round: Literal['last'] | int | None = None
     ) -> ErgastSimpleResponse | ErgastRawResponse:
         """Get a list of drivers.
+
+        .. deprecated:: 3.9.0
+            The ``round`` keyword argument is deprecated, use
+            ``round_number`` instead.
 
         See: https://ergast.com/mrd/methods/drivers/
 
@@ -771,7 +797,7 @@ class Ergast:
 
         Args:
             season: select a season by its year (default: all, oldest first)
-            round: select a round by its number (default: all)
+            round_number: select a round by its number (default: all)
             circuit: select a circuit by its circuit id (default: all)
             constructor: select a constructor by its constructor id
                 (default: all)
@@ -793,8 +819,22 @@ class Ergast:
             :class:`~interface.ErgastRawResponse`, depending on the
             ``result_type`` parameter
         """
+        if round is not None:
+            warnings.warn(
+                "The `round` keyword argument is deprecated and will be "
+                "removed in a future version. Use `round_number` instead.",
+                FutureWarning,
+                stacklevel=2,
+            )
+            if round_number is not None:
+                raise ValueError(
+                    "Cannot pass both `round_number` and `round`. "
+                    "Use `round_number` only; `round` is deprecated."
+                )
+            round_number = round
+
         selectors = {'season': season,
-                     'round': round,
+                     'round_number': round_number,
                      'circuit': circuit,
                      'constructor': constructor,
                      'driver': driver,
@@ -816,7 +856,7 @@ class Ergast:
     def get_constructor_info(
             self,
             season: Literal['current'] | int | None = None,
-            round: Literal['last'] | int | None = None,
+            round_number: Literal['last'] | int | None = None,
             circuit: str | None = None,
             constructor: str | None = None,
             driver: str | None = None,
@@ -827,9 +867,15 @@ class Ergast:
             result_type: Literal['pandas', 'raw'] | None = None,
             auto_cast: bool | None = None,
             limit: int | None = None,
-            offset: int | None = None
+            offset: int | None = None,
+            *,
+            round: Literal['last'] | int | None = None
     ) -> ErgastSimpleResponse | ErgastRawResponse:
         """Get a list of constructors.
+
+        .. deprecated:: 3.9.0
+            The ``round`` keyword argument is deprecated, use
+            ``round_number`` instead.
 
         See: https://ergast.com/mrd/methods/constructors/
 
@@ -838,7 +884,7 @@ class Ergast:
 
         Args:
             season: select a season by its year (default: all, oldest first)
-            round: select a round by its number (default: all)
+            round_number: select a round by its number (default: all)
             circuit: select a circuit by its circuit id (default: all)
             constructor: select a constructor by its constructor id
                 (default: all)
@@ -860,8 +906,22 @@ class Ergast:
             :class:`~interface.ErgastRawResponse`, depending on the
             ``result_type`` parameter
         """
+        if round is not None:
+            warnings.warn(
+                "The `round` keyword argument is deprecated and will be "
+                "removed in a future version. Use `round_number` instead.",
+                FutureWarning,
+                stacklevel=2,
+            )
+            if round_number is not None:
+                raise ValueError(
+                    "Cannot pass both `round_number` and `round`. "
+                    "Use `round_number` only; `round` is deprecated."
+                )
+            round_number = round
+
         selectors = {'season': season,
-                     'round': round,
+                     'round_number': round_number,
                      'circuit': circuit,
                      'constructor': constructor,
                      'driver': driver,
@@ -883,7 +943,7 @@ class Ergast:
     def get_circuits(
             self,
             season: Literal['current'] | int | None = None,
-            round: Literal['last'] | int | None = None,
+            round_number: Literal['last'] | int | None = None,
             constructor: str | None = None,
             driver: str | None = None,
             grid_position: int | None = None,
@@ -893,9 +953,15 @@ class Ergast:
             result_type: Literal['pandas', 'raw'] | None = None,
             auto_cast: bool | None = None,
             limit: int | None = None,
-            offset: int | None = None
+            offset: int | None = None,
+            *,
+            round: Literal['last'] | int | None = None
     ) -> ErgastSimpleResponse | ErgastRawResponse:
         """Get a list of circuits.
+
+        .. deprecated:: 3.9.0
+            The ``round`` keyword argument is deprecated, use
+            ``round_number`` instead.
 
         See: https://ergast.com/mrd/methods/circuits/
 
@@ -904,7 +970,7 @@ class Ergast:
 
         Args:
             season: select a season by its year (default: all, oldest first)
-            round: select a round by its number (default: all)
+            round_number: select a round by its number (default: all)
             constructor: select a constructor by its constructor id
                 (default: all)
             driver: select a driver by its driver id (default: all)
@@ -925,8 +991,22 @@ class Ergast:
             :class:`~interface.ErgastRawResponse`, depending on the
             ``result_type`` parameter
         """
+        if round is not None:
+            warnings.warn(
+                "The `round` keyword argument is deprecated and will be "
+                "removed in a future version. Use `round_number` instead.",
+                FutureWarning,
+                stacklevel=2,
+            )
+            if round_number is not None:
+                raise ValueError(
+                    "Cannot pass both `round_number` and `round`. "
+                    "Use `round_number` only; `round` is deprecated."
+                )
+            round_number = round
+
         selectors = {'season': season,
-                     'round': round,
+                     'round_number': round_number,
                      'constructor': constructor,
                      'driver': driver,
                      'grid_position': grid_position,
@@ -947,7 +1027,7 @@ class Ergast:
     def get_finishing_status(
             self,
             season: Literal['current'] | int | None = None,
-            round: Literal['last'] | int | None = None,
+            round_number: Literal['last'] | int | None = None,
             circuit: str | None = None,
             constructor: str | None = None,
             driver: str | None = None,
@@ -958,9 +1038,15 @@ class Ergast:
             result_type: Literal['pandas', 'raw'] | None = None,
             auto_cast: bool | None = None,
             limit: int | None = None,
-            offset: int | None = None
+            offset: int | None = None,
+            *,
+            round: Literal['last'] | int | None = None
     ) -> ErgastSimpleResponse | ErgastRawResponse:
         """Get a list of finishing status codes.
+
+        .. deprecated:: 3.9.0
+            The ``round`` keyword argument is deprecated, use
+            ``round_number`` instead.
 
         See: https://ergast.com/mrd/methods/status/
 
@@ -969,7 +1055,7 @@ class Ergast:
 
         Args:
             season: select a season by its year (default: all, oldest first)
-            round: select a round by its number (default: all)
+            round_number: select a round by its number (default: all)
             circuit: select a circuit by its circuit id (default: all)
             constructor: select a constructor by its constructor id
                 (default: all)
@@ -991,8 +1077,22 @@ class Ergast:
             :class:`~interface.ErgastRawResponse`, depending on the
             ``result_type`` parameter
         """
+        if round is not None:
+            warnings.warn(
+                "The `round` keyword argument is deprecated and will be "
+                "removed in a future version. Use `round_number` instead.",
+                FutureWarning,
+                stacklevel=2,
+            )
+            if round_number is not None:
+                raise ValueError(
+                    "Cannot pass both `round_number` and `round`. "
+                    "Use `round_number` only; `round` is deprecated."
+                )
+            round_number = round
+
         selectors = {'season': season,
-                     'round': round,
+                     'round_number': round_number,
                      'circuit': circuit,
                      'constructor': constructor,
                      'driver': driver,
@@ -1020,7 +1120,7 @@ class Ergast:
     def get_race_results(
             self,
             season: Literal['current'] | int | None = None,
-            round: Literal['last'] | int | None = None,
+            round_number: Literal['last'] | int | None = None,
             circuit: str | None = None,
             constructor: str | None = None,
             driver: str | None = None,
@@ -1031,9 +1131,15 @@ class Ergast:
             result_type: Literal['pandas', 'raw'] | None = None,
             auto_cast: bool | None = None,
             limit: int | None = None,
-            offset: int | None = None
+            offset: int | None = None,
+            *,
+            round: Literal['last'] | int | None = None
     ) -> ErgastMultiResponse | ErgastRawResponse:
         """Get race results for one or multiple races.
+
+        .. deprecated:: 3.9.0
+            The ``round`` keyword argument is deprecated, use
+            ``round_number`` instead.
 
         See: https://ergast.com/mrd/methods/results/
 
@@ -1043,7 +1149,7 @@ class Ergast:
 
         Args:
             season: select a season by its year (default: all, oldest first)
-            round: select a round by its number (default: all)
+            round_number: select a round by its number (default: all)
             circuit: select a circuit by its circuit id (default: all)
             constructor: select a constructor by its constructor id
                 (default: all)
@@ -1065,8 +1171,22 @@ class Ergast:
             :class:`~interface.ErgastRawResponse`, depending on the
             ``result_type`` parameter
         """
+        if round is not None:
+            warnings.warn(
+                "The `round` keyword argument is deprecated and will be "
+                "removed in a future version. Use `round_number` instead.",
+                FutureWarning,
+                stacklevel=2,
+            )
+            if round_number is not None:
+                raise ValueError(
+                    "Cannot pass both `round_number` and `round`. "
+                    "Use `round_number` only; `round` is deprecated."
+                )
+            round_number = round
+
         selectors = {'season': season,
-                     'round': round,
+                     'round_number': round_number,
                      'circuit': circuit,
                      'constructor': constructor,
                      'driver': driver,
@@ -1088,7 +1208,7 @@ class Ergast:
     def get_qualifying_results(
             self,
             season: Literal['current'] | int | None = None,
-            round: Literal['last'] | int | None = None,
+            round_number: Literal['last'] | int | None = None,
             circuit: str | None = None,
             constructor: str | None = None,
             driver: str | None = None,
@@ -1099,9 +1219,15 @@ class Ergast:
             result_type: Literal['pandas', 'raw'] | None = None,
             auto_cast: bool | None = None,
             limit: int | None = None,
-            offset: int | None = None
+            offset: int | None = None,
+            *,
+            round: Literal['last'] | int | None = None
     ) -> ErgastMultiResponse | ErgastRawResponse:
         """Get qualifying results for one or multiple qualifying sessions.
+
+        .. deprecated:: 3.9.0
+            The ``round`` keyword argument is deprecated, use
+            ``round_number`` instead.
 
         See: https://ergast.com/mrd/methods/qualifying/
 
@@ -1111,7 +1237,7 @@ class Ergast:
 
         Args:
             season: select a season by its year (default: all, oldest first)
-            round: select a round by its number (default: all)
+            round_number: select a round by its number (default: all)
             circuit: select a circuit by its circuit id (default: all)
             constructor: select a constructor by its constructor id
                 (default: all)
@@ -1133,8 +1259,22 @@ class Ergast:
             :class:`~interface.ErgastRawResponse`, depending on the
             ``result_type`` parameter
         """
+        if round is not None:
+            warnings.warn(
+                "The `round` keyword argument is deprecated and will be "
+                "removed in a future version. Use `round_number` instead.",
+                FutureWarning,
+                stacklevel=2,
+            )
+            if round_number is not None:
+                raise ValueError(
+                    "Cannot pass both `round_number` and `round`. "
+                    "Use `round_number` only; `round` is deprecated."
+                )
+            round_number = round
+
         selectors = {'season': season,
-                     'round': round,
+                     'round_number': round_number,
                      'circuit': circuit,
                      'constructor': constructor,
                      'driver': driver,
@@ -1156,7 +1296,7 @@ class Ergast:
     def get_sprint_results(
             self,
             season: Literal['current'] | int | None = None,
-            round: Literal['last'] | int | None = None,
+            round_number: Literal['last'] | int | None = None,
             circuit: str | None = None,
             constructor: str | None = None,
             driver: str | None = None,
@@ -1166,9 +1306,15 @@ class Ergast:
             result_type: Literal['pandas', 'raw'] | None = None,
             auto_cast: bool | None = None,
             limit: int | None = None,
-            offset: int | None = None
+            offset: int | None = None,
+            *,
+            round: Literal['last'] | int | None = None
     ) -> ErgastMultiResponse | ErgastRawResponse:
         """Get sprint results for one or multiple sprints.
+
+        .. deprecated:: 3.9.0
+            The ``round`` keyword argument is deprecated, use
+            ``round_number`` instead.
 
         See: https://ergast.com/mrd/methods/sprint/
 
@@ -1178,7 +1324,7 @@ class Ergast:
 
         Args:
             season: select a season by its year (default: all, oldest first)
-            round: select a round by its number (default: all)
+            round_number: select a round by its number (default: all)
             circuit: select a circuit by its circuit id (default: all)
             constructor: select a constructor by its constructor id
                 (default: all)
@@ -1199,8 +1345,22 @@ class Ergast:
             :class:`~interface.ErgastRawResponse`, depending on the
             ``result_type`` parameter
         """
+        if round is not None:
+            warnings.warn(
+                "The `round` keyword argument is deprecated and will be "
+                "removed in a future version. Use `round_number` instead.",
+                FutureWarning,
+                stacklevel=2,
+            )
+            if round_number is not None:
+                raise ValueError(
+                    "Cannot pass both `round_number` and `round`. "
+                    "Use `round_number` only; `round` is deprecated."
+                )
+            round_number = round
+
         selectors = {'season': season,
-                     'round': round,
+                     'round_number': round_number,
                      'circuit': circuit,
                      'constructor': constructor,
                      'driver': driver,
@@ -1221,15 +1381,21 @@ class Ergast:
     def get_driver_standings(
             self,
             season: Literal['current'] | int | None = None,
-            round: Literal['last'] | int | None = None,
+            round_number: Literal['last'] | int | None = None,
             driver: str | None = None,
             standings_position: int | None = None,
             result_type: Literal['pandas', 'raw'] | None = None,
             auto_cast: bool | None = None,
             limit: int | None = None,
-            offset: int | None = None
+            offset: int | None = None,
+            *,
+            round: Literal['last'] | int | None = None
     ) -> ErgastMultiResponse | ErgastRawResponse:
         """Get driver standings at specific points of a season.
+
+        .. deprecated:: 3.9.0
+            The ``round`` keyword argument is deprecated, use
+            ``round_number`` instead.
 
         See: https://ergast.com/mrd/methods/standings/
 
@@ -1239,7 +1405,7 @@ class Ergast:
 
         Args:
             season: select a season by its year (default: all, oldest first)
-            round: select a round by its number (default: all)
+            round_number: select a round by its number (default: all)
             driver: select a driver by its driver id (default: all)
             standings_position: select a result by position in the standings
                 (default: all)
@@ -1255,8 +1421,22 @@ class Ergast:
             :class:`~interface.ErgastRawResponse`, depending on the
             ``result_type`` parameter
         """
+        if round is not None:
+            warnings.warn(
+                "The `round` keyword argument is deprecated and will be "
+                "removed in a future version. Use `round_number` instead.",
+                FutureWarning,
+                stacklevel=2,
+            )
+            if round_number is not None:
+                raise ValueError(
+                    "Cannot pass both `round_number` and `round`. "
+                    "Use `round_number` only; `round` is deprecated."
+                )
+            round_number = round
+
         selectors = {'season': season,
-                     'round': round,
+                     'round_number': round_number,
                      'driver': driver,
                      'standings_position': standings_position}
 
@@ -1273,15 +1453,21 @@ class Ergast:
     def get_constructor_standings(
             self,
             season: Literal['current'] | int | None = None,
-            round: Literal['last'] | int | None = None,
+            round_number: Literal['last'] | int | None = None,
             constructor: str | None = None,
             standings_position: int | None = None,
             result_type: Literal['pandas', 'raw'] | None = None,
             auto_cast: bool | None = None,
             limit: int | None = None,
-            offset: int | None = None
+            offset: int | None = None,
+            *,
+            round: Literal['last'] | int | None = None
     ) -> ErgastMultiResponse | ErgastRawResponse:
         """Get constructor standings at specific points of a season.
+
+        .. deprecated:: 3.9.0
+            The ``round`` keyword argument is deprecated, use
+            ``round_number`` instead.
 
         See: https://ergast.com/mrd/methods/standings/
 
@@ -1291,7 +1477,7 @@ class Ergast:
 
         Args:
             season: select a season by its year (default: all, oldest first)
-            round: select a round by its number (default: all)
+            round_number: select a round by its number (default: all)
             constructor: select a constructor by its constructor id
                 (default: all)
             standings_position: select a result by position in the standings
@@ -1308,8 +1494,22 @@ class Ergast:
             :class:`~interface.ErgastRawResponse`, depending on the
             ``result_type`` parameter
         """
+        if round is not None:
+            warnings.warn(
+                "The `round` keyword argument is deprecated and will be "
+                "removed in a future version. Use `round_number` instead.",
+                FutureWarning,
+                stacklevel=2,
+            )
+            if round_number is not None:
+                raise ValueError(
+                    "Cannot pass both `round_number` and `round`. "
+                    "Use `round_number` only; `round` is deprecated."
+                )
+            round_number = round
+
         selectors = {'season': season,
-                     'round': round,
+                     'round_number': round_number,
                      'constructor': constructor,
                      'standings_position': standings_position}
 
@@ -1327,15 +1527,21 @@ class Ergast:
 
     def get_lap_times(self,
                       season: Literal['current'] | int,
-                      round: Literal['last'] | int,
+                      round_number: Literal['last'] | int | None = None,
                       lap_number: int | None = None,
                       driver: str | None = None,
                       result_type: Literal['pandas', 'raw'] | None = None,
                       auto_cast: bool | None = None,
                       limit: int | None = None,
-                      offset: int | None = None
+                      offset: int | None = None,
+                      *,
+                      round: Literal['last'] | int | None = None
                       ) -> ErgastMultiResponse | ErgastRawResponse:
-        """Get sprint results for one or multiple sprints.
+        """Get lap times for one or multiple sessions.
+
+        .. deprecated:: 3.9.0
+            The ``round`` keyword argument is deprecated, use
+            ``round_number`` instead.
 
         See: https://ergast.com/mrd/methods/laps/
 
@@ -1345,7 +1551,7 @@ class Ergast:
 
         Args:
             season: select a season by its year (default: all, oldest first)
-            round: select a round by its number (default: all)
+            round_number: select a round by its number (default: all)
             lap_number: select lap times by a specific lap number
                 (default: all)
             driver: select a driver by its driver id (default: all)
@@ -1361,8 +1567,27 @@ class Ergast:
             :class:`~interface.ErgastRawResponse`, depending on the
             ``result_type`` parameter
         """
+        if round is not None:
+            warnings.warn(
+                "The `round` keyword argument is deprecated and will be "
+                "removed in a future version. Use `round_number` instead.",
+                FutureWarning,
+                stacklevel=2,
+            )
+            if round_number is not None:
+                raise ValueError(
+                    "Cannot pass both `round_number` and `round`. "
+                    "Use `round_number` only; `round` is deprecated."
+                )
+            round_number = round
+
+        if round_number is None:
+            raise ValueError(
+                "get_lap_times() missing 1 required argument: 'round_number'"
+            )
+
         selectors = {'season': season,
-                     'round': round,
+                     'round_number': round_number,
                      'driver': driver,
                      'lap_number': lap_number}
 
@@ -1378,16 +1603,22 @@ class Ergast:
 
     def get_pit_stops(self,
                       season: Literal['current'] | int,
-                      round: Literal['last'] | int,
+                      round_number: Literal['last'] | int | None = None,
                       stop_number: int | None = None,
                       lap_number: int | None = None,
                       driver: str | None = None,
                       result_type: Literal['pandas', 'raw'] | None = None,
                       auto_cast: bool | None = None,
                       limit: int | None = None,
-                      offset: int | None = None
+                      offset: int | None = None,
+                      *,
+                      round: Literal['last'] | int | None = None
                       ) -> ErgastMultiResponse | ErgastRawResponse:
         """Get pit stop information for one or multiple sessions.
+
+        .. deprecated:: 3.9.0
+            The ``round`` keyword argument is deprecated, use
+            ``round_number`` instead.
 
         See: https://ergast.com/mrd/methods/standings/
 
@@ -1397,7 +1628,7 @@ class Ergast:
 
         Args:
             season: select a season by its year (default: all, oldest first)
-            round: select a round by its number (default: all)
+            round_number: select a round by its number (default: all)
             lap_number: select pit stops by a specific lap number
                 (default: all)
             stop_number: select pit stops by their stop number
@@ -1415,8 +1646,27 @@ class Ergast:
             :class:`~interface.ErgastRawResponse`, depending on the
             ``result_type`` parameter
         """
+        if round is not None:
+            warnings.warn(
+                "The `round` keyword argument is deprecated and will be "
+                "removed in a future version. Use `round_number` instead.",
+                FutureWarning,
+                stacklevel=2,
+            )
+            if round_number is not None:
+                raise ValueError(
+                    "Cannot pass both `round_number` and `round`. "
+                    "Use `round_number` only; `round` is deprecated."
+                )
+            round_number = round
+
+        if round_number is None:
+            raise ValueError(
+                "get_pit_stops() missing 1 required argument: 'round_number'"
+            )
+
         selectors = {'season': season,
-                     'round': round,
+                     'round_number': round_number,
                      'driver': driver,
                      'lap_number': lap_number,
                      'stop_number': stop_number}

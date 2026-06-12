@@ -20,7 +20,7 @@ def test_lap_data_loading_position_calculation():
 
     ergast = Ergast()
     ergast_laps = ergast.get_lap_times(
-        season=2023, round=1, limit=20 * 60
+        season=2023, round_number=1, limit=20 * 60
     ).content[0]
     ergast_drivers = ergast.get_driver_info(season=2023)
 
