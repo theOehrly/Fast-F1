@@ -9,7 +9,7 @@ import pandas as pd
 import fastf1._api
 import fastf1.ergast
 from fastf1 import __version_short__
-from fastf1._utils import (
+from fastf1.internals.parsing_helpers import (
     recursive_dict_get,
     to_datetime,
     to_timedelta

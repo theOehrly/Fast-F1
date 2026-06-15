@@ -22,7 +22,7 @@ from fastf1 import (
     ergast,
     exceptions
 )
-from fastf1._utils import to_timedelta
+from fastf1.internals.parsing_helpers import to_timedelta
 from fastf1.internals.pandas_base import (
     BaseDataFrame,
     BaseSeries

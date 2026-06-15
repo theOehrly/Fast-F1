@@ -1,4 +1,4 @@
-"""Internal helpers used by FastF1.
+"""Internal parsing helpers used by FastF1.
 
 These functions are not part of the public API and may change without
 notice. The thin wrappers in :mod:`fastf1.utils` provide a deprecated public

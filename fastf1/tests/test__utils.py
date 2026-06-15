@@ -1,4 +1,4 @@
-"""Tests for the private :mod:`fastf1._utils` module.
+"""Tests for :mod:`fastf1.internals.parsing_helpers`.
 
 These mirror the public tests in ``test_utils.py`` but target the private
 implementation directly. Calling the private functions must not emit any
@@ -7,7 +7,7 @@ warnings (the public wrappers in :mod:`fastf1.utils` are responsible for the
 """
 import datetime
 
-from fastf1._utils import (
+from fastf1.internals.parsing_helpers import (
     recursive_dict_get,
     to_datetime,
     to_timedelta

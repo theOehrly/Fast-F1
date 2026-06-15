@@ -16,8 +16,9 @@ Deprecations
 - ``fastf1.utils.recursive_dict_get``, ``fastf1.utils.to_datetime`` and
   ``fastf1.utils.to_timedelta`` are deprecated. They were never intended to
   be part of the public API. The implementations have been moved to the
-  internal ``fastf1._utils`` module. The public names continue to work and
-  forward to the internal implementations, but emit a ``DeprecationWarning``
+  internal ``fastf1.internals.parsing_helpers`` module. The public names
+  continue to work and forward to the internal implementations, but emit a
+  ``DeprecationWarning``
   and will be removed in a future release (#884).
 
 
