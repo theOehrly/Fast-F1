@@ -24,7 +24,7 @@ from fastf1.plotting._base import (
 )
 
 
-_DEFAULT_COLOR_MAP: Literal['fastf1', 'official'] = 'fastf1'
+_DEFAULT_COLOR_MAP: Literal["fastf1", "official"] = "fastf1"
 _DRIVER_TEAM_MAPPINGS = {}
 
 
@@ -34,7 +34,7 @@ def _get_driver_team_mapping(
     # driver-team mappings are generated once for each session and then reused
     # on future calls
     api_path = session.api_path
-    year = str(session.event['EventDate'].year)
+    year = str(session.event["EventDate"].year)
 
     if api_path not in _DRIVER_TEAM_MAPPINGS:
         teams = _load_drivers_from_f1_livetiming(
@@ -114,7 +114,7 @@ def _get_team_fuzzy(identifier: str, session: Session) -> Team:
     dtm = _get_driver_team_mapping(session)
     identifier = _normalize_string(identifier).lower()
     # remove common non-unique words
-    for word in ('racing', 'team', 'f1', 'scuderia'):
+    for word in ("racing", "team", "f1", "scuderia"):
         identifier = identifier.replace(word, "").strip()
 
     # check for an exact team name match
@@ -167,7 +167,7 @@ def _get_driver_color(
         identifier: str,
         session: Session,
         *,
-        colormap: str = 'default',
+        colormap: str = "default",
         exact_match: bool = False,
         _variants: bool = False
 ) -> str:
@@ -182,19 +182,19 @@ def _get_team_color(
         identifier: str,
         session: Session,
         *,
-        colormap: str = 'default',
+        colormap: str = "default",
         exact_match: bool = False
 ) -> str:
     team = _get_team(
         identifier, session, exact_match=exact_match
     )
 
-    if colormap == 'default':
+    if colormap == "default":
         colormap = _DEFAULT_COLOR_MAP
 
-    if colormap == 'fastf1':
+    if colormap == "fastf1":
         return team.colors.fastf1
-    if colormap == 'official':
+    if colormap == "official":
         return team.colors.official
     raise ValueError(f"Invalid colormap '{colormap}'")
 
@@ -280,7 +280,7 @@ def get_team_color(
         identifier: str,
         session: Session,
         *,
-        colormap: str = 'default',
+        colormap: str = "default",
         exact_match: bool = False
 ) -> str:
     """
@@ -423,7 +423,7 @@ def get_driver_color(
         identifier: str,
         session: Session,
         *,
-        colormap: str = 'default',
+        colormap: str = "default",
         exact_match: bool = False
 ) -> str:
     """
@@ -475,7 +475,7 @@ def _replace_magic_auto(
     the key is in color_kws.
     """
     for key, value in style.items():
-        if key in color_kws and value == 'auto':
+        if key in color_kws and value == "auto":
             style[key] = _get_team_color(
                 team_name, session, colormap=colormap, exact_match=True
             )
@@ -491,7 +491,7 @@ def get_driver_style(
         style: str | Sequence[str] | Sequence[dict],
         session: Session,
         *,
-        colormap: str = 'default',
+        colormap: str = "default",
         additional_color_kws: list | tuple = (),
         exact_match: bool = False
 ) -> dict[str, Any]:
@@ -626,25 +626,25 @@ def get_driver_style(
         :add-heading:
     """
     stylers = {
-        'linestyle': ['solid', 'dashed', 'dashdot', 'dotted'],
-        'marker': ['x', 'o', '^', 'D']
+        "linestyle": ["solid", "dashed", "dashdot", "dotted"],
+        "marker": ["x", "o", "^", "D"]
     }
 
     # color keyword arguments that are supported by various matplotlib
     # functions
     color_kwargs = (
         # generic
-        'color', 'colors', 'c',
+        "color", "colors", "c",
         # .plot
-        'gapcolor',
-        'markeredgecolor', 'mec',
-        'markerfacecolor', 'mfc',
-        'markerfacecoloralt', 'mfcalt',
+        "gapcolor",
+        "markeredgecolor", "mec",
+        "markerfacecolor", "mfc",
+        "markerfacecoloralt", "mfcalt",
         # .scatter
-        'facecolor', 'facecolors', 'fc',
-        'edgecolor', 'edgecolors', 'ec',
+        "facecolor", "facecolors", "fc",
+        "edgecolor", "edgecolors", "ec",
         # .errorbar
-        'ecolor',
+        "ecolor",
         # add user defined color keyword arguments
         *additional_color_kws
     )
@@ -715,7 +715,7 @@ def get_compound_color(compound: str, session: Session) -> str:
     Returns:
         A hexadecimal RGB color code
     """
-    year = str(session.event['EventDate'].year)
+    year = str(session.event["EventDate"].year)
     compound_type = CompoundTypes(compound.upper())  # cast to enum
     return Constants[year].compound_colors[compound_type]
 
@@ -731,13 +731,13 @@ def get_compound_mapping(session: Session) -> dict[str, str]:
     Returns:
         dictionary mapping compound names to RGB hex colors
     """
-    year = str(session.event['EventDate'].year)
+    year = str(session.event["EventDate"].year)
     return {e.value: value
             for e, value in Constants[year].compound_colors.items()}
 
 
 def get_driver_color_mapping(
-        session: Session, *, colormap: str = 'default',
+        session: Session, *, colormap: str = "default",
 ) -> dict[str, str]:
     """
     Returns a dictionary that maps driver abbreviations to their associated
@@ -753,15 +753,15 @@ def get_driver_color_mapping(
     """
     dtm = _get_driver_team_mapping(session)
 
-    if colormap == 'default':
+    if colormap == "default":
         colormap = _DEFAULT_COLOR_MAP
 
-    if colormap == 'fastf1':
+    if colormap == "fastf1":
         colors = {
             abb: driver.team.colors.fastf1
             for abb, driver in dtm.drivers_by_abbreviation.items()
         }
-    elif colormap == 'official':
+    elif colormap == "official":
         colors = {
             abb: driver.team.colors.official
             for abb, driver in dtm.drivers_by_abbreviation.items()
@@ -807,7 +807,7 @@ def list_driver_names(session: Session) -> list[str]:
 
 def list_compounds(session: Session) -> list[str]:
     """Returns a list of all compound names for this season (not session)."""
-    year = str(session.event['EventDate'].year)
+    year = str(session.event["EventDate"].year)
     return [e.value for e in Constants[year].compound_colors]
 
 
@@ -861,8 +861,8 @@ def add_sorted_driver_legend(
         warnings.warn("Failed to parse optional legend arguments correctly.",
                       UserWarning)
         extra_args = []
-        kwargs.pop('handles', None)
-        kwargs.pop('labels', None)
+        kwargs.pop("handles", None)
+        kwargs.pop("labels", None)
         handles, labels = ax.get_legend_handles_labels()
 
     teams_list = list(dtm.teams_by_normalized.values())
@@ -903,7 +903,7 @@ def set_default_colormap(colormap: str):
         colormap: one of ``'fastf1'`` or ``'official'``
     """
     global _DEFAULT_COLOR_MAP
-    if colormap not in ('fastf1', 'official'):
+    if colormap not in ("fastf1", "official"):
         raise ValueError(f"Invalid colormap '{colormap}'")
     _DEFAULT_COLOR_MAP = colormap
 

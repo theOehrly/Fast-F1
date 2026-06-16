@@ -7,7 +7,7 @@ from fastf1.exceptions import FuzzyMatchError
 
 with warnings.catch_warnings():
     warnings.filterwarnings(
-        'ignore', message="Using slow pure-python SequenceMatcher"
+        "ignore", message="Using slow pure-python SequenceMatcher"
     )
     # suppress that warning, it's confusing at best here, we don't need fast
     # sequence matching and the installation (on windows) requires some effort

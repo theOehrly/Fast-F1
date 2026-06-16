@@ -98,12 +98,12 @@ def delta_time(
             [[stream[0] - dstream_start], stream, [stream[-1] + dstream_end]]
         )
 
-    ltime = mini_pro(comp['Time'].dt.total_seconds().to_numpy())
+    ltime = mini_pro(comp["Time"].dt.total_seconds().to_numpy())
     multiplier = ref.Distance.iat[-1]/comp.Distance.iat[-1]
-    ldistance = mini_pro(comp['Distance'].to_numpy())*multiplier
-    lap_time = np.interp(ref['Distance'], ldistance, ltime)
+    ldistance = mini_pro(comp["Distance"].to_numpy())*multiplier
+    lap_time = np.interp(ref["Distance"], ldistance, ltime)
 
-    delta = lap_time - ref['Time'].dt.total_seconds()
+    delta = lap_time - ref["Time"].dt.total_seconds()
 
     return delta, ref, comp
 
@@ -143,17 +143,17 @@ def to_timedelta(x: str | datetime.timedelta) \
     if isinstance(x, str) and len(x):
         try:
             hours, minutes = 0, 0
-            if len(hms := x.split(':')) == 3:
+            if len(hms := x.split(":")) == 3:
                 hours, minutes, seconds = hms
             elif len(hms) == 2:
                 minutes, seconds = hms
             else:
                 seconds = hms[0]
 
-            if '.' in seconds:
-                seconds, msus = seconds.split('.')
+            if "." in seconds:
+                seconds, msus = seconds.split(".")
                 if len(msus) < 6:
-                    msus = msus + '0' * (6 - len(msus))
+                    msus = msus + "0" * (6 - len(msus))
                 elif len(msus) > 6:
                     msus = msus[0:6]
             else:
@@ -199,13 +199,13 @@ def to_datetime(x: str | datetime.datetime) \
     """
     if isinstance(x, str) and x:
         try:
-            date, time = x.strip('Z').split('T')
-            year, month, day = date.split('-')
-            hours, minutes, seconds = time.split(':')
-            if '.' in seconds:
-                seconds, msus = seconds.split('.')
+            date, time = x.strip("Z").split("T")
+            year, month, day = date.split("-")
+            hours, minutes, seconds = time.split(":")
+            if "." in seconds:
+                seconds, msus = seconds.split(".")
                 if len(msus) < 6:
-                    msus = msus + '0' * (6 - len(msus))
+                    msus = msus + "0" * (6 - len(msus))
                 elif len(msus) > 6:
                     msus = msus[0:6]
             else:

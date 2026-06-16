@@ -19,7 +19,7 @@ try:
     from pandas.core.internals.managers import _consolidate
 
     # verify existence of non-public methods of public objects
-    if not hasattr(Index, '_with_infer'):
+    if not hasattr(Index, "_with_infer"):
         raise AttributeError
 
 except (AttributeError, ImportError) as import_exc:
