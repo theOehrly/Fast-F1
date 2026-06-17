@@ -11,14 +11,14 @@ import fastf1.plotting
 
 
 # Load FastF1's dark color scheme
-fastf1.plotting.setup_mpl(mpl_timedelta_support=False, color_scheme='fastf1')
+fastf1.plotting.setup_mpl(mpl_timedelta_support=False, color_scheme="fastf1")
 
 
 ###############################################################################
 # Load the race session.
 # Pick all quick laps (within 107% of fastest lap).
 # For races with mixed conditions, pick_wo_box() is better.
-race = fastf1.get_session(2024, 1, 'R')
+race = fastf1.get_session(2024, 1, "R")
 race.load()
 laps = race.laps.pick_quicklaps()
 
@@ -53,10 +53,10 @@ sns.boxplot(
     hue="Team",
     order=team_order,
     palette=team_palette,
-    whiskerprops={'color': "white"},
-    boxprops={'edgecolor': "white"},
-    medianprops={'color': "grey"},
-    capprops={'color': "white"},
+    whiskerprops={"color": "white"},
+    boxprops={"edgecolor": "white"},
+    medianprops={"color": "grey"},
+    capprops={"color": "white"},
 )
 
 plt.title("2023 British Grand Prix")

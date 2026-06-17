@@ -13,13 +13,13 @@ import fastf1.plotting
 
 # Enable Matplotlib patches for plotting timedelta values and load
 # FastF1's dark color scheme
-fastf1.plotting.setup_mpl(mpl_timedelta_support=True, color_scheme='fastf1')
+fastf1.plotting.setup_mpl(mpl_timedelta_support=True, color_scheme="fastf1")
 
 
 ###############################################################################
 # Load the race session.
 
-race = fastf1.get_session(2023, "Azerbaijan", 'R')
+race = fastf1.get_session(2023, "Azerbaijan", "R")
 race.load()
 
 ###############################################################################
@@ -44,7 +44,7 @@ sns.scatterplot(data=driver_laps,
                 palette=fastf1.plotting.get_compound_mapping(session=race),
                 s=80,
                 linewidth=0,
-                legend='auto')
+                legend="auto")
 # sphinx_gallery_defer_figures
 
 ###############################################################################
@@ -58,7 +58,7 @@ ax.invert_yaxis()
 plt.suptitle("Alonso Laptimes in the 2023 Azerbaijan Grand Prix")
 
 # Turn on major grid lines
-plt.grid(color='w', which='major', axis='both')
+plt.grid(color="w", which="major", axis="both")
 sns.despine(left=True, bottom=True)
 
 plt.tight_layout()

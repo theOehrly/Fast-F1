@@ -14,7 +14,7 @@ import fastf1.plotting
 ###############################################################################
 # Load the race session
 
-session = fastf1.get_session(2022, "Hungary", 'R')
+session = fastf1.get_session(2022, "Hungary", "R")
 session.load()
 laps = session.laps
 
@@ -82,9 +82,9 @@ ax.invert_yaxis()
 
 ###############################################################################
 # Plot aesthetics
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
-ax.spines['left'].set_visible(False)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.spines["left"].set_visible(False)
 
 plt.tight_layout()
 plt.show()
