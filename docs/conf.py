@@ -21,7 +21,7 @@ from plotly.io._sg_scraper import plotly_sg_scraper
 import fastf1
 
 
-sys.path.append(os.path.abspath('extensions'))
+sys.path.append(os.path.abspath("extensions"))
 
 
 ERGAST_BACKEND_OVERRIDE = os.environ.get("FASTF1_DOCS_ERGAST_BACKEND_OVERRIDE")
@@ -34,34 +34,34 @@ if ERGAST_BACKEND_OVERRIDE:
 
 # -- FastF1 specific config --------------------------------------------------
 # ignore warning on import of fastf1.api
-warnings.filterwarnings(action='ignore',
-                        message=r'`fastf1.api` will be considered private .*')
-warnings.filterwarnings(action='ignore',
-                        message=r'`utils.delta_time` is considered '
-                                r'deprecated.*')
-warnings.filterwarnings(action='ignore',
-                        message=r'(COMPOUND_COLORS|DRIVER_COLORS|'
-                                r'DRIVER_TRANSLATE|TEAM_COLORS|TEAM_TRANSLATE|'
-                                r'COLOR_PALETTE) is deprecated and.*')
+warnings.filterwarnings(action="ignore",
+                        message=r"`fastf1.api` will be considered private .*")
+warnings.filterwarnings(action="ignore",
+                        message=r"`utils.delta_time` is considered "
+                                r"deprecated.*")
+warnings.filterwarnings(action="ignore",
+                        message=r"(COMPOUND_COLORS|DRIVER_COLORS|"
+                                r"DRIVER_TRANSLATE|TEAM_COLORS|TEAM_TRANSLATE|"
+                                r"COLOR_PALETTE) is deprecated and.*")
 
-doc_cache = os.path.abspath('../doc_cache')
+doc_cache = os.path.abspath("../doc_cache")
 if not os.path.exists(doc_cache):
     os.makedirs(doc_cache)
 
 # -- Project information -----------------------------------------------------
 
-project = 'FastF1'
+project = "FastF1"
 # copyright = 'MIT'
 # author = 'Oehrly'
 version = fastf1.__version__
 release = version
-copyright = f'{datetime.now().year}, Philipp Schäfer'  # noqa: A001
+copyright = f"{datetime.now().year}, Philipp Schäfer"  # noqa: A001
 html_title = f"{project} ({release})"
 
-with open(os.path.abspath('../pyproject.toml'), 'rb') as f:
+with open(os.path.abspath("../pyproject.toml"), "rb") as f:
     pyproject = tomllib.load(f)
 
-python_requires = pyproject['project']['requires-python']
+python_requires = pyproject["project"]["requires-python"]
 min_python_version = python_requires.removeprefix(">=")
 
 rst_epilog = f"""
@@ -74,26 +74,26 @@ rst_epilog = f"""
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'matplotlib.sphinxext.plot_directive',
-    'sphinx.ext.doctest',
-    'sphinx.ext.autodoc',
-    'sphinx.ext.napoleon',
-    'sphinx_autodoc_typehints',
-    'sphinx.ext.autosummary',
-    'sphinx.ext.todo',
-    'sphinx.ext.viewcode',
-    'sphinx_gallery.gen_gallery',
-    'autodocsumm',
-    'fastf1.ergast.sphinx',
-    'nitpick_ignore_files',
-    'notfound.extension',
+    "matplotlib.sphinxext.plot_directive",
+    "sphinx.ext.doctest",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
+    "sphinx_autodoc_typehints",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.todo",
+    "sphinx.ext.viewcode",
+    "sphinx_gallery.gen_gallery",
+    "autodocsumm",
+    "fastf1.ergast.sphinx",
+    "nitpick_ignore_files",
+    "notfound.extension",
 ]
 
 todo_include_todos = True
-autodoc_member_order = 'bysource'
+autodoc_member_order = "bysource"
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -103,21 +103,21 @@ exclude_patterns = []
 nitpicky = True
 
 nitpick_ignore_regex = [
-    (r'py:class', r'collections.abc\..*'),
-    (r'py:data', r'typing\..*'),
-    (r'py:.*', r'datetime\..*'),
-    (r'py:.*', r'pandas\..*'),
-    (r'py:.*', r'pd\..*'),
-    (r'py:.*', r'numpy\..*'),
-    (r'py:.*', r'matplotlib\..*'),
-    (r'py:mod', r'logging'),
-    (r'py:class', r'logging.Logger'),
+    (r"py:class", r"collections.abc\..*"),
+    (r"py:data", r"typing\..*"),
+    (r"py:.*", r"datetime\..*"),
+    (r"py:.*", r"pandas\..*"),
+    (r"py:.*", r"pd\..*"),
+    (r"py:.*", r"numpy\..*"),
+    (r"py:.*", r"matplotlib\..*"),
+    (r"py:mod", r"logging"),
+    (r"py:class", r"logging.Logger"),
 ]
 
 nitpick_ignore_files = [
     # exclude changelog from nitpick, old entries might reference removed
     # functionality
-    r'changelog/.*',
+    r"changelog/.*",
 ]
 # nitpick_ignore_files is a custom extension (docs/extensions)
 
@@ -157,21 +157,21 @@ html_favicon = "_static/favicon.png"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 # Add any extra paths that contain custom files that should be copied to the
 # output directory.
-html_extra_path = ['_extra']
+html_extra_path = ["_extra"]
 
 # These paths are either relative to html_static_path
 # or fully qualified paths (eg. https://...)
 html_css_files = [
-    'css/custom.css',
+    "css/custom.css",
 ]
 
 # -- Plotly configuration ----------------------------------------------------
 # use sphinx to render plotly
-pio.renderers.default = 'sphinx_gallery_png'
+pio.renderers.default = "sphinx_gallery_png"
 
 
 # -- matplotlib plot directive options ---------------------------------------
@@ -203,32 +203,32 @@ def sphinx_gallery_setup(gallery_conf, fname):  # noqa: ARG001
     import fastf1
     import fastf1.logger
     fastf1.Cache.enable_cache(doc_cache)
-    fastf1.logger.set_log_level('WARNING')
+    fastf1.logger.set_log_level("WARNING")
 
 
 sphinx_gallery_conf = {
-    'examples_dirs': '../examples',
-    'gallery_dirs': 'gen_modules/examples_gallery',
-    'download_all_examples': False,
-    'remove_config_comments': True,
-    'image_scrapers': ('matplotlib',  # default
+    "examples_dirs": "../examples",
+    "gallery_dirs": "gen_modules/examples_gallery",
+    "download_all_examples": False,
+    "remove_config_comments": True,
+    "image_scrapers": ("matplotlib",  # default
                        plotly_sg_scraper),  # for plotly thumbnail
-    'reset_modules': ('matplotlib', 'seaborn',  # defaults
+    "reset_modules": ("matplotlib", "seaborn",  # defaults
                       sphinx_gallery_setup),  # custom setup
     # directory where function/class granular galleries are stored
-    'backreferences_dir': 'gen_modules/backreferences',
+    "backreferences_dir": "gen_modules/backreferences",
 
     # if an example does not produce an output plot, use the following image
     # as the thumbnail.
-    'default_thumb_file': '_static/logo.png',
+    "default_thumb_file": "_static/logo.png",
 
     # Modules for which function/class level galleries are created. In
     # this case sphinx_gallery and numpy in a tuple of strings.
-    'doc_module': ('fastf1', ),
+    "doc_module": ("fastf1", ),
 }
 
 
 # -- options for latexpdf build ----------------------------------------------
 latex_elements = {
-    'preamble': r'\usepackage{enumitem}\setlistdepth{99}',
+    "preamble": r"\usepackage{enumitem}\setlistdepth{99}",
 }
