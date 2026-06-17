@@ -1,6 +1,7 @@
 import collections
 import datetime
 import json
+import warnings
 from typing import Literal
 
 import dateutil.parser
@@ -696,19 +697,47 @@ class EventSchedule(BaseDataFrame):
         testing event."""
         return pd.Series(self["EventFormat"] == "testing")
 
-    def get_event_by_round(self, round: int) -> "Event":
+    def get_event_by_round(
+            self,
+            round_number: int | None = None,
+            *,
+            round: int | None = None) -> "Event":
         """Get an :class:`Event` by its round number.
 
+        .. deprecated:: 3.9.0
+            The ``round`` keyword argument is deprecated, use
+            ``round_number`` instead.
+
         Args:
-            round: The round number
+            round_number: The round number
         Raises:
             ValueError: The round does not exist in the event schedule
         """
-        if round == 0:
+        if round is not None:
+            warnings.warn(
+                "The `round` keyword argument is deprecated and will be "
+                "removed in a future version. Use `round_number` instead.",
+                FutureWarning,
+                stacklevel=2,
+            )
+            if round_number is not None:
+                raise ValueError(
+                    "Cannot pass both `round_number` and `round`. "
+                    "Use `round_number` only; `round` is deprecated."
+                )
+            round_number = round
+
+        if round_number is None:
+            raise ValueError(
+                "get_event_by_round() missing 1 required argument: "
+                "'round_number'"
+            )
+
+        if round_number == 0:
             raise ValueError("Cannot get testing event by round number!")
-        mask = self["RoundNumber"] == round
+        mask = self['RoundNumber'] == round_number
         if not mask.any():
-            raise ValueError(f"Invalid round: {round}")
+            raise ValueError(f"Invalid round: {round_number}")
         return self[mask].iloc[0]
 
     def _strict_event_search(self, name: str) -> "Event":
