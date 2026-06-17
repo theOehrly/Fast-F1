@@ -96,9 +96,9 @@ class SeasonConstants(BaseModel):
 # These models are partially filled from constants and partially from API data
 
 class Team(TeamConstants):
-    name: str = ''
+    name: str = ""
     # full team name
-    normalized_name: str = ''
+    normalized_name: str = ""
     # reduced to most recognizable part, omitting "F1", "Racing", ...
     drivers: list["Driver"] = []
 
@@ -110,9 +110,9 @@ class Team(TeamConstants):
 
 class Driver(BaseModel):
     team: Team
-    abbreviation: str = ''
-    name: str = ''
-    normalized_name: str = ''
+    abbreviation: str = ""
+    name: str = ""
+    normalized_name: str = ""
 
     @model_validator(mode="after")
     def ensure_unique(self):
@@ -143,5 +143,5 @@ class DriverTeamMapping(BaseModel):
 def _normalize_string(name: str) -> str:
     # removes accents from a string and returns the closest possible
     # ascii representation (https://stackoverflow.com/a/518232)
-    return ''.join(c for c in unicodedata.normalize('NFD', name)
-                       if unicodedata.category(c) != 'Mn')
+    return "".join(c for c in unicodedata.normalize("NFD", name)
+                       if unicodedata.category(c) != "Mn")

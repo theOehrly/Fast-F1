@@ -21,8 +21,8 @@ from fastf1.logger import get_logger
 _logger = get_logger(__package__)
 
 
-_COLOR_PALETTE: list[str] = ['#FF79C6', '#50FA7B', '#8BE9FD', '#BD93F9',
-                             '#FFB86C', '#FF5555', '#F1FA8C']
+_COLOR_PALETTE: list[str] = ["#FF79C6", "#50FA7B", "#8BE9FD", "#BD93F9",
+                             "#FFB86C", "#FF5555", "#F1FA8C"]
 # The default color palette for matplotlib plot lines in fastf1's color scheme
 
 
@@ -52,7 +52,7 @@ def setup_mpl(
             example images.
             Valid color scheme names are: ['fastf1', None]
     """
-    if args or 'misc_mpl_mods' in kwargs:
+    if args or "misc_mpl_mods" in kwargs:
         warnings.warn(
             "The `misc_mpl_mods` argument was dropped from `.setup_mpl()` in "
             "version 3.6.0 and has no effect anymore. It will be removed in a "
@@ -61,7 +61,7 @@ def setup_mpl(
 
     if mpl_timedelta_support:
         _enable_timple()
-    if color_scheme == 'fastf1':
+    if color_scheme == "fastf1":
         _enable_fastf1_color_scheme()
 
 
@@ -76,30 +76,30 @@ def _enable_timple():
         "%M:%s.0",
         "%M:%s.%ms"
     ]
-    tmpl = timple.Timple(converter='concise',
-                         formatter_args={'show_offset_zero': False,
-                                         'formats': tick_formats})
+    tmpl = timple.Timple(converter="concise",
+                         formatter_args={"show_offset_zero": False,
+                                         "formats": tick_formats})
     tmpl.enable()
 
 
 def _enable_fastf1_color_scheme():
-    plt.rcParams['figure.facecolor'] = '#292625'
-    plt.rcParams['axes.edgecolor'] = '#2d2928'
-    plt.rcParams['xtick.color'] = '#f1f2f3'
-    plt.rcParams['ytick.color'] = '#f1f2f3'
-    plt.rcParams['axes.labelcolor'] = '#F1f2f3'
-    plt.rcParams['axes.facecolor'] = '#1e1c1b'
+    plt.rcParams["figure.facecolor"] = "#292625"
+    plt.rcParams["axes.edgecolor"] = "#2d2928"
+    plt.rcParams["xtick.color"] = "#f1f2f3"
+    plt.rcParams["ytick.color"] = "#f1f2f3"
+    plt.rcParams["axes.labelcolor"] = "#F1f2f3"
+    plt.rcParams["axes.facecolor"] = "#1e1c1b"
     # plt.rcParams['axes.facecolor'] = '#292625'
-    plt.rcParams['axes.titlesize'] = 'x-large'
+    plt.rcParams["axes.titlesize"] = "x-large"
     # plt.rcParams['font.family'] = 'Gravity'
-    plt.rcParams['font.weight'] = 'medium'
-    plt.rcParams['text.color'] = '#F1F1F3'
-    plt.rcParams['axes.titlesize'] = '19'
-    plt.rcParams['axes.titlepad'] = '12'
-    plt.rcParams['axes.titleweight'] = 'light'
-    plt.rcParams['axes.prop_cycle'] = cycler('color', _COLOR_PALETTE)
-    plt.rcParams['legend.fancybox'] = False
-    plt.rcParams['legend.facecolor'] = (0.1, 0.1, 0.1, 0.7)
-    plt.rcParams['legend.edgecolor'] = (0.1, 0.1, 0.1, 0.9)
-    plt.rcParams['savefig.transparent'] = False
-    plt.rcParams['axes.axisbelow'] = True
+    plt.rcParams["font.weight"] = "medium"
+    plt.rcParams["text.color"] = "#F1F1F3"
+    plt.rcParams["axes.titlesize"] = "19"
+    plt.rcParams["axes.titlepad"] = "12"
+    plt.rcParams["axes.titleweight"] = "light"
+    plt.rcParams["axes.prop_cycle"] = cycler("color", _COLOR_PALETTE)
+    plt.rcParams["legend.fancybox"] = False
+    plt.rcParams["legend.facecolor"] = (0.1, 0.1, 0.1, 0.7)
+    plt.rcParams["legend.edgecolor"] = (0.1, 0.1, 0.1, 0.9)
+    plt.rcParams["savefig.transparent"] = False
+    plt.rcParams["axes.axisbelow"] = True
