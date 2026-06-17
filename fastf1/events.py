@@ -735,7 +735,7 @@ class EventSchedule(BaseDataFrame):
 
         if round_number == 0:
             raise ValueError("Cannot get testing event by round number!")
-        mask = self['RoundNumber'] == round_number
+        mask = self["RoundNumber"] == round_number
         if not mask.any():
             raise ValueError(f"Invalid round: {round_number}")
         return self[mask].iloc[0]
