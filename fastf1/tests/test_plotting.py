@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import pytest
 
 import fastf1
-import fastf1._api
 import fastf1.plotting
 from fastf1.exceptions import FuzzyMatchError
 from fastf1.plotting._backend import (
@@ -152,24 +151,19 @@ def test_get_team_name_by_driver(identifier, kwargs, expected):
     assert name == expected
 
 
-def test_load_drivers_preserves_known_team_color_if_live_color_missing(
-        monkeypatch
-):
-    def mock_driver_info(api_path):  # noqa: ARG001
-        return {
-            '16': {
-                'TeamName': 'Ferrari',
-                'TeamColour': None,
-                'Tla': 'LEC',
-                'FirstName': 'Charles',
-                'LastName': 'Leclerc',
-            }
+def test_load_drivers_preserves_known_team_color_if_live_color_missing():
+    driver_info = {
+        '16': {
+            'TeamName': 'Ferrari',
+            'TeamColour': None,
+            'Tla': 'LEC',
+            'FirstName': 'Charles',
+            'LastName': 'Leclerc',
         }
-
-    monkeypatch.setattr(fastf1._api, 'driver_info', mock_driver_info)
+    }
 
     teams = _load_drivers_from_f1_livetiming(
-        api_path='api/path', year='2026'
+        api_path='api/path', year='2026', driver_info=driver_info
     )
     team = teams[0]
 

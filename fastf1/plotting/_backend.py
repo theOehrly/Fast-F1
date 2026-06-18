@@ -25,11 +25,13 @@ for year, consts in json.loads(content).items():
 def _load_drivers_from_f1_livetiming(
         *,
         api_path: str,
-        year: str
+        year: str,
+        driver_info: dict | None = None
 ) -> list[Team]:
 
-    # load the driver information for the determined session
-    driver_info = fastf1._api.driver_info(api_path)
+    if driver_info is None:
+        # load the driver information for the determined session
+        driver_info = fastf1._api.driver_info(api_path)
 
     teams = {}
     if year in Constants:
@@ -59,10 +61,6 @@ def _load_drivers_from_f1_livetiming(
     for num in sorted(driver_info.keys()):
         driver_entry = driver_info[num]
         team_name = driver_entry.get('TeamName')
-        team_color_raw = driver_entry.get('TeamColour')
-        team_color = None
-        if team_color_raw:
-            team_color = f"#{team_color_raw.lower()}"
         abbreviation = driver_entry.get('Tla', '')
         name = ' '.join((driver_entry.get('FirstName', ''),
                          driver_entry.get('LastName', '')))
@@ -80,21 +78,31 @@ def _load_drivers_from_f1_livetiming(
             continue
 
         normalized_full_team_name = _normalize_string(team_name).lower()
-        for normalized_name, team in teams.items():
-            if normalized_name in normalized_full_team_name:
-                team.name = team_name
-                if team_color is not None:
-                    team.colors.official = team_color
-                break
+        team = next(
+            (
+                team
+                for normalized_name, team in teams.items()
+                if normalized_name in normalized_full_team_name
+            ),
+            None
+        )
+        team_color_raw = driver_entry.get('TeamColour')
+        if team_color_raw:
+            team_color = f"#{team_color_raw.lower()}"
+        elif team is not None:
+            team_color = team.colors.official
         else:
-            if team_color is None:
-                _logger.warning(
-                    "Skipping driver with incomplete team color while "
-                    "generating driver-team mapping for plotting constants."
-                )
-                _logger.debug(f"Skipping driver entry: {driver_entry}")
-                continue
+            _logger.warning(
+                "Skipping driver with incomplete team color while "
+                "generating driver-team mapping for plotting constants."
+            )
+            _logger.debug(f"Skipping driver entry: {driver_entry}")
+            continue
 
+        if team is not None:
+            team.name = team_name
+            team.colors.official = team_color
+        else:
             team = _generate_team(team_name, team_color)
 
             _logger.warning(f"Auto-generating unknown team: {team.name}")
