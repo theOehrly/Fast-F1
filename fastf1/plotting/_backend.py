@@ -59,7 +59,10 @@ def _load_drivers_from_f1_livetiming(
     for num in sorted(driver_info.keys()):
         driver_entry = driver_info[num]
         team_name = driver_entry.get("TeamName", "")
+
         team_color = driver_entry.get("TeamColor", "").lower()
+        team_color = f"#{team_color}" if team_color else ""
+
         abbreviation = driver_entry.get("Tla", "")
         name = " ".join((driver_entry.get("FirstName", ""),
                          driver_entry.get("LastName", "")))
@@ -78,11 +81,11 @@ def _load_drivers_from_f1_livetiming(
                 team.name = team_name
                 if team_color:
                     # only update if the API provided a color value
-                    team.colors.official = f"#{team_color}"
+                    team.colors.official = team_color
                 break
         else:
-            team_color = f"#{team_color}" if team_color else ""
             team = _generate_team(team_name, team_color)
+
             _logger.warning(f"Auto-generating unknown team: {team.name}")
             if not team_color:
                 _logger.warning(f"Auto-generated team {team.name} has no "
