@@ -58,13 +58,13 @@ def _load_drivers_from_f1_livetiming(
     #   primary style
     for num in sorted(driver_info.keys()):
         driver_entry = driver_info[num]
-        team_name = driver_entry.get("TeamName")
-        team_color = f"#{driver_entry.get('TeamColour').lower()}"
+        team_name = driver_entry.get("TeamName", "")
+        team_color = driver_entry.get("TeamColor", "").lower()
         abbreviation = driver_entry.get("Tla", "")
         name = " ".join((driver_entry.get("FirstName", ""),
                          driver_entry.get("LastName", "")))
 
-        if not abbreviation.strip() or not name.strip():
+        if not (abbreviation.strip() and name.strip() and team_name.strip()):
             _logger.warning(
                 "Skipping driver with incomplete data while generating "
                 "driver-team mapping for plotting constants."
@@ -76,12 +76,17 @@ def _load_drivers_from_f1_livetiming(
         for normalized_name, team in teams.items():
             if normalized_name in normalized_full_team_name:
                 team.name = team_name
-                team.colors.official = team_color
+                if team_color:
+                    # only update if the API provided a color value
+                    team.colors.official = f"#{team_color}"
                 break
         else:
+            team_color = f"#{team_color}" if team_color else ""
             team = _generate_team(team_name, team_color)
-
             _logger.warning(f"Auto-generating unknown team: {team.name}")
+            if not team_color:
+                _logger.warning(f"Auto-generated team {team.name} has no "
+                                f"team color.")
 
             teams[team.normalized_name] = team
 
@@ -94,7 +99,10 @@ def _load_drivers_from_f1_livetiming(
         team.add_driver(driver)
 
     # return all teams that have drivers in this session
-    return [team for team in teams.values() if team.drivers]
+    teams = [team for team in teams.values() if team.drivers]
+    if not teams:
+        _logger.warning("Failed to generate driver-team mapping!")
+    return teams
 
 
 def _generate_team(team_name: str, team_color: str) -> Team:
