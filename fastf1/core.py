@@ -3185,6 +3185,11 @@ class Laps(BaseDataFrame):
             ver_laps = session_laps.pick_drivers("VER")
             some_drivers_laps = session_laps.pick_drivers([5, 'BOT', 7])
 
+        Driver numbers can be passed as integers or strings (e.g. ``63`` and
+        ``'63'`` are both valid). Abbreviations are case-insensitive. If an
+        identifier does not match any driver in the session, an empty
+        :class:`Laps` object is returned silently.
+
         Args:
             identifiers: Multiple driver abbreviations or driver numbers
                 (can be mixed)
@@ -3284,7 +3289,13 @@ class Laps(BaseDataFrame):
     def pick_quicklaps(self, threshold: float | None = None) -> "Laps":
         """Return all laps with `LapTime` faster than a certain limit. By
         default, the threshold is 107% of the best `LapTime` of all laps
-        in self.
+        in self. ::
+
+            # get all laps within 107% of the fastest lap time (default)
+            quick_laps = session_laps.pick_quicklaps()
+
+            # get all laps within 105% of the fastest lap time
+            quick_laps = session_laps.pick_quicklaps(threshold=1.05)
 
         Args:
             threshold: custom threshold coefficient
@@ -3371,6 +3382,12 @@ class Laps(BaseDataFrame):
     def pick_wo_box(self) -> "Laps":
         """Return all laps which are NOT in laps or out laps.
 
+        In F1 terminology, "box" refers to the pit lane. This method filters
+        out laps where the driver either entered or exited the pits, returning
+        only clean flying laps. ::
+
+            clean_laps = session_laps.pick_wo_box()
+
         Returns:
             instance of :class:`Laps`
         """
@@ -3407,6 +3424,18 @@ class Laps(BaseDataFrame):
     def pick_not_deleted(self) -> "Laps":
         """Return all laps whose lap times are NOT deleted.
 
+        Lap times can be deleted by the stewards, for example due to track
+        limits violations. This method requires race control messages to be
+        loaded via ``Session.load(messages=True)``. ::
+
+            # requires messages=True when loading the session
+            session.load(messages=True)
+            valid_laps = session.laps.pick_not_deleted()
+
+        Raises:
+            :class:`~fastf1.exceptions.DataNotLoadedError`: if race control
+                messages have not been loaded
+
         Returns:
             instance of :class:`Laps`
         """
@@ -3419,7 +3448,14 @@ class Laps(BaseDataFrame):
 
     def pick_accurate(self) -> "Laps":
         """Return all laps which pass the accuracy validation check
-        (lap['IsAccurate'] is True).
+        (``lap['IsAccurate']`` is True). ::
+
+            accurate_laps = session_laps.pick_accurate()
+
+        .. note:: For best results, combine with :meth:`pick_not_deleted`
+            to also filter out laps with deleted lap times. Note that
+            :meth:`pick_not_deleted` requires race control messages to be
+            loaded via ``Session.load(messages=True)``.
 
         Returns:
             instance of :class:`Laps`
