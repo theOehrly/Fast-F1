@@ -3407,6 +3407,17 @@ class Laps(BaseDataFrame):
     def pick_not_deleted(self) -> "Laps":
         """Return all laps whose lap times are NOT deleted.
 
+        Lap times can be deleted by the stewards, for example due to track
+        limits violations.
+
+        Requires:
+            Race control messages to be loaded via
+            ``Session.load(messages=True)``
+
+        Raises:
+            :class:`~fastf1.exceptions.DataNotLoadedError` if race control
+            messages are not loaded
+
         Returns:
             instance of :class:`Laps`
         """
