@@ -1469,7 +1469,7 @@ class Session:
         # remove first lap pitout time if it is before session_start_time
         mask = (data["PitOutTime"] < self.session_start_time) & \
                (data["NumberOfLaps"] == 1)
-        data.loc[mask, "PitOutTime"] = np.timedelta64("NaT")
+        data.loc[mask, "PitOutTime"] = np.timedelta64("NaT", "ns")
 
         drivers = self.drivers
         if not drivers:
@@ -1552,7 +1552,7 @@ class Session:
                 # started can only be made for the race
                 laps_start_time.insert(0, self.session_start_time)
             else:
-                laps_start_time.insert(0, np.timedelta64("NaT"))
+                laps_start_time.insert(0, np.timedelta64("NaT", "ns"))
 
             # don't set lap start times after red flag restart to the time
             # at which the previous lap was set
@@ -1589,7 +1589,7 @@ class Session:
                             # PitOutTime later if possible
                             laps_start_time[
                                 restart_index
-                            ] = np.timedelta64("NaT")
+                            ] = np.timedelta64("NaT", "ns")
                     elif row["Status"] == "Aborted":  # red flag
                         _is_aborted = True
 
@@ -1923,7 +1923,7 @@ class Session:
                 quali_results = (quali_results
                                  .merge(laps, on="DriverNumber", how="left"))
             else:
-                quali_results[session_name] = np.timedelta64("NaT")
+                quali_results[session_name] = np.timedelta64("NaT", "ns")
 
         quali_results = quali_results \
             .sort_values(by=["Q3", "Q2", "Q1"]) \
