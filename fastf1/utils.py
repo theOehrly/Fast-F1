@@ -9,7 +9,8 @@ release.
 import datetime
 import warnings
 
-from fastf1.internals.parsing_helpers import recursive_dict_get as _recursive_dict_get
+from fastf1.internals.parsing_helpers import \
+    recursive_dict_get as _recursive_dict_get
 from fastf1.internals.parsing_helpers import to_datetime as _to_datetime
 from fastf1.internals.parsing_helpers import to_timedelta as _to_timedelta
 

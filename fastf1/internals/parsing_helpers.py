@@ -48,17 +48,17 @@ def to_timedelta(x: str | datetime.timedelta) \
     if isinstance(x, str) and len(x):
         try:
             hours, minutes = 0, 0
-            if len(hms := x.split(':')) == 3:
+            if len(hms := x.split(":")) == 3:
                 hours, minutes, seconds = hms
             elif len(hms) == 2:
                 minutes, seconds = hms
             else:
                 seconds = hms[0]
 
-            if '.' in seconds:
-                seconds, msus = seconds.split('.')
+            if "." in seconds:
+                seconds, msus = seconds.split(".")
                 if len(msus) < 6:
-                    msus = msus + '0' * (6 - len(msus))
+                    msus = msus + "0" * (6 - len(msus))
                 elif len(msus) > 6:
                     msus = msus[0:6]
             else:
@@ -104,13 +104,13 @@ def to_datetime(x: str | datetime.datetime) \
     """
     if isinstance(x, str) and x:
         try:
-            date, time = x.strip('Z').split('T')
-            year, month, day = date.split('-')
-            hours, minutes, seconds = time.split(':')
-            if '.' in seconds:
-                seconds, msus = seconds.split('.')
+            date, time = x.strip("Z").split("T")
+            year, month, day = date.split("-")
+            hours, minutes, seconds = time.split(":")
+            if "." in seconds:
+                seconds, msus = seconds.split(".")
                 if len(msus) < 6:
-                    msus = msus + '0' * (6 - len(msus))
+                    msus = msus + "0" * (6 - len(msus))
                 elif len(msus) > 6:
                     msus = msus[0:6]
             else:
