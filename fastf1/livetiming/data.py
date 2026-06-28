@@ -17,12 +17,12 @@ _logger = get_logger(__name__)
 
 
 _track_status_mapping = {
-    'AllClear': '1',
-    'Yellow': '2',
-    'SCDeployed': '4',
-    'Red': '5',
-    'VSCDeployed': '6',
-    'VSCEnding': '7'
+    "AllClear": "1",
+    "Yellow": "2",
+    "SCDeployed": "4",
+    "Red": "5",
+    "VSCDeployed": "6",
+    "VSCEnding": "7"
 }
 
 
@@ -63,7 +63,7 @@ class LiveTimingData:
         # date when session was started
         self._start_date = None
 
-        if 'remove_duplicates' in kwargs:
+        if "remove_duplicates" in kwargs:
             warnings.warn("The argument `remove_duplicates` is no longer "
                           "available. Duplicates caused by overlapping files "
                           "will now always be removed.")
@@ -160,8 +160,8 @@ class LiveTimingData:
     def _fix_json(self, elem):
         # fix F1's not json compliant data
         return elem.replace("'", '"') \
-            .replace('True', 'true') \
-            .replace('False', 'false')
+            .replace("True", "true") \
+            .replace("False", "false")
 
     def _add_to_category(self, cat, entry):
         if cat not in self.data:
@@ -173,7 +173,7 @@ class LiveTimingData:
         # skim content to find 'Started' session status without actually
         # decoding each line to save time
         for elem in data:
-            if 'SessionStatus' in elem and 'Started' in elem:
+            if "SessionStatus" in elem and "Started" in elem:
                 break
         else:
             # didn't find 'Started'
@@ -192,22 +192,22 @@ class LiveTimingData:
 
         # find correct entry in series
         try:
-            for entry in msg['StatusSeries']:
-                status = recursive_dict_get(entry, 'SessionStatus')
-                if status == 'Started':
+            for entry in msg["StatusSeries"]:
+                status = recursive_dict_get(entry, "SessionStatus")
+                if status == "Started":
                     try:
-                        self._start_date = to_datetime(entry['Utc'])
+                        self._start_date = to_datetime(entry["Utc"])
                     except (KeyError, ValueError, TypeError):
                         self.errorcount += 1
                         _logger.error("Error while trying to set correct "
                                       "session start date!")
                         return
         except AttributeError:
-            for entry in msg['StatusSeries'].values():
-                status = entry.get('SessionStatus', None)
-                if status == 'Started':
+            for entry in msg["StatusSeries"].values():
+                status = entry.get("SessionStatus", None)
+                if status == "Started":
                     try:
-                        self._start_date = to_datetime(entry['Utc'])
+                        self._start_date = to_datetime(entry["Utc"])
                     except (KeyError, ValueError, TypeError):
                         self.errorcount += 1
                         _logger.error("Error while trying to set correct "

@@ -245,9 +245,9 @@ class Cache(metaclass=_MetaCache):
         cls._FORCE_RENEW = force_renew
         if use_requests_cache:
             cls._requests_session_cached = _CachedSessionWithRateLimiting(
-                cache_name=os.path.join(cache_dir, 'fastf1_http_cache'),
-                backend='sqlite',
-                allowable_methods=('GET', 'POST'),
+                cache_name=os.path.join(cache_dir, "fastf1_http_cache"),
+                backend="sqlite",
+                allowable_methods=("GET", "POST"),
                 expire_after=datetime.timedelta(hours=12),
                 cache_control=True,
                 stale_if_error=True,
@@ -273,13 +273,13 @@ class Cache(metaclass=_MetaCache):
         if cls._ci_mode:
             # try to return a cached response first
             resp = cls._cached_request(
-                'GET', url, only_if_cached=True, **kwargs)
+                "GET", url, only_if_cached=True, **kwargs)
             # 504 indicates that no cached response was found
             if resp.status_code != 504:
                 return resp
 
         cls._request_counter += 1
-        return cls._cached_request('GET', url, **kwargs)
+        return cls._cached_request("GET", url, **kwargs)
 
     @classmethod
     def requests_post(cls, url: str, **kwargs):
@@ -298,23 +298,23 @@ class Cache(metaclass=_MetaCache):
         if cls._ci_mode:
             # try to return a cached response first
             resp = cls._cached_request(
-                'POST', url, only_if_cached=True, **kwargs)
+                "POST", url, only_if_cached=True, **kwargs)
             # 504 indicates that no cached response was found
             if resp.status_code != 504:
                 return resp
 
         cls._request_counter += 1
-        return cls._cached_request('POST', url, **kwargs)
+        return cls._cached_request("POST", url, **kwargs)
 
     @classmethod
     def _cached_request(cls,
-                        method: Literal['GET', 'POST'],
+                        method: Literal["GET", "POST"],
                         url: str,
                         **kwargs):
 
-        if method == 'GET':
+        if method == "GET":
             func = cls._requests_session_cached.get
-        elif method == 'POST':
+        elif method == "POST":
             func = cls._requests_session_cached.post
         else:
             raise ValueError("Invalid method. Must be 'GET' or 'POST'.")
@@ -384,11 +384,11 @@ class Cache(metaclass=_MetaCache):
 
         for dirpath, _dirnames, filenames in os.walk(cache_dir):
             for filename in filenames:
-                if filename.endswith('.ff1pkl'):
+                if filename.endswith(".ff1pkl"):
                     os.remove(os.path.join(dirpath, filename))
 
         if deep:
-            cache_db_path = os.path.join(cache_dir, 'fastf1_http_cache.sqlite')
+            cache_db_path = os.path.join(cache_dir, "fastf1_http_cache.sqlite")
             if os.path.exists(cache_db_path):
                 os.remove(cache_db_path)
 
@@ -418,7 +418,7 @@ class Cache(metaclass=_MetaCache):
 
                     # file exists already, try to load it
                     try:
-                        with open(cache_file_path, 'rb') as cache_file:
+                        with open(cache_file_path, "rb") as cache_file:
                             cached = pickle.load(cache_file)
                     except:  # noqa: E722 (bare except)
                         # don't like the bare exception clause but who knows
@@ -429,7 +429,7 @@ class Cache(metaclass=_MetaCache):
                     if (cached is not None) and cls._data_ok_for_use(cached):
                         # cached data is ok for use, return it
                         _logger.info(f"Using cached data for {func_name}")
-                        return cached['data']
+                        return cached["data"]
 
                     # cached data needs to be downloaded again and updated
                     _logger.info(f"Updating cache for {func_name}...")
@@ -477,7 +477,7 @@ class Cache(metaclass=_MetaCache):
             # create subfolders if they don't yet exist
             os.makedirs(cache_dir_path)
 
-        file_name = name + '.ff1pkl'
+        file_name = name + ".ff1pkl"
         return os.path.join(cache_dir_path, file_name)
 
     @classmethod
@@ -487,7 +487,7 @@ class Cache(metaclass=_MetaCache):
             return False
         return (
             cls._IGNORE_VERSION or
-            cached['version'] == cls._API_CORE_VERSION
+            cached["version"] == cls._API_CORE_VERSION
         )
 
     @classmethod
@@ -496,7 +496,7 @@ class Cache(metaclass=_MetaCache):
             version=cls._API_CORE_VERSION, data=data,
             **kwargs
         )
-        with open(cache_file_path, 'wb') as cache_file_obj:
+        with open(cache_file_path, "wb") as cache_file_obj:
             pickle.dump(new_cached, cache_file_obj)
 
     @classmethod
@@ -674,7 +674,7 @@ class Cache(metaclass=_MetaCache):
         return f"{s} {size_name[i]}"
 
     @classmethod
-    def _get_size(cls, start_path='.'):  # https://stackoverflow.com/questions/1392413/calculating-a-directorys-size-using-python # noqa: E501
+    def _get_size(cls, start_path="."):  # https://stackoverflow.com/questions/1392413/calculating-a-directorys-size-using-python # noqa: E501
         total_size = 0
         for dirpath, _dirnames, filenames in os.walk(start_path):
             for f in filenames:

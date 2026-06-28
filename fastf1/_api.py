@@ -19,40 +19,40 @@ from fastf1.logger import (
 from fastf1.req import Cache
 
 
-_logger = get_logger('api')
+_logger = get_logger("api")
 
-base_url = 'https://livetiming.formula1.com'
-base_url_mirror = 'https://livetiming-mirror.fastf1.dev'
+base_url = "https://livetiming.formula1.com"
+base_url_mirror = "https://livetiming-mirror.fastf1.dev"
 
 headers: dict[str, str] = {
-    'Connection': 'close',
-    'TE': 'identity',
-    'User-Agent': 'BestHTTP',
-    'Accept-Encoding': 'gzip, identity',
+    "Connection": "close",
+    "TE": "identity",
+    "User-Agent": "BestHTTP",
+    "Accept-Encoding": "gzip, identity",
 }
 
 pages: dict[str, str] = {
-    'session_data': 'SessionData.json',  # track + session status + lap count
-    'session_info': 'SessionInfo.jsonStream',  # more rnd
-    'archive_status': 'ArchiveStatus.json',  # rnd=1880327548
-    'heartbeat': 'Heartbeat.jsonStream',  # Probably time synchronization?
-    'audio_streams': 'AudioStreams.jsonStream',  # Link to audio commentary
-    'driver_list': 'DriverList.jsonStream',  # Driver info and line story
-    'extrapolated_clock': 'ExtrapolatedClock.jsonStream',  # Boolean
-    'race_control_messages': 'RaceControlMessages.jsonStream',  # Flags etc
-    'session_status': 'SessionStatus.jsonStream',  # Start and finish times
-    'team_radio': 'TeamRadio.jsonStream',  # Links to team radios
-    'timing_app_data': 'TimingAppData.jsonStream',  # Tyres and laps (juicy)
-    'timing_stats': 'TimingStats.jsonStream',  # 'Best times/speed' useless
-    'track_status': 'TrackStatus.jsonStream',  # SC, VSC and Yellow
-    'weather_data': 'WeatherData.jsonStream',  # Temp, wind and rain
-    'position': 'Position.z.jsonStream',  # Coordinates, not GPS? (.z)
-    'car_data': 'CarData.z.jsonStream',  # Telemetry channels (.z)
-    'content_streams': 'ContentStreams.jsonStream',  # Lap by lap feeds
-    'timing_data': 'TimingData.jsonStream',  # Gap to car ahead
-    'lap_count': 'LapCount.jsonStream',  # Lap counter
-    'championship_prediction': 'ChampionshipPrediction.jsonStream',  # Points
-    'index': 'Index.json'
+    "session_data": "SessionData.json",  # track + session status + lap count
+    "session_info": "SessionInfo.jsonStream",  # more rnd
+    "archive_status": "ArchiveStatus.json",  # rnd=1880327548
+    "heartbeat": "Heartbeat.jsonStream",  # Probably time synchronization?
+    "audio_streams": "AudioStreams.jsonStream",  # Link to audio commentary
+    "driver_list": "DriverList.jsonStream",  # Driver info and line story
+    "extrapolated_clock": "ExtrapolatedClock.jsonStream",  # Boolean
+    "race_control_messages": "RaceControlMessages.jsonStream",  # Flags etc
+    "session_status": "SessionStatus.jsonStream",  # Start and finish times
+    "team_radio": "TeamRadio.jsonStream",  # Links to team radios
+    "timing_app_data": "TimingAppData.jsonStream",  # Tyres and laps (juicy)
+    "timing_stats": "TimingStats.jsonStream",  # 'Best times/speed' useless
+    "track_status": "TrackStatus.jsonStream",  # SC, VSC and Yellow
+    "weather_data": "WeatherData.jsonStream",  # Temp, wind and rain
+    "position": "Position.z.jsonStream",  # Coordinates, not GPS? (.z)
+    "car_data": "CarData.z.jsonStream",  # Telemetry channels (.z)
+    "content_streams": "ContentStreams.jsonStream",  # Lap by lap feeds
+    "timing_data": "TimingData.jsonStream",  # Gap to car ahead
+    "lap_count": "LapCount.jsonStream",  # Lap counter
+    "championship_prediction": "ChampionshipPrediction.jsonStream",  # Points
+    "index": "Index.json"
 }
 """Known API requests"""
 
@@ -72,8 +72,8 @@ def make_path(wname, wdate, sname, sdate):
     Returns:
         relative url path
     """
-    smooth_operator = f'{wdate[:4]}/{wdate} {wname}/{sdate} {sname}/'
-    path = '/static/' + smooth_operator.replace(' ', '_')
+    smooth_operator = f"{wdate[:4]}/{wdate} {wname}/{sdate} {sname}/"
+    path = "/static/" + smooth_operator.replace(" ", "_")
     # Workaround for Brazil Qualifying on sunday (#652), TODO: fix properly
     # and workaround for pre-season testing 2025
     return path \
@@ -90,17 +90,17 @@ def make_path(wname, wdate, sname, sdate):
 
 
 # define all empty columns for timing data
-EMPTY_LAPS = {'Time': pd.NaT, 'Driver': '', 'LapTime': pd.NaT,
-              'NumberOfLaps': np.nan, 'NumberOfPitStops': np.nan,
-              'PitOutTime': pd.NaT, 'PitInTime': pd.NaT,
-              'Sector1Time': pd.NaT, 'Sector2Time': pd.NaT,
-              'Sector3Time': pd.NaT, 'Sector1SessionTime': pd.NaT,
-              'Sector2SessionTime': pd.NaT, 'Sector3SessionTime': pd.NaT,
-              'SpeedI1': np.nan, 'SpeedI2': np.nan, 'SpeedFL': np.nan,
-              'SpeedST': np.nan, 'IsPersonalBest': False}
+EMPTY_LAPS = {"Time": pd.NaT, "Driver": "", "LapTime": pd.NaT,
+              "NumberOfLaps": np.nan, "NumberOfPitStops": np.nan,
+              "PitOutTime": pd.NaT, "PitInTime": pd.NaT,
+              "Sector1Time": pd.NaT, "Sector2Time": pd.NaT,
+              "Sector3Time": pd.NaT, "Sector1SessionTime": pd.NaT,
+              "Sector2SessionTime": pd.NaT, "Sector3SessionTime": pd.NaT,
+              "SpeedI1": np.nan, "SpeedI2": np.nan, "SpeedFL": np.nan,
+              "SpeedST": np.nan, "IsPersonalBest": False}
 
-EMPTY_STREAM = {'Time': pd.NaT, 'Driver': '', 'Position': np.nan,
-                'GapToLeader': np.nan, 'IntervalToPositionAhead': np.nan}
+EMPTY_STREAM = {"Time": pd.NaT, "Driver": "", "Position": np.nan,
+                "GapToLeader": np.nan, "IntervalToPositionAhead": np.nan}
 
 
 def timing_data(path: str,
@@ -190,11 +190,11 @@ def _extended_timing_data(path, response=None, livedata=None):
     #   - inlap has to be followed by outlap
     #   - pit stops may never be negative (missing outlap)
     #   - speed traps against telemetry (especially in Q FastLap - Slow Lap)
-    if livedata is not None and livedata.has('TimingData'):
-        response = livedata.get('TimingData')
+    if livedata is not None and livedata.has("TimingData"):
+        response = livedata.get("TimingData")
     elif response is None:  # no previous response provided
         _logger.info("Fetching timing data...")
-        response = fetch_page(path, 'timing_data')
+        response = fetch_page(path, "timing_data")
         if response is None:  # no response received
             raise SessionNotAvailableError(
                 "No data for this session! If this session only finished "
@@ -205,13 +205,13 @@ def _extended_timing_data(path, response=None, livedata=None):
     # split up response per driver for easier iteration and processing later
     resp_per_driver = {}
     for entry in response:
-        if (len(entry) < 2) or 'Lines' not in entry[1]:
+        if (len(entry) < 2) or "Lines" not in entry[1]:
             continue
-        for drv in entry[1]['Lines']:
+        for drv in entry[1]["Lines"]:
             if drv not in resp_per_driver:
-                resp_per_driver[drv] = [(entry[0], entry[1]['Lines'][drv])]
+                resp_per_driver[drv] = [(entry[0], entry[1]["Lines"][drv])]
             else:
-                resp_per_driver[drv].append((entry[0], entry[1]['Lines'][drv]))
+                resp_per_driver[drv].append((entry[0], entry[1]["Lines"][drv]))
 
     # create empty data dicts and populate them with data from all drivers after that
     laps_data = {key: [] for key, val in EMPTY_LAPS.items()}
@@ -243,7 +243,7 @@ def _extended_timing_data(path, response=None, livedata=None):
     _align_laps(laps_data, stream_data)
 
     # pandas doesn't correctly infer bool dtype columns, set type explicitly
-    laps_data[['IsPersonalBest']] = laps_data[['IsPersonalBest']].astype(bool)
+    laps_data[["IsPersonalBest"]] = laps_data[["IsPersonalBest"]].astype(bool)
 
     return laps_data, stream_data, session_split_times
 
@@ -253,28 +253,28 @@ def _extended_timing_data(path, response=None, livedata=None):
                  logger=_logger)
 def _align_laps(laps_data, stream_data):
     # align lap start and end times between drivers based on Gap to leader
-    if pd.isnull(stream_data['GapToLeader']).all():
+    if pd.isnull(stream_data["GapToLeader"]).all():
         return  # no data to align on
 
     expected_gap = {}
     delta = {}
-    n_laps = laps_data['NumberOfLaps'].max()
+    n_laps = laps_data["NumberOfLaps"].max()
 
     for offset in range(n_laps):
         leader = None
 
         # drivers still running on this lap
         active_drivers = laps_data.loc[
-            laps_data['NumberOfLaps'] == (offset + 1), 'Driver'
+            laps_data["NumberOfLaps"] == (offset + 1), "Driver"
         ].unique()
 
         # drivers that pit in/out on this lap need to be skipped
         skip_drivers = laps_data.loc[
             (
-                (laps_data['NumberOfLaps'] == (offset + 1)) &
-                ((~pd.isnull(laps_data['PitInTime'])) |
-                 (~pd.isnull(laps_data['PitOutTime'])))
-            ), 'Driver'
+                (laps_data["NumberOfLaps"] == (offset + 1)) &
+                ((~pd.isnull(laps_data["PitInTime"])) |
+                 (~pd.isnull(laps_data["PitOutTime"])))
+            ), "Driver"
         ].to_list()
 
         for drv in active_drivers:
@@ -282,7 +282,7 @@ def _align_laps(laps_data, stream_data):
                 continue
 
             gap_str = _get_gap_str_for_drv(drv, offset, laps_data, stream_data)
-            if 'LAP' in gap_str:
+            if "LAP" in gap_str:
                 leader = drv
             elif drv not in delta:
                 eg = to_timedelta(gap_str)
@@ -294,7 +294,7 @@ def _align_laps(laps_data, stream_data):
             continue
 
         leader_time \
-            = laps_data[laps_data['Driver'] == leader].iloc[offset]['Time']
+            = laps_data[laps_data["Driver"] == leader].iloc[offset]["Time"]
 
         # if first alignment pass, set current leader as zero point
         # else get already calculated offset of current leader as zero point
@@ -307,7 +307,7 @@ def _align_laps(laps_data, stream_data):
                 continue  # driver already has a delta, skip
 
             other_time \
-                = laps_data[laps_data['Driver'] == drv].iloc[offset]['Time']
+                = laps_data[laps_data["Driver"] == drv].iloc[offset]["Time"]
             is_gap = other_time - leader_time
             # expected_gap is taken from "gap to leader" values
             # is_gap is calculated from difference between when laps where set
@@ -319,7 +319,7 @@ def _align_laps(laps_data, stream_data):
             break
 
     unaligned_drivers = list(
-        set(laps_data['Driver'].unique()) - set(delta.keys())
+        set(laps_data["Driver"].unique()) - set(delta.keys())
     )
 
     # realign all deltas: a positive delta means too early with reference to
@@ -343,7 +343,7 @@ def _align_laps(laps_data, stream_data):
         if delta[drv] is None:
             continue
         delta[drv] -= max_delta
-        laps_data.loc[laps_data['Driver'] == drv, 'Time'] += delta[drv]
+        laps_data.loc[laps_data["Driver"] == drv, "Time"] += delta[drv]
 
     if unaligned_drivers:
         _logger.warning(f"Failed to align laps for drivers: "
@@ -351,10 +351,10 @@ def _align_laps(laps_data, stream_data):
 
 
 def _get_gap_str_for_drv(drv, idx, laps_data, stream_data):
-    first_time = laps_data[laps_data['Driver'] == drv].iloc[idx]['Time']
-    ref_idx = (stream_data[stream_data['Driver'] == drv]['Time']
+    first_time = laps_data[laps_data["Driver"] == drv].iloc[idx]["Time"]
+    ref_idx = (stream_data[stream_data["Driver"] == drv]["Time"]
                - first_time).abs().idxmin()
-    return stream_data.loc[ref_idx]['GapToLeader']
+    return stream_data.loc[ref_idx]["GapToLeader"]
 
 
 def _laps_data_driver(driver_raw, empty_vals, drv):
@@ -394,10 +394,10 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
 
     for time, resp in driver_raw:
         # the first three ifs are just edge case handling for the rare sessions were the data goes back in time
-        if in_past and 'NumberOfLaps' in resp and resp['NumberOfLaps'] == api_lapcnt:
+        if in_past and "NumberOfLaps" in resp and resp["NumberOfLaps"] == api_lapcnt:
             in_past = False  # we're back in the present
 
-        if 'NumberOfLaps' in resp and ((prev_lapcnt := resp['NumberOfLaps']) < api_lapcnt):
+        if "NumberOfLaps" in resp and ((prev_lapcnt := resp["NumberOfLaps"]) < api_lapcnt):
             _logger.warning(f"Driver {drv: >2}: Ignoring late data for a "
                             f"previously processed lap.The data may contain "
                             f"errors (previous: {prev_lapcnt}; "
@@ -408,15 +408,15 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         if in_past:  # still in the past, just continue and ignore everything
             continue
 
-        if ('InPit' in resp) and (resp['InPit'] is False):
+        if ("InPit" in resp) and (resp["InPit"] is False):
             out_of_pit = True  # drove out of the pits for the first time
 
         # new lap; create next row
-        if 'NumberOfLaps' in resp and resp['NumberOfLaps'] > api_lapcnt:
+        if "NumberOfLaps" in resp and resp["NumberOfLaps"] > api_lapcnt:
             api_lapcnt += 1
             # make sure the car actually drove out of the pits already; it can't be a new lap if it didn't
             if out_of_pit:
-                drv_data['Time'][lapcnt] = to_timedelta(time)
+                drv_data["Time"][lapcnt] = to_timedelta(time)
                 lapcnt += 1
                 # append a new empty row; last row may not be populated (depending on session) and may be removed later
                 for key, val in empty_vals.items():
@@ -439,29 +439,29 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
     # iterate through the data; new lap triggers next row in data
     for time, resp in driver_raw:
         # the first three ifs are just edge case handling for the rare sessions were the data goes back in time
-        if in_past and 'NumberOfLaps' in resp and resp['NumberOfLaps'] == api_lapcnt:
+        if in_past and "NumberOfLaps" in resp and resp["NumberOfLaps"] == api_lapcnt:
             in_past = False  # we're back in the present
-        if in_past or ('NumberOfLaps' in resp and resp['NumberOfLaps'] < api_lapcnt):
+        if in_past or ("NumberOfLaps" in resp and resp["NumberOfLaps"] < api_lapcnt):
             in_past = True
             continue
 
         # values which are up to five seconds late are still counted towards the previous lap
         # (sector times, speed traps and lap times)
         lap_offset = 0
-        if (lapcnt > 0) and (to_timedelta(time) - drv_data['Time'][lapcnt - 1] < pd.Timedelta(5, 's')):
+        if (lapcnt > 0) and (to_timedelta(time) - drv_data["Time"][lapcnt - 1] < pd.Timedelta(5, "s")):
             lap_offset = 1
 
-        if 'Sectors' in resp and isinstance(resp['Sectors'], dict):
+        if "Sectors" in resp and isinstance(resp["Sectors"], dict):
             # sometimes it's a list but then it never contains values...
-            for sn, sector, sesst in (('0', 'Sector1Time', 'Sector1SessionTime'),
-                                      ('1', 'Sector2Time', 'Sector2SessionTime'),
-                                      ('2', 'Sector3Time', 'Sector3SessionTime')):
-                if val := recursive_dict_get(resp, 'Sectors', sn, 'Value'):
+            for sn, sector, sesst in (("0", "Sector1Time", "Sector1SessionTime"),
+                                      ("1", "Sector2Time", "Sector2SessionTime"),
+                                      ("2", "Sector3Time", "Sector3SessionTime")):
+                if val := recursive_dict_get(resp, "Sectors", sn, "Value"):
                     drv_data[sector][lapcnt - lap_offset] = to_timedelta(val)
                     drv_data[sesst][lapcnt - lap_offset] = to_timedelta(time)
 
-        if ((last_lap_time := resp.get('LastLapTime'))
-                and (val := last_lap_time.get('Value')) is not None):
+        if ((last_lap_time := resp.get("LastLapTime"))
+                and (val := last_lap_time.get("Value")) is not None):
             # explicitly check whether the lap time is None, i.e. key is
             # missing or if the value is an empty string
 
@@ -473,13 +473,13 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
                 # laps which are longer than 150 seconds are ignored; usually this is the case between Q1, Q2 and Q3
                 # because all three qualifying sessions are one session here. Those timestamps are often wrong and
                 # sometimes associated with the wrong lap
-                drv_data['LapTime'][lapcnt - lap_offset] = val
+                drv_data["LapTime"][lapcnt - lap_offset] = val
 
-        if 'Speeds' in resp:
-            for trapkey, trapname in (('I1', 'SpeedI1'), ('I2', 'SpeedI2'), ('FL', 'SpeedFL'), ('ST', 'SpeedST')):
-                if val := recursive_dict_get(resp, 'Speeds', trapkey, 'Value'):
+        if "Speeds" in resp:
+            for trapkey, trapname in (("I1", "SpeedI1"), ("I2", "SpeedI2"), ("FL", "SpeedFL"), ("ST", "SpeedST")):
+                if val := recursive_dict_get(resp, "Speeds", trapkey, "Value"):
                     # speed has to be float because int does not support NaN
-                    if trapkey == 'ST':
+                    if trapkey == "ST":
                         # the ST trap value can occur early enough in a new lap
                         # that it needs to be excluded from the usual offset
                         # logic, therefore the offset is ignored here
@@ -487,20 +487,20 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
                     else:
                         drv_data[trapname][lapcnt - lap_offset] = float(val)
 
-        if 'InPit' in resp:
+        if "InPit" in resp:
             # 'InPit': True is received once when entering pits, False is received once when leaving
-            if resp['InPit'] is True:
+            if resp["InPit"] is True:
                 if pitstops >= 0:
-                    drv_data['PitInTime'][lapcnt] = to_timedelta(time)
-            elif ((('NumberOfLaps' in resp) and resp['NumberOfLaps'] > api_lapcnt)
-                  or (drv_data['Time'][lapcnt] - to_timedelta(time))
-                  < pd.Timedelta(5, 's')):
+                    drv_data["PitInTime"][lapcnt] = to_timedelta(time)
+            elif ((("NumberOfLaps" in resp) and resp["NumberOfLaps"] > api_lapcnt)
+                  or (drv_data["Time"][lapcnt] - to_timedelta(time))
+                  < pd.Timedelta(5, "s")):
                 # same response line as beginning of next lap
                 # or beginning of next lap less than 5 seconds away
-                drv_data['PitOutTime'][lapcnt + 1] = to_timedelta(time)  # add to next lap
+                drv_data["PitOutTime"][lapcnt + 1] = to_timedelta(time)  # add to next lap
                 pitstops += 1
             else:
-                drv_data['PitOutTime'][lapcnt] = to_timedelta(time)  # add to current lap
+                drv_data["PitOutTime"][lapcnt] = to_timedelta(time)  # add to current lap
                 pitstops += 1
 
         # Get save information about personal best lap times at the timestamp
@@ -509,7 +509,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         # the previous 'BestLapTime' value is sent again. There is some extra
         # logic at then end that correctly marks personal best laps based on
         # the data that is saved here.
-        if val := recursive_dict_get(resp, 'BestLapTime', 'Value'):
+        if val := recursive_dict_get(resp, "BestLapTime", "Value"):
             personal_best_lap_times.append(
                 (to_timedelta(time), to_timedelta(val))
             )
@@ -519,20 +519,20 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         # (Note: those lap times cannot be used for correct personal best
         #  detection, because the previous value is not resent here when a lap
         #  is deleted.)
-        if (val := resp.get('BestLapTimes')) and isinstance(val, dict):
+        if (val := resp.get("BestLapTimes")) and isinstance(val, dict):
             session_n = int(list(val.keys())[0])
             if (session_n + 1) > len(session_split_times):
                 session_split_times.append(to_timedelta(time))
 
         # new lap; create next row
-        if 'NumberOfLaps' in resp and resp['NumberOfLaps'] > api_lapcnt:
+        if "NumberOfLaps" in resp and resp["NumberOfLaps"] > api_lapcnt:
             api_lapcnt += 1
             # make sure the car actually drove out of the pits already; it can't be a new lap if it didn't
             if pitstops >= 0:
-                drv_data['Time'][lapcnt] = to_timedelta(time)
-                drv_data['NumberOfLaps'][lapcnt] = lapcnt + 1  # don't use F1's lap count; ours is better
-                drv_data['NumberOfPitStops'][lapcnt] = pitstops
-                drv_data['Driver'][lapcnt] = drv
+                drv_data["Time"][lapcnt] = to_timedelta(time)
+                drv_data["NumberOfLaps"][lapcnt] = lapcnt + 1  # don't use F1's lap count; ours is better
+                drv_data["NumberOfPitStops"][lapcnt] = pitstops
+                drv_data["Driver"][lapcnt] = drv
                 lapcnt += 1
 
     if lapcnt == 0:  # no data at all for this driver
@@ -541,17 +541,17 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
     # done reading the data, do postprocessing
 
     def data_in_lap(lap_n):
-        relevant = ('Sector1Time', 'Sector2Time', 'Sector3Time', 'SpeedI1', 'SpeedI2',
-                    'SpeedFL', 'SpeedST', 'LapTime')
+        relevant = ("Sector1Time", "Sector2Time", "Sector3Time", "SpeedI1", "SpeedI2",
+                    "SpeedFL", "SpeedST", "LapTime")
         return any(not pd.isnull(drv_data[col][lap_n]) for col in relevant)
 
     # 'NumberOfLaps' always introduces a new lap (can be a previous one) but sometimes there is one more lap at the end
     # in this case the data will be added as usual above, lap count and pit stops are added here and the 'Time' is
     # calculated below from sector times
     if data_in_lap(lapcnt):
-        drv_data['NumberOfLaps'][lapcnt] = lapcnt + 1
-        drv_data['NumberOfPitStops'][lapcnt] = pitstops
-        drv_data['Driver'][lapcnt] = drv
+        drv_data["NumberOfLaps"][lapcnt] = lapcnt + 1
+        drv_data["NumberOfPitStops"][lapcnt] = pitstops
+        drv_data["Driver"][lapcnt] = drv
     else:  # if there was no more data after the last lap count increase,
         # delete the last empty record
         for key in drv_data:
@@ -560,16 +560,16 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         # "pseudo outlap" that didn't exist
         for key in drv_data:
             drv_data[key] = drv_data[key][1:]
-        drv_data['NumberOfLaps'] = [i - 1 for i in drv_data['NumberOfLaps']]  # reduce each lap count by one
+        drv_data["NumberOfLaps"] = [i - 1 for i in drv_data["NumberOfLaps"]]  # reduce each lap count by one
 
-    if not drv_data['Time']:
+    if not drv_data["Time"]:
         # ensure that there is still data left after potentially removing a lap
         return drv_data, session_split_times
 
-    for i in range(len(drv_data['Time'])):
+    for i in range(len(drv_data["Time"])):
         sector_sum = datetime.timedelta(0)
         na_sectors = []  # list of keys for missing sector times
-        for key in ('Sector1Time', 'Sector2Time', 'Sector3Time'):
+        for key in ("Sector1Time", "Sector2Time", "Sector3Time"):
             st = drv_data[key][i]
             if pd.isna(st):
                 na_sectors.append(key)
@@ -578,9 +578,9 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
 
         # check for incorrect lap times and remove them
         # fixes GH#167 among others
-        if ((drv_data['LapTime'][i] is not None)
-                and (sector_sum > drv_data['LapTime'][i])):
-            drv_data['LapTime'][i] = pd.NaT
+        if ((drv_data["LapTime"][i] is not None)
+                and (sector_sum > drv_data["LapTime"][i])):
+            drv_data["LapTime"][i] = pd.NaT
             integrity_errors.append(i + 1)
 
         # Lap times are initially set to NaT. If and only if an empty value is
@@ -588,11 +588,11 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         # try to calculate the lap time from sector times.
         # This is not done for NaT lap times to protect against parser logic
         # errors and values simply being incorrectly assigned.
-        if drv_data['LapTime'][i] is None:
+        if drv_data["LapTime"][i] is None:
             if not na_sectors:
-                drv_data['LapTime'][i] = sector_sum
+                drv_data["LapTime"][i] = sector_sum
             else:
-                drv_data['LapTime'][i] = pd.NaT
+                drv_data["LapTime"][i] = pd.NaT
 
         if i == 0:
             # only do following corrections for 2nd lap and onwards
@@ -605,18 +605,18 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         # the calculated value matches the previous value, it will be set.
 
         # lap time is missing
-        if (not na_sectors) and pd.isna(drv_data['LapTime'][i]) \
-                and (drv_data['LapTime'][i - 1] == sector_sum):
+        if (not na_sectors) and pd.isna(drv_data["LapTime"][i]) \
+                and (drv_data["LapTime"][i - 1] == sector_sum):
 
-            drv_data['LapTime'][i] = sector_sum
+            drv_data["LapTime"][i] = sector_sum
 
         # one sector time is missing
-        elif (len(na_sectors) == 1) and not pd.isna(drv_data['LapTime'][i]):
+        elif (len(na_sectors) == 1) and not pd.isna(drv_data["LapTime"][i]):
             # create a list with the two keys for available sector times
-            ref_sec = ['Sector1Time', 'Sector2Time', 'Sector3Time']
+            ref_sec = ["Sector1Time", "Sector2Time", "Sector3Time"]
             ref_sec.remove(na_sectors[0])
 
-            if (sec1 := (drv_data['LapTime'][i]
+            if (sec1 := (drv_data["LapTime"][i]
                          - drv_data[ref_sec[0]][i]
                          - drv_data[ref_sec[1]][i])) \
                     == drv_data[na_sectors[0]][i - 1]:
@@ -628,12 +628,12 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
     # Sector2SessionTime + Sector3Time == end of lap
     # Sector1SessionTime + Sector2Time + Sector3Time == end of lap
     # all of these three have slightly different times; take earliest one -> most exact because can't trigger too early
-    for i in range(len(drv_data['Time'])):
+    for i in range(len(drv_data["Time"])):
         sector_sum = pd.Timedelta(0)
-        min_time = drv_data['Time'][i]
-        for sector_time, session_time in ((pd.Timedelta(0), drv_data['Sector3SessionTime'][i]),
-                                          (drv_data['Sector3Time'][i], drv_data['Sector2SessionTime'][i]),
-                                          (drv_data['Sector2Time'][i], drv_data['Sector1SessionTime'][i])):
+        min_time = drv_data["Time"][i]
+        for sector_time, session_time in ((pd.Timedelta(0), drv_data["Sector3SessionTime"][i]),
+                                          (drv_data["Sector3Time"][i], drv_data["Sector2SessionTime"][i]),
+                                          (drv_data["Sector2Time"][i], drv_data["Sector1SessionTime"][i])):
             if pd.isnull(session_time):
                 continue
             if pd.isnull(sector_time):
@@ -643,68 +643,68 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             new_time = session_time + sector_sum
             if not pd.isnull(new_time) and (new_time < min_time or pd.isnull(min_time)):
                 min_time = new_time
-        if i > 0 and min_time < drv_data['Time'][i - 1]:
+        if i > 0 and min_time < drv_data["Time"][i - 1]:
             integrity_errors.append(i + 1)  # not be possible if sector times and lap time are correct
             continue
 
-        drv_data['Time'][i] = min_time
+        drv_data["Time"][i] = min_time
 
     # last lap needs to be removed if it does not have a 'Time' and it could not be calculated (likely an inlap)
-    if pd.isnull(drv_data['Time'][-1]):
-        if not pd.isnull(drv_data['PitInTime'][-1]):
-            drv_data['Time'][-1] = drv_data['PitInTime'][-1]
+    if pd.isnull(drv_data["Time"][-1]):
+        if not pd.isnull(drv_data["PitInTime"][-1]):
+            drv_data["Time"][-1] = drv_data["PitInTime"][-1]
         else:
             for key in drv_data:
                 drv_data[key] = drv_data[key][:-1]
 
-    if not drv_data['Time']:
+    if not drv_data["Time"]:
         # ensure that there is still data left after potentially removing a lap
         return drv_data, session_split_times
 
     # more lap sync, this time check which lap triggered with the lowest latency
-    for i in range(len(drv_data['Time']) - 1, 0, -1):
-        if (new_time := drv_data['Time'][i] - drv_data['LapTime'][i]) < \
-                drv_data['Time'][i - 1]:
-            if i > 1 and new_time < drv_data['Time'][i - 2]:
+    for i in range(len(drv_data["Time"]) - 1, 0, -1):
+        if (new_time := drv_data["Time"][i] - drv_data["LapTime"][i]) < \
+                drv_data["Time"][i - 1]:
+            if i > 1 and new_time < drv_data["Time"][i - 2]:
                 integrity_errors.append(i + 1)  # not be possible if sector times and lap time are correct
             else:
-                drv_data['Time'][i - 1] = new_time
+                drv_data["Time"][i - 1] = new_time
 
     # need to go both directions once to make everything match up; also recalculate sector times
-    for i in range(len(drv_data['Time']) - 1):
-        if (pd.isnull(drv_data['Time'][i])
-                or pd.isnull(drv_data['LapTime'][i + 1])):
+    for i in range(len(drv_data["Time"]) - 1):
+        if (pd.isnull(drv_data["Time"][i])
+                or pd.isnull(drv_data["LapTime"][i + 1])):
             # lap not usable, missing critical values; more checks follow
             continue
 
-        if (new_time := drv_data['Time'][i] + drv_data['LapTime'][i+1]) \
-                < drv_data['Time'][i+1]:
-            drv_data['Time'][i+1] = new_time
+        if (new_time := drv_data["Time"][i] + drv_data["LapTime"][i+1]) \
+                < drv_data["Time"][i+1]:
+            drv_data["Time"][i+1] = new_time
 
-        if pd.isnull(drv_data['Sector1Time'][i + 1]):
+        if pd.isnull(drv_data["Sector1Time"][i + 1]):
             continue
 
-        if (new_s1_time := drv_data['Time'][i]
-                + drv_data['Sector1Time'][i+1]) \
-                < drv_data['Sector1SessionTime'][i+1]:
-            drv_data['Sector1SessionTime'][i+1] = new_s1_time
+        if (new_s1_time := drv_data["Time"][i]
+                + drv_data["Sector1Time"][i+1]) \
+                < drv_data["Sector1SessionTime"][i+1]:
+            drv_data["Sector1SessionTime"][i+1] = new_s1_time
 
-        if pd.isnull(drv_data['Sector2Time'][i + 1]):
+        if pd.isnull(drv_data["Sector2Time"][i + 1]):
             continue
 
-        if (new_s2_time := drv_data['Time'][i] + drv_data['Sector1Time'][i+1]
-                + drv_data['Sector2Time'][i+1]) \
-                < drv_data['Sector2SessionTime'][i+1]:
-            drv_data['Sector2SessionTime'][i+1] = new_s2_time
+        if (new_s2_time := drv_data["Time"][i] + drv_data["Sector1Time"][i+1]
+                + drv_data["Sector2Time"][i+1]) \
+                < drv_data["Sector2SessionTime"][i+1]:
+            drv_data["Sector2SessionTime"][i+1] = new_s2_time
 
-        if pd.isnull(drv_data['Sector3Time'][i + 1]):
+        if pd.isnull(drv_data["Sector3Time"][i + 1]):
             continue
 
-        if (new_s3_time := drv_data['Time'][i] + drv_data['Sector1Time'][i+1]
-                + drv_data['Sector2Time'][i+1]
-                + drv_data['Sector3Time'][i+1]) \
-                < drv_data['Sector3SessionTime'][i+1]:
-            drv_data['Sector3SessionTime'][i+1] = new_s3_time
+        if (new_s3_time := drv_data["Time"][i] + drv_data["Sector1Time"][i+1]
+                + drv_data["Sector2Time"][i+1]
+                + drv_data["Sector3Time"][i+1]) \
+                < drv_data["Sector3SessionTime"][i+1]:
+            drv_data["Sector3SessionTime"][i+1] = new_s3_time
 
     # Iterate over list of personal lap times set 'IsPersonalBest'.
     # When a lap is deleted, the API resends the previous personal best.
@@ -736,22 +736,22 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         # find the index of the corresponding lap by comparing with the lap
         # times and set 'IsPersonalBest' to True for that lap
         try:
-            pb_idx = drv_data['LapTime'].index(pb_lap_time)
+            pb_idx = drv_data["LapTime"].index(pb_lap_time)
         except ValueError:
             # one example case where this error occurs, are wildly of personal
             # best times (>2 min lap time) that are sometimes present and
             # which have no corresponding lap time
             pass
         else:
-            drv_data['IsPersonalBest'][pb_idx] = True
+            drv_data["IsPersonalBest"][pb_idx] = True
 
     # fix the number of pit stops; due to potentially multiple laps to the grid
     # where a car goes through the pit lane before finally taking its place
     # on the grid, the number of pit stops on the first lap may be already
     # greater than zero; therefore, apply correction so that we start with zero
-    pitstop_offset = drv_data['NumberOfPitStops'][0]
-    for i in range(len(drv_data['NumberOfPitStops'])):
-        drv_data['NumberOfPitStops'][i] -= pitstop_offset
+    pitstop_offset = drv_data["NumberOfPitStops"][0]
+    for i in range(len(drv_data["NumberOfPitStops"])):
+        drv_data["NumberOfPitStops"][i] -= pitstop_offset
 
     # fix first lap PitInTime; same reason as above for pit stops, there may
     # be an incorrect PitInTime on the first lap. There always is a PitOutTime
@@ -759,7 +759,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
     # PitInTime if the car drives multiple laps to the grid, discard these.
     # There is also a PitInTime if the car actually pits at the end of the
     # first lap, those need to be kept.
-    if drv_data['PitInTime'][0] < drv_data['PitOutTime'][0]:
+    if drv_data["PitInTime"][0] < drv_data["PitOutTime"][0]:
         drv_data["PitInTime"][0] = pd.NaT
 
     if integrity_errors:
@@ -795,20 +795,20 @@ def _stream_data_driver(driver_raw, empty_vals, drv):
     # iterate through the data; timestamp + any of the values triggers new row in data
     for time, resp in driver_raw:
         new_entry = False
-        if val := recursive_dict_get(resp, 'Position'):
-            drv_data['Position'][i] = int(val)
+        if val := recursive_dict_get(resp, "Position"):
+            drv_data["Position"][i] = int(val)
             new_entry = True
-        if val := recursive_dict_get(resp, 'GapToLeader'):
-            drv_data['GapToLeader'][i] = val
+        if val := recursive_dict_get(resp, "GapToLeader"):
+            drv_data["GapToLeader"][i] = val
             new_entry = True
-        if val := recursive_dict_get(resp, 'IntervalToPositionAhead', 'Value'):
-            drv_data['IntervalToPositionAhead'][i] = val
+        if val := recursive_dict_get(resp, "IntervalToPositionAhead", "Value"):
+            drv_data["IntervalToPositionAhead"][i] = val
             new_entry = True
 
         # at least one value was present, create next row
         if new_entry:
-            drv_data['Time'][i] = to_timedelta(time)
-            drv_data['Driver'][i] = drv
+            drv_data["Time"][i] = to_timedelta(time)
+            drv_data["Driver"][i] = drv
             i += 1
 
             # create next row of data from the last values; there will always be one row too much at the end which is
@@ -862,28 +862,28 @@ def timing_app_data(path, response=None, livedata=None):
     Raises:
         SessionNotAvailableError: in case the F1 livetiming api returns no data
     """
-    if livedata is not None and livedata.has('TimingAppData'):
-        response = livedata.get('TimingAppData')
+    if livedata is not None and livedata.has("TimingAppData"):
+        response = livedata.get("TimingAppData")
     elif response is None:  # no previous response provided
         _logger.info("Fetching timing app data...")
-        response = fetch_page(path, 'timing_app_data')
+        response = fetch_page(path, "timing_app_data")
         if response is None:  # no response received
             raise SessionNotAvailableError(
                 "No data for this session! If this session only finished "
                 "recently, please try again in a few minutes."
             )
 
-    data = {'LapNumber': [], 'Driver': [], 'LapTime': [], 'Stint': [], 'TotalLaps': [], 'Compound': [], 'New': [],
-            'TyresNotChanged': [], 'Time': [], 'LapFlags': [], 'LapCountTime': [], 'StartLaps': [], 'Outlap': []}
+    data = {"LapNumber": [], "Driver": [], "LapTime": [], "Stint": [], "TotalLaps": [], "Compound": [], "New": [],
+            "TyresNotChanged": [], "Time": [], "LapFlags": [], "LapCountTime": [], "StartLaps": [], "Outlap": []}
 
     for entry in response:
-        if (len(entry) < 2) or 'Lines' not in entry[1]:
+        if (len(entry) < 2) or "Lines" not in entry[1]:
             continue
 
         time = to_timedelta(entry[0])
         row = entry[1]
-        for driver_number in row['Lines']:
-            if update := recursive_dict_get(row, 'Lines', driver_number, 'Stints'):
+        for driver_number in row["Lines"]:
+            if update := recursive_dict_get(row, "Lines", driver_number, "Stints"):
 
                 # Stints sometimes are given in a list format. This only seems
                 # to happen at the start of a session:
@@ -899,10 +899,10 @@ def timing_app_data(path, response=None, livedata=None):
                     for key in data:
                         if key in stint:
                             val = stint[key]
-                            if key == 'LapTime':
+                            if key == "LapTime":
                                 val = to_timedelta(val)
-                            elif key == 'New':
-                                val = val == 'true'
+                            elif key == "New":
+                                val = val == "true"
                             data[key].append(val)
                         else:
                             data[key].append(None)
@@ -911,9 +911,9 @@ def timing_app_data(path, response=None, livedata=None):
                             _logger.debug(f"Found unknown key in timing app "
                                           f"data: {key}")
 
-                    data['Time'][-1] = time
-                    data['Driver'][-1] = driver_number
-                    data['Stint'][-1] = int(stint_number)
+                    data["Time"][-1] = time
+                    data["Driver"][-1] = driver_number
+                    data["Stint"][-1] = int(stint_number)
 
     return pd.DataFrame(data)
 
@@ -968,12 +968,12 @@ def car_data(path, response=None, livedata=None):
     # data recorded from live timing has a slightly different structure
     is_livedata = False  # flag to indicate live timing data
 
-    if livedata is not None and livedata.has('CarData.z'):
-        response = livedata.get('CarData.z')
+    if livedata is not None and livedata.has("CarData.z"):
+        response = livedata.get("CarData.z")
         is_livedata = True
     elif response is None:
         _logger.info("Fetching car data...")
-        response = fetch_page(path, 'car_data')
+        response = fetch_page(path, "car_data")
         if response is None:  # no response received
             raise SessionNotAvailableError(
                 "No data for this session! If this session only finished "
@@ -982,10 +982,10 @@ def car_data(path, response=None, livedata=None):
 
     _logger.info("Parsing car data...")
 
-    numeric_channels = ['RPM', 'Speed', 'nGear', 'Throttle', 'DRS']
-    bool_channels = ['Brake']
-    columns = ['Time', 'Date', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake',
-               'DRS', 'Source']  # correct order required!
+    numeric_channels = ["RPM", "Speed", "nGear", "Throttle", "DRS"]
+    bool_channels = ["Brake"]
+    columns = ["Time", "Date", "RPM", "Speed", "nGear", "Throttle", "Brake",
+               "DRS", "Source"]  # correct order required!
 
     ts_length = 12  # length of timestamp: len('00:00:00:000')
 
@@ -1001,32 +1001,32 @@ def car_data(path, response=None, livedata=None):
                 time = to_timedelta(record[:ts_length])
                 jrecord: dict = parse(record[ts_length:], zipped=True)
 
-            for entry in jrecord['Entries']:
+            for entry in jrecord["Entries"]:
                 # date format is '2020-08-08T09:45:03.0619797Z' with a varying
                 # number of millisecond decimal points
                 # always remove last char ('z'), max len 26, right pad to len
                 # 26 with zeroes if shorter
-                date = to_datetime(entry['Utc'])
+                date = to_datetime(entry["Utc"])
 
-                for drv in entry['Cars']:
+                for drv in entry["Cars"]:
                     if drv not in data:
                         # initialize dict entry for this driver
                         data[drv] = []
 
                     try:
-                        rpm = entry['Cars'][drv]['Channels']['0']
-                        speed = entry['Cars'][drv]['Channels']['2']
-                        ngear = entry['Cars'][drv]['Channels']['3']
-                        throttle = entry['Cars'][drv]['Channels']['4']
-                        brake = entry['Cars'][drv]['Channels']['5']
-                        drs = entry['Cars'][drv]['Channels'].get('45', 0)
+                        rpm = entry["Cars"][drv]["Channels"]["0"]
+                        speed = entry["Cars"][drv]["Channels"]["2"]
+                        ngear = entry["Cars"][drv]["Channels"]["3"]
+                        throttle = entry["Cars"][drv]["Channels"]["4"]
+                        brake = entry["Cars"][drv]["Channels"]["5"]
+                        drs = entry["Cars"][drv]["Channels"].get("45", 0)
                         # drs is no longer included in 2026
 
                     except KeyError:
                         continue
 
                     data[drv].append((time, date, rpm, speed, ngear, throttle,
-                                      brake, drs, 'car'))
+                                      brake, drs, "car"))
 
         except Exception:
             # too risky to specify an exception: unexpected invalid data!
@@ -1041,15 +1041,15 @@ def car_data(path, response=None, livedata=None):
     most_complete_ref = None
     for drv in data:
         arr_all = np.array(data[drv])
-        time = arr_all[:, 0].astype('timedelta64[ns]')
-        date = arr_all[:, 1].astype('datetime64[ns]')
-        rpm = arr_all[:, 2].astype('int64')
-        speed = arr_all[:, 3].astype('int64')
-        ngear = arr_all[:, 4].astype('int64')
-        throttle = arr_all[:, 5].astype('int64')
-        brake = arr_all[:, 6].astype('int64')  # converted to bool later
-        drs = arr_all[:, 7].astype('int64')
-        source = arr_all[:, 8].astype('object')
+        time = arr_all[:, 0].astype("timedelta64[ns]")
+        date = arr_all[:, 1].astype("datetime64[ns]")
+        rpm = arr_all[:, 2].astype("int64")
+        speed = arr_all[:, 3].astype("int64")
+        ngear = arr_all[:, 4].astype("int64")
+        throttle = arr_all[:, 5].astype("int64")
+        brake = arr_all[:, 6].astype("int64")  # converted to bool later
+        drs = arr_all[:, 7].astype("int64")
+        source = arr_all[:, 8].astype("object")
 
         data[drv] = create_df_fast(
             arrays=[time, date,
@@ -1058,28 +1058,28 @@ def car_data(path, response=None, livedata=None):
         )
 
         if (most_complete_ref is None) \
-                or (len(data[drv]['Date']) > len(most_complete_ref)):
-            most_complete_ref = data[drv]['Date']
+                or (len(data[drv]["Date"]) > len(most_complete_ref)):
+            most_complete_ref = data[drv]["Date"]
 
     for drv in data:
         # if everything is well, all dataframes should have the same length
         # and no postprocessing is necessary
-        if len(data[drv]['Date']) < len(most_complete_ref):
+        if len(data[drv]["Date"]) < len(most_complete_ref):
             # there is missing data for this driver
             # extend the Date column and fill up missing telemetry values with
             # zero, except Time which is left as NaT and will be calculated
             # correctly based on Session.t0_date anyway when creating Telemetry
             # instances in Session.load_telemetry
             data[drv] = data[drv] \
-                .merge(most_complete_ref, how='outer') \
-                .sort_values(by='Date') \
+                .merge(most_complete_ref, how="outer") \
+                .sort_values(by="Date") \
                 .reset_index(drop=True)
 
             _logger.warning(f"Driver {drv: >2}: Car data is incomplete!")
 
         # ensure that brake data is 'boolean-compatible' in case that this is
         # ever changed
-        _unique_brake_values = data[drv].loc[:, 'Brake'].unique()
+        _unique_brake_values = data[drv].loc[:, "Brake"].unique()
         if ((_unique_brake_values > 0) & (_unique_brake_values < 100)).any():
             _logger.warning(f"Driver {drv: >2}: Raw brake data contains "
                             f"non-boolean values!")
@@ -1088,12 +1088,12 @@ def car_data(path, response=None, livedata=None):
         data[drv][numeric_channels] = \
             data[drv].loc[:, numeric_channels] \
             .fillna(value=0, inplace=False) \
-            .astype('int64')
+            .astype("int64")
 
         data[drv][bool_channels] = \
             data[drv].loc[:, bool_channels] \
             .fillna(value=False, inplace=False) \
-            .astype('bool')
+            .astype("bool")
 
     return data
 
@@ -1133,12 +1133,12 @@ def position_data(path, response=None, livedata=None):
     # data recorded from live timing has a slightly different structure
     is_livedata = False  # flag to indicate live timing data
 
-    if livedata is not None and livedata.has('Position.z'):
-        response = livedata.get('Position.z')
+    if livedata is not None and livedata.has("Position.z"):
+        response = livedata.get("Position.z")
         is_livedata = True
     elif response is None:
         _logger.info("Fetching position data...")
-        response = fetch_page(path, 'position')
+        response = fetch_page(path, "position")
         if response is None:  # no response received
             raise SessionNotAvailableError(
                 "No data for this session! If this session only finished "
@@ -1151,8 +1151,8 @@ def position_data(path, response=None, livedata=None):
         return {}
 
     ts_length = 12  # length of timestamp: len('00:00:00:000')
-    columns = ['Time', 'Date', 'Status', 'X', 'Y', 'Z',
-               'Source']  # correct order required!
+    columns = ["Time", "Date", "Status", "X", "Y", "Z",
+               "Source"]  # correct order required!
 
     data = {}
     decode_error_count = 0
@@ -1166,34 +1166,34 @@ def position_data(path, response=None, livedata=None):
                 time = to_timedelta(record[:ts_length])
                 jrecord: dict = parse(record[ts_length:], zipped=True)
 
-            for sample in jrecord['Position']:
+            for sample in jrecord["Position"]:
                 # date format is '2020-08-08T09:45:03.0619797Z' with a varying
                 # number of millisecond decimal points
                 # always remove last char ('z'), max len 26, right pad to len
                 # 26 with zeroes if shorter
-                date = to_datetime(sample['Timestamp'])
+                date = to_datetime(sample["Timestamp"])
 
-                for drv in sample['Entries']:
+                for drv in sample["Entries"]:
                     if drv not in data:
                         # initialize dict entry for this driver
                         data[drv] = []
 
                     try:
-                        x = sample['Entries'][drv]['X']
-                        y = sample['Entries'][drv]['Y']
-                        z = sample['Entries'][drv]['Z']
+                        x = sample["Entries"][drv]["X"]
+                        y = sample["Entries"][drv]["Y"]
+                        z = sample["Entries"][drv]["Z"]
                     except KeyError:
                         continue
 
                     try:
-                        status = sample['Entries'][drv]['Status']
+                        status = sample["Entries"][drv]["Status"]
                     except KeyError:
                         status = None
                     if str(status).isdigit():
                         # Fallback on older api status mapping and convert
-                        status = 'OffTrack' if int(status) else 'OnTrack'
+                        status = "OffTrack" if int(status) else "OnTrack"
 
-                    data[drv].append((time, date, status, x, y, z, 'pos'))
+                    data[drv].append((time, date, status, x, y, z, "pos"))
 
         except Exception:
             # too risky to specify an exception: unexpected invalid data!
@@ -1209,13 +1209,13 @@ def position_data(path, response=None, livedata=None):
     most_complete_ref = None
     for drv in data:
         arr_all = np.array(data[drv])
-        time = arr_all[:, 0].astype('timedelta64[ns]')
-        date = arr_all[:, 1].astype('datetime64[ns]')
-        status = arr_all[:, 2].astype('object')
-        x = arr_all[:, 3].astype('int64')
-        y = arr_all[:, 4].astype('int64')
-        z = arr_all[:, 5].astype('int64')
-        source = arr_all[:, 6].astype('object')
+        time = arr_all[:, 0].astype("timedelta64[ns]")
+        date = arr_all[:, 1].astype("datetime64[ns]")
+        status = arr_all[:, 2].astype("object")
+        x = arr_all[:, 3].astype("int64")
+        y = arr_all[:, 4].astype("int64")
+        z = arr_all[:, 5].astype("int64")
+        source = arr_all[:, 6].astype("object")
 
         data[drv] = create_df_fast(
             arrays=[time, date, status, x, y, z, source],
@@ -1224,13 +1224,13 @@ def position_data(path, response=None, livedata=None):
 
         # check length of dataframe; sometimes there can be missing data
         if (most_complete_ref is None) \
-                or (len(data[drv]['Date']) > len(most_complete_ref)):
-            most_complete_ref = data[drv]['Date']
+                or (len(data[drv]["Date"]) > len(most_complete_ref)):
+            most_complete_ref = data[drv]["Date"]
 
     # if everything is well, all dataframes should have the same length and no
     # postprocessing is necessary
     for drv in data:
-        if len(data[drv]['Date']) < len(most_complete_ref):
+        if len(data[drv]["Date"]) < len(most_complete_ref):
             # there is missing data for this driver
             # extend the Date column and fill up missing telemetry values with
             # zero, except Time which is left as NaT and will be calculated
@@ -1238,13 +1238,13 @@ def position_data(path, response=None, livedata=None):
             # instances in Session.load_telemetry
             # and except Status which should be 'OffTrack' for missing data
             data[drv] = data[drv] \
-                .merge(most_complete_ref, how='outer') \
-                .sort_values(by='Date') \
+                .merge(most_complete_ref, how="outer") \
+                .sort_values(by="Date") \
                 .reset_index(drop=True)
-            data[drv]['Status'] = data[drv]['Status'] \
-                .fillna(value='OffTrack', inplace=False)
-            data[drv].loc[:, ['X', 'Y', 'Z']] = \
-                data[drv].loc[:, ['X', 'Y', 'Z']]\
+            data[drv]["Status"] = data[drv]["Status"] \
+                .fillna(value="OffTrack", inplace=False)
+            data[drv].loc[:, ["X", "Y", "Z"]] = \
+                data[drv].loc[:, ["X", "Y", "Z"]]\
                 .fillna(value=0, inplace=False)
 
             _logger.warning(f"Driver {drv: >2}: Position data is "
@@ -1295,20 +1295,20 @@ def track_status_data(path, response=None, livedata=None):
     Raises:
         SessionNotAvailableError: in case the F1 livetiming api returns no data
     """
-    if livedata is not None and livedata.has('TrackStatus'):
+    if livedata is not None and livedata.has("TrackStatus"):
         # does not need any further processing
         _logger.info("Loading track status data")
-        response = livedata.get('TrackStatus')
+        response = livedata.get("TrackStatus")
     elif response is None:
         _logger.info("Fetching track status data...")
-        response = fetch_page(path, 'track_status')
+        response = fetch_page(path, "track_status")
         if response is None:  # no response received
             raise SessionNotAvailableError(
                 "No data for this session! If this session only finished "
                 "recently, please try again in a few minutes."
             )
 
-    data = {'Time': [], 'Status': [], 'Message': []}
+    data = {"Time": [], "Status": [], "Message": []}
 
     for entry in response:
         if len(entry) < 2:
@@ -1316,9 +1316,9 @@ def track_status_data(path, response=None, livedata=None):
         row = entry[1]
         if not isinstance(row, dict):
             continue
-        data['Time'].append(to_timedelta(entry[0]))
-        data['Status'].append(row.get('Status', ''))
-        data['Message'].append(row.get('Message', ''))
+        data["Time"].append(to_timedelta(entry[0]))
+        data["Status"].append(row.get("Status", ""))
+        data["Message"].append(row.get("Message", ""))
 
     return data
 
@@ -1351,30 +1351,30 @@ def session_status_data(path, response=None, livedata=None):
     Raises:
         SessionNotAvailableError: in case the F1 livetiming api returns no data
     """
-    if livedata is not None and livedata.has('SessionStatus'):
+    if livedata is not None and livedata.has("SessionStatus"):
         # does not need any further processing
         _logger.info("Loading session status data")
-        response = livedata.get('SessionStatus')
+        response = livedata.get("SessionStatus")
     elif response is None:
         _logger.info("Fetching session status data...")
-        response = fetch_page(path, 'session_status')
+        response = fetch_page(path, "session_status")
         if response is None:  # no response received
             raise SessionNotAvailableError(
                 "No data for this session! If this session only finished "
                 "recently, please try again in a few minutes."
             )
 
-    data = {'Time': [], 'Status': []}
+    data = {"Time": [], "Status": []}
 
     for entry in response:
         if len(entry) < 2:
             continue
         row = entry[1]
-        if not isinstance(row, dict) or 'Status' not in row:
+        if not isinstance(row, dict) or "Status" not in row:
             continue
 
-        data['Time'].append(to_timedelta(entry[0]))
-        data['Status'].append(row['Status'])
+        data["Time"].append(to_timedelta(entry[0]))
+        data["Status"].append(row["Status"])
 
     return data
 
@@ -1422,13 +1422,13 @@ def race_control_messages(path, response=None, livedata=None):
     Raises:
         SessionNotAvailableError: in case the F1 livetiming api returns no data
     """
-    if livedata is not None and livedata.has('RaceControlMessages'):
+    if livedata is not None and livedata.has("RaceControlMessages"):
         # does not need any further processing
         _logger.info("Loading race control messages")
-        response = livedata.get('RaceControlMessages')
+        response = livedata.get("RaceControlMessages")
     elif response is None:
         _logger.info("Fetching race control messages...")
-        response = fetch_page(path, 'race_control_messages')
+        response = fetch_page(path, "race_control_messages")
         if response is None:  # no response received
             raise SessionNotAvailableError(
                 "No data for this session! If this session only finished "
@@ -1436,19 +1436,19 @@ def race_control_messages(path, response=None, livedata=None):
             )
 
     data = {
-        'Time': [], 'Category': [], 'Message': [], 'Status': [],
-        'Flag': [], 'Scope': [], 'Sector': [], 'RacingNumber': [], 'Lap': []
+        "Time": [], "Category": [], "Message": [], "Status": [],
+        "Flag": [], "Scope": [], "Sector": [], "RacingNumber": [], "Lap": []
     }
-    data_keys = ('Category', 'Message', 'Status', 'Flag', 'Scope', 'Sector',
-                 'RacingNumber', 'Lap')
+    data_keys = ("Category", "Message", "Status", "Flag", "Scope", "Sector",
+                 "RacingNumber", "Lap")
     converters = (str, str, str, str, str, int, str, int)
 
     for line in response:
-        messages = line[1]['Messages']
+        messages = line[1]["Messages"]
         if isinstance(messages, dict):
             messages = list(messages.values())
         for entry in messages:
-            data['Time'].append(to_datetime(entry['Utc']))
+            data["Time"].append(to_datetime(entry["Utc"]))
 
             for key, conv in zip(data_keys, converters, strict=True):
                 try:
@@ -1494,25 +1494,25 @@ def lap_count(path, response=None, livedata=None):
     Raises:
         SessionNotAvailableError: in case the F1 livetiming api returns no data
     """
-    if livedata is not None and livedata.has('LapCount'):
+    if livedata is not None and livedata.has("LapCount"):
         # does not need any further processing
         _logger.info("Loading lap count data")
-        response = livedata.get('LapCount')
+        response = livedata.get("LapCount")
     elif response is None:
         _logger.info("Fetching lap count data...")
-        response = fetch_page(path, 'lap_count')
+        response = fetch_page(path, "lap_count")
         if response is None:  # no response received
             raise SessionNotAvailableError(
                 "No data for this session! If this session only finished "
                 "recently, please try again in a few minutes."
             )
 
-    data = {'Time': [], 'TotalLaps': [], 'CurrentLap': []}
-    data_keys = ('TotalLaps', 'CurrentLap')
+    data = {"Time": [], "TotalLaps": [], "CurrentLap": []}
+    data_keys = ("TotalLaps", "CurrentLap")
     converters = (int, int)
 
     for entry in response:
-        data['Time'].append(to_timedelta(entry[0]))
+        data["Time"].append(to_timedelta(entry[0]))
 
         for key, conv in zip(data_keys, converters, strict=True):
             try:
@@ -1553,13 +1553,13 @@ def driver_info(path, response=None, livedata=None):
     Raises:
         SessionNotAvailableError: in case the F1 livetiming api returns no data
     """
-    if livedata is not None and livedata.has('DriverList'):
+    if livedata is not None and livedata.has("DriverList"):
         # does not need any further processing
         _logger.info("Loading driver list")
-        response = livedata.get('DriverList')
+        response = livedata.get("DriverList")
     elif response is None:
         _logger.info("Fetching driver list...")
-        response = fetch_page(path, 'driver_list')
+        response = fetch_page(path, "driver_list")
         if response is None:  # no response received
             raise SessionNotAvailableError(
                 "No data for this session! If this session only finished "
@@ -1569,9 +1569,9 @@ def driver_info(path, response=None, livedata=None):
     drivers = {}
 
     default_keys = [
-        'RacingNumber', 'BroadcastName', 'FullName', 'Tla', 'Line',
-        'TeamName', 'TeamColour', 'FirstName', 'LastName', 'Reference',
-        'HeadshotUrl', 'CountryCode'
+        "RacingNumber", "BroadcastName", "FullName", "Tla", "Line",
+        "TeamName", "TeamColour", "FirstName", "LastName", "Reference",
+        "HeadshotUrl", "CountryCode"
     ]
 
     new_driver_cutoff = datetime.timedelta(minutes=60)
@@ -1645,13 +1645,13 @@ def weather_data(path, response=None, livedata=None):
         SessionNotAvailableError: in case the F1 live timing api
             returns no data
     """
-    if livedata is not None and livedata.has('WeatherData'):
+    if livedata is not None and livedata.has("WeatherData"):
         # does not need any further processing
         _logger.info("Loading weather data")
-        response = livedata.get('WeatherData')
+        response = livedata.get("WeatherData")
     elif response is None:
         _logger.info("Fetching weather data...")
-        response = fetch_page(path, 'weather_data')
+        response = fetch_page(path, "weather_data")
         if response is None:  # no response received
             raise SessionNotAvailableError(
                 "No data for this session! If this session only finished "
@@ -1659,14 +1659,14 @@ def weather_data(path, response=None, livedata=None):
             )
 
     data = {
-        'Time': [], 'AirTemp': [], 'Humidity': [], 'Pressure': [],
-        'Rainfall': [], 'TrackTemp': [], 'WindDirection': [], 'WindSpeed': []
+        "Time": [], "AirTemp": [], "Humidity": [], "Pressure": [],
+        "Rainfall": [], "TrackTemp": [], "WindDirection": [], "WindSpeed": []
     }
 
-    data_keys = ('AirTemp', 'Humidity', 'Pressure', 'Rainfall',
-                 'TrackTemp', 'WindDirection', 'WindSpeed')
+    data_keys = ("AirTemp", "Humidity", "Pressure", "Rainfall",
+                 "TrackTemp", "WindDirection", "WindSpeed")
     converters = (float, float, float,
-                  lambda v: v == '1',  # rain: str -> bool
+                  lambda v: v == "1",  # rain: str -> bool
                   float, int, float)
 
     for entry in response:
@@ -1676,7 +1676,7 @@ def weather_data(path, response=None, livedata=None):
         if not isinstance(row, dict):
             continue
 
-        data['Time'].append(to_timedelta(entry[0]))
+        data["Time"].append(to_timedelta(entry[0]))
         for key, conv in zip(data_keys, converters, strict=True):
             try:
                 data[key].append(conv(row[key]))
@@ -1691,14 +1691,14 @@ def weather_data(path, response=None, livedata=None):
 def season_schedule(path, response=None):
     if response is None:
         _logger.info("Fetching season schedule...")
-        response = fetch_page(path, 'index')
+        response = fetch_page(path, "index")
         if response is None:  # no response received
             raise SessionNotAvailableError(
                 "No data for this session! If this session only finished "
                 "recently, please try again in a few minutes."
             )
 
-    return response['Meetings']
+    return response["Meetings"]
 
 
 @Cache.api_request_wrapper
@@ -1719,13 +1719,13 @@ def session_info(path, response=None, livedata=None):
         SessionNotAvailableError: in case the F1 live timing api
             returns no data
     """
-    if livedata is not None and livedata.has('SessionInfo'):
+    if livedata is not None and livedata.has("SessionInfo"):
         # does not need any further processing
         _logger.info("Loading session info data")
-        response = livedata.get('SessionInfo')
+        response = livedata.get("SessionInfo")
     elif response is None:
         _logger.info("Fetching session info data...")
-        response = fetch_page(path, 'session_info')
+        response = fetch_page(path, "session_info")
         if response is None:  # no response received
             raise SessionNotAvailableError(
                 "No data for this session! If this session only finished "
@@ -1734,9 +1734,9 @@ def session_info(path, response=None, livedata=None):
 
     ts, data = response[0]
 
-    data['StartDate'] = to_datetime(data['StartDate'])
-    data['EndDate'] = to_datetime(data['EndDate'])
-    data['GmtOffset'] = to_timedelta(data['GmtOffset'])
+    data["StartDate"] = to_datetime(data["StartDate"])
+    data["EndDate"] = to_datetime(data["EndDate"])
+    data["GmtOffset"] = to_timedelta(data["GmtOffset"])
 
     return data
 
@@ -1762,8 +1762,8 @@ def fetch_page(path, name):
 
     """
     page = pages[name]
-    is_stream = 'jsonStream' in page
-    is_z = '.z.' in page
+    is_stream = "jsonStream" in page
+    is_z = ".z." in page
 
     r = Cache.requests_get(base_url + path + pages[name], headers=headers)
 
@@ -1773,10 +1773,10 @@ def fetch_page(path, name):
                                headers=headers)
 
     if r.status_code == 200:
-        raw = r.content.decode('utf-8-sig')
+        raw = r.content.decode("utf-8-sig")
         if is_stream:
-            records = raw.split('\r\n')[:-1]  # last split is empty
-            if name in ('position', 'car_data'):
+            records = raw.split("\r\n")[:-1]  # last split is empty
+            if name in ("position", "car_data"):
                 # Special case to improve memory efficiency
                 return records
             decode_error_count = 0
@@ -1818,13 +1818,13 @@ def parse(text: str, zipped: bool = False) -> str | dict:
             - a dictionary created as a result of loading json data
             - a string
     """
-    if text[0] == '{':
+    if text[0] == "{":
         return json.loads(text)
     if text[0] == '"':
         text = text.strip('"')
     if zipped:
         text = zlib.decompress(base64.b64decode(text), -zlib.MAX_WBITS)
-        return parse(text.decode('utf-8-sig'))
+        return parse(text.decode("utf-8-sig"))
     _logger.warning("Couldn't parse text")
     return text
 

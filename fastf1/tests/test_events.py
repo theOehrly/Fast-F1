@@ -117,6 +117,26 @@ def test_event_schedule_get_event_by_round_number():
         schedule.get_event_by_round(10)
 
 
+def test_event_schedule_get_event_by_round_deprecated_kwarg():
+    schedule = fastf1.events.EventSchedule(
+        {'EventName': ['T1', 'A', 'B', 'C', 'D'],
+         'RoundNumber': [0, 1, 2, 3, 4]}
+    )
+    # Deprecated `round` kwarg still works but emits FutureWarning
+    with pytest.warns(FutureWarning, match="deprecated"):
+        event = schedule.get_event_by_round(round=2)
+    assert event['EventName'] == 'B'
+    # Passing both raises ValueError (and emits the warning first)
+    with (
+        pytest.warns(FutureWarning, match="deprecated"),
+        pytest.raises(ValueError, match="Cannot pass both"),
+    ):
+        schedule.get_event_by_round(round_number=2, round=2)
+    # Passing neither raises ValueError
+    with pytest.raises(ValueError, match="missing 1 required argument"):
+        schedule.get_event_by_round()
+
+
 def test_event_schedule_get_by_name():
     schedule = fastf1.events.EventSchedule(
         {
