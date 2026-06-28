@@ -3412,8 +3412,11 @@ class Laps(BaseDataFrame):
 
         Requires:
             Race control messages to be loaded via
-            ``Session.load(messages=True)``, otherwise
-            :class:`~fastf1.exceptions.DataNotLoadedError` is raised.
+            ``Session.load(messages=True)``
+
+        Raises:
+            :class:`~fastf1.exceptions.DataNotLoadedError` if race control
+            messages are not loaded
 
         Returns:
             instance of :class:`Laps`
