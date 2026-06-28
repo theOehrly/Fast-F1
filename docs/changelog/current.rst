@@ -1,15 +1,30 @@
 What's new in v3.9.0
---------------------
+--------------------------
 
 (in development)
+
+Removals
+^^^^^^^^
+
+- The deprecated function ``fastf1.utils.delta_time`` has been removed. It
+  was deprecated in v3.0.0 because it produced inaccurate results (#884).
 
 
 Deprecations
 ^^^^^^^^^^^^
 
+- ``fastf1.utils.recursive_dict_get``, ``fastf1.utils.to_datetime`` and
+  ``fastf1.utils.to_timedelta`` are deprecated. They were never intended to
+  be part of the public API. The implementations have been moved to the
+  internal ``fastf1.internals.parsing_helpers`` module. The public names
+  continue to work and forward to the internal implementations, but emit a
+  ``DeprecationWarning``
+  and will be removed in a future release (#884).
+
 - The ``round`` keyword argument of ``EventSchedule.get_event_by_round`` is
   deprecated and will be removed in a future version. Use ``round_number``
   instead. (#890)
+  
 
 What's new in v3.8.3
 --------------------
