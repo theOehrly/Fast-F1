@@ -70,6 +70,11 @@ jobs:
         run: |
           pytest -ra
 
+      - name: Upload image comparison results as artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: mpl-results/
+
       - name: Save cache for FastF1
         id: cache-fastf1-save
         # Save the cache even in case of a failure but only if the content of
