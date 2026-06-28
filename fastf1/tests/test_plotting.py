@@ -2,9 +2,14 @@ import matplotlib.pyplot as plt
 import pytest
 
 import fastf1
+import fastf1._api
 import fastf1.plotting
 from fastf1.exceptions import FuzzyMatchError
-from fastf1.plotting._backend import Constants
+from fastf1.plotting._backend import (
+    _DEFAULT_TEAM_COLOR,
+    _load_drivers_from_f1_livetiming,
+    Constants
+)
 from fastf1.plotting._base import CompoundTypes
 from fastf1.testing import run_in_subprocess
 
@@ -523,6 +528,48 @@ def test_override_team_constants():
 
     if fastf1.plotting.get_team_name('Haas', session, short=True) != 'Haas':
         raise RuntimeError("Test cleanup failed!")
+
+
+def test_load_drivers_missing_team_colour(monkeypatch):
+    # regression test for GH #931: live timing driver entries can have
+    # ``TeamColour=None`` (incomplete live timing metadata), which previously
+    # raised an ``AttributeError`` while building the driver-team mapping
+    fake_driver_info = {
+        "1": {  # known team with a valid colour
+            "TeamName": "Mercedes",
+            "TeamColour": "27F4D2",
+            "Tla": "HAM",
+            "FirstName": "Lewis",
+            "LastName": "Hamilton",
+        },
+        "2": {  # known team, missing colour -> must not crash or overwrite
+            "TeamName": "Mercedes",
+            "TeamColour": None,
+            "Tla": "RUS",
+            "FirstName": "George",
+            "LastName": "Russell",
+        },
+        "3": {  # unknown team, missing colour -> falls back to default colour
+            "TeamName": "Quux Motorsport",
+            "TeamColour": None,
+            "Tla": "QUX",
+            "FirstName": "Quux",
+            "LastName": "Driver",
+        },
+    }
+    monkeypatch.setattr(
+        fastf1._api, "driver_info", lambda api_path: fake_driver_info
+    )
+
+    teams = _load_drivers_from_f1_livetiming(api_path="/fake", year="2023")
+    by_name = {team.normalized_name: team for team in teams}
+
+    # the missing colour for the second Mercedes driver must neither raise nor
+    # overwrite the colour supplied by the first driver
+    assert by_name["mercedes"].colors.official == "#27f4d2"
+
+    # an unknown team with no colour falls back to the default team colour
+    assert by_name["quux motorsport"].colors.official == _DEFAULT_TEAM_COLOR
 
 
 def test_import_internal_mpl_lgend_arg_kwarg_parser():

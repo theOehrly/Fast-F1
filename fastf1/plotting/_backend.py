@@ -22,6 +22,11 @@ for year, consts in json.loads(content).items():
     Constants[year] = SeasonConstants(**consts)
 
 
+# fallback colour used when a live timing driver entry is missing the team
+# colour (e.g. incomplete live timing metadata); see GH #931
+_DEFAULT_TEAM_COLOR = "#808080"
+
+
 def _load_drivers_from_f1_livetiming(
         *,
         api_path: str,
@@ -59,7 +64,10 @@ def _load_drivers_from_f1_livetiming(
     for num in sorted(driver_info.keys()):
         driver_entry = driver_info[num]
         team_name = driver_entry.get("TeamName")
-        team_color = f"#{driver_entry.get('TeamColour').lower()}"
+        # live timing data can be incomplete and miss the team colour; guard
+        # against ``None`` here to avoid an ``AttributeError`` (GH #931)
+        team_colour = driver_entry.get("TeamColour")
+        team_color = f"#{team_colour.lower()}" if team_colour else None
         abbreviation = driver_entry.get("Tla", "")
         name = " ".join((driver_entry.get("FirstName", ""),
                          driver_entry.get("LastName", "")))
@@ -76,10 +84,14 @@ def _load_drivers_from_f1_livetiming(
         for normalized_name, team in teams.items():
             if normalized_name in normalized_full_team_name:
                 team.name = team_name
-                team.colors.official = team_color
+                # keep the built-in colour if live timing did not provide one
+                if team_color is not None:
+                    team.colors.official = team_color
                 break
         else:
-            team = _generate_team(team_name, team_color)
+            team = _generate_team(
+                team_name, team_color or _DEFAULT_TEAM_COLOR
+            )
 
             _logger.warning(f"Auto-generating unknown team: {team.name}")
 
