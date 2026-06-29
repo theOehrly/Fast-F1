@@ -1217,6 +1217,7 @@ class Session:
 
         self._weather_data: pd.DataFrame
         self._results: SessionResults
+        self._timing_stream_data: pd.DataFrame
 
         self._session_split_times: list | None = None
 
@@ -1337,6 +1338,26 @@ class Session:
         return self._get_property_warn_not_loaded("_race_control_messages")
 
     @property
+    def timing_stream_data(self) -> pd.DataFrame:
+        """Timing stream data containing position, gap and interval information.
+
+        The timing stream provides high-frequency updates of position and
+        timing gap information for each driver. This includes:
+
+        - Time (pandas.Timedelta): Session time at which this sample was created
+        - Driver (str): Driver number
+        - Position (float): Position in the field
+        - GapToLeader (str): Time gap to leader (e.g., '+0.5' or '1 LAP')
+        - IntervalToPositionAhead (str): Time gap to car ahead
+
+        This data is useful for getting real-time race gaps without having
+        to use the private :mod:`fastf1.api` module.
+
+        Data is available after calling `Session.load` with ``laps=True``
+        """
+        return self._get_property_warn_not_loaded("_timing_stream_data")
+
+    @property
     def session_start_time(self) -> pd.Timedelta | None:
         """Session time at which the session was started according to the
         session status data. This is not the time at which the session is
@@ -1452,10 +1473,11 @@ class Session:
 
     @soft_exceptions("lap timing data", "Failed to load timing data!", _logger)
     def _load_laps_data(self, livedata=None):
-        data, _, session_split_times \
+        data, stream_data, session_split_times \
             = api._extended_timing_data(self.api_path, livedata=livedata)
 
         self._session_split_times = session_split_times
+        self._timing_stream_data = stream_data
 
         app_data = api.timing_app_data(self.api_path, livedata=livedata)
         _logger.info("Processing timing data...")
