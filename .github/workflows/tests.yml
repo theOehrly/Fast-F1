@@ -72,6 +72,7 @@ jobs:
 
       - name: Upload image comparison results as artifact
         uses: actions/upload-pages-artifact@v3
+        if: always()
         with:
           path: mpl-results/
 
