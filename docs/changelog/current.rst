@@ -3,12 +3,6 @@ What's new in v3.9.0
 
 (in development)
 
-Removals
-^^^^^^^^
-
-- The deprecated function ``fastf1.utils.delta_time`` has been removed. It
-  was deprecated in v3.0.0 because it produced inaccurate results (#884).
-
 
 Behaviour Changes
 ^^^^^^^^^^^^^^^^^
@@ -27,6 +21,24 @@ Behaviour Changes
       was already described in the documentation.
 
 
+New Features
+^^^^^^^^^^^^
+
+- ``SessionResults`` now includes ``Time`` (best lap time) and ``Position``
+  for practice sessions ('Practice 1', 'Practice 2', 'Practice 3').
+  Previously, both columns were ``NaT``/``NaN`` for these sessions.
+
+- The new method ``Cache.configure`` replaces ``Cache.enable_cache``. All
+  arguments are keyword arguments and all of them are optional, so that
+  individual cache settings can be changed easily. This also add the option to
+  change settings while keeping the default cache location.
+
+- ``Cache.disabled`` and ``Cache.set_disabled`` now accept the keyword
+  arguments ``disable_http_cache`` and ``disable_func_cache``. This makes it
+  possible to disable the HTTP cache (stage 1) and the parsed-data cache
+  (stage 2) separately. By default, both are disabled, as before.
+
+
 Deprecations
 ^^^^^^^^^^^^
 
@@ -42,13 +54,25 @@ Deprecations
   deprecated and will be removed in a future version. Use ``round_number``
   instead. (#890)
 
+- ``Cache.enable_cache`` is deprecated and will be removed in a future
+  version. Use ``Cache.configure`` instead.
 
-New Features
-^^^^^^^^^^^^
+- ``Cache.ci_mode`` is deprecated and will be removed in a future version. Use
+  ``Cache.offline_mode`` instead.
 
-- ``SessionResults`` now includes ``Time`` (best lap time) and ``Position``
-  for practice sessions ('Practice 1', 'Practice 2', 'Practice 3').
-  Previously, both columns were ``NaT``/``NaN`` for these sessions.
+
+Removals
+^^^^^^^^
+
+- The deprecated function ``fastf1.utils.delta_time`` has been removed. It
+  was deprecated in v3.0.0 because it produced inaccurate results (#884).
+
+
+Increased minimum versions for dependencies
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- The minimum supported version of ``requests-cache`` is now 1.3.0.
+
 
 
 What's new in v3.8.3

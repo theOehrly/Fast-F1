@@ -36,27 +36,27 @@ def _test_cache_used_and_clear(tmpdir):
         # enable fastf1's own pickle cache
         Cache.configure(cache_dir=tmpdir, use_requests_cache=False)
 
-        with open('fastf1/testing/reference_data/'
+        with open('fastf1/testing/data/cache_test/'
                   'schedule_2020.json', 'rb') as fobj:
             content = fobj.read()
         mocker.get('https://raw.githubusercontent.com/theOehrly/f1schedule/'
                    'master/schedule_2020.json',
                    content=content, status_code=200)
 
-        with open('fastf1/testing/reference_data/'
+        with open('fastf1/testing/data/cache_test/'
                   'Index2020.json', 'rb') as fobj:
             content = fobj.read()
         mocker.get('https://livetiming.formula1.com/static/2020/Index.json',
                    content=content, status_code=200)
 
         # create mock responses for general api requests
-        with open('fastf1/testing/reference_data/2020_05_FP2/'
+        with open('fastf1/testing/data/cache_test/'
                   'ergast_race.raw', 'rb') as fobj:
             content = fobj.read()
         mocker.get(f'{fastf1.ergast.interface.BASE_URL}/2020/5.json',
                    content=content, status_code=200)
 
-        with open('fastf1/testing/reference_data/2020_05_FP2/'
+        with open('fastf1/testing/data/cache_test/'
                   'ergast_race_result.raw', 'rb') as fobj:
             content = fobj.read()
         mocker.get(f'{fastf1.ergast.interface.BASE_URL}/2020/5/results.json',
@@ -71,8 +71,8 @@ def _test_cache_used_and_clear(tmpdir):
                      'weather_data', 'driver_list', 'race_control_messages',
                      'session_info']
         for p in req_pages:
-            with open(f'fastf1/testing/reference_data/'
-                      f'2020_05_FP2/{p}.raw', 'rb') as fobj:
+            with open(f'fastf1/testing/data/'
+                      f'cache_test/{p}.raw', 'rb') as fobj:
                 lines = fobj.readlines()
 
             # ensure correct newline character (as expected by api parser)

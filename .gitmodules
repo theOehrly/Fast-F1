@@ -1,0 +1,4 @@
+[submodule "fastf1-test-data"]
+	path = fastf1/testing/data
+	url = https://github.com/theOehrly/fastf1-test-data.git
+	branch = main

@@ -4,6 +4,10 @@ pytest-mpl>=0.17.0  # logging issues in newer versions
 pytest>=7.0.0  # equals pytest min version requirement
 requests-mock
 requests>=2.28.1
+# requests-cache stores binary response bodies base85-encoded up to v1.2.x and
+# base64-encoded from v1.3.0 on. The frozen test data is stored base64-encoded
+# and older versions fail to read it.
+requests-cache>=1.3.0
 ruff
 websockets>=10.3,<14
 wheel
