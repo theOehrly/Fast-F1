@@ -36,7 +36,7 @@ dependencies = [
   "pyjwt",
   "python-dateutil",
   "requests>=2.30.0",
-  "requests-cache>=1.0.0",
+  "requests-cache>=1.3.0",
   "scipy>=1.11.0,<2.0.0",
   "signalrcore",
   "rapidfuzz",
@@ -135,5 +135,5 @@ lines_after_imports = 2
 [tool.codespell]
 builtin = "clear,rare,informal"
 ignore-regex = "ALO|[Ss]argeant"
-skip = "./venv/*, ./fastf1/testing/reference_data/*, ./fastf1/legacy.py"
+skip = "./venv/*, ./fastf1/testing/data/*, ./fastf1/legacy.py"
 quiet-level = 3

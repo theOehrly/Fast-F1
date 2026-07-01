@@ -1,6 +1,3 @@
-import requests_mock
-
-import fastf1
 from fastf1 import get_session
 from fastf1.mvapi import get_circuit_info
 from fastf1.testing import (
@@ -49,13 +46,8 @@ def test_get_circuit_info_invalid_key():
 
 def _test_get_circuit_info():
     # requires a subprocess to prevent the modification of cache settings from
-    # influencing other tests
-    cache_settings = fastf1.Cache._requests_session_cached.settings
-
-    # cache expected error response so that tests can be run offline
-    cache_settings.allowable_codes = (200, 404, 504)
-    cache_settings.cache_control = False
-
+    # influencing other tests; caching of the expected error response is
+    # enabled through ``patch_cache_error_responses``
     log_handle = capture_log()
 
     get_circuit_info(year=2020, circuit_key=0)
