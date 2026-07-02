@@ -215,7 +215,8 @@ class Cache(metaclass=_MetaCache):
     _requests_session_cached: _CachedSessionWithRateLimiting | None = None
     _requests_session: requests.Session = _SessionWithRateLimiting()
     _no_cached_warned = False  # flag to ensure that warning about disabled cache is logged once only # noqa: E501
-    _tmp_disabled = False
+    _http_tmp_disabled = False
+    _func_tmp_disabled = False
     _ci_mode = False
 
     @classmethod
@@ -285,7 +286,7 @@ class Cache(metaclass=_MetaCache):
         caching.
         """
         cls._ensure_caching()
-        if (cls._requests_session_cached is None) or cls._tmp_disabled:
+        if (cls._requests_session_cached is None) or cls._http_tmp_disabled:
             return cls._requests_session.get(url, **kwargs)
 
         if cls._ci_mode:
@@ -308,7 +309,7 @@ class Cache(metaclass=_MetaCache):
         caching.
         """
         cls._ensure_caching()
-        if (cls._requests_session_cached is None) or cls._tmp_disabled:
+        if (cls._requests_session_cached is None) or cls._http_tmp_disabled:
             return cls._requests_session.post(url, **kwargs)
 
         if cls._ci_mode:
@@ -417,7 +418,7 @@ class Cache(metaclass=_MetaCache):
 
         @functools.wraps(func)
         def _cached_api_request(api_path, **func_kwargs):
-            if cls._CACHE_DIR and not cls._tmp_disabled:
+            if cls._CACHE_DIR and not cls._func_tmp_disabled:
                 # caching is enabled
                 func_name = str(func.__name__)
                 cache_file_path = cls._get_cache_file_path(api_path, func_name)
@@ -600,9 +601,18 @@ class Cache(metaclass=_MetaCache):
             )
 
     @classmethod
-    def disabled(cls):
+    def disabled(
+        cls,
+        *,
+        disable_http_cache: bool = True,
+        disable_func_cache: bool = True,
+    ):
         """Returns a context manager object that creates a context within
         which the cache is temporarily disabled.
+
+        Args:
+            disable_http_cache: Disable http cache (stage 1)
+            disable_func_cache: Disable function/compute cache (stage 2)
 
         Example::
 
@@ -613,15 +623,25 @@ class Cache(metaclass=_MetaCache):
         .. note::
             The context manager is not multithreading-safe
         """
-        return _NoCacheContext()
+        return _NoCacheContext(
+            disable_http_cache=disable_http_cache,
+            disable_func_cache=disable_func_cache,
+        )
 
     @classmethod
-    def set_disabled(cls):
+    def set_disabled(
+            cls,
+            *,
+            disable_http_cache: bool = True,
+            disable_func_cache: bool = True
+    ):
         """Disable the cache while keeping the configuration intact.
 
-        This disables stage 1 and stage 2 caching!
-
         You can enable the cache at any time using :func:`set_enabled`
+
+        Args:
+            disable_http_cache: Disable http cache (stage 1)
+            disable_func_cache: Disable function/compute cache (stage 2)
 
         .. note:: You may prefer to use :func:`disabled` to get a context
             manager object and disable the cache only within a specific
@@ -630,7 +650,10 @@ class Cache(metaclass=_MetaCache):
         .. note::
             This function is not multithreading-safe
         """
-        cls._tmp_disabled = True
+        if disable_http_cache:
+            cls._http_tmp_disabled = True
+        if disable_func_cache:
+            cls._func_tmp_disabled = True
 
     @classmethod
     def set_enabled(cls):
@@ -647,7 +670,8 @@ class Cache(metaclass=_MetaCache):
         .. note::
             This function is not multithreading-safe
         """
-        cls._tmp_disabled = False
+        cls._http_tmp_disabled = False
+        cls._func_tmp_disabled = False
 
     @classmethod
     def offline_mode(cls, enabled: bool):
@@ -742,8 +766,20 @@ class Cache(metaclass=_MetaCache):
 
 
 class _NoCacheContext:
+    def __init__(
+        self,
+        *,
+        disable_http_cache: bool = True,
+        disable_func_cache: bool = True
+    ):
+        self.disable_http_cache = disable_http_cache
+        self.disable_func_cache = disable_func_cache
+
     def __enter__(self):
-        Cache.set_disabled()
+        Cache.set_disabled(
+            disable_http_cache=self.disable_http_cache,
+            disable_func_cache=self.disable_func_cache
+        )
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         Cache.set_enabled()
