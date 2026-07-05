@@ -1190,18 +1190,17 @@ class Session:
             # in 2021, 'Sprint Qualifying' was used as the name for a race-like
             # session that set the grid for the main race
             self._QUALI_LIKE_SESSIONS = ("Qualifying", "Sprint Shootout")
-            self._PRACTICE_LIKE_SESSIONS = (
-                'Practice 1', 'Practice 2', 'Practice 3'
-            )
         else:
             self._RACE_LIKE_SESSIONS = ("Race", "Sprint")
             self._QUALI_LIKE_SESSIONS = ("Qualifying", "Sprint Qualifying")
-            self._PRACTICE_LIKE_SESSIONS = (
-                'Practice 1', 'Practice 2', 'Practice 3'
-            )
+            
             # starting from 2024, 'Sprint Qualifying' is the name for the
             # qualifying-like session that sets the grid for the Sprint
             # (previously, this was called 'Sprint Shootout')
+
+        self._PRACTICE_LIKE_SESSIONS = (
+            'Practice 1', 'Practice 2', 'Practice 3'
+        )
 
         self._ergast = ergast.Ergast()
 
@@ -3824,10 +3823,8 @@ class SessionResults(BaseDataFrame):
           The driver's country code (e.g. "FRA")
 
         - ``Position`` | :class:`float` |
-          The drivers finishing position (values only given if session is
-          'Race', 'Qualifying', 'Sprint Shootout', 'Sprint',
-          'Sprint Qualifying', or a practice session). This additionally
-          accounts for post-race penalties and disqualifications if session
+          The drivers finishing position in the session. This additionally
+          accounts for post-session penalties and disqualifications if session
           is 'Race', 'Qualifying', 'Sprint Shootout', or 'Sprint'.
 
         - ``ClassifiedPosition`` | :class:`str` |
@@ -3854,8 +3851,8 @@ class SessionResults(BaseDataFrame):
           'Qualifying' or 'Sprint Shootout')
 
         - ``Time`` | :class:`pd.Timedelta` |
-          For race-like sessions ('Race', 'Sprint', 'Sprint Shootout',
-          'Sprint Qualifying'): the drivers total race time (only given if
+          For race-like sessions ('Race', 'Sprint', 'Sprint Shootout'): 
+          the drivers total race time (only given if
           the driver was not more than one lap behind the leader).
           For practice sessions: the drivers best lap time.
 
