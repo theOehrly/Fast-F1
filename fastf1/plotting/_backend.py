@@ -58,11 +58,11 @@ def _load_drivers_from_f1_livetiming(
     #   primary style
     for num in sorted(driver_info.keys()):
         driver_entry = driver_info[num]
-        team_name = driver_entry.get('TeamName')
+        team_name = driver_entry.get("TeamName")
         team_color = f"#{driver_entry.get('TeamColour').lower()}"
-        abbreviation = driver_entry.get('Tla', '')
-        name = ' '.join((driver_entry.get('FirstName', ''),
-                         driver_entry.get('LastName', '')))
+        abbreviation = driver_entry.get("Tla", "")
+        name = " ".join((driver_entry.get("FirstName", ""),
+                         driver_entry.get("LastName", "")))
 
         if not abbreviation.strip() or not name.strip():
             _logger.warning(
@@ -102,13 +102,13 @@ def _generate_team(team_name: str, team_color: str) -> Team:
     # this may not be perfect
 
     short_team_name = (_normalize_string(team_name)
-                       .replace('Team', '')
-                       .replace('F1', '')
-                       .replace('Scuderia', '')
+                       .replace("Team", "")
+                       .replace("F1", "")
+                       .replace("Scuderia", "")
                        )
     if not short_team_name.startswith("Racing"):
         # special case to keep "Racing Bulls" unmodified
-        short_team_name = short_team_name.replace('Racing', '')
+        short_team_name = short_team_name.replace("Racing", "")
 
     # remove leading and trailing spaces
     short_team_name = short_team_name.strip().lstrip()

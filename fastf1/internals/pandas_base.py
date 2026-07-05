@@ -16,7 +16,7 @@ import pandas as pd
 try:
     from pandas.core.internals import SingleBlockManager
 except ImportError as exc:
-    _mgr_instance = getattr(pd.Series(dtype=float), '_mgr', None)
+    _mgr_instance = getattr(pd.Series(dtype=float), "_mgr", None)
     if _mgr_instance is None:
         raise ImportError("Import of Pandas internals failed. You are likely "
                           "using a recently released version of Pandas that "
@@ -61,7 +61,7 @@ class BaseDataFrame(pd.DataFrame):
     (e.g. 'datetime64[ns]') or as classes (e.g. int).
     """
 
-    _internal_names = pd.DataFrame._internal_names + ['base_class_view']
+    _internal_names = pd.DataFrame._internal_names + ["base_class_view"]
     _internal_names_set = set(_internal_names)
 
     def __repr__(self) -> str:
@@ -75,7 +75,7 @@ class BaseDataFrame(pd.DataFrame):
             **kwargs
     ):
         if _force_default_cols and (self._COLUMNS is not None):
-            kwargs['columns'] = list(self._COLUMNS.keys())
+            kwargs["columns"] = list(self._COLUMNS.keys())
             # force casting of default columns when forcing columns
             _cast_default_cols = True
 
@@ -88,7 +88,7 @@ class BaseDataFrame(pd.DataFrame):
                 cast = True
                 if self[col].isna().all():
                     # empty column, set appropriate NA-type
-                    if isinstance(_type, str) and _type != 'object':
+                    if isinstance(_type, str) and _type != "object":
                         # type given as string, e.g. 'datetime64[ns]'
                         self[col] = pd.Series(dtype=_type)
                     elif type(None) in typing.get_args(_type):
@@ -96,7 +96,7 @@ class BaseDataFrame(pd.DataFrame):
                         # optional, e.g. typing.Optional[int]
                         self[col] = None
                         cast = False  # do not cast this column
-                    elif (_type == object) or (_type == 'object'):  # noqa: E721, type comparison with ==
+                    elif (_type == object) or (_type == "object"):  # noqa: E721, type comparison with ==
                         # object type, set to None
                         self[col] = None
                         cast = False
@@ -120,9 +120,9 @@ class BaseDataFrame(pd.DataFrame):
         # has a reference to this self (i.e. the object from which the slice
         # is created) as a class property
         # type(...) returns a new subclass of a Series
-        return type('_DynamicBaseSeriesConstructor',
+        return type("_DynamicBaseSeriesConstructor",
                     (_BaseSeriesConstructor,),
-                    {'__meta_created_from': self})
+                    {"__meta_created_from": self})
 
     @property
     def _constructor_sliced_horizontal(self) -> Callable[..., pd.Series]:
@@ -153,13 +153,13 @@ class _BaseSeriesConstructor(pd.Series):
     __meta_created_from: BaseDataFrame | None
 
     def __new__(cls, data=None, index=None, *args, **kwargs) -> pd.Series:
-        parent = getattr(cls, '__meta_created_from', None)
+        parent = getattr(cls, "__meta_created_from", None)
 
         if (index is None) and isinstance(
                 data, pd.Series | pd.DataFrame | SingleBlockManager):
             # no index is explicitly given, try to get an index from the
             # data itself
-            index = getattr(data, 'index', None)
+            index = getattr(data, "index", None)
 
         if (parent is None) or (index is None):
             # do "conventional" slicing and return a pd.Series

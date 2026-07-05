@@ -10,15 +10,15 @@ def fetch_results(year, gp, session):
     """session can be 'Qualifying' or 'Race'
     mainly to port on upper level libraries
     """
-    if session == 'Race':
-        day = 'results'
-        sel = 'Results'
-    elif session == 'Qualifying':
-        day = 'qualifying'
-        sel = 'QualifyingResults'
-    elif session in ('Sprint Qualifying', 'Sprint'):
-        day = 'sprint'
-        sel = 'SprintResults'
+    if session == "Race":
+        day = "results"
+        sel = "Results"
+    elif session == "Qualifying":
+        day = "qualifying"
+        sel = "QualifyingResults"
+    elif session in ("Sprint Qualifying", "Sprint"):
+        day = "sprint"
+        sel = "SprintResults"
 
     return _parse_ergast(fetch_day(year, gp, day))[0][sel]
 
@@ -39,10 +39,10 @@ def fetch_day(year, gp, day):
 
 def _parse_json_response(r):
     if r.status_code == 200:
-        return json.loads(r.content.decode('utf-8'))
+        return json.loads(r.content.decode("utf-8"))
     warnings.warn(f"Request returned: {r.status_code}")
     return None
 
 
 def _parse_ergast(data):
-    return data['MRData']['RaceTable']['Races']
+    return data["MRData"]["RaceTable"]["Races"]

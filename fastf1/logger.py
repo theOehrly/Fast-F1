@@ -19,14 +19,14 @@ class LoggingManager:
     child loggers.
     """
     _console_formatter = logging.Formatter(
-        "{module: <8} {levelname: >10} \t{message}", style='{'
+        "{module: <8} {levelname: >10} \t{message}", style="{"
     )
 
     _console_handler = logging.StreamHandler()
     _console_handler.setFormatter(_console_formatter)
     _console_handler.setLevel(logging.INFO)
 
-    _root_logger = logging.getLogger('fastf1')
+    _root_logger = logging.getLogger("fastf1")
     _root_logger.setLevel(logging.DEBUG)
     _root_logger.addHandler(_console_handler)
 
@@ -54,7 +54,7 @@ class LoggingManager:
         cls._console_handler.setLevel(level)
 
 
-if os.getenv('FASTF1_DEBUG') == '1':
+if os.getenv("FASTF1_DEBUG") == "1":
     warnings.warn("Debug Mode enabled for Logger!", UserWarning)
     LoggingManager.debug = True
 else:

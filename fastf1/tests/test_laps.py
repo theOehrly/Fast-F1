@@ -358,7 +358,7 @@ def test_calculated_quali_results(source):
 
     # copy and delete (!) before recalculating
     ergast_results = session.results.copy()
-    session.results.loc[:, ('Q1', 'Q2', 'Q3')] = np.timedelta64("NaT")
+    session.results.loc[:, ('Q1', 'Q2', 'Q3')] = np.timedelta64("NaT", "ns")
 
     if source == "session_status":
         # delete precalculated split times (from api parser)
@@ -370,7 +370,7 @@ def test_calculated_quali_results(source):
     # it was slower than the 107% rule. Calculation excludes it.
     # This needs to be addressed separately with an indication of not classified.
     ergast_results.loc[ergast_results['DriverNumber'] == "21", "Q1"] \
-        = np.timedelta64("NaT")
+        = np.timedelta64("NaT", "ns")
 
     pd.testing.assert_frame_equal(ergast_results, session.results)
 
@@ -397,7 +397,7 @@ def test_quali_q3_cancelled(source):
     # that would be a better test case. The last one was the US GP in 2015, so
     # no lap data is available.
     session.session_status.drop([13, 14, 15, 16], inplace=True)
-    session.results['Q3'] = np.timedelta64("NaT")
+    session.results['Q3'] = np.timedelta64("NaT", "ns")
     if source == "session_status":
         # delete precalculated split times (from api parser)
         session._session_split_times = None
@@ -414,7 +414,7 @@ def test_quali_q3_cancelled(source):
     # Test _calculate_quali_like_session_results()
     # copy and delete (!) before recalculating
     orig_results = session.results.copy()
-    session.results.loc[:, ('Q1', 'Q2', 'Q3')] = np.timedelta64("NaT")
+    session.results.loc[:, ('Q1', 'Q2', 'Q3')] = np.timedelta64("NaT", "ns")
     session._calculate_quali_like_session_results(force=True)
 
     # Note that differences may exist if one or more drivers didn't set a

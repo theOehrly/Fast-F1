@@ -12,13 +12,13 @@ import fastf1.plotting
 
 # Enable Matplotlib patches for plotting timedelta values and load
 # FastF1's dark color scheme
-fastf1.plotting.setup_mpl(mpl_timedelta_support=True, color_scheme='fastf1')
+fastf1.plotting.setup_mpl(mpl_timedelta_support=True, color_scheme="fastf1")
 
 
 ###############################################################################
 # Load the race session
 
-race = fastf1.get_session(2023, "Azerbaijan", 'R')
+race = fastf1.get_session(2023, "Azerbaijan", "R")
 race.load()
 
 ###############################################################################

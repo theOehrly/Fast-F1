@@ -8,7 +8,7 @@ from fastf1.req import Cache
 
 PROTO = "https"
 HOST = "api.multiviewer.app"
-HEADERS = {'User-Agent': f'FastF1/{__version_short__}'}
+HEADERS = {"User-Agent": f"FastF1/{__version_short__}"}
 
 
 def _make_url(path: str):

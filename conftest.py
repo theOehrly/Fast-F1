@@ -70,7 +70,7 @@ def pytest_collection_modifyitems(config, items):
                 item.add_marker(skip_ergast)
 
     # only test documentation and project structure
-    if config.getoption('--prj-doc'):
+    if config.getoption("--prj-doc"):
         skip_non_prj = pytest.mark.skip(reason="--prj-doc given: run only "
                                                "project structure and "
                                                "documentation tests")
@@ -90,30 +90,30 @@ def pytest_collection_modifyitems(config, items):
 def pytest_report_teststatus(report, config):  # noqa: ARG001
     from fastf1 import Cache
 
-    if (report.when == 'teardown') and (Cache._request_counter > 0):
-        name = report.location[0] + '::' + report.location[2]
+    if (report.when == "teardown") and (Cache._request_counter > 0):
+        name = report.location[0] + "::" + report.location[2]
         line = (
             f"{name} - uncached requests:\t"
             f"{Cache._request_counter}"
         )
-        report.sections.append(('Request Count', line))
+        report.sections.append(("Request Count", line))
         Cache._request_counter = 0
 
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):  # noqa: ARG001
-    reports = terminalreporter.getreports('')
+    reports = terminalreporter.getreports("")
     content = os.linesep.join(
         text for report in reports for secname, text in report.sections
-        if secname == 'Request Count'
+        if secname == "Request Count"
     )
     if content:
         terminalreporter.ensure_newline()
-        terminalreporter.section('Request count', sep='-', blue=True,
+        terminalreporter.section("Request count", sep="-", blue=True,
                                  bold=True)
         terminalreporter.line(content)
 
     terminalreporter.ensure_newline()
-    terminalreporter.section('Parameter Overrides', sep='-', blue=True,
+    terminalreporter.section("Parameter Overrides", sep="-", blue=True,
                              bold=True)
     terminalreporter.line(f"Ergast backend override: "
                           f"{ERGAST_BACKEND_OVERRIDE}")
@@ -127,7 +127,7 @@ def reference_laps_data():
     # require it
     import fastf1
     fastf1.Cache.enable_cache("test_cache/")
-    session = fastf1.get_session(2020, 'Italy', 'R')
+    session = fastf1.get_session(2020, "Italy", "R")
     session.load()
     return session, session.laps
 
@@ -138,11 +138,11 @@ def fastf1_setup():
     from fastf1.logger import LoggingManager
 
     try:
-        fastf1.Cache.enable_cache('test_cache')  # use specific cache directory
+        fastf1.Cache.enable_cache("test_cache")  # use specific cache directory
     except NotADirectoryError:
         # create the test cache and re-enable
-        os.mkdir('test_cache')
-        fastf1.Cache.enable_cache('test_cache')
+        os.mkdir("test_cache")
+        fastf1.Cache.enable_cache("test_cache")
 
     fastf1.Cache.ci_mode(True)  # only request uncached data
     LoggingManager.debug = True  # raise all exceptions

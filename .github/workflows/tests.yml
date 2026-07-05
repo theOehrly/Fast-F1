@@ -41,15 +41,15 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
 
-      - name: Install python requirements
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install --upgrade build twine
-          python -m pip install -r requirements/dev.txt ${{ matrix.extra-requirements }}
-
       - name: Install Fast-F1 from sources
         run: |
+          python3 -m pip install --upgrade pip
           python3 -m pip install ${{ matrix.extra-requirements }} -e .
+
+      - name: Install development requirements
+        run: |
+          python -m pip install --upgrade build twine
+          python -m pip install -r requirements/dev.txt ${{ matrix.extra-requirements }}
 
       - name: Create cache directory
         run: |

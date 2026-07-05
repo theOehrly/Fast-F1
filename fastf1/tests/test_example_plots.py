@@ -3,7 +3,6 @@ from matplotlib import pyplot as plt
 
 import fastf1
 import fastf1.plotting
-import fastf1.utils
 
 
 fastf1.plotting.setup_mpl(color_scheme='fastf1')
@@ -49,32 +48,6 @@ def test_doc_example_fast_lec():
     ax.legend()
 
     return fig
-
-
-@pytest.mark.f1telapi
-@pytest.mark.mpl_image_compare(style='default')
-def test_doc_example_delta_time():
-    session = fastf1.get_session(2020, 'Belgian', 'R')
-    session.load()
-    lec = session.laps.pick_drivers('LEC').pick_fastest()
-    ham = session.laps.pick_drivers('HAM').pick_fastest()
-
-    fig, ax = plt.subplots()
-    ax.plot(lec.telemetry['Distance'], lec.telemetry['Speed'],
-            color=fastf1.plotting.get_team_color(lec['Team'],
-                                                 session=session))
-    ax.plot(ham.telemetry['Distance'], ham.telemetry['Speed'],
-            color=fastf1.plotting.get_team_color(ham['Team'],
-                                                 session=session))
-    twin = ax.twinx()
-    delta_time, ham_car_data, lec_car_data = fastf1.utils.delta_time(ham, lec)
-    ham_car_data = ham_car_data.add_distance()
-    twin.plot(ham_car_data['Distance'], delta_time, '--',
-              color=fastf1.plotting.get_team_color(lec['Team'],
-                                                   session=session))
-
-    return fig
-
 
 @pytest.mark.f1telapi
 @pytest.mark.mpl_image_compare(style='default')
