@@ -6,12 +6,12 @@ import zlib
 import numpy as np
 import pandas as pd
 
+from fastf1.internals.pandas_extensions import create_df_fast
 from fastf1.internals.parsing_helpers import (
     recursive_dict_get,
     to_datetime,
     to_timedelta
 )
-from fastf1.internals.pandas_extensions import create_df_fast
 from fastf1.logger import (
     get_logger,
     soft_exceptions

@@ -10,16 +10,16 @@ import pandas as pd
 import fastf1._api
 import fastf1.ergast
 from fastf1 import __version_short__
-from fastf1.internals.parsing_helpers import (
-    recursive_dict_get,
-    to_datetime,
-    to_timedelta
-)
 from fastf1.core import Session
 from fastf1.internals.fuzzy import fuzzy_matcher
 from fastf1.internals.pandas_base import (
     BaseDataFrame,
     BaseSeries
+)
+from fastf1.internals.parsing_helpers import (
+    recursive_dict_get,
+    to_datetime,
+    to_timedelta
 )
 from fastf1.logger import (
     get_logger,
