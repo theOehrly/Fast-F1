@@ -22,11 +22,11 @@ from fastf1 import (
     ergast,
     exceptions
 )
-from fastf1.internals.parsing_helpers import to_timedelta
 from fastf1.internals.pandas_base import (
     BaseDataFrame,
     BaseSeries
 )
+from fastf1.internals.parsing_helpers import to_timedelta
 from fastf1.livetiming.data import LiveTimingData
 from fastf1.logger import (
     get_logger,
