@@ -24,7 +24,15 @@ Deprecations
 - The ``round`` keyword argument of ``EventSchedule.get_event_by_round`` is
   deprecated and will be removed in a future version. Use ``round_number``
   instead. (#890)
-  
+
+
+New Features
+^^^^^^^^^^^^
+
+- ``SessionResults`` now includes ``Time`` (best lap time) and ``Position``
+  for practice sessions ('Practice 1', 'Practice 2', 'Practice 3').
+  Previously, both columns were ``NaT``/``NaN`` for these sessions.
+
 
 What's new in v3.8.3
 --------------------

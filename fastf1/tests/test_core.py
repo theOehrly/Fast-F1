@@ -213,3 +213,22 @@ def test_session_results_drivers():
     session.load(laps=False, telemetry=False, weather=False)
     drivers = session.results.index
     assert "47" in drivers
+
+@pytest.mark.f1telapi
+def test_practice_session_results_time_and_position():
+    session = fastf1.get_session(2024, "Silverstone", "FP1")
+    session.load(telemetry=False, weather=False)
+
+    results = session.results
+    # Time should be populated (not all NaT)
+    assert not results['Time'].isna().all()
+    # Position should be populated (not all NaN)
+    assert not results['Position'].isna().all()
+
+    # driver in P1 should have the fastest (min) time
+    p1_time = results.loc[results['Position'] == 1.0, 'Time'].iloc[0]
+    assert p1_time == results['Time'].min()
+
+    # results should be sorted by position
+    valid = results.dropna(subset=['Position'])
+    assert (valid['Position'].diff().dropna() >= 0).all()

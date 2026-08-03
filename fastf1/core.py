@@ -1193,9 +1193,14 @@ class Session:
         else:
             self._RACE_LIKE_SESSIONS = ("Race", "Sprint")
             self._QUALI_LIKE_SESSIONS = ("Qualifying", "Sprint Qualifying")
+
             # starting from 2024, 'Sprint Qualifying' is the name for the
             # qualifying-like session that sets the grid for the Sprint
             # (previously, this was called 'Sprint Shootout')
+
+        self._PRACTICE_LIKE_SESSIONS = (
+            "Practice 1", "Practice 2", "Practice 3"
+        )
 
         self._ergast = ergast.Ergast()
 
@@ -1439,6 +1444,7 @@ class Session:
         self._set_laps_deleted_from_rcm()
         self._calculate_quali_like_session_results()
         self._calculate_race_like_session_results()
+        self._calculate_practice_like_session_results()
 
         _logger.info(f"Finished loading data for {len(self.drivers)} "
                      f"drivers: {self.drivers}")
@@ -1932,6 +1938,57 @@ class Session:
         quali_results = quali_results.set_index("DriverNumber", drop=True)
 
         self.results.loc[:, quali_results.columns] = quali_results
+        self.results.sort_values(by=["Position"], inplace=True)
+
+    @soft_exceptions(
+        "practice results",
+        "Failed to calculate practice results from lap times!",
+        _logger,
+    )
+    def _calculate_practice_like_session_results(self, force=False):
+        """Try to calculate practice results from lap times if no results are
+        available.
+
+        Args:
+            force (bool): Force calculation of practice results even if
+                results are already available, (default: False)
+        """
+
+        if self.name not in self._PRACTICE_LIKE_SESSIONS:
+            return
+
+        if not hasattr(self, "_laps"):
+            return
+
+        if not self.results["Position"].isna().all() and not force:
+            # Don't do anything if results are already available
+            # unless force is True
+            return
+
+        if self.laps["Deleted"].dtype.name != "bool":
+            _logger.warning(
+                "Cannot calculate practice results: missing information "
+                "about deleted laps. Make sure that race control messages "
+                "are being loaded."
+            )
+
+        best_laps = (
+            self._laps.loc[
+                ~self._laps["LapTime"].isna() & ~self._laps["Deleted"]
+            ]
+            .groupby("DriverNumber")
+            .agg({"LapTime": "min"})
+            .rename(columns={"LapTime": "Time"})
+            .sort_values(by="Time")
+            .reset_index()
+        )
+
+        best_laps["Position"] = (best_laps.index + 1).astype("float64")
+        best_laps = best_laps.set_index("DriverNumber")
+
+        self.results.loc[:, ["Time", "Position"]] = (
+            best_laps[["Time", "Position"]]
+        )
         self.results.sort_values(by=["Position"], inplace=True)
 
     @soft_exceptions(
@@ -3770,11 +3827,9 @@ class SessionResults(BaseDataFrame):
           The driver's country code (e.g. "FRA")
 
         - ``Position`` | :class:`float` |
-          The drivers finishing position (values only given if session is
-          'Race', 'Qualifying', 'Sprint Shootout', 'Sprint', or
-          'Sprint Qualifying'). This additionally accounts for post-race
-          penalties and disqualifications if session is 'Race', 'Qualifying',
-          Sprint Shootout', or 'Sprint'.
+          The drivers finishing position in the session. This additionally
+          accounts for post-session penalties and disqualifications if session
+          is 'Race', 'Qualifying', 'Sprint Shootout', or 'Sprint'.
 
         - ``ClassifiedPosition`` | :class:`str` |
           The official classification result for each driver.
@@ -3800,9 +3855,10 @@ class SessionResults(BaseDataFrame):
           'Qualifying' or 'Sprint Shootout')
 
         - ``Time`` | :class:`pd.Timedelta` |
-          The drivers total race time (values only given if session is
-          'Race', 'Sprint', 'Sprint Shootout' or 'Sprint Qualifying' and the
-          driver was not more than one lap behind the leader)
+          For race-like sessions ('Race', 'Sprint', 'Sprint Shootout'):
+          the drivers total race time (only given if
+          the driver was not more than one lap behind the leader).
+          For practice sessions: the drivers best lap time.
 
         - ``Status`` | :class:`str` |
           A status message to indicate if and how the driver finished the race
