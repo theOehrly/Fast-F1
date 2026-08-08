@@ -357,6 +357,21 @@ def _get_gap_str_for_drv(drv, idx, laps_data, stream_data):
     return stream_data.loc[ref_idx]["GapToLeader"]
 
 
+def _sector_sum(drv_data, lap_idx):
+    """Sum of the three sector times of a lap.
+
+    Returns None if any of the sector times is missing, i.e. if no
+    complete sum can be calculated.
+    """
+    total = datetime.timedelta(0)
+    for key in ("Sector1Time", "Sector2Time", "Sector3Time"):
+        sector_time = drv_data[key][lap_idx]
+        if pd.isna(sector_time):
+            return None
+        total += sector_time
+    return total
+
+
 def _laps_data_driver(driver_raw, empty_vals, drv):
     """
     .. warning::
@@ -466,14 +481,21 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             # missing or if the value is an empty string
 
             val = to_timedelta(val)  # empty string converts to None here!
+            lap_idx = lapcnt - lap_offset
             # Set None values too, to explicitly differentiate the case where
             # no information about the value is found in the source from the
             # case here where the source indicates that no value exists.
-            if (val is None) or (val.total_seconds() < 150):
-                # laps which are longer than 150 seconds are ignored; usually this is the case between Q1, Q2 and Q3
-                # because all three qualifying sessions are one session here. Those timestamps are often wrong and
-                # sometimes associated with the wrong lap
-                drv_data["LapTime"][lapcnt - lap_offset] = val
+            if ((val is None) or (val.total_seconds() < 150)
+                    or (val == _sector_sum(drv_data, lap_idx))):
+                # Lap times longer than 150 seconds are usually incorrect:
+                # because all three qualifying sessions are one session here,
+                # the value that is received between Q1, Q2 and Q3 is the time
+                # since the driver's previous lap. Those values are often wrong
+                # and sometimes associated with the wrong lap. Such a value is
+                # only accepted if the sector times that were received for this
+                # lap add up to exactly the same value, which identifies it as
+                # a genuinely slow lap (e.g. safety car or red flag).
+                drv_data["LapTime"][lap_idx] = val
 
         if "Speeds" in resp:
             for trapkey, trapname in (("I1", "SpeedI1"), ("I2", "SpeedI2"), ("FL", "SpeedFL"), ("ST", "SpeedST")):

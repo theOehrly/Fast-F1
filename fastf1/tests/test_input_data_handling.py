@@ -283,6 +283,39 @@ def test_explicitly_missing_lap_times_calculated():
 
 
 @pytest.mark.f1telapi
+def test_long_lap_time_accepted_if_sector_times_match():
+    # Grosjean's lap 15 in the 2020 British GP took longer than 150 seconds
+    # because of a safety car period. The source data additionally contains
+    # the lap time of lap 14 a second time, received after the lap count had
+    # already been increased. Previously, the correct value for lap 15 was
+    # discarded because it exceeded the 150 second threshold, so that the
+    # duplicated value of lap 14 was used for lap 15 as well. This caused a
+    # timing integrity error. The sector times of lap 15 add up to exactly
+    # the correct lap time, which identifies it as a genuine lap. (GH#612)
+    session = fastf1.get_session(2020, 4, 'R')
+    session.load(telemetry=False, weather=False)
+    gro = session.laps.pick_drivers('8')
+
+    assert gro.pick_laps(15)['LapTime'].iloc[0] \
+           == pd.Timedelta(seconds=151.069)
+    assert gro.pick_laps(14)['LapTime'].iloc[0] \
+           != gro.pick_laps(15)['LapTime'].iloc[0]
+
+
+@pytest.mark.f1telapi
+def test_incorrect_long_lap_times_ignored_in_qualifying():
+    # Because Q1, Q2 and Q3 are a single session in the source data, the API
+    # sends the time since the driver's previous lap as lap time between the
+    # individual parts of qualifying. Those values are incorrect and need to
+    # be ignored, even though lap times longer than 150 seconds are accepted
+    # if they match the sector times of the lap. (GH#612)
+    session = fastf1.get_session(2023, 'Canada', 'Q')
+    session.load(telemetry=False, weather=False)
+
+    assert session.laps['LapTime'].max() < pd.Timedelta(minutes=5)
+
+
+@pytest.mark.f1telapi
 @pytest.mark.parametrize(
     "year, round_, session, drv, stints",
     (
