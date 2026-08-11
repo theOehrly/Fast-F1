@@ -10,6 +10,23 @@ Removals
   was deprecated in v3.0.0 because it produced inaccurate results (#884).
 
 
+Behaviour Changes
+^^^^^^^^^^^^^^^^^
+
+- Changes to ``Session.results`` for Qualifying and Sprint Qualifying:
+    - If a driver was eliminated in Q1 and did not pass the 107% rule, their
+      best Q1 time will now be **included** in the result.
+    - The "ClassifiedPosition" column will be populated with the drivers'
+      respective classified positions. If a driver was eliminated in Q1, the
+      value will be set to "N" for "Not Classified".
+    - The old behaviour was for the "ClassifiedPosition" column to not be
+      used. Drivers who failed the 107% rule had their time excluded from the
+      results. The new behaviour follows partially from a change in the data
+      that is returned by the Jolpica-F1 API. Further, the new behaviour
+      provides more informative data and better matches the behaviour that
+      was already described in the documentation.
+
+
 Deprecations
 ^^^^^^^^^^^^
 
