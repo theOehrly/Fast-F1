@@ -1917,7 +1917,6 @@ class Session:
         for i, session in enumerate(sessions):
             session_name = f"Q{i + 1}"
             if session is not None:
-                session = session.pick_quicklaps()  # 107% rule applies per Q
                 laps = (
                     session[~session["LapTime"].isna() & ~session["Deleted"]]
                     .copy()
@@ -1935,6 +1934,15 @@ class Session:
             .sort_values(by=["Q3", "Q2", "Q1"]) \
             .reset_index(drop=True)
         quali_results["Position"] = (quali_results.index + 1).astype("float64")
+
+        # augment not classified based on 107% rule
+        fastest_q1 = quali_results["Q1"].min()
+        eliminated = quali_results["Q2"].isna()
+        nc = (quali_results["Q1"] > (fastest_q1 * 1.07)) & eliminated
+        c_pos = quali_results["Position"].astype(str)
+        c_pos.loc[nc] = "N"
+        quali_results["ClassifiedPosition"] = c_pos
+
         quali_results = quali_results.set_index("DriverNumber", drop=True)
 
         self.results.loc[:, quali_results.columns] = quali_results
@@ -2508,6 +2516,16 @@ class Session:
 
         if "Position" in self._results:
             self._results = self._results.sort_values("Position")
+
+        if self.name == "Qualifying":
+            # augment not classified based on 107% rule;
+            # old Ergast API does not provide this info
+            fastest_q1 = self._results["Q1"].min()
+            eliminated = self._results["Q2"].isna()
+            nc = (self._results["Q1"] > (fastest_q1 * 1.07)) & eliminated
+            c_pos = self._results["Position"].astype(str)
+            c_pos.loc[nc] = "N"
+            self._results["ClassifiedPosition"] = c_pos
 
     def _drivers_from_f1_api(self, *, livedata=None):
         try:
