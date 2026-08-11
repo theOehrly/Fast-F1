@@ -366,12 +366,6 @@ def test_calculated_quali_results(source):
 
     session._calculate_quali_like_session_results(force=True)
 
-    # patch: Jolpica does include the fastest lap time of car 21, even though
-    # it was slower than the 107% rule. Calculation excludes it.
-    # This needs to be addressed separately with an indication of not classified.
-    ergast_results.loc[ergast_results['DriverNumber'] == "21", "Q1"] \
-        = np.timedelta64("NaT", "ns")
-
     pd.testing.assert_frame_equal(ergast_results, session.results)
 
 
