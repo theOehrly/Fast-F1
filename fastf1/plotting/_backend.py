@@ -60,7 +60,7 @@ def _load_drivers_from_f1_livetiming(
         driver_entry = driver_info[num]
         team_name = driver_entry.get("TeamName", "")
 
-        team_color = driver_entry.get("TeamColor", "").lower()
+        team_color = driver_entry.get("TeamColour", "").lower()
         team_color = f"#{team_color}" if team_color else ""
 
         abbreviation = driver_entry.get("Tla", "")
