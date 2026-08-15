@@ -214,7 +214,8 @@ class Telemetry(BaseDataFrame):
 
         if drop_unknown_channels:
             unknown = set(self.columns).difference(self._CHANNELS.keys())
-            super().drop(columns=unknown, inplace=True)
+            # `self` cannot be rebound here, so the drop must be inplace
+            super().drop(columns=unknown, inplace=True)  # noqa: PD002
             if unknown:
                 _logger.warning(
                     f"The following unknown telemetry channels have "
@@ -927,13 +928,13 @@ class Telemetry(BaseDataFrame):
         )
 
         if ((d["Date"].shape != dtd["Date"].shape)
-                or np.any(d["Date"].values
-                          != dtd["Date"].values)):
+                or np.any(d["Date"].to_numpy()
+                          != dtd["Date"].to_numpy())):
             dtd = dtd.resample_channels(new_date_ref=d["Date"])
 
         # indices need to match as .join works index-on-index
         dtd["_SelfIndex"] = d.index
-        dtd.set_index("_SelfIndex", drop=True, inplace=True)
+        dtd = dtd.set_index("_SelfIndex", drop=True)
 
         return d.join(dtd.loc[:, ("DriverAhead", "DistanceToDriverAhead")],
                       how="outer")
@@ -1468,7 +1469,7 @@ class Session:
         # Matching data and app_data. Not super straightforward
         # Sometimes a car may enter the pit without changing tyres, so
         # new compound is associated with the help of logging time.
-        data.drop(columns=["NumberOfPitStops"], inplace=True)
+        data = data.drop(columns=["NumberOfPitStops"])
         useful = app_data[["Driver", "Time", "Compound", "StartLaps", "New",
                            "Stint"]]
 
@@ -1498,7 +1499,7 @@ class Session:
                 # Find all laps where a driver went into the pits. Their end
                 # times mark the end of each stint.
                 stint_split_times = d1.loc[
-                    ~pd.isnull(d1["PitInTime"]), "Time"
+                    ~pd.isna(d1["PitInTime"]), "Time"
                 ].to_list()
 
                 d2 = self.__fix_tyre_info(d2, stint_split_times)
@@ -1520,7 +1521,7 @@ class Session:
                     # for drivers who could not start the race
                     is_generated = True
                     result = d1.copy()
-                    result.reset_index(drop=True, inplace=True)
+                    result = result.reset_index(drop=True)
                     result["Driver"] = [driver, ]
                     result["NumberOfLaps"] = 1
                     result["Time"] = data["Time"].min()
@@ -1535,7 +1536,7 @@ class Session:
 
             elif not len(d2):
                 result = d1.copy()
-                result.reset_index(drop=True, inplace=True)
+                result = result.reset_index(drop=True)
                 result["Compound"] = ""
                 result["TyreLife"] = np.nan
                 result["Stint"] = 0
@@ -1618,9 +1619,9 @@ class Session:
         laps = df.reset_index(drop=True)
 
         # rename some columns
-        laps.rename(columns={"Driver": "DriverNumber",
-                             "NumberOfLaps": "LapNumber",
-                             "New": "FreshTyre"}, inplace=True)
+        laps = laps.rename(columns={"Driver": "DriverNumber",
+                                    "NumberOfLaps": "LapNumber",
+                                    "New": "FreshTyre"})
 
         laps["Stint"] += 1  # counting stints from 1
 
@@ -1680,7 +1681,7 @@ class Session:
 
             # forward fill finish line speed trap like sector 1 speed trap,
             # additionally excluding laps where the driver entered the pits
-            appl_mask &= pd.isnull(laps.loc[drv_mask, "PitInTime"])
+            appl_mask &= pd.isna(laps.loc[drv_mask, "PitInTime"])
             fill_fl = laps.loc[drv_mask, "SpeedFL"].ffill().loc[appl_mask]
             laps.loc[appl_mask & drv_mask, "SpeedFL"] = fill_fl
 
@@ -1946,7 +1947,7 @@ class Session:
         quali_results = quali_results.set_index("DriverNumber", drop=True)
 
         self.results.loc[:, quali_results.columns] = quali_results
-        self.results.sort_values(by=["Position"], inplace=True)
+        self._results = self._results.sort_values(by=["Position"])
 
     @soft_exceptions(
         "practice results",
@@ -1997,7 +1998,7 @@ class Session:
         self.results.loc[:, ["Time", "Position"]] = (
             best_laps[["Time", "Position"]]
         )
-        self.results.sort_values(by=["Position"], inplace=True)
+        self._results = self._results.sort_values(by=["Position"])
 
     @soft_exceptions(
         "race results",
@@ -2054,7 +2055,7 @@ class Session:
         final_order["Position"] = (final_order.index + 1).astype("float64")
         final_order = final_order.set_index("DriverNumber")
         self.results.loc[:, ["Position"]] = final_order["Position"]
-        self.results.sort_values(by=["Position"], inplace=True)
+        self._results = self._results.sort_values(by=["Position"])
 
     @soft_exceptions("add track status to laps",
                      "Failed to add track status to Laps!",
@@ -2346,15 +2347,15 @@ class Session:
                 lap_integrity_ok = True
                 # require existence, non-existence and specific values for
                 # some variables
-                check_1 = (pd.isnull(lap["PitInTime"])
-                           & pd.isnull(lap["PitOutTime"])
+                check_1 = (pd.isna(lap["PitInTime"])
+                           & pd.isna(lap["PitOutTime"])
                            & (not lap["FastF1Generated"])
                            # slightly paranoid, allow only green + yellow flag
                            & (lap["TrackStatus"] in ("1", "2", "12", "21"))
-                           & (not pd.isnull(lap["LapTime"]))
-                           & (not pd.isnull(lap["Sector1Time"]))
-                           & (not pd.isnull(lap["Sector2Time"]))
-                           & (not pd.isnull(lap["Sector3Time"])))
+                           & (not pd.isna(lap["LapTime"]))
+                           & (not pd.isna(lap["Sector1Time"]))
+                           & (not pd.isna(lap["Sector2Time"]))
+                           & (not pd.isna(lap["Sector3Time"])))
 
                 if check_1:
                     # only do check 2 if all necessary values for this check
@@ -2379,10 +2380,10 @@ class Session:
                 else:
                     check_3 = True  # no previous lap, no SC error
 
-                pre_check_4 = (((not pd.isnull(lap["Time"]))
-                               & (not pd.isnull(lap["LapTime"])))
+                pre_check_4 = (((not pd.isna(lap["Time"]))
+                               & (not pd.isna(lap["LapTime"])))
                                and (prev_lap is not None)
-                               and (not pd.isnull(prev_lap["Time"])))
+                               and (not pd.isna(prev_lap["Time"])))
 
                 if pre_check_4:  # needed condition for check_4
                     time_diff = np.sum((lap["Time"],
@@ -2675,9 +2676,7 @@ class Session:
         if load_drivers:
             d["FullName"] = d["FirstName"] + " " + d["LastName"]
 
-        d.set_index("DriverNumber", drop=False, inplace=True)
-
-        return d
+        return d.set_index("DriverNumber", drop=False)
 
     @soft_exceptions("weather data", "Failed to load weather data!", _logger)
     def _load_weather_data(self, livedata=None):
@@ -3449,8 +3448,8 @@ class Laps(BaseDataFrame):
         Returns:
             instance of :class:`Laps`
         """
-        return self[pd.isnull(self["PitInTime"])
-                    & pd.isnull(self["PitOutTime"])]
+        return self[pd.isna(self["PitInTime"])
+                    & pd.isna(self["PitOutTime"])]
 
     def pick_box_laps(self, which: str = "both") -> "Laps":
         """Return all laps which are either in-laps, out-laps, or both.
@@ -3471,12 +3470,12 @@ class Laps(BaseDataFrame):
             instance of :class:`Laps`
         """
         if which == "in":
-            return self[~pd.isnull(self["PitInTime"])]
+            return self[~pd.isna(self["PitInTime"])]
         if which == "out":
-            return self[~pd.isnull(self["PitOutTime"])]
+            return self[~pd.isna(self["PitOutTime"])]
         if which == "both":
-            return self[~pd.isnull(self["PitInTime"])
-                        | ~pd.isnull(self["PitOutTime"])]
+            return self[~pd.isna(self["PitInTime"])
+                        | ~pd.isna(self["PitOutTime"])]
         raise ValueError(f"Invalid value '{which}' for kwarg 'which'")
 
     def pick_not_deleted(self) -> "Laps":
@@ -3599,7 +3598,7 @@ class Laps(BaseDataFrame):
         Args:
             require: Require is a list of column/telemetry channel names. All
                 names listed in `require` must exist in the data and have a
-                non-null value (tested with :func:`pandas.is_null`). The
+                non-null value (tested with :func:`pandas.isna`). The
                 iterator only yields laps for which this is true. If require is
                 left empty, the iterator will yield all laps.
         Yields:
@@ -3608,10 +3607,10 @@ class Laps(BaseDataFrame):
         for index, lap in self.iterrows():
             if require:
                 # make sure that all required values even exist in the index
-                if any(val not in lap.index.values for val in require):
+                if any(val not in lap.index.to_numpy() for val in require):
                     continue
-                require = set(require).intersection(set(lap.index.values))
-                if any(pd.isnull(val) for val in lap.loc[require]):
+                require = set(require).intersection(set(lap.index.to_numpy()))
+                if any(pd.isna(val) for val in lap.loc[require]):
                     continue
             yield index, lap
 

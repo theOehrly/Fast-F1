@@ -55,9 +55,9 @@ for _, event in schedule.iterrows():
                 sprint.results["Abbreviation"] == abbreviation
             ]
             if not driver_row.empty:
-                # We need the values[0] accessor because driver_row is actually
+                # We need the [0] accessor because driver_row is actually
                 # returned as a dataframe with a single row
-                sprint_points = driver_row["Points"].values[0]
+                sprint_points = driver_row["Points"].to_numpy()[0]
 
         standings.append(
             {
@@ -79,7 +79,7 @@ df = pd.DataFrame(standings)
 # We remake it into an easier to use format where the row indices are the
 # drivers, and the columns are the races. This allows us to look up the points
 # scored by a driver at a race more easily.
-heatmap_data = df.pivot(
+heatmap_data = df.pivot(  # noqa: PD010
     index="Driver", columns="RoundNumber", values="Points"
 ).fillna(0)
 
@@ -87,11 +87,11 @@ heatmap_data = df.pivot(
 # scoring driver is towards the bottom
 heatmap_data["total_points"] = heatmap_data.sum(axis=1)
 heatmap_data = heatmap_data.sort_values(by="total_points", ascending=True)
-total_points = heatmap_data["total_points"].values
+total_points = heatmap_data["total_points"].to_numpy()
 heatmap_data = heatmap_data.drop(columns=["total_points"])
 
 # Do the same for position.
-position_data = df.pivot(
+position_data = df.pivot(  # noqa: PD010
     index="Driver", columns="RoundNumber", values="Position"
 ).fillna("N/A")
 
@@ -100,7 +100,7 @@ position_data = df.pivot(
 hover_info = [
     [
         {
-            "position": position_data.at[driver, race],
+            "position": position_data.loc[driver, race],
         }
         for race in schedule["RoundNumber"]
     ]
@@ -141,7 +141,7 @@ fig.add_trace(
         zmin=0,
         # We need to set zmax for the two heatmaps separately as the
         # max value in the total points plot is significantly higher.
-        zmax=heatmap_data.values.max(),
+        zmax=heatmap_data.to_numpy().max(),
     ),
     row=1,
     col=1,

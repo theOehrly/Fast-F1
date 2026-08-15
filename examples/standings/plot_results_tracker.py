@@ -29,10 +29,10 @@ for rnd, race in races["raceName"].items():
     # If there is a sprint, get the results as well
     sprint = ergast.get_sprint_results(season=2022, round=rnd + 1)
     if sprint.content and sprint.description["round"][0] == rnd + 1:
-        temp = pd.merge(temp, sprint.content[0], on="driverCode", how="left")
+        temp = temp.merge(sprint.content[0], on="driverCode", how="left")
         # Add sprint points and race points to get the total
         temp["points"] = temp["points_x"] + temp["points_y"]
-        temp.drop(columns=["points_x", "points_y"], inplace=True)
+        temp = temp.drop(columns=["points_x", "points_y"])
 
     # Add round no. and grand prix name
     temp["round"] = rnd + 1
@@ -47,13 +47,15 @@ races = results["race"].drop_duplicates()
 ##############################################################################
 # Then we “reshape” the results to a wide table, where each row represents a
 # driver and each column refers to a race, and the cell value is the points.
-results = results.pivot(index="driverCode", columns="round", values="points")
+results = results.pivot(  # noqa: PD010
+    index="driverCode", columns="round", values="points"
+)
 # Here we have a 22-by-22 matrix (22 races and 22 drivers, incl. DEV and HUL)
 
 # Rank the drivers by their total points
 results["total_points"] = results.sum(axis=1)
 results = results.sort_values(by="total_points", ascending=False)
-results.drop(columns="total_points", inplace=True)
+results = results.drop(columns="total_points")
 
 # Use race name, instead of round no., as column names
 results.columns = races

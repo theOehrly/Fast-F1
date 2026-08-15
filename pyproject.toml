@@ -114,6 +114,7 @@ select = [
     "ARG",
     "RUF100",
     "Q",
+    "PD",
 ]
 
 ignore = [
