@@ -64,6 +64,46 @@ def test_dtypes_default_columns():
     ensure_data_type(LAP_DTYPES, laps)
 
 
+def _laps_with_one_missing_lap_time():
+    return fastf1.core.Laps({
+        'LapNumber': (1.0, 2.0, 3.0),
+        'LapTime': (pd.Timedelta(seconds=90), pd.NaT,
+                    pd.Timedelta(seconds=92))
+    })
+
+
+@pytest.mark.parametrize('iterable_type', (tuple, list, set, frozenset))
+def test_iterlaps_require(iterable_type):
+    laps = _laps_with_one_missing_lap_time()
+
+    # laps that hold a null value in a required column are skipped
+    lap_numbers = []
+    for _, lap in laps.iterlaps(require=iterable_type(('LapTime',))):
+        lap_numbers.append(lap['LapNumber'])
+    assert lap_numbers == [1.0, 3.0]
+
+    # a required column that does not exist skips every lap
+    require = iterable_type(('LapTime', 'NotAColumn'))
+    assert not list(laps.iterlaps(require=require))
+
+    # without `require`, every lap is yielded
+    assert len(list(laps.iterlaps())) == 3
+
+
+def test_iterlaps_require_single_use_iterator():
+    laps = _laps_with_one_missing_lap_time()
+
+    # The check for missing column names iterates `require` and would exhaust a
+    # single-use iterator, leaving nothing for the null value check that
+    # follows it. `require` therefore needs to be materialized beforehand.
+    single_use_iterator = iter(('LapTime',))
+
+    lap_numbers = []
+    for _, lap in laps.iterlaps(require=single_use_iterator):
+        lap_numbers.append(lap['LapNumber'])
+    assert lap_numbers == [1.0, 3.0]
+
+
 @pytest.mark.f1telapi
 def test_dtypes_pick(reference_laps_data):
     session, laps = reference_laps_data

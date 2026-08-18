@@ -3604,12 +3604,14 @@ class Laps(BaseDataFrame):
         Yields:
             (index, lap): label and an instance of :class:`Lap`
         """
+        if require is not None:
+            require = list(require)
+
         for index, lap in self.iterrows():
             if require:
                 # make sure that all required values even exist in the index
                 if any(val not in lap.index.to_numpy() for val in require):
                     continue
-                require = set(require).intersection(set(lap.index.to_numpy()))
                 if any(pd.isna(val) for val in lap.loc[require]):
                     continue
             yield index, lap
