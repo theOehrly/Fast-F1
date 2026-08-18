@@ -26,7 +26,7 @@ base_url_mirror = "https://livetiming-mirror.fastf1.dev"
 
 headers: dict[str, str] = {
     "Connection": "close",
-    "TE": "identity",
+    "TE": "identity",  # codespell:ignore
     "User-Agent": "BestHTTP",
     "Accept-Encoding": "gzip, identity",
 }
@@ -253,7 +253,7 @@ def _extended_timing_data(path, response=None, livedata=None):
                  logger=_logger)
 def _align_laps(laps_data, stream_data):
     # align lap start and end times between drivers based on Gap to leader
-    if pd.isnull(stream_data["GapToLeader"]).all():
+    if pd.isna(stream_data["GapToLeader"]).all():
         return  # no data to align on
 
     expected_gap = {}
@@ -272,8 +272,8 @@ def _align_laps(laps_data, stream_data):
         skip_drivers = laps_data.loc[
             (
                 (laps_data["NumberOfLaps"] == (offset + 1)) &
-                ((~pd.isnull(laps_data["PitInTime"])) |
-                 (~pd.isnull(laps_data["PitOutTime"])))
+                ((~pd.isna(laps_data["PitInTime"])) |
+                 (~pd.isna(laps_data["PitOutTime"])))
             ), "Driver"
         ].to_list()
 
@@ -543,7 +543,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
     def data_in_lap(lap_n):
         relevant = ("Sector1Time", "Sector2Time", "Sector3Time", "SpeedI1", "SpeedI2",
                     "SpeedFL", "SpeedST", "LapTime")
-        return any(not pd.isnull(drv_data[col][lap_n]) for col in relevant)
+        return any(not pd.isna(drv_data[col][lap_n]) for col in relevant)
 
     # 'NumberOfLaps' always introduces a new lap (can be a previous one) but sometimes there is one more lap at the end
     # in this case the data will be added as usual above, lap count and pit stops are added here and the 'Time' is
@@ -634,14 +634,14 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         for sector_time, session_time in ((pd.Timedelta(0), drv_data["Sector3SessionTime"][i]),
                                           (drv_data["Sector3Time"][i], drv_data["Sector2SessionTime"][i]),
                                           (drv_data["Sector2Time"][i], drv_data["Sector1SessionTime"][i])):
-            if pd.isnull(session_time):
+            if pd.isna(session_time):
                 continue
-            if pd.isnull(sector_time):
+            if pd.isna(sector_time):
                 break  # need to stop here because else the sector sum will be incorrect
 
             sector_sum += sector_time
             new_time = session_time + sector_sum
-            if not pd.isnull(new_time) and (new_time < min_time or pd.isnull(min_time)):
+            if not pd.isna(new_time) and (new_time < min_time or pd.isna(min_time)):
                 min_time = new_time
         if i > 0 and min_time < drv_data["Time"][i - 1]:
             integrity_errors.append(i + 1)  # not be possible if sector times and lap time are correct
@@ -650,8 +650,8 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         drv_data["Time"][i] = min_time
 
     # last lap needs to be removed if it does not have a 'Time' and it could not be calculated (likely an inlap)
-    if pd.isnull(drv_data["Time"][-1]):
-        if not pd.isnull(drv_data["PitInTime"][-1]):
+    if pd.isna(drv_data["Time"][-1]):
+        if not pd.isna(drv_data["PitInTime"][-1]):
             drv_data["Time"][-1] = drv_data["PitInTime"][-1]
         else:
             for key in drv_data:
@@ -672,8 +672,8 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
 
     # need to go both directions once to make everything match up; also recalculate sector times
     for i in range(len(drv_data["Time"]) - 1):
-        if (pd.isnull(drv_data["Time"][i])
-                or pd.isnull(drv_data["LapTime"][i + 1])):
+        if (pd.isna(drv_data["Time"][i])
+                or pd.isna(drv_data["LapTime"][i + 1])):
             # lap not usable, missing critical values; more checks follow
             continue
 
@@ -681,7 +681,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
                 < drv_data["Time"][i+1]:
             drv_data["Time"][i+1] = new_time
 
-        if pd.isnull(drv_data["Sector1Time"][i + 1]):
+        if pd.isna(drv_data["Sector1Time"][i + 1]):
             continue
 
         if (new_s1_time := drv_data["Time"][i]
@@ -689,7 +689,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
                 < drv_data["Sector1SessionTime"][i+1]:
             drv_data["Sector1SessionTime"][i+1] = new_s1_time
 
-        if pd.isnull(drv_data["Sector2Time"][i + 1]):
+        if pd.isna(drv_data["Sector2Time"][i + 1]):
             continue
 
         if (new_s2_time := drv_data["Time"][i] + drv_data["Sector1Time"][i+1]
@@ -697,7 +697,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
                 < drv_data["Sector2SessionTime"][i+1]:
             drv_data["Sector2SessionTime"][i+1] = new_s2_time
 
-        if pd.isnull(drv_data["Sector3Time"][i + 1]):
+        if pd.isna(drv_data["Sector3Time"][i + 1]):
             continue
 
         if (new_s3_time := drv_data["Time"][i] + drv_data["Sector1Time"][i+1]
