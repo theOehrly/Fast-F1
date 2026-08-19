@@ -189,7 +189,6 @@ def test_driver_list():
 
 # ########## special test cases ##########
 
-@pytest.mark.f1telapi
 def test_driver_list_contains_support_race(caplog):
     # requires clean parsing
     with Cache.disabled(disable_http_cache=False, disable_func_cache=True):
@@ -207,7 +206,7 @@ def test_driver_list_contains_support_race(caplog):
         # check F1 driver data is not overwritten
         assert session.results.loc["1", "Abbreviation"] == "VER"
 
-@pytest.mark.f1telapi
+
 def test_deleted_laps_not_marked_personal_best():
     # requires clean parsing
     with Cache.disabled(disable_http_cache=False, disable_func_cache=True):
@@ -222,7 +221,6 @@ def test_deleted_laps_not_marked_personal_best():
                     False, True, False, False, False, False]).all()
 
 
-@pytest.mark.f1telapi
 def test_personal_best_q_session_handled_individually():
     # requires clean parsing
     with Cache.disabled(disable_http_cache=False, disable_func_cache=True):

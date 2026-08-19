@@ -63,7 +63,6 @@ def test_joining_with_metadata_propagation():
     assert all(col in joined.columns for col in ('example_1', 'example_2'))
 
 
-@pytest.mark.f1telapi
 def test_merge_channels_with_metadata_propagation(reference_laps_data):
     session, laps = reference_laps_data
     lap = laps.pick_fastest()
@@ -77,7 +76,6 @@ def test_merge_channels_with_metadata_propagation(reference_laps_data):
         assert merged.session is session
 
 
-@pytest.mark.f1telapi
 def test_resample_channels_with_metadata_propagation(reference_laps_data):
     session, laps = reference_laps_data
     lap = laps.pick_fastest()
@@ -90,7 +88,6 @@ def test_resample_channels_with_metadata_propagation(reference_laps_data):
         assert resampled.session is session
 
 
-@pytest.mark.f1telapi
 def test_dtypes_from_api(reference_laps_data):
     session, laps = reference_laps_data
     for drv in session.car_data.keys():
@@ -100,7 +97,6 @@ def test_dtypes_from_api(reference_laps_data):
         ensure_data_type(POS_DATA_DTYPES, session.pos_data[drv])
 
 
-@pytest.mark.f1telapi
 def test_slice_by_time(reference_laps_data):
     session, laps = reference_laps_data
     drv = list(session.car_data.keys())[1]  # some driver
@@ -122,7 +118,6 @@ def test_slice_by_time(reference_laps_data):
     ensure_data_type(CAR_DATA_DTYPES, slice2)
 
 
-@pytest.mark.f1telapi
 def test_slice_by_mask(reference_laps_data):
     session, laps = reference_laps_data
     drv = list(session.car_data.keys())[1]  # some driver
@@ -141,7 +136,6 @@ def test_slice_by_mask(reference_laps_data):
     assert slice2['SessionTime'].iloc[0] == test_data['SessionTime'].iloc[198]
 
 
-@pytest.mark.f1telapi
 def test_slice_by_lap(reference_laps_data):
     session, laps = reference_laps_data
     drv = list(session.car_data.keys())[1]  # some driver
@@ -162,7 +156,6 @@ def test_slice_by_lap(reference_laps_data):
     assert len(tel2_3) == len(tel2) + len(tel3)
 
 
-@pytest.mark.f1telapi
 def test_merging_original_freq(reference_laps_data):
     session, laps = reference_laps_data
     lap = laps.pick_fastest()
@@ -191,7 +184,6 @@ def test_merging_original_freq(reference_laps_data):
     assert merged['SessionTime'].iloc[0] != pandas.Timedelta(0)
 
 
-@pytest.mark.f1telapi
 def test_merging_10_hz(reference_laps_data):
     session, laps = reference_laps_data
     lap = laps.pick_fastest()
@@ -240,7 +232,6 @@ def test_drop_unknown_channels(caplog):
     fastf1.core.Telemetry._CHANNELS.pop("test_keep")  # clean up
 
 
-@pytest.mark.f1telapi
 def test_resampling_down(reference_laps_data):
     session, laps = reference_laps_data
     lap = laps.pick_fastest()
@@ -261,7 +252,6 @@ def test_resampling_down(reference_laps_data):
     assert test_data['SessionTime'].iloc[0] != pandas.Timedelta(0)
 
 
-@pytest.mark.f1telapi
 def test_resampling_up(reference_laps_data):
     session, laps = reference_laps_data
     lap = laps.pick_fastest()
@@ -282,7 +272,6 @@ def test_resampling_up(reference_laps_data):
     assert test_data['SessionTime'].iloc[0] != pandas.Timedelta(0)
 
 
-@pytest.mark.f1telapi
 @pytest.mark.parametrize(
     "resample_rule",
     [None, pd.Timedelta(seconds=0.1)]  # test base frequency and resampled
@@ -301,7 +290,6 @@ def test_add_driver_ahead(reference_laps_data, resample_rule):
     assert (test_data['DriverAhead'].unique() != ['']).any()
 
 
-@pytest.mark.f1telapi
 def test_add_driver_ahead_resampled(reference_laps_data):
     session, laps = reference_laps_data
     test_data = laps.pick_fastest().get_car_data()\
@@ -311,7 +299,6 @@ def test_add_driver_ahead_resampled(reference_laps_data):
     assert test_data['DistanceToDriverAhead'].isnull().sum() <= 1
 
 
-@pytest.mark.f1telapi
 def test_add_track_status(reference_laps_data):
     session, laps = reference_laps_data
 
