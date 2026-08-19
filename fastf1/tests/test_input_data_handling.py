@@ -12,7 +12,6 @@ from fastf1 import _api
 from fastf1.testing.reference_values import LAP_DTYPES
 
 
-@pytest.mark.f1telapi
 def test_ergast_lookup_fail():
     cache_dir = fastf1.Cache._CACHE_DIR
     fastf1.testing.run_in_subprocess(_test_ergast_lookup_fail,
@@ -38,7 +37,6 @@ def _test_ergast_lookup_fail():
     assert "Finished loading data" in log_handle.text
 
 
-@pytest.mark.f1telapi
 def test_crash_lap_added_1():
     # sainz crashed in his 14th lap, there need to be all 14 laps
     session = fastf1.get_session(2021, "Monza", 'FP2')
@@ -47,7 +45,6 @@ def test_crash_lap_added_1():
     assert session.laps.pick_drivers('SAI').shape[0] == 14
 
 
-@pytest.mark.f1telapi
 def test_crash_lap_added_2():
     # verstappen crashed on his first lap, the lap needs to exist
     session = fastf1.get_session(2021, 'British Grand Prix', 'R')
@@ -56,7 +53,6 @@ def test_crash_lap_added_2():
     assert session.laps.pick_drivers('VER').shape[0] == 1
 
 
-@pytest.mark.f1telapi
 def test_no_extra_lap_if_race_not_started():
     # tsunoda had a technical issue shortly before the race and could not
     # start even though he is listed in the drivers list
@@ -67,7 +63,6 @@ def test_no_extra_lap_if_race_not_started():
     assert session.laps.pick_drivers('TSU').size == 0
 
 
-@pytest.mark.f1telapi
 def test_no_extra_lap_if_race_not_started_2():
     # Tyre data is present for PIA, NOR, BOR, ALB, but none of them actually
     # started the race.
@@ -77,7 +72,6 @@ def test_no_extra_lap_if_race_not_started_2():
     assert session.laps.pick_drivers(['PIA', 'NOR', 'BOR', 'ALB']).size == 0
 
 
-@pytest.mark.f1telapi
 def test_no_timing_app_data():
     fastf1.testing.run_in_subprocess(_test_no_timing_app_data)
 
@@ -106,7 +100,6 @@ def _test_no_timing_app_data():
     assert all([col in session.laps.columns for col in LAP_DTYPES.keys()])
 
 
-@pytest.mark.f1telapi
 def test_inlap_added():
     session = fastf1.get_session(2021, 'Mexico City', 'Q')
     session.load(telemetry=False)
@@ -116,7 +109,6 @@ def test_inlap_added():
     assert not pd.isnull(last['Time'])
 
 
-@pytest.mark.f1telapi
 def test_lap_start_time_after_red_flag():
     # see GH#167
     session = fastf1.get_session(2022, 'Saudi Arabia', 'Q')
@@ -132,7 +124,6 @@ def test_lap_start_time_after_red_flag():
     assert ver_laps.loc[idx]['LapStartTime'] > restart_time
 
 
-@pytest.mark.f1telapi
 def test_partial_lap_retired_added():
     # test that a last (partial) lap is added for drivers that retire on track
     session = fastf1.get_session(2022, 1, 'R')
@@ -141,7 +132,6 @@ def test_partial_lap_retired_added():
     assert session.laps.pick_drivers('11').iloc[-1]['FastF1Generated']
 
 
-@pytest.mark.f1telapi
 def test_partial_lap_retired_not_added_after_finished():
     # in some cases, the code that generates a partial last lap when a driver
     # retires on track would add a nonexistent last lap after the race has
@@ -156,14 +146,13 @@ def test_partial_lap_retired_not_added_after_finished():
             == session.total_laps)
 
 
-@pytest.mark.f1telapi
 def test_first_lap_time_added_from_ergast_in_race():
     session = fastf1.get_session(2022, 1, 'R')
     session.load(telemetry=False)
 
     assert not pd.isna(session.laps.pick_laps(1)['LapTime']).any()
 
-@pytest.mark.f1telapi
+
 def test_lap_start_time_dtype_single_lap():
     # When a driver only completes one lap, the LapStartTime column only
     # contains a NaT value. Ensure that this column still has the correct
@@ -174,7 +163,7 @@ def test_lap_start_time_dtype_single_lap():
 
     assert session.laps['LapStartTime'].dtype == 'timedelta64[ns]'
 
-@pytest.mark.f1telapi
+
 def test_consecutive_equal_lap_times():
     # No update for the lap time value is given if the lap time is exactly
     # equal to the previous value. Ensure that this is recognized and corrected
@@ -189,7 +178,6 @@ def test_consecutive_equal_lap_times():
            == lt.pick_laps(38)['LapTime'].iloc[0]
 
 
-@pytest.mark.f1telapi
 def test_consecutive_equal_sector_times():
     # No update for a sector time value is given if the sector time is exactly
     # equal to the previous value. Ensure that this is recognized and corrected
@@ -205,7 +193,6 @@ def test_consecutive_equal_sector_times():
            == lt.pick_laps(20)['Sector1Time'].iloc[0]
 
 
-@pytest.mark.f1telapi
 def test_laps_aligned_across_drivers():
     # Without postprocessing, lap start and end times are not correctly aligned
     # between drivers. Test that this is done correctly by calculating the
@@ -235,7 +222,6 @@ def test_laps_aligned_across_drivers():
         assert (other_time - leader_time) == ref[drv]
 
 
-@pytest.mark.f1telapi
 @pytest.mark.parametrize(
     'year, round_',
     (
@@ -261,7 +247,6 @@ def test_laps_aligned_consistency(year, round_):
     pd.testing.assert_frame_equal(laps_data, laps_data_ref)
 
 
-@pytest.mark.f1telapi
 def test_explicitly_missing_lap_times_calculated():
     # Russel had transponder issues in bahrain 2025, which caused the timing
     # problems. Two lap times were missing but the source explicitly indicated
@@ -276,7 +261,6 @@ def test_explicitly_missing_lap_times_calculated():
     assert not l37['LapTime'].isna().any()
 
 
-@pytest.mark.f1telapi
 @pytest.mark.parametrize(
     "year, round_, session, drv, stints",
     (
@@ -320,7 +304,6 @@ def test_tyre_data_incorrect_stint_counter(year, round_, session, drv, stints):
         ).all()
 
 
-@pytest.mark.f1telapi
 def test_compounds_correct_after_delayed_tyre_data():
     # Tyre data was delayed and messages were bunched up with equivalent
     # timestamp after the start of the session. This requires special case

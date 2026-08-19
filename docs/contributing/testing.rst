@@ -50,14 +50,8 @@ not need to be installed, but FastF1 should be)::
 In addition, the following FastF1-specific options are available:
 
 ===========================  ===========
-``--no-f1-tel-api``          Skip tests that use data from the F1 telemetry
-                             API
-``--ergast-api``             Run the tests that use data from the Ergast API
-                             (skipped by default)
 ``--prj-doc``                Run *only* the tests for project structure and
                              documentation
-``--slow``                   Run the extremely slow tests as well (this may
-                             take 30 minutes or more)
 ``--create-http-cache``      Record missing test data from the live APIs,
                              see :ref:`testing_test_data`
 ===========================  ===========
@@ -93,9 +87,10 @@ submodule therefore gives you exactly the test data that this version was
 developed against. The continuous integration tests use the same referenced
 commit, so that they test against the same data as a local test run.
 
-The directory :file:`test_cache/` is used for FastF1's own parsed-data cache
-while the tests run. It is not version controlled and can be deleted at any
-time.
+The directory :file:`test_cache/` that is created in the root of the repository
+is used for FastF1's own parsed-data cache (stage 2 cache) while the tests run.
+It stores data after parsing in FastF1 and only serves to improve performance.
+This directory is not version controlled and can be deleted at any time.
 
 
 Adding test data

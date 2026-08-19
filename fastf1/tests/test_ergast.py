@@ -711,7 +711,6 @@ def test_ergast_raw_response():
     assert result == expected
 
 
-@pytest.mark.ergastapi
 def test_ergast_api_endpoints_raw_and_defaults():
     result_1 = Ergast(auto_cast=False, result_type='raw', limit=3) \
         .get_seasons()
@@ -730,7 +729,6 @@ def test_ergast_api_endpoints_raw_and_defaults():
     assert isinstance(result_3[0]['season'], int)  # cast year to int
 
 
-@pytest.mark.ergastapi
 def test_ergast_api_endpoints_simple_response():
     result = Ergast(auto_cast=True, result_type='pandas', limit=3) \
         .get_seasons()
@@ -741,7 +739,6 @@ def test_ergast_api_endpoints_simple_response():
     assert result['season'].dtype == 'int64'
 
 
-@pytest.mark.ergastapi
 def test_ergast_api_endpoints_multi_response():
     result = Ergast(auto_cast=True, result_type='pandas', limit=30) \
         .get_race_results(season=2020)

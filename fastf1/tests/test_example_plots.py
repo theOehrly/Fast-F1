@@ -1,6 +1,6 @@
-import pytest
 import sys
 
+import pytest
 from matplotlib import pyplot as plt
 
 import fastf1
@@ -21,7 +21,6 @@ fastf1.plotting.setup_mpl(color_scheme='fastf1')
 # >pytest --mpl-generate-path=fastf1/tests/mpl-baseline
 
 
-@pytest.mark.f1telapi
 @pytest.mark.mpl_image_compare(style='default')
 def test_readme_example():
     session = fastf1.get_session(2020, 'Belgian', 'R')
@@ -40,7 +39,6 @@ def test_readme_example():
     return fig
 
 
-@pytest.mark.f1telapi
 @pytest.mark.mpl_image_compare(style='default')
 def test_doc_example_fast_lec():
     session = fastf1.get_session(2020, 'Belgian', 'R')
@@ -59,7 +57,7 @@ def test_doc_example_fast_lec():
 
     return fig
 
-@pytest.mark.f1telapi
+
 @pytest.mark.mpl_image_compare(style='default')
 def test_speed_trace():
     session = fastf1.get_session(2020, 'Belgian', 'R')
