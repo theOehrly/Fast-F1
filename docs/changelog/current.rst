@@ -51,6 +51,15 @@ New Features
   Previously, both columns were ``NaT``/``NaN`` for these sessions.
 
 
+Bug Fixes
+^^^^^^^^^
+
+- Lap times that are longer than 150 seconds are no longer ignored if they are equal to sector sum.
+  Previously, all lap times above this threshold were discarded, which caused missing lap times during safety car and red flag periods. 
+  In the 2020 British Grand Prix, it also caused the lap time of the previous lap to be used for lap 15
+  of Grosjean, which resulted in a timing integrity error. (#612)
+
+
 What's new in v3.8.3
 --------------------
 
