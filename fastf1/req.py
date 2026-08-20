@@ -89,10 +89,10 @@ class _SessionWithRateLimiting(requests.Session):
     """
     _RATE_LIMITS = {
         # limits on ergast.com
-        re.compile(r"^https?://(\w+\.)?ergast\.com.*"): [
+        re.compile(r"^https?://(\w+\.)?jolpi\.ca.*"): [
             _MinIntervalLimitDelay(0.25),
             # soft limit 4 calls/sec
-            _CallsPerIntervalLimitRaise(200, 60*60, "ergast.com: 200 calls/h")
+            _CallsPerIntervalLimitRaise(200, 60*60, "*.jolpi.ca: 200 calls/h")
             # hard limit 200 calls/h
         ],
         # general limits on all other APIs
@@ -100,7 +100,7 @@ class _SessionWithRateLimiting(requests.Session):
             _MinIntervalLimitDelay(0.25),
             # soft limit 4 calls/sec
             _CallsPerIntervalLimitRaise(500, 60 * 60, "any API: 500 calls/h")
-            # hard limit 200 calls/h
+            # hard limit 500 calls/h
         ],
     }
 
