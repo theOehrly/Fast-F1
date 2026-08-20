@@ -47,7 +47,7 @@ races = results["race"].drop_duplicates()
 ##############################################################################
 # Then we “reshape” the results to a wide table, where each row represents a
 # driver and each column refers to a race, and the cell value is the points.
-results = results.pivot(  # noqa: PD010
+results = results.pivot(  # noqa: PD010 (pivot must raise on duplicates)
     index="driverCode", columns="round", values="points"
 )
 # Here we have a 22-by-22 matrix (22 races and 22 drivers, incl. DEV and HUL)
