@@ -20,6 +20,9 @@ Behaviour Changes
       provides more informative data and better matches the behaviour that
       was already described in the documentation.
 
+- Updated internal rate limits for Jolpica-F1 to match changed server
+  side limits.
+
 
 New Features
 ^^^^^^^^^^^^
