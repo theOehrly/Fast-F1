@@ -7,8 +7,11 @@ import multiprocessing
 import os
 from typing import Callable
 
+import requests
+
 
 _MP_CONFIGURED = False
+_REQUESTS_PATCHED = False
 CREATE_HTTP_CACHE = False
 
 
@@ -184,7 +187,7 @@ def enable_test_cache():
             f"data, but version {version('requests-cache')} is installed."
         )
 
-    if not os.path.isdir(HTTP_CACHE_DIR) or not os.listdir(HTTP_CACHE_DIR):
+    if not os.path.isdir(HTTP_CACHE_DIR):
         if not os.path.isdir('fastf1'):
             # all test paths are relative to the repository root
             raise RuntimeError(
@@ -197,6 +200,22 @@ def enable_test_cache():
             f"provided by a git submodule; fetch it by running "
             f"`git submodule update --init --depth 1`."
         )
+
+    # Patch requests to pin the default Accept-Encoding header to an always
+    # supported subset of encodings. This must happen before the cached
+    # session is created in ``Cache.configure`` below.
+    # The patch is applied only once, so that repeated calls of this
+    # function don't stack wrappers.
+    global _REQUESTS_PATCHED
+    if not _REQUESTS_PATCHED:
+        _default_init = requests.Session.__init__
+
+        def _post_init_headers(self):
+            _default_init(self)
+            self.headers["Accept-Encoding"] = "gzip, deflate"
+
+        requests.Session.__init__ = _post_init_headers
+        _REQUESTS_PATCHED = True
 
     os.makedirs(TEST_CACHE_DIR, exist_ok=True)
 
@@ -224,6 +243,16 @@ def enable_test_cache():
         # Ensure that tests make no actual requests and only run with prepared
         # test data for reliability and repeatability.
         fastf1.Cache.offline_mode(True)
+
+        # patch requests to raise an Exception on any attempted request that
+        # somehow might slip through
+        def _fail_send(self, request, **kwargs):
+            raise RuntimeError(
+                "No HTTP requests allowed during test runs. "
+                f"Attempted to {request.method} URL: {request.url}"
+            )
+
+        requests.Session.send = _fail_send
 
 
 def enable_terminal_size_mock():
