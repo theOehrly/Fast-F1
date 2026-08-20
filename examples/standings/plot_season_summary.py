@@ -79,7 +79,7 @@ df = pd.DataFrame(standings)
 # We remake it into an easier to use format where the row indices are the
 # drivers, and the columns are the races. This allows us to look up the points
 # scored by a driver at a race more easily.
-heatmap_data = df.pivot(  # noqa: PD010
+heatmap_data = df.pivot(  # noqa: PD010 (pivot must raise on duplicates)
     index="Driver", columns="RoundNumber", values="Points"
 ).fillna(0)
 
@@ -91,7 +91,7 @@ total_points = heatmap_data["total_points"].to_numpy()
 heatmap_data = heatmap_data.drop(columns=["total_points"])
 
 # Do the same for position.
-position_data = df.pivot(  # noqa: PD010
+position_data = df.pivot(  # noqa: PD010 (pivot must raise on duplicates)
     index="Driver", columns="RoundNumber", values="Position"
 ).fillna("N/A")
 
