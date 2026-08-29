@@ -24,12 +24,12 @@ versions can be used.
 
     fastf1.plotting.setup_mpl(color_scheme='fastf1')
 
-    session = fastf1.get_session(2020, 'Italy', 'R')
+    session = fastf1.get_session(2025, 'Italy', 'R')
     session.load()
 
     DRIVER = 'VER'  # which driver; need to specify number and abbreviation
-    DRIVER_NUMBER = '33'
-    LAP_N = 10  # which lap number to plot
+    DRIVER_NUMBER = str(session.get_driver(DRIVER)["DriverNumber"])
+    LAP_N = 38  # which lap number to plot
 
     drv_laps = session.laps.pick_drivers(DRIVER)
     drv_lap = drv_laps[(drv_laps['LapNumber'] == LAP_N)]  # select the lap
