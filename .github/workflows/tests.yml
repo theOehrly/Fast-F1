@@ -8,11 +8,6 @@ on:
   pull_request:
 
 
-env:
-  # Set environment variable with value from configuration variable
-  FASTF1_TEST_ERGAST_BACKEND_OVERRIDE: ${{ vars.FASTF1_TEST_ERGAST_BACKEND_OVERRIDE }}
-
-
 jobs:
   run-code-tests:
     if: (!contains(github.event.head_commit.message, '[skip-pytest]')) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name)

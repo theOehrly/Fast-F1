@@ -7,14 +7,6 @@ import pytest
 import fastf1.testing
 
 
-ERGAST_BACKEND_OVERRIDE = os.environ.get("FASTF1_TEST_ERGAST_BACKEND_OVERRIDE")
-
-if ERGAST_BACKEND_OVERRIDE:
-    import fastf1.ergast
-
-    fastf1.ergast.interface.BASE_URL = ERGAST_BACKEND_OVERRIDE
-
-
 # URLs for which no frozen test data exists, collected during the test run
 OFFLINE_CACHE_MISSES: set[str] = set()
 
@@ -91,11 +83,6 @@ def pytest_collection_modifyitems(config, items):
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
     terminalreporter.ensure_newline()
-    terminalreporter.section("Parameter Overrides", sep="-", blue=True,
-                             bold=True)
-    terminalreporter.line(f"Ergast backend override: "
-                          f"{ERGAST_BACKEND_OVERRIDE}")
-
     if config.getoption("--create-http-cache"):
         _report_recorded_data(terminalreporter)
     elif exitstatus and OFFLINE_CACHE_MISSES:

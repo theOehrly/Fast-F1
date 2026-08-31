@@ -50,11 +50,6 @@ on:
       - 'src/.github/workflows/docs.yml'
 
 
-env:
-  # Set environment variable with value from configuration variable
-  FASTF1_DOCS_ERGAST_BACKEND_OVERRIDE: ${{ vars.FASTF1_DOCS_ERGAST_BACKEND_OVERRIDE }}
-
-
 jobs:
   build:
     if: (!contains(github.event.head_commit.message, '[skip-doc-build]')) || inputs.publish
