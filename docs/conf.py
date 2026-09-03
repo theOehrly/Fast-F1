@@ -21,6 +21,7 @@ from plotly.io._sg_scraper import plotly_sg_scraper
 import fastf1
 
 
+# append path for custom extensions
 sys.path.append(os.path.abspath("extensions"))
 
 
@@ -32,10 +33,6 @@ warnings.filterwarnings(action="ignore",
                         message=r"(COMPOUND_COLORS|DRIVER_COLORS|"
                                 r"DRIVER_TRANSLATE|TEAM_COLORS|TEAM_TRANSLATE|"
                                 r"COLOR_PALETTE) is deprecated and.*")
-
-doc_cache = os.path.abspath("../doc_cache")
-if not os.path.exists(doc_cache):
-    os.makedirs(doc_cache)
 
 # -- Project information -----------------------------------------------------
 
@@ -74,7 +71,8 @@ extensions = [
     "sphinx_gallery.gen_gallery",
     "autodocsumm",
     "fastf1.ergast.sphinx",
-    "nitpick_ignore_files",
+    "nitpick_ignore_files",  # custom, see docs/extensions
+    "frozen_doc_cache",  # custom, see docs/extensions
     "notfound.extension",
 ]
 
@@ -165,13 +163,14 @@ pio.renderers.default = "sphinx_gallery_png"
 
 # -- matplotlib plot directive options ---------------------------------------
 plot_pre_code = (
-    f"import numpy as np;"
-    f"from matplotlib import pyplot as plt;"
-    f"plt.rcParams['figure.figsize'] = [8.0, 4.5];"
-    f"import fastf1;"
-    f"import fastf1.logger;"
-    f"fastf1.Cache.configure(cache_dir='{doc_cache}');"
-    f"fastf1.logger.set_log_level('WARNING');"
+    "import numpy as np;"
+    "from matplotlib import pyplot as plt;"
+    "plt.rcParams['figure.figsize'] = [8.0, 4.5];"
+    "import fastf1;"
+    "import fastf1.logger;"
+    "import frozen_doc_cache;"
+    "frozen_doc_cache.enable_doc_cache();"
+    "fastf1.logger.set_log_level('WARNING');"
 )
 
 plot_include_source = True
@@ -180,18 +179,20 @@ plot_html_show_source_link = False
 
 # -- doctest directive options -----------------------------------------------
 doctest_global_setup = (
-    f"import fastf1;"
-    f"import fastf1.logger;"
-    f"fastf1.Cache.configure(cache_dir='{doc_cache}');"
-    f"fastf1.logger.set_log_level('WARNING');"
+    "import fastf1;"
+    "import fastf1.logger;"
+    "import frozen_doc_cache;"
+    "frozen_doc_cache.enable_doc_cache();"
+    "fastf1.logger.set_log_level('WARNING');"
 )
 
 
 # -- sphinx gallery configuration --------------------------------------------
 def sphinx_gallery_setup(gallery_conf, fname):  # noqa: ARG001
-    import fastf1
+    import frozen_doc_cache
+
     import fastf1.logger
-    fastf1.Cache.configure(cache_dir=doc_cache)
+    frozen_doc_cache.enable_doc_cache()
     fastf1.logger.set_log_level("WARNING")
 
 

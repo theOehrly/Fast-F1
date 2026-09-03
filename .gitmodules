@@ -2,3 +2,7 @@
 	path = fastf1/testing/data
 	url = https://github.com/theOehrly/fastf1-test-data.git
 	branch = main
+[submodule "fastf1-docs-data"]
+	path = docs/data
+	url = https://github.com/theOehrly/fastf1-doc-data.git
+	branch = main

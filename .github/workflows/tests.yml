@@ -27,13 +27,17 @@ jobs:
     name: Tests on ${{ matrix.python-version }} ${{ matrix.name-suffix }}
     steps:
       - name: Checkout repo
-        # The tests run against frozen test data that is provided by the
-        # 'fastf1-test-data' submodule. The commit that is referenced by this
-        # repository is used, so that a test run is reproducible
         uses: actions/checkout@v4
         with:
-          submodules: true
           fetch-depth: 1
+
+      - name: Fetch frozen test data
+        # The tests run against frozen test data that is provided by the
+        # 'fastf1-test-data' submodule. The commit that is referenced by this
+        # repository is used, so that a test run is reproducible. (Fetched
+        # explicitly, so that the unrelated doc data submodule is not fetched
+        # as well.)
+        run: git submodule update --init --depth 1 fastf1/testing/data
 
       - name: Setup python
         uses: actions/setup-python@v6

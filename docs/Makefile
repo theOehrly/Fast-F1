@@ -14,7 +14,7 @@ VERSION ?= dev
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-.PHONY: help Makefile
+.PHONY: help Makefile show serve clean-gallery version-build record-data
 
 show:
 	@python -c "import webbrowser; webbrowser.open_new_tab('file://$(shell pwd)/_build/html/index.html')"
@@ -24,6 +24,14 @@ serve:
 
 clean-gallery:
 	@rm -rf $(shell pwd)/gen_modules/examples_gallery/*
+
+# Re-record the frozen API responses in docs/data. Requires an IP address that
+# is not blocked by the F1 API. The stage 2 cache and the previous build output
+# must be gone, else most examples are never executed and nothing is recorded.
+record-data:
+	@rm -rf $(shell pwd)/../doc_cache
+	@$(SPHINXBUILD) -M clean "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	@FASTF1_DOCS_CREATE_HTTP_CACHE=1 $(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 version-build:
 	@rm -rf $(shell pwd)/_build/html/tmp/

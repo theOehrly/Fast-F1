@@ -367,8 +367,13 @@ class Cache(metaclass=_MetaCache):
             # Offline mode and no cached response is available. The caller may
             # still be able to recover from this (e.g. by trying a mirror), so
             # this is only logged and never raised.
+            # The url is attached to the log record as well, so that the test
+            # suite and the documentation build can collect all missing data
+            # without parsing the message; see
+            # ``fastf1.testing.OfflineCacheMissHandler``.
             _logger.warning(f"Offline mode is enabled but no cached response "
-                            f"is available for '{url}'")
+                            f"is available for '{url}'",
+                            extra={"offline_cache_miss_url": url})
 
         return response
 

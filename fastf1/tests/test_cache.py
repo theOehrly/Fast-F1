@@ -1,6 +1,8 @@
 import logging
 import os
 
+import pytest
+
 import fastf1._api
 import fastf1.ergast.interface
 import fastf1.testing
@@ -116,3 +118,32 @@ def _test_cache_used_and_clear(tmpdir):
 
         Cache.clear_cache(tmpdir)  # should delete pickle files
         assert os.listdir(cache_dir_path) == []
+
+
+@pytest.mark.skipif(fastf1.testing.CREATE_HTTP_CACHE,
+                    reason="requests are not served from the cache while the "
+                           "frozen data is being recorded")
+def test_offline_cache_miss_is_collected():
+    fastf1.testing.run_in_subprocess(_test_offline_cache_miss_is_collected)
+
+
+def _test_offline_cache_miss_is_collected():
+    # The test suite and the documentation build both rely on
+    # OfflineCacheMissHandler to detect data that is missing from the frozen
+    # datasets. A build that silently stops collecting misses would publish
+    # incomplete results, therefore the connection between fastf1.req and the
+    # handler is tested explicitly. (Runs in a subprocess, so that this
+    # intentional miss is not reported for the test run itself.)
+    import logging
+
+    import fastf1.req
+    import fastf1.testing
+
+    handler = fastf1.testing.OfflineCacheMissHandler()
+    logging.getLogger("fastf1").addHandler(handler)
+
+    url = "https://fastf1.dev/static/does-not-exist.json"
+    response = fastf1.req.Cache.requests_get(url)
+
+    assert response.status_code == 504  # returned by requests-cache on a miss
+    assert handler.missed_urls == {url}

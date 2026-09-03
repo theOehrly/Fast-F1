@@ -73,21 +73,6 @@ jobs:
           python -m pip install --upgrade build twine
           python -m pip install -r requirements/dev.txt -r requirements/doc-build.txt
 
-      - name: Create cache directory
-        run: |
-          mkdir doc_cache  # make sure cache dir exists
-
-      - name: Restore cache for FastF1
-        id: cache-doc-restore
-        uses: actions/cache/restore@v4
-        with:
-          path: ./doc_cache
-           # Restore any matching cache independent of hash suffix. We cannot
-           # know if anything has changed at this stage.
-          key: fastf1-doc-cache-${{ hashFiles('./doc_cache/**/*.*') }}
-          restore-keys: |
-            fastf1-doc-cache
-
       - name: Install at install ref
         if: inputs.install-ref != ''
         run: |
@@ -105,6 +90,14 @@ jobs:
             git checkout ${{ github.sha }}
           fi
 
+      - name: Fetch frozen documentation data
+        # The examples are built against frozen API responses that are
+        # provided by the 'fastf1-doc-data' submodule. The commit that is
+        # referenced by this repository is used, so that a build is
+        # reproducible. (Fetched explicitly, so that the unrelated test data
+        # submodule is not fetched as well.)
+        run: git submodule update --init --depth 1 docs/data
+
       - name: Initialize Documentation build directory
         run: |
           mkdir -p docs/_build/html
@@ -120,7 +113,6 @@ jobs:
 
       - name: Build docs
         run: |
-          mkdir test_cache  # not really need but pytest setup relies on it 
           cd docs
           chmod +x ./setup_versioning.sh
           if [[ "${{ inputs.test-build }}" == "true" ]]; then
@@ -139,16 +131,6 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: docs/_build/html/
-
-      - name: Save cache for FastF1
-        id: cache-doc-save
-        # Save the cache even in case of a failure but only if the content of
-        # the cached directory has changed.
-        if: always() && steps.cache-doc-restore.outputs.cache-matched-key != hashFiles('./doc_cache/**/*.*')
-        uses: actions/cache/save@v4
-        with:
-          key: fastf1-doc-cache-${{ hashFiles('./doc_cache/**/*.*') }}
-          path: ./doc_cache
 
       - name: Push build changes to external repo
         # If this was either a release, run manually with publish=true or a push to main
