@@ -2401,10 +2401,36 @@ class Session:
                 else:
                     check_4 = True
 
+                # check_5: LapStartTime should match the previous lap's
+                # Time for consecutive normal laps; allow a small tolerance
+                # for timing jitter and edge cases.
+                pre_check_5 = (
+                    (prev_lap is not None)
+                    and (not pd.isna(lap["LapStartTime"]))
+                    and (not pd.isna(prev_lap["Time"]))
+                    and (not lap["FastF1Generated"])
+                    and (pd.isna(lap["PitInTime"]))
+                    and (pd.isna(lap["PitOutTime"]))
+                )
+
+                if pre_check_5:
+                    lap_start_diff = (
+                        lap["LapStartTime"] - prev_lap["Time"]
+                    ).total_seconds()
+                    check_5 = np.isclose(
+                        lap_start_diff, 0.0, atol=0.1, rtol=0,
+                        equal_nan=False
+                    )
+
+                    if not check_5:
+                        lap_integrity_ok = False
+                else:
+                    check_5 = True
+
                 if not lap_integrity_ok:
                     integrity_errors += 1
 
-                result = check_1 and check_2 and check_3 and check_4
+                result = check_1 and check_2 and check_3 and check_4 and check_5
                 is_accurate.append(result)
                 prev_lap = lap
 
