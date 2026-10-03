@@ -93,6 +93,7 @@ Bug Fixes
 - Fixed an issue that lead to missing tyre data for some laps when the source tyre data was delayed at the start
   of a session. This was for example observed in the 2018 Azerbaijan Grand Prix. (#893)
 
+- Fixed an issue where delayed first-stint tyre data could result in missing tyre information for the first laps of race-like sessions. (#970)
 - Fixed an issue where unexpected driver data from a support race altered the F1 driver data.
   (#908) (by @Casper-Guo)
 
