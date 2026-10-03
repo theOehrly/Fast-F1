@@ -318,3 +318,25 @@ def test_compounds_correct_after_delayed_tyre_data():
 
     # In case of incorrect handling, the supersoft stint would be missing.
     assert compounds == {"SOFT": 39, "ULTRASOFT": 11, "SUPERSOFT": 1}
+
+
+def test_delayed_first_stint_tyre_data():
+    session = fastf1.get_session(2024, 'Lusail', 'Sprint')
+    session.load(telemetry=False, weather=False, messages=False)
+
+    expected_tyre_life = {
+        'BOT': 9,
+        'PER': 8,
+        'COL': 1,
+    }
+
+    for driver, tyre_life in expected_tyre_life.items():
+        laps = session.laps.pick_drivers(driver).loc[
+            lambda x: x['LapNumber'].between(1, 5)
+        ]
+
+        assert laps['Compound'].notna().all()
+        assert laps['Stint'].notna().all()
+
+        lap_1 = laps.loc[laps['LapNumber'] == 1].iloc[0]
+        assert lap_1['TyreLife'] == tyre_life
