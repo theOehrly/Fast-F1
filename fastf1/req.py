@@ -8,6 +8,7 @@ import re
 import sys
 import time
 import warnings
+from collections.abc import Sequence
 from typing import (
     Any,
     Literal
@@ -285,70 +286,142 @@ class Cache(metaclass=_MetaCache):
                 cls._requests_session_cached.cache.clear()
 
     @classmethod
-    def requests_get(cls, url: str, **kwargs):
-        """Wraps `requests.Session().get()` with caching if enabled.
+    def requests_get(
+            cls, url: str | Sequence[str], **kwargs
+    ) -> requests.Response:
+        """Wraps ``requests.Session().get()`` with caching if enabled.
 
         All GET requests that require caching should be performed through this
         wrapper. Caching will be done if the module-wide cache has been
-        enabled. Else, `requests.Session().get()` will be called without any
+        enabled. Else, ``requests.Session().get()`` will be called without any
         caching.
+
+        If offline mode is enabled and no cached response is available, only
+        a single warning is logged, even if multiple URLs were tried. This
+        warning names the first URL only.
+
+        Args:
+            url: A single URL or a sequence of URLs. If a sequence is given,
+                the URLs are tried in order and the first response with a
+                status code below 400 is returned. A response with a status
+                code of 400 or higher triggers a fallback to the next URL. If
+                all URLs fail, the response for the last URL is returned.
+                Exceptions raised while requesting a URL (e.g. connection
+                errors) are not caught. They propagate immediately and the
+                remaining URLs are not tried.
+            **kwargs: Passed on to ``requests.Session().get()``.
         """
-        cls._ensure_caching()
-        if (cls._requests_session_cached is None) or cls._http_tmp_disabled:
-            return cls._requests_session.get(url, **kwargs)
-
-        if cls._ci_mode:
-            # try to return a cached response first
-            mod_kwargs = {**kwargs, "only_if_cached": True}
-            resp = cls._cached_request("GET", url, **mod_kwargs)
-            # 504 indicates that no cached response was found
-            if resp.status_code != 504:
-                return resp
-
-        return cls._cached_request("GET", url, **kwargs)
+        return cls._request("get", url, **kwargs)
 
     @classmethod
-    def requests_post(cls, url: str, **kwargs):
-        """Wraps `requests.Session().post()` with caching if enabled.
+    def requests_post(
+            cls, url: str | Sequence[str], **kwargs
+    ) -> requests.Response:
+        """Wraps ``requests.Session().post()`` with caching if enabled.
 
         All POST requests that require caching should be performed through this
         wrapper. Caching will be done if the module-wide cache has been
-        enabled. Else, `requests.Session().get()` will be called without any
+        enabled. Else, ``requests.Session().post()`` will be called without any
         caching.
-        """
-        cls._ensure_caching()
-        if (cls._requests_session_cached is None) or cls._http_tmp_disabled:
-            return cls._requests_session.post(url, **kwargs)
 
-        if cls._ci_mode:
-            # try to return a cached response first
-            mod_kwargs = {**kwargs, "only_if_cached": True}
-            resp = cls._cached_request("POST", url, **mod_kwargs)
-            # 504 indicates that no cached response was found
-            if resp.status_code != 504:
+        If offline mode is enabled and no cached response is available, only
+        a single warning is logged, even if multiple URLs were tried. This
+        warning names the first URL only.
+
+        .. note::
+            If data is provided as a stream or generator, fallback will not
+            work correctly since the stream or generator will be used up on
+            the first request. Only use static data in combination with
+            fallback URLs.
+
+        Args:
+            url: A single URL or a sequence of URLs. If a sequence is given,
+                the URLs are tried in order and the first response with a
+                status code below 400 is returned. A response with a status
+                code of 400 or higher triggers a fallback to the next URL. If
+                all URLs fail, the response for the last URL is returned.
+                Exceptions raised while requesting a URL (e.g. connection
+                errors) are not caught. They propagate immediately and the
+                remaining URLs are not tried.
+            **kwargs: Passed on to ``requests.Session().post()``.
+        """
+        return cls._request("post", url, **kwargs)
+
+    @classmethod
+    def _request(
+            cls,
+            method: Literal["get", "post"],
+            url: str | Sequence[str],
+            **kwargs
+    ) -> requests.Response:
+        if method not in ("get", "post"):
+            raise ValueError("`method` must be 'get' or 'post'")
+
+        if not url:
+            raise ValueError("`url` must not be empty.")
+
+        cls._ensure_caching()
+        cached_session = cls._requests_session_cached
+
+        urls = [url] if isinstance(url, str) else url
+
+        for i, _url in enumerate(urls):
+            if i > 0:
+                _logger.debug(f"Falling back to {_url}")
+
+            if cached_session is None or cls._http_tmp_disabled:
+                resp = getattr(cls._requests_session, method)(_url, **kwargs)
+
+            elif cls._ci_mode:
+                # try to return a cached response first
+                mod_kwargs = {**kwargs, "only_if_cached": True}
+                resp = cls._cached_request(method, _url, **mod_kwargs)
+                # 504 indicates that no cached response was found
+                if resp.status_code == 504:
+                    resp = cls._cached_request(method, _url, **kwargs)
+
+            else:
+                resp = cls._cached_request(method, _url, **kwargs)
+
+            if resp.status_code < 400:
                 return resp
 
-        return cls._cached_request("POST", url, **kwargs)
+        # Error logging here relies on the fact that only responses with http
+        # status code 200 are cached. Therefore, each request that is handled
+        # by the cache either returns 200 or 504 and this simplified error
+        # handling works.
+        is_offline = ((cached_session is not None)
+                   and not cls._http_tmp_disabled
+                   and (cached_session.settings.only_if_cached
+                        or kwargs.get("only_if_cached")))
+
+        if (resp.status_code == 504) and is_offline:
+            # The url is attached to the log record, so that the test
+            # suite and the documentation build can collect all missing data
+            # without parsing the message
+            # see ``fastf1.testing.OfflineCacheMissHandler``.
+            _logger.warning(
+                f"Offline mode is enabled but no cached response "
+                f"is available for '{urls[0]}'",
+                extra={"offline_cache_miss_url": urls[0]},
+            )
+
+        return resp
 
     @classmethod
     def _cached_request(cls,
-                        method: Literal["GET", "POST"],
+                        method: Literal["get", "post"],
                         url: str,
                         **kwargs):
         if cls._requests_session_cached is None:
             raise RuntimeError("A cached request was attempted but the cache "
                                "is not enabled.")
 
+        func = getattr(cls._requests_session_cached, method)
+
         # catch TypeError raised by outdated requests-cache version if the
         # cache was created with a newer version
         # github.com/requests-cache/requests-cache/issues/973
-        if method == "GET":
-            func = cls._requests_session_cached.get
-        elif method == "POST":
-            func = cls._requests_session_cached.post
-        else:
-            raise ValueError("Invalid method. Must be 'GET' or 'POST'.")
-
         try:
             response = func(url, **kwargs)
         except TypeError:
@@ -360,20 +433,6 @@ class Cache(metaclass=_MetaCache):
                 raise
             cls._requests_session_cached.cache.delete(urls=[url])
             response = func(url, **kwargs)
-
-        if ((response.status_code == 504)
-                and (cls._requests_session_cached.settings.only_if_cached
-                     or kwargs.get("only_if_cached"))):
-            # Offline mode and no cached response is available. The caller may
-            # still be able to recover from this (e.g. by trying a mirror), so
-            # this is only logged and never raised.
-            # The url is attached to the log record as well, so that the test
-            # suite and the documentation build can collect all missing data
-            # without parsing the message; see
-            # ``fastf1.testing.OfflineCacheMissHandler``.
-            _logger.warning(f"Offline mode is enabled but no cached response "
-                            f"is available for '{url}'",
-                            extra={"offline_cache_miss_url": url})
 
         return response
 

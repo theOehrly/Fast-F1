@@ -68,13 +68,10 @@ def pytest_collection_modifyitems(config, items):
                 item.add_marker(skip_prj)
 
 
-def pytest_terminal_summary(terminalreporter, exitstatus, config):
+def pytest_terminal_summary(terminalreporter, config):
     if config.getoption("--create-http-cache"):
         _report_recorded_data(terminalreporter)
-    elif exitstatus and CACHE_MISS_HANDLER.missed_urls:
-        # Only report on failure. Some requests are expected to miss, for
-        # example when the primary API is unavailable and the test data was
-        # recorded from the mirror instead.
+    elif CACHE_MISS_HANDLER.missed_urls:
         _report_missing_data(terminalreporter)
 
 
@@ -96,8 +93,6 @@ def _report_missing_data(terminalreporter):
         "`python -m pytest --create-http-cache <test>` and contribute "
         "the new files in fastf1/testing/data/ to "
         "https://github.com/theOehrly/fastf1-test-data."
-        "\nMissing cached requests may be irrelevant for some tests if "
-        "test data is fetched from a fallback mirror instead."
     )
 
 
