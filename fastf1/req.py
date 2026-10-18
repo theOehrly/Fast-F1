@@ -233,10 +233,10 @@ class Cache(metaclass=_MetaCache):
         .. deprecated:: 3.9.0
 
             :func:`enable_cache` will be removed in a future version.
-            Use :func:`configure` instead.`
+            Use :func:`configure` instead.
 
         """
-        warnings.warn("`.enable_cache` is deprecated and will be removed in a"
+        warnings.warn("`.enable_cache` is deprecated and will be removed in a "
                       "future version. Use `.configure` instead.",
                       FutureWarning)
 
@@ -256,11 +256,28 @@ class Cache(metaclass=_MetaCache):
         use_requests_cache: bool = True,
         _backend: str | BaseCache | None = None,
     ):
-        sanitized_cached_dir = cls._ensure_cache_directory(cache_dir)
+        """Configure the API cache.
+
+        Args:
+            cache_dir: Path to a custom cache directory. Will use the default
+                cache directory if not set. The directory needs to exist.
+            force_renew: Forces all requests to go to the actual server.
+                Responses will be updated in the cache. Defaults to `False`.
+            ignore_version: Will attempt to reuse cached responses that were
+                saved with a different version of the API core. This can cause
+                errors. Defaults to `False`.
+            use_requests_cache: Enables HTTP request caching (highly
+                recommended). Defaults to `True`.
+        """
+        # do not create the cache folder if the user supplied a custom path
+        create_dir = cache_dir is None
+        sanitized_cached_dir = cls._ensure_cache_directory(
+            cache_dir, create_dir=create_dir
+        )
         if sanitized_cached_dir is None:
             return
 
-        cls._CACHE_DIR = cache_dir
+        cls._CACHE_DIR = sanitized_cached_dir
         cls._IGNORE_VERSION = ignore_version
         cls._FORCE_RENEW = force_renew
 
@@ -284,6 +301,9 @@ class Cache(metaclass=_MetaCache):
             )
             if force_renew:
                 cls._requests_session_cached.cache.clear()
+
+        else:
+            cls._requests_session_cached = None
 
     @classmethod
     def requests_get(
@@ -482,7 +502,9 @@ class Cache(metaclass=_MetaCache):
         if cache_dir is None and cls._CACHE_DIR is not None:
             sanitized_cache_dir = cls._CACHE_DIR
         else:
-            sanitized_cache_dir = cls._ensure_cache_directory(cache_dir)
+            sanitized_cache_dir = cls._ensure_cache_directory(
+                cache_dir, create_dir=False
+            )
 
         if sanitized_cache_dir is None:
             raise ValueError("Unable to clear cache. Could not determine "
@@ -631,7 +653,8 @@ class Cache(metaclass=_MetaCache):
             tmp = os.path.expanduser("~/.cache")
             if os.path.exists(tmp):
                 cache_dir = r"~/.cache/fastf1"
-            cache_dir = r"~/.fastf1"
+            else:
+                cache_dir = r"~/.fastf1"
         elif sys.platform == "darwin":
             cache_dir = r"~/Library/Caches/fastf1"
         elif sys.platform == "win32":
@@ -640,28 +663,16 @@ class Cache(metaclass=_MetaCache):
             # unknown platform, unable to get cache directory
             return None
 
-        cache_dir = os.path.expandvars(cache_dir)
-        cache_dir = os.path.expanduser(cache_dir)
-        if not os.path.exists(cache_dir):
-            try:
-                os.mkdir(cache_dir, mode=0o0700)
-            except Exception as err:
-                _logger.error(
-                    f"Failed to create cache directory "
-                    f"{cache_dir}. Error {err}"
-                )
-                raise
-
         return cache_dir
 
     @classmethod
     def _ensure_cache_directory(
             cls,
-            user_cache_dir: str| None = None
+            user_cache_dir: str| None = None,
+            create_dir: bool = True,
     ) -> str | None:
         if user_cache_dir is not None:
-            # Allow users to use paths such as %LOCALAPPDATA%
-            cache_dir = str(os.path.expandvars(user_cache_dir))
+            cache_dir = str(user_cache_dir)
         elif "FASTF1_CACHE" in os.environ:
             cache_dir = os.environ.get("FASTF1_CACHE")
         else:
@@ -675,12 +686,25 @@ class Cache(metaclass=_MetaCache):
             )
             return None
 
-        # Allow users to use paths such as ~user or ~/
+        # Allow users to use paths such as %LOCALAPPDATA%
+        cache_dir = os.path.expandvars(cache_dir)
         cache_dir = os.path.expanduser(cache_dir)
 
-        if not os.path.exists(cache_dir):
-            raise NotADirectoryError("Cache directory does not exist! Please "
-                                     "check for typos or create it first.")
+        if create_dir and not os.path.exists(cache_dir):
+            try:
+                os.mkdir(cache_dir, mode=0o0700)
+            except Exception as err:
+                _logger.error(
+                    f"Failed to create cache directory "
+                    f"{cache_dir}. Error {err}"
+                )
+                raise
+
+        if not create_dir and not os.path.exists(cache_dir):
+            raise NotADirectoryError(
+                "Cache directory does not exist! Please "
+                "check for typos or create it first."
+            )
 
         return cache_dir
 
