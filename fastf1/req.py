@@ -19,6 +19,11 @@ from requests_cache import CacheMixin
 from requests_cache.backends.base import BaseCache
 
 from fastf1.exceptions import RateLimitExceededError
+from fastf1.internals.f1account import (
+    LIVETIMING_URL,
+    LivetimingAuthAdapter,
+    token_manager
+)
 from fastf1.logger import get_logger
 
 
@@ -87,6 +92,9 @@ class _CallsPerIntervalLimitRaise:
 
 class _SessionWithRateLimiting(requests.Session):
     """Apply rate limiters to requests that match a URL pattern.
+
+    Requests to the F1 livetiming API are authenticated with the user's
+    Formula 1 account.
     """
     _RATE_LIMITS = {
         # limits on ergast.com
@@ -104,6 +112,10 @@ class _SessionWithRateLimiting(requests.Session):
             # hard limit 500 calls/h
         ],
     }
+
+    def __init__(self):
+        super().__init__()
+        self.mount(LIVETIMING_URL, LivetimingAuthAdapter(token_manager))
 
     def send(self, request, **kwargs):
         # patches rate limiting into `requests.send`

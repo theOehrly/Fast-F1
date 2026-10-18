@@ -25,6 +25,9 @@ Data Loading Exceptions
 .. autoclass:: fastf1.exceptions.NoLapDataError
     :show-inheritance:
 
+.. autoclass:: fastf1.exceptions.F1AuthError
+    :show-inheritance:
+
 
 Jolpica-F1 (Ergast) Specific Exceptions
 ---------------------------------------
