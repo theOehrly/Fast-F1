@@ -1,10 +1,43 @@
 import argparse
+import sys
+from datetime import datetime
 
-from fastf1.internals.f1auth import (
-    clear_auth_token,
-    get_auth_token,
-    print_auth_status
+from fastf1.exceptions import F1AuthError
+from fastf1.internals.f1account import (
+    AUTH_METHODS,
+    TokenStore,
+    clear_token,
+    get_auth_method,
+    get_token
 )
+
+
+def authenticate(method: str):
+    try:
+        get_token(force_renew=True, method=method)
+    except F1AuthError as exc:
+        print(f"Sign-in failed: {exc}")
+        sys.exit(1)
+    print("Sign-in successful.")
+
+
+def print_status():
+    print(f"Sign-in method: {get_auth_method()}")
+
+    token = TokenStore.default().load()
+    if token is None:
+        print("Not authenticated")
+        return
+
+    if token.is_valid():
+        expiry = datetime.fromtimestamp(token.expires_at)
+        token_status = f"Expires {expiry:%Y-%m-%d %H:%M:%S}"
+    else:
+        token_status = "EXPIRED"
+    claims = token.claims
+    print(f"Token Status: {token_status}\n"
+          f"Subscription Status: {claims.get('SubscriptionStatus')}\n"
+          f"Subscribed Product: {claims.get('SubscribedProduct')}")
 
 
 def main():
@@ -25,6 +58,13 @@ def main():
         choices=["f1tv"],
         help="Service to authenticate with"
     )
+    auth_parser.add_argument(
+        "--method",
+        choices=AUTH_METHODS,
+        default=None,
+        help="Sign-in method used with --authenticate. Defaults to the "
+             "FASTF1_AUTH_METHOD environment variable, else 'password'."
+    )
 
     auth_actions_group = auth_parser.add_mutually_exclusive_group()
     auth_actions_group.add_argument("--clear",
@@ -41,11 +81,11 @@ def main():
 
     if (args.command == "auth") and (args.service == "f1tv"):
         if args.clear:
-            clear_auth_token()
+            clear_token()
         elif args.authenticate:
-            get_auth_token()
+            authenticate(args.method or get_auth_method())
         elif args.status:
-            print_auth_status()
+            print_status()
         else:
             auth_parser.print_help()
 

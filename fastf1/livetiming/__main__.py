@@ -1,6 +1,10 @@
 import argparse
 import sys
 
+from fastf1.internals.f1account import (
+    AUTH_METHODS,
+    set_auth_method
+)
 from fastf1.livetiming.client import (
     SignalRClient,
     messages_from_raw
@@ -9,8 +13,10 @@ from fastf1.livetiming.client import (
 
 def save(args):
     mode = "a" if args.append else "w"
+    if args.auth_method:
+        set_auth_method(args.auth_method)
     client = SignalRClient(args.file, filemode=mode, debug=args.debug,
-                           timeout=args.timeout)
+                           timeout=args.timeout, no_auth=args.no_auth)
     client.start()
 
 
@@ -49,6 +55,13 @@ rec_parser.add_argument("--debug", action="store_true", default=False,
 rec_parser.add_argument("--timeout", type=int, default=60,
                         help="Timeout in seconds after which the client will "
                              "automatically exit if no data is received.")
+rec_parser.add_argument("--no-auth", action="store_true", default=False,
+                        help="Connect without signing in to the Formula 1 "
+                             "account. Data may be incomplete or missing.")
+rec_parser.add_argument("--auth-method", choices=AUTH_METHODS, default=None,
+                        help="Sign-in method for the Formula 1 account. "
+                             "Defaults to the FASTF1_AUTH_METHOD environment "
+                             "variable, else 'password'.")
 rec_parser.set_defaults(func=save)
 
 conv_parser.add_argument("input", type=str, help="Input file name")

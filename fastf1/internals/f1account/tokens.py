@@ -51,12 +51,26 @@ class SubscriptionToken:
                               "An active F1TV subscription is required.")
 
         # the subscription token may expire before the access token
-        candidates = [expires_at] if expires_at else []
+        token = cls.from_jwt(value)
+        if expires_at and expires_at < token.expires_at:
+            token = cls(value=value, expires_at=expires_at)
+        return token
+
+    @classmethod
+    def from_jwt(cls, value: str) -> "SubscriptionToken":
+        """Create the token from the subscription JWT itself, taking the
+        expiry from its ``exp`` claim."""
+        expires_at = time.time() + DEFAULT_LIFETIME
         with contextlib.suppress(jwt.PyJWTError, TypeError, ValueError):
             if exp := _unverified_claims(value).get("exp"):
-                candidates.append(float(exp))
-        return cls(value=value, expires_at=min(
-            candidates, default=time.time() + DEFAULT_LIFETIME))
+                expires_at = float(exp)
+        return cls(value=value, expires_at=expires_at)
+
+    @property
+    def claims(self) -> dict:
+        """The unverified claims of the token, e.g. the subscription
+        status."""
+        return _unverified_claims(self.value)
 
     @property
     def authorization_header(self) -> str:
@@ -130,15 +144,24 @@ class TokenManager:
         self._authenticate = authenticate
         self._token: SubscriptionToken | None = None
 
-    def get(self, force_renew: bool = False) -> SubscriptionToken:
-        """Return a valid token from memory or disk, or sign in."""
+    def get(
+            self,
+            force_renew: bool = False,
+            authenticate: Callable[[], SubscriptionToken] | None = None
+    ) -> SubscriptionToken:
+        """Return a valid token from memory or disk, or sign in.
+
+        Args:
+            force_renew: sign in even if a valid token exists
+            authenticate: sign in with this instead of the default
+        """
         if not force_renew:
             self._token = self._token or self._store.load()
             if self._token is not None and self._token.is_valid():
                 return self._token
 
         _logger.info("Signing in to Formula 1 account...")
-        self._token = self._authenticate()
+        self._token = (authenticate or self._authenticate)()
         _logger.info("Sign-in successful.")
         try:
             self._store.save(self._token)

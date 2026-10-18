@@ -8,7 +8,9 @@ import requests
 import urllib3
 from requests.adapters import HTTPAdapter
 
+import fastf1.internals.f1account as f1account
 from fastf1.exceptions import F1AuthError
+from fastf1.internals import f1auth
 from fastf1.internals.f1account import (
     LIVETIMING_URL,
     LivetimingAuthAdapter,
@@ -122,6 +124,19 @@ def test_token_from_access_token_without_subscription():
         SubscriptionToken.from_access_token(_jwt(sub="x"))
 
 
+def test_token_from_jwt():
+    exp = int(time.time() + 100)
+    token = SubscriptionToken.from_jwt(_jwt(exp=exp, SubscribedProduct="Pro"))
+    assert token.expires_at == exp
+    assert token.claims["SubscribedProduct"] == "Pro"
+
+
+def test_token_from_jwt_without_expiry():
+    token = SubscriptionToken.from_jwt("not-a-jwt")
+    assert token.expires_at == pytest.approx(time.time() + DEFAULT_LIFETIME,
+                                             abs=5)
+
+
 def test_token_repr_hides_value():
     assert "secret-value" not in repr(_token("secret-value"))
 
@@ -172,6 +187,59 @@ def test_token_manager_renews_expired_token(tmp_path):
                            lambda: next(tokens))
     assert manager.get().value == "old"
     assert manager.get().value == "new"
+
+
+def test_token_manager_authenticate_override(tmp_path):
+    manager = TokenManager(TokenStore(tmp_path / "t.json"),
+                           lambda: _token("default"))
+    assert manager.get(authenticate=lambda: _token("other")).value == "other"
+    # a valid token is reused, unless renewal is forced
+    assert manager.get(authenticate=lambda: _token("x")).value == "other"
+    assert manager.get(force_renew=True).value == "default"
+
+
+# ---- sign-in method -------------------------------------------------------
+
+@pytest.fixture
+def auth_method(monkeypatch):
+    monkeypatch.delenv(f1account.ENV_AUTH_METHOD, raising=False)
+    yield
+    f1account.set_auth_method(None)
+
+
+def test_auth_method_precedence(auth_method, monkeypatch):
+    assert f1account.get_auth_method() == "password"
+    monkeypatch.setenv(f1account.ENV_AUTH_METHOD, "browser")
+    assert f1account.get_auth_method() == "browser"
+    f1account.set_auth_method("password")
+    assert f1account.get_auth_method() == "password"
+
+
+def test_auth_method_invalid(auth_method, monkeypatch):
+    with pytest.raises(ValueError, match="password, browser"):
+        f1account.set_auth_method("oauth")
+    monkeypatch.setenv(f1account.ENV_AUTH_METHOD, "oauth")
+    with pytest.raises(ValueError):
+        f1account.get_auth_method()
+
+
+def test_authenticator_dispatch():
+    assert f1account._get_authenticator("browser") is f1auth.login_browser
+    with pytest.raises(ValueError):
+        f1account._get_authenticator("oauth")
+
+
+def test_get_token_uses_method(auth_method, monkeypatch, tmp_path):
+    monkeypatch.setattr(f1account, "_get_authenticator",
+                        lambda method: lambda: _token(method))
+    monkeypatch.setattr(f1account, "token_manager", TokenManager(
+        TokenStore(tmp_path / "t.json"),
+        lambda: f1account._get_authenticator(f1account.get_auth_method())()))
+
+    assert f1account.get_token().value == "password"
+    assert f1account.get_token(True, method="browser").value == "browser"
+    f1account.set_auth_method("browser")
+    assert f1account.get_token(True).value == "browser"
 
 
 # ---- transport ------------------------------------------------------------

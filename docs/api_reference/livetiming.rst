@@ -13,8 +13,8 @@ It is **not** possible to do real-time processing of the data.
     FastF1 will direct you to sign in to you F1TV account if you have not already done so.
     You can get more information about the authentication flow in the :ref:`accounts-auth` section.
 
-    The live timing client cannot be used in hosted environments like Google Colab or in WebAssembly
-    based environments like Jupyter Lite, due to limitations of the sign-in method.
+    Use ``--no-auth`` to connect without signing in, in which case data may be incomplete or
+    missing, and ``--auth-method {password,browser}`` to select the sign-in method.
 
 There are two ways to interact with this module.
 
