@@ -6,13 +6,13 @@ from fastf1.livetiming.data import LiveTimingData
 
 def test_file_loading_w_errors():
     # load file with many errors and invalid data without crashing
-    livedata = LiveTimingData('fastf1/testing/reference_data/livedata/with_errors.txt')
+    livedata = LiveTimingData('fastf1/testing/data/livedata/with_errors.txt')
     livedata.load()
 
 
 def test_file_loading():
     # load a valid file
-    livedata = LiveTimingData('fastf1/testing/reference_data/livedata/2021_1_FP3.txt')
+    livedata = LiveTimingData('fastf1/testing/data/livedata/2021_1_FP3.txt')
     livedata.load()
 
     session = fastf1.get_session(2021, 1, 'Practice 3')

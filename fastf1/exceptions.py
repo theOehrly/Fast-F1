@@ -70,6 +70,10 @@ class FuzzyMatchError(ValueError):
     """
 
 
+class F1AuthError(Exception):
+    """Raised if signing in to the Formula 1 account fails."""
+
+
 # ### Critical FastF1 Exceptions ###
 
 class FastF1CriticalError(RuntimeError):

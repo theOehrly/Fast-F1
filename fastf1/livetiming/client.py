@@ -9,7 +9,8 @@ from signalrcore.hub_connection_builder import HubConnectionBuilder
 from signalrcore.messages.completion_message import CompletionMessage
 
 import fastf1
-from fastf1.internals.f1auth import get_auth_token
+from fastf1.exceptions import F1AuthError
+from fastf1.internals.f1account import get_token
 
 
 def messages_from_raw(r: Iterable):
@@ -79,7 +80,6 @@ class SignalRClient:
     """
     _connection_url = "wss://livetiming.formula1.com/signalrcore"
     _negotiate_url = "https://livetiming.formula1.com/signalrcore/negotiate"
-
 
     def __init__(self,
                  filename: str,
@@ -167,7 +167,7 @@ class SignalRClient:
         # Configure and create connection
         options = {
             "verify_ssl": True,
-            "access_token_factory": None if self._no_auth else get_auth_token,
+            "access_token_factory": self._access_token_factory(),
             "headers": self.headers
         }
 
@@ -190,6 +190,20 @@ class SignalRClient:
         self._connection.send(
             "Subscribe", [self.topics], on_invocation=self._on_message
         )
+
+    def _access_token_factory(self):
+        if self._no_auth:
+            return None
+        # sign in before connecting, so that a failure is reported early
+        try:
+            get_token()
+        except F1AuthError as exc:
+            self.logger.warning(f"Failed to authenticate with Formula 1 "
+                                f"account, continuing without "
+                                f"authentication: {exc}")
+            return None
+        # renews the token if necessary when reconnecting
+        return lambda: get_token().value
 
     def _supervise(self):
         # check if data is still being received and exit if not

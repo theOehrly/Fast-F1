@@ -13,8 +13,8 @@ It is **not** possible to do real-time processing of the data.
     FastF1 will direct you to sign in to you F1TV account if you have not already done so.
     You can get more information about the authentication flow in the :ref:`accounts-auth` section.
 
-    The live timing client cannot be used in hosted environments like Google Colab or in WebAssembly
-    based environments like Jupyter Lite, due to limitations of the sign-in method.
+    Use ``--no-auth`` to connect without signing in, in which case data may be incomplete or
+    missing, and ``--auth-method {password,browser}`` to select the sign-in method.
 
 There are two ways to interact with this module.
 
@@ -84,7 +84,7 @@ Important Notes
   See :class:`fastf1.req.Cache` for details on how to configure a custom
   cache directory. One simple way is to add the following line to your code::
 
-    fastf1.Cache.enable_cache('path/to/cache/directory')
+    fastf1.Cache.configure(cache_dir='path/to/cache/directory')
 
 - You need to force a cache update if you modify the
   :class:`~fastf1.livetiming.data.LiveTimingData` (e.g. by adding a second
@@ -93,7 +93,7 @@ Important Notes
 
   You can force-refresh the cache::
 
-    fastf1.Cache.enable_cache('path/to/cache/directory', force_renew=True)
+    fastf1.Cache.configure(cache_dir='path/to/cache/directory', force_renew=True)
 
   You only need to use ``forece_renew=True`` once after modifying the
   input data.

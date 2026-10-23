@@ -12,7 +12,6 @@ from fastf1.core import (
 from fastf1.ergast import Ergast
 
 
-@pytest.mark.f1telapi
 def test_lap_data_loading_position_calculation():
     # compare internally calculated per-lap positions with data from ergast
     session = fastf1.get_session(2023, 1, 'R')
@@ -44,7 +43,6 @@ def test_lap_data_loading_position_calculation():
         assert (delta == 0).all()  # assert that the delta is zero for all laps
 
 
-@pytest.mark.f1telapi
 def test_lap_data_loading_position_calculation_first_lap_retired():
     # GH#764 COL retired to the pits, LAW crashed on first lap; lap pos
     # calculation must ignore them to get correct position at end of lap
@@ -67,7 +65,6 @@ def test_lap_data_loading_position_calculation_first_lap_retired():
     pd.testing.assert_frame_equal(first_lap_pos, ref_pos)
 
 
-@pytest.mark.f1telapi
 def test_first_lap_pitout_times():
     sprint_session = fastf1.get_session(2023, 4, "Sprint")
     sprint_session.load(telemetry=False, weather=False, messages=False)
@@ -214,7 +211,6 @@ def test_session_results_drivers():
     drivers = session.results.index
     assert "47" in drivers
 
-@pytest.mark.f1telapi
 def test_practice_session_results_time_and_position():
     session = fastf1.get_session(2024, "Silverstone", "FP1")
     session.load(telemetry=False, weather=False)

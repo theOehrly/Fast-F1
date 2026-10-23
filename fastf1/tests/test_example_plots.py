@@ -1,8 +1,18 @@
+import sys
+
 import pytest
 from matplotlib import pyplot as plt
 
 import fastf1
 import fastf1.plotting
+
+
+# On Python 3.10, in some environments, there are minor differences related
+# to the font of the plot. Ignore for the sake of being pragmatic.
+pytestmark = pytest.mark.skipif(
+    sys.version_info[:2] == (3, 10),
+    reason="unreliable image comparison on Python 3.10"
+)
 
 
 fastf1.plotting.setup_mpl(color_scheme='fastf1')
@@ -11,7 +21,6 @@ fastf1.plotting.setup_mpl(color_scheme='fastf1')
 # >pytest --mpl-generate-path=fastf1/tests/mpl-baseline
 
 
-@pytest.mark.f1telapi
 @pytest.mark.mpl_image_compare(style='default')
 def test_readme_example():
     session = fastf1.get_session(2020, 'Belgian', 'R')
@@ -30,7 +39,6 @@ def test_readme_example():
     return fig
 
 
-@pytest.mark.f1telapi
 @pytest.mark.mpl_image_compare(style='default')
 def test_doc_example_fast_lec():
     session = fastf1.get_session(2020, 'Belgian', 'R')
@@ -49,7 +57,7 @@ def test_doc_example_fast_lec():
 
     return fig
 
-@pytest.mark.f1telapi
+
 @pytest.mark.mpl_image_compare(style='default')
 def test_speed_trace():
     session = fastf1.get_session(2020, 'Belgian', 'R')

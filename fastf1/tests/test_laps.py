@@ -53,7 +53,6 @@ def test_joining_with_metadata_propagation():
     assert merged.session is e
     assert all(col in merged.columns for col in ('example_1', 'example_2'))
 
-@pytest.mark.f1telapi
 def test_dtypes_from_api(reference_laps_data):
     session, laps = reference_laps_data
     ensure_data_type(LAP_DTYPES, laps)
@@ -64,7 +63,46 @@ def test_dtypes_default_columns():
     ensure_data_type(LAP_DTYPES, laps)
 
 
-@pytest.mark.f1telapi
+def _laps_with_one_missing_lap_time():
+    return fastf1.core.Laps({
+        'LapNumber': (1.0, 2.0, 3.0),
+        'LapTime': (pd.Timedelta(seconds=90), pd.NaT,
+                    pd.Timedelta(seconds=92))
+    })
+
+
+@pytest.mark.parametrize('iterable_type', (tuple, list, set, frozenset))
+def test_iterlaps_require(iterable_type):
+    laps = _laps_with_one_missing_lap_time()
+
+    # laps that hold a null value in a required column are skipped
+    lap_numbers = []
+    for _, lap in laps.iterlaps(require=iterable_type(('LapTime',))):
+        lap_numbers.append(lap['LapNumber'])
+    assert lap_numbers == [1.0, 3.0]
+
+    # a required column that does not exist skips every lap
+    require = iterable_type(('LapTime', 'NotAColumn'))
+    assert not list(laps.iterlaps(require=require))
+
+    # without `require`, every lap is yielded
+    assert len(list(laps.iterlaps())) == 3
+
+
+def test_iterlaps_require_single_use_iterator():
+    laps = _laps_with_one_missing_lap_time()
+
+    # The check for missing column names iterates `require` and would exhaust a
+    # single-use iterator, leaving nothing for the null value check that
+    # follows it. `require` therefore needs to be materialized beforehand.
+    single_use_iterator = iter(('LapTime',))
+
+    lap_numbers = []
+    for _, lap in laps.iterlaps(require=single_use_iterator):
+        lap_numbers.append(lap['LapNumber'])
+    assert lap_numbers == [1.0, 3.0]
+
+
 def test_dtypes_pick(reference_laps_data):
     session, laps = reference_laps_data
     drv = list(laps['Driver'].unique())[1]  # some driver
@@ -75,7 +113,6 @@ def test_dtypes_pick(reference_laps_data):
                      laps.pick_drivers(drv).iloc[:3].pick_quicklaps())
 
 
-@pytest.mark.f1telapi
 def test_laps_get_car_data(reference_laps_data):
     session, laps = reference_laps_data
     drv_laps = laps.pick_drivers('BOT')
@@ -87,7 +124,6 @@ def test_laps_get_car_data(reference_laps_data):
         assert col in car.columns
 
 
-@pytest.mark.f1telapi
 def test_laps_get_pos_data(reference_laps_data):
     session, laps = reference_laps_data
     drv_laps = laps.pick_drivers('BOT')
@@ -99,7 +135,6 @@ def test_laps_get_pos_data(reference_laps_data):
         assert col in pos.columns
 
 
-@pytest.mark.f1telapi
 def test_laps_get_telemetry(reference_laps_data):
     session, laps = reference_laps_data
     drv_laps = laps.pick_drivers('BOT')
@@ -112,7 +147,6 @@ def test_laps_get_telemetry(reference_laps_data):
         assert col in tel.columns
 
 
-@pytest.mark.f1telapi
 def test_laps_get_telemetry_non_default_frequency(reference_laps_data):
     session, laps = reference_laps_data
     drv_laps = laps.pick_drivers('BOT')
@@ -128,7 +162,6 @@ def test_laps_get_telemetry_non_default_frequency(reference_laps_data):
             == pd.Timedelta(0.1, 'seconds'))
 
 
-@pytest.mark.f1telapi
 def test_laps_get_weather_data(reference_laps_data):
     session, laps = reference_laps_data
     wd = laps.get_weather_data()
@@ -148,7 +181,6 @@ def test_laps_get_weather_data(reference_laps_data):
         assert col in wd.columns
 
 
-@pytest.mark.f1telapi
 def test_lap_get_car_data(reference_laps_data):
     session, laps = reference_laps_data
     drv_laps = laps.pick_fastest()
@@ -160,7 +192,6 @@ def test_lap_get_car_data(reference_laps_data):
         assert col in car.columns
 
 
-@pytest.mark.f1telapi
 def test_lap_get_pos_data(reference_laps_data):
     session, laps = reference_laps_data
     drv_laps = laps.pick_fastest()
@@ -172,7 +203,6 @@ def test_lap_get_pos_data(reference_laps_data):
         assert col in pos.columns
 
 
-@pytest.mark.f1telapi
 def test_lap_get_telemetry(reference_laps_data):
     session, laps = reference_laps_data
     drv_laps = laps.pick_fastest()
@@ -187,7 +217,6 @@ def test_lap_get_telemetry(reference_laps_data):
         assert col in tel.columns
 
 
-@pytest.mark.f1telapi
 def test_lap_get_weather_data(reference_laps_data):
     session, laps = reference_laps_data
     # check a valid lap
@@ -208,7 +237,6 @@ def test_lap_get_weather_data(reference_laps_data):
     pd.testing.assert_series_equal(wd_last, session.weather_data.iloc[-1])
 
 
-@pytest.mark.f1telapi
 def test_laps_pick_laps(reference_laps_data):
     session, laps = reference_laps_data
 
@@ -229,7 +257,6 @@ def test_laps_pick_laps(reference_laps_data):
         assert str(e) == "Invalid value 2.5 in `lap_numbers`"
 
 
-@pytest.mark.f1telapi
 def test_laps_pick_drivers(reference_laps_data):
     session, laps = reference_laps_data
 
@@ -246,7 +273,6 @@ def test_laps_pick_drivers(reference_laps_data):
     ensure_data_type(LAP_DTYPES, mul_driver_mixed)
 
 
-@pytest.mark.f1telapi
 def test_laps_pick_teams(reference_laps_data):
     session, laps = reference_laps_data
 
@@ -262,7 +288,6 @@ def test_laps_pick_teams(reference_laps_data):
     ensure_data_type(LAP_DTYPES, mul_teams)
 
 
-@pytest.mark.f1telapi
 def test_laps_pick_compounds(reference_laps_data):
     session, laps = reference_laps_data
 
@@ -277,7 +302,6 @@ def test_laps_pick_compounds(reference_laps_data):
     ensure_data_type(LAP_DTYPES, mul_compounds)
 
 
-@pytest.mark.f1telapi
 def test_laps_pick_track_status(reference_laps_data):
     session, laps = reference_laps_data
 
@@ -307,7 +331,6 @@ def test_laps_pick_track_status(reference_laps_data):
     ensure_data_type(LAP_DTYPES, none)
 
 
-@pytest.mark.f1telapi
 @pytest.mark.parametrize("source", ["session_status", "timing_data"])
 def test_split_quali_laps(source):
     session = fastf1.get_session(2024, 10, 'Q')
@@ -331,7 +354,6 @@ def test_split_quali_laps(source):
     assert q2['Time'].max() < pd.Timedelta(hours=1, minutes=3)
 
 
-@pytest.mark.f1telapi
 @pytest.mark.parametrize("source", ["session_status", "timing_data"])
 def test_split_sprint_shootout_laps(source):
     session = fastf1.get_session(2023, 4, 'SS')
@@ -350,7 +372,6 @@ def test_split_sprint_shootout_laps(source):
     assert len(q3['DriverNumber'].unique()) == 9
 
 
-@pytest.mark.f1telapi
 @pytest.mark.parametrize("source", ["session_status", "timing_data"])
 def test_calculated_quali_results(source):
     session = fastf1.get_session(2023, 4, 'Q')
@@ -366,16 +387,9 @@ def test_calculated_quali_results(source):
 
     session._calculate_quali_like_session_results(force=True)
 
-    # patch: Jolpica does include the fastest lap time of car 21, even though
-    # it was slower than the 107% rule. Calculation excludes it.
-    # This needs to be addressed separately with an indication of not classified.
-    ergast_results.loc[ergast_results['DriverNumber'] == "21", "Q1"] \
-        = np.timedelta64("NaT", "ns")
-
     pd.testing.assert_frame_equal(ergast_results, session.results)
 
 
-@pytest.mark.f1telapi
 def test_calculated_race_results():
     # This session is chosen as it has a combination of DNF drivers and lapped
     # drivers who are behind by multiple laps
@@ -387,7 +401,6 @@ def test_calculated_race_results():
     pd.testing.assert_frame_equal(ergast_results, session.results)
 
 
-@pytest.mark.f1telapi
 @pytest.mark.parametrize("source", ["session_status", "timing_data"])
 def test_quali_q3_cancelled(source):
     session = fastf1.get_session(2023, 4, 'Q')
