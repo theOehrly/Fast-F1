@@ -1,40 +1,37 @@
 """OAuth2 Authorization-Code + PKCE sign-in to the Formula 1 account.
 
-    1. Discover the client configuration (see ``discovery``).
-    2. GET  /as/authorize -> login page; sets the IdP session cookies and
-                             embeds the DaVinci SDK token.
-    3. DaVinci username/password step (see ``davinci``) -> ``dvResponse``.
-    4. POST /as/resume    -> redirect to the redirect uri with ?code=...
-    5. POST /as/token     -> exchange the code for the access token.
+The identity provider (PingOne) runs the username/password step as a
+DaVinci flow. With PingOne's redirectless ``response_mode=pi.flow``, every
+step is a JSON API call instead of an HTML page:
 
-PKCE, the ``state`` check and error handling of the OAuth parts are done by
-requests-oauthlib. No refresh token is issued; once the token expires, the
-sign-in is repeated.
+    1. Discover the client configuration (see ``discovery``).
+    2. GET  /as/authorize -> JSON describing the login form and the url to
+                             submit it to
+    3. POST <next url>    -> submits username + password, returns the
+                             authorization code
+    4. POST /as/token     -> exchange the code for the access token.
+
+No refresh token is issued; once the token expires, the sign-in is repeated.
 """
 
+import base64
 import getpass
+import hashlib
 import os
 import secrets
 import sys
-from dataclasses import (
-    dataclass,
-    field
-)
 
+import jwt
 import requests
-from oauthlib.oauth2 import OAuth2Error
-from requests_oauthlib import OAuth2Session
 
 from fastf1.exceptions import F1AuthError
-from fastf1.internals.f1account import davinci
 from fastf1.internals.f1account.common import (
-    ACCOUNT_ORIGIN,
     AUTHORIZE_URL,
     DEFAULT_HEADERS,
     IDP_ORIGIN,
-    RESUME_URL,
     TIMEOUT,
-    TOKEN_URL
+    TOKEN_URL,
+    logger
 )
 from fastf1.internals.f1account.discovery import (
     AuthConfig,
@@ -46,94 +43,182 @@ from fastf1.internals.f1account.tokens import SubscriptionToken
 ENV_USERNAME = "F1_USERNAME"
 ENV_PASSWORD = "F1_PASSWORD"
 
-
-@dataclass(frozen=True)
-class Credentials:
-    username: str
-    password: str = field(repr=False)
-
-    @classmethod
-    def from_env_or_prompt(cls) -> "Credentials":
-        """Read the credentials from the environment variables
-        ``F1_USERNAME`` and ``F1_PASSWORD``, or prompt for missing values if
-        the session is interactive."""
-        username = os.environ.get(ENV_USERNAME)
-        password = os.environ.get(ENV_PASSWORD)
-        if username and password:
-            return cls(username, password)
-
-        if not sys.stdin.isatty():
-            raise F1AuthError(
-                f"No F1 account credentials available. Set the environment "
-                f"variables {ENV_USERNAME} and {ENV_PASSWORD}.")
-        try:
-            username = username or input("F1 account email: ")
-            password = password or getpass.getpass("F1 account password: ")
-        except EOFError as exc:
-            raise F1AuthError("No F1 account credentials entered.") from exc
-        return cls(username, password)
+# requests JSON instead of HTML responses from the DaVinci flow
+PING_SDK_HEADERS = {"X-Requested-With": "ping-sdk"}
 
 
-def login(credentials: Credentials) -> SubscriptionToken:
-    """Sign in and return the livetiming token.
+def default_login() -> SubscriptionToken:
+    """Sign in with the credentials from the environment or a prompt."""
+    return login(*_credentials_from_env_or_prompt())
+
+
+def login(username: str, password: str) -> SubscriptionToken:
+    """Sign in and return the subscription token for the F1 APIs.
 
     Raises ``F1AuthError`` on any failure.
     """
+    # attempt to get a current browser user agent, else the hard-coded
+    # default chrome UA is used
+    if ua := _get_current_user_agent():
+        DEFAULT_HEADERS.update({"User-Agent": ua})
+
     try:
+        # the IdP ties the steps of the flow together through cookies, so
+        # every step must share this session
         with requests.Session() as session:
             session.headers.update(DEFAULT_HEADERS)
             config = fetch_config(session)
-        return _login(config, credentials)
-    except (requests.RequestException, OAuth2Error) as exc:
+            access_token = _do_login_flow(session, config, username, password)
+    except requests.RequestException as exc:
         raise F1AuthError(f"Sign-in failed: {exc}") from exc
 
+    # extract the subscription token from the claims that are carried by the
+    # access token
+    try:
+        claims = jwt.decode(access_token, options={"verify_signature": False})
+    except jwt.PyJWTError as exc:
+        raise F1AuthError("Failed to decode the access token.") from exc
+    if not (value := claims.get("subscriptionToken")):
+        raise F1AuthError("Access token contains no subscription token. "
+                          "An active F1TV subscription is required.")
+    return SubscriptionToken.from_jwt(value)
 
-def _login(config: AuthConfig, credentials: Credentials) -> SubscriptionToken:
-    # One session = one cookie jar. The cookies set by the authorize request
-    # let /as/resume map the DaVinci result back onto the OAuth request, so
-    # every step must share this session.
-    with OAuth2Session(config.client_id, redirect_uri=config.redirect_uri,
-                       scope=config.scope, pkce="S256") as oauth:
-        oauth.headers.update(DEFAULT_HEADERS)
 
-        url, _state = oauth.authorization_url(
-            AUTHORIZE_URL,
-            nonce=secrets.token_urlsafe(24),
-            acr_values=config.policy_id,
-            journey="login",
-            ch="COWB",
-            language="en",
+def _get_current_user_agent() -> str | None:
+    from fastf1.req import Cache
+    try:
+        resp = Cache.requests_get(
+            "https://jnrbsn.github.io/user-agents/user-agents.json",
+            timeout=TIMEOUT
         )
-        resp = oauth.get(url, timeout=TIMEOUT)
         resp.raise_for_status()
-        page = davinci.LoginPage.parse(url, resp.text)
+        ua = resp.json()[0]
+    except (requests.RequestException, ValueError, LookupError, TypeError):
+        logger.warning("Failed to update user agent for login.")
+        return None
+    return ua if isinstance(ua, str) and ua else None
 
-        dv_response = davinci.sign_in(oauth, page, config.policy_id,
-                                      credentials.username,
-                                      credentials.password)
 
-        # do not follow the redirect, the code is in the Location header
-        resp = oauth.post(
-            RESUME_URL,
-            data={"dvResponse": dv_response, "state": page.resume_state},
-            headers={"Origin": IDP_ORIGIN, "Referer": page.url},
-            allow_redirects=False,
-            timeout=TIMEOUT,
-        )
-        if not resp.is_redirect:
-            raise F1AuthError(f"Resuming the sign-in did not redirect "
-                              f"(status {resp.status_code}).")
+def _do_login_flow(
+        session: requests.Session,
+        config: AuthConfig,
+        username: str,
+        password: str
+) -> str:
+    """Run the OAuth flow and return the access token."""
+    code_verifier = secrets.token_urlsafe(64)
+    state = secrets.token_urlsafe(24)
 
-        # The granted scopes are irrelevant here. Without an expected scope,
-        # oauthlib does not raise if the server reports different scopes.
-        oauth.scope = None
-        token = oauth.fetch_token(
-            TOKEN_URL,
-            authorization_response=resp.headers["Location"],
-            include_client_id=True,
-            headers={"Referer": f"{ACCOUNT_ORIGIN}/"},
-            timeout=TIMEOUT,
-        )
+    resp = session.get(
+        AUTHORIZE_URL,
+        params={
+            "client_id": config.client_id,
+            "response_type": "code",
+            "response_mode": "pi.flow",
+            # the subscription token is included with any scope
+            "scope": "openid",
+            "state": state,
+            "nonce": secrets.token_urlsafe(24),
+            "code_challenge": _code_challenge(code_verifier),
+            "code_challenge_method": "S256",
+            # selects the DaVinci flow
+            "acr_values": config.policy_id,
+        },
+        headers=PING_SDK_HEADERS,
+        timeout=TIMEOUT,
+    )
+    resp.raise_for_status()
+    form = resp.json()
+    try:
+        submit_url = form["_links"]["next"]["href"]
+        interaction_id = form["interactionId"]
+        flow_id = form["id"]
+        event_name = form["eventName"]
+    except (KeyError, TypeError) as exc:
+        raise F1AuthError(
+            "Unexpected response when starting the sign-in.") from exc
+    if not submit_url.startswith(f"{IDP_ORIGIN}/"):
+        # never send the credentials anywhere else
+        raise F1AuthError(f"Unexpected sign-in url {submit_url}.")
 
-    return SubscriptionToken.from_access_token(token["access_token"],
-                                               token.get("expires_at"))
+    resp = session.post(
+        submit_url,
+        json={
+            "id": flow_id,
+            "eventName": event_name,
+            "interactionId": interaction_id,
+            "parameters": {
+                "eventType": "submit",
+                "data": {
+                    "actionKey": "SIGNIN",
+                    "formData": {"username": username, "password": password},
+                },
+            },
+        },
+        headers={**PING_SDK_HEADERS, "interactionId": interaction_id},
+        timeout=TIMEOUT,
+    )
+    code = _code_from_flow_response(resp, state)
+
+    resp = session.post(
+        TOKEN_URL,
+        data={
+            "grant_type": "authorization_code",
+            "client_id": config.client_id,
+            "code": code,
+            "code_verifier": code_verifier,
+        },
+        timeout=TIMEOUT,
+    )
+    resp.raise_for_status()
+    try:
+        return resp.json()["access_token"]
+    except (ValueError, KeyError, TypeError) as exc:
+        raise F1AuthError("No access token in the token response.") from exc
+
+
+def _code_challenge(code_verifier: str) -> str:
+    """PKCE S256 code challenge (RFC 7636)."""
+    digest = hashlib.sha256(code_verifier.encode("ascii")).digest()
+    return base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
+
+
+def _code_from_flow_response(resp: requests.Response, state: str) -> str:
+    """Return the authorization code from the final DaVinci response."""
+    try:
+        data = resp.json()
+    except ValueError:
+        resp.raise_for_status()
+        raise F1AuthError("Unexpected response from the sign-in.") from None
+
+    if data.get("status") != "COMPLETED":
+        # e.g. wrong credentials; the message is meant for the user
+        raise F1AuthError(data.get("message")
+                          or f"Sign-in failed (status {resp.status_code}).")
+    auth_response = data.get("authorizeResponse") or {}
+    if auth_response.get("state") != state:
+        raise F1AuthError("Sign-in failed: state mismatch in the response.")
+    if not ((code := auth_response.get("code")) and isinstance(code, str)):
+        raise F1AuthError("Sign-in failed: no authorization code returned.")
+    return code
+
+
+def _credentials_from_env_or_prompt() -> tuple[str, str]:
+    """Read the credentials from the environment variables ``F1_USERNAME``
+    and ``F1_PASSWORD``, or prompt for missing values if the session is
+    interactive."""
+    username = os.environ.get(ENV_USERNAME)
+    password = os.environ.get(ENV_PASSWORD)
+    if username and password:
+        return username, password
+
+    if not sys.stdin.isatty():
+        raise F1AuthError(
+            f"No F1 account credentials available. Set the environment "
+            f"variables {ENV_USERNAME} and {ENV_PASSWORD}.")
+    try:
+        username = username or input("F1 account email: ")
+        password = password or getpass.getpass("F1 account password: ")
+    except EOFError as exc:
+        raise F1AuthError("No F1 account credentials entered.") from exc
+    return username, password

@@ -1,4 +1,5 @@
 import io
+import json
 import stat
 import time
 
@@ -10,20 +11,18 @@ from requests.adapters import HTTPAdapter
 
 import fastf1.internals.f1account as f1account
 from fastf1.exceptions import F1AuthError
-from fastf1.internals import f1auth
 from fastf1.internals.f1account import (
     LIVETIMING_URL,
     LivetimingAuthAdapter,
     SubscriptionToken,
     TokenManager,
-    TokenStore
+    browser,
+    login
 )
-from fastf1.internals.f1account.davinci import LoginPage
 from fastf1.internals.f1account.discovery import (
     AuthConfig,
     parse_frontend_config
 )
-from fastf1.internals.f1account.tokens import DEFAULT_LIFETIME
 from fastf1.req import (
     _CachedSessionWithRateLimiting,
     _SessionWithRateLimiting
@@ -42,25 +41,20 @@ def _token(value="tok", lifetime=3600):
 # ---- discovery ------------------------------------------------------------
 
 FRONTEND_SCRIPT = (
-    'var a={x:1};var c={davinci:{clientId:"cid",acrValues:"pid",'
-    'nested:{key:"}"},scope:"openid profile",'
-    'redirectUri:window.location.origin+"/#//login/"'
-    '},other:{clientId:"wrong"}};'
+    'var a={clientId:"wrong"};var c={davinci:{clientId:"cid",'
+    'registrationAcrValues:"rid",acrValues:"pid",'
+    'redirectUri:window.location.origin+"/#//login/"},other:{acrValues:"x"}};'
 )
 
 
 def test_parse_frontend_config():
-    assert parse_frontend_config(FRONTEND_SCRIPT) == AuthConfig(
-        client_id="cid",
-        policy_id="pid",
-        scope="openid profile",
-        redirect_uri="https://account.formula1.com/#//login/",
-    )
+    assert parse_frontend_config(FRONTEND_SCRIPT) \
+        == AuthConfig(client_id="cid", policy_id="pid")
 
 
 def test_parse_frontend_config_missing_field():
-    script = FRONTEND_SCRIPT.replace('scope:"openid profile",', '')
-    with pytest.raises(F1AuthError, match="scope"):
+    script = FRONTEND_SCRIPT.replace('acrValues:"pid",', "")
+    with pytest.raises(F1AuthError, match="acrValues"):
         parse_frontend_config(script)
 
 
@@ -69,60 +63,113 @@ def test_parse_frontend_config_no_block():
         parse_frontend_config("var a={b:1};")
 
 
-# ---- davinci --------------------------------------------------------------
+# ---- login ----------------------------------------------------------------
 
-SK_PROPS = ('<script>var skProps = {"accessToken": "sdk", "x": "{}"};'
-            '</script>')
-RESUME_FORM = (
-    '<form id="pingOneDaVinciResponseForm" method="POST">'
-    '<input type="hidden" name="dvResponse" value="">'
-    '<input type="hidden" value="resume" name="state">'
-    '</form>'
-)
+def test_code_challenge():
+    # test vector from RFC 7636, appendix B
+    verifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+    assert login._code_challenge(verifier) \
+        == "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"
 
 
-def test_login_page_parse():
-    html = SK_PROPS + RESUME_FORM
-    page = LoginPage.parse("https://id.example.com/as/authorize?x=1", html)
-    assert page.sdk_token == "sdk"
-    assert page.resume_state == "resume"
+def _flow_response(data, status=200):
+    resp = requests.Response()
+    resp.status_code = status
+    resp._content = json.dumps(data).encode()
+    return resp
 
 
-def test_login_page_parse_missing_resume_state():
-    with pytest.raises(F1AuthError, match="resume state"):
-        LoginPage.parse("https://id.example.com/as/authorize", SK_PROPS)
+def test_code_from_flow_response():
+    resp = _flow_response({"status": "COMPLETED", "authorizeResponse": {
+        "code": "abc", "state": "xyz"}})
+    assert login._code_from_flow_response(resp, "xyz") == "abc"
 
 
-def test_login_page_parse_missing_sdk_token():
-    html = '<script>var skProps = {"x": 1};</script>' + RESUME_FORM
-    with pytest.raises(F1AuthError, match="SDK token"):
-        LoginPage.parse("https://id.example.com/as/authorize", html)
+def test_code_from_flow_response_state_mismatch():
+    resp = _flow_response({"status": "COMPLETED", "authorizeResponse": {
+        "code": "abc", "state": "other"}})
+    with pytest.raises(F1AuthError, match="state"):
+        login._code_from_flow_response(resp, "xyz")
+
+
+def test_code_from_flow_response_rejected():
+    # response to wrong credentials
+    resp = _flow_response({"code": "unexpectedError",
+                           "message": "Check your details."}, status=400)
+    with pytest.raises(F1AuthError, match="Check your details"):
+        login._code_from_flow_response(resp, "xyz")
+
+
+class _FakeLoginSession:
+    """Answers the sign-in requests in order and records them."""
+
+    def __init__(self, next_url="https://id.formula1.com/davinci/submit"):
+        self.next_url = next_url
+        self.calls = []
+
+    def _respond(self, method, url, **kwargs):
+        self.calls.append((method, url, kwargs))
+        if url.endswith("/as/authorize"):
+            return _flow_response({
+                "id": "f", "interactionId": "i", "eventName": "continue",
+                "_links": {"next": {"href": self.next_url}}})
+        if url == self.next_url:
+            state = self.calls[0][2]["params"]["state"]
+            return _flow_response({"status": "COMPLETED",
+                                   "authorizeResponse": {"code": "abc",
+                                                         "state": state}})
+        if url.endswith("/as/token"):
+            return _flow_response({"access_token": "at"})
+        raise AssertionError(f"unexpected request to {url}")
+
+    def get(self, url, **kwargs):
+        return self._respond("GET", url, **kwargs)
+
+    def post(self, url, **kwargs):
+        return self._respond("POST", url, **kwargs)
+
+
+LOGIN_CONFIG = AuthConfig(client_id="cid", policy_id="pid")
+
+
+def test_login_flow():
+    session = _FakeLoginSession()
+    assert login._do_login_flow(session, LOGIN_CONFIG, "user", "pw") == "at"
+
+    authorize, submit, token = session.calls
+    params = authorize[2]["params"]
+    assert params["acr_values"] == "pid"
+    assert params["response_mode"] == "pi.flow"
+    assert submit[2]["headers"]["interactionId"] == "i"
+    assert submit[2]["json"]["parameters"]["data"]["formData"] \
+        == {"username": "user", "password": "pw"}
+    data = token[2]["data"]
+    assert data["code"] == "abc"
+    assert "redirect_uri" not in data
+    assert login._code_challenge(data["code_verifier"]) \
+        == params["code_challenge"]
+
+
+def test_login_flow_rejects_foreign_submit_url():
+    session = _FakeLoginSession(next_url="https://evil.example.com/submit")
+    with pytest.raises(F1AuthError, match="url"):
+        login._do_login_flow(session, LOGIN_CONFIG, "user", "pw")
+    assert len(session.calls) == 1  # credentials were not sent
+
+
+def test_login_extracts_subscription_token(monkeypatch):
+    sub = _jwt(exp=int(time.time() + 100))
+    monkeypatch.setattr(login, "fetch_config", lambda session: None)
+    monkeypatch.setattr(login, "_do_login_flow",
+                        lambda *args: _jwt(subscriptionToken=sub))
+    assert login.login("user", "pw").value == sub
+
+    monkeypatch.setattr(login, "_do_login_flow", lambda *args: _jwt(sub="x"))
+    with pytest.raises(F1AuthError, match="subscription"):
+        login.login("user", "pw")
 
 
 # ---- tokens ---------------------------------------------------------------
-
-def test_token_from_access_token_uses_earliest_expiry():
-    now = time.time()
-    sub = _jwt(exp=int(now + 100))
-    token = SubscriptionToken.from_access_token(
-        _jwt(subscriptionToken=sub), expires_at=now + 1000)
-    assert token.value == sub
-    assert token.expires_at == int(now + 100)
-
-
-def test_token_from_access_token_without_expiry():
-    # neither the token response nor the token state an expiry
-    token = SubscriptionToken.from_access_token(
-        _jwt(subscriptionToken=_jwt(sub="x")))
-    assert token.expires_at == pytest.approx(time.time() + DEFAULT_LIFETIME,
-                                             abs=5)
-    assert token.is_valid()
-
-
-def test_token_from_access_token_without_subscription():
-    with pytest.raises(F1AuthError, match="subscription"):
-        SubscriptionToken.from_access_token(_jwt(sub="x"))
-
 
 def test_token_from_jwt():
     exp = int(time.time() + 100)
@@ -132,9 +179,10 @@ def test_token_from_jwt():
 
 
 def test_token_from_jwt_without_expiry():
-    token = SubscriptionToken.from_jwt("not-a-jwt")
-    assert token.expires_at == pytest.approx(time.time() + DEFAULT_LIFETIME,
-                                             abs=5)
+    with pytest.raises(F1AuthError, match="expiry"):
+        SubscriptionToken.from_jwt(_jwt(sub="x"))
+    with pytest.raises(F1AuthError, match="expiry"):
+        SubscriptionToken.from_jwt("not-a-jwt")
 
 
 def test_token_repr_hides_value():
@@ -146,22 +194,22 @@ def test_token_store_roundtrip_and_permissions(tmp_path):
     path.write_text("{}")
     path.chmod(0o644)
 
-    store = TokenStore(path)
+    store = TokenManager(lambda: _token(), path)
     token = _token()
-    store.save(token)
+    store.store(token)
 
     assert stat.S_IMODE(path.stat().st_mode) == 0o600
-    assert store.load() == token
+    assert store.get_stored() == token
     assert list(tmp_path.iterdir()) == [path]  # no leftover temp file
 
-    store.delete()
-    assert store.load() is None
+    store.clear()
+    assert store.get_stored() is None
 
 
 def test_token_store_ignores_invalid_file(tmp_path):
     path = tmp_path / "token.json"
     path.write_text('{"subscription_token": "x", "expires_at": 1}')
-    assert TokenStore(path).load() is None
+    assert TokenManager(lambda: _token(), path).get_stored() is None
 
 
 def test_token_manager_signs_in_once(tmp_path):
@@ -171,30 +219,28 @@ def test_token_manager_signs_in_once(tmp_path):
         calls.append(1)
         return _token()
 
-    manager = TokenManager(TokenStore(tmp_path / "t.json"), authenticate)
+    manager = TokenManager(authenticate, tmp_path / "t.json")
     assert manager.get() is manager.get()
     assert len(calls) == 1
 
     # a new manager picks the token up from disk
-    other = TokenManager(TokenStore(tmp_path / "t.json"), authenticate)
+    other = TokenManager(authenticate, tmp_path / "t.json")
     assert other.get() == manager.get()
     assert len(calls) == 1
 
 
 def test_token_manager_renews_expired_token(tmp_path):
     tokens = iter([_token("old", lifetime=0), _token("new")])
-    manager = TokenManager(TokenStore(tmp_path / "t.json"),
-                           lambda: next(tokens))
+    manager = TokenManager(lambda: next(tokens), tmp_path / "t.json")
     assert manager.get().value == "old"
     assert manager.get().value == "new"
 
 
 def test_token_manager_authenticate_override(tmp_path):
-    manager = TokenManager(TokenStore(tmp_path / "t.json"),
-                           lambda: _token("default"))
-    assert manager.get(authenticate=lambda: _token("other")).value == "other"
+    manager = TokenManager(lambda: _token("default"), tmp_path / "t.json")
+    assert manager.get(auth_func=lambda: _token("other")).value == "other"
     # a valid token is reused, unless renewal is forced
-    assert manager.get(authenticate=lambda: _token("x")).value == "other"
+    assert manager.get(auth_func=lambda: _token("x")).value == "other"
     assert manager.get(force_renew=True).value == "default"
 
 
@@ -223,23 +269,27 @@ def test_auth_method_invalid(auth_method, monkeypatch):
         f1account.get_auth_method()
 
 
-def test_authenticator_dispatch():
-    assert f1account._get_authenticator("browser") is f1auth.login_browser
-    with pytest.raises(ValueError):
-        f1account._get_authenticator("oauth")
+def test_authenticators():
+    assert f1account.AUTH_METHODS == ("password", "browser")
+    assert f1account._AUTHENTICATORS["browser"] is browser.login_browser
+    assert f1account._AUTHENTICATORS["password"] is login.default_login
 
 
 def test_get_token_uses_method(auth_method, monkeypatch, tmp_path):
-    monkeypatch.setattr(f1account, "_get_authenticator",
-                        lambda method: lambda: _token(method))
-    monkeypatch.setattr(f1account, "token_manager", TokenManager(
-        TokenStore(tmp_path / "t.json"),
-        lambda: f1account._get_authenticator(f1account.get_auth_method())()))
+    for method in f1account.AUTH_METHODS:
+        monkeypatch.setitem(f1account._AUTHENTICATORS, method,
+                            lambda method=method: _token(method))
+
+    monkeypatch.setattr(f1account.token_manager, "_token_path",
+                        tmp_path / "t.json")
+    monkeypatch.setattr(f1account.token_manager, "_token", None)
 
     assert f1account.get_token().value == "password"
     assert f1account.get_token(True, method="browser").value == "browser"
     f1account.set_auth_method("browser")
     assert f1account.get_token(True).value == "browser"
+    with pytest.raises(ValueError):
+        f1account.get_token(True, method="oauth")
 
 
 # ---- transport ------------------------------------------------------------

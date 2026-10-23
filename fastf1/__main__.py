@@ -5,10 +5,10 @@ from datetime import datetime
 from fastf1.exceptions import F1AuthError
 from fastf1.internals.f1account import (
     AUTH_METHODS,
-    TokenStore,
     clear_token,
     get_auth_method,
-    get_token
+    get_token,
+    token_manager
 )
 
 
@@ -24,7 +24,7 @@ def authenticate(method: str):
 def print_status():
     print(f"Sign-in method: {get_auth_method()}")
 
-    token = TokenStore.default().load()
+    token = token_manager.get_stored()
     if token is None:
         print("Not authenticated")
         return
