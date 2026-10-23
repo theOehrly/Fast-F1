@@ -1,3 +1,5 @@
+import math
+
 import numpy
 import pandas
 import pandas as pd
@@ -201,7 +203,7 @@ def test_merging_10_hz(reference_laps_data):
         assert ch in merged.columns
 
     # assert correct number of samples for duration at 10 Hz within +-1 sample
-    n_samples_target = round(test_car_data['Time'].iloc[-1].total_seconds() * 10, 0)
+    n_samples_target = math.floor(test_car_data['Time'].iloc[-1].total_seconds() * 10)
     assert len(merged) in (n_samples_target-1, n_samples_target, n_samples_target+1)
 
     # no values should be nan; everything should be interpolated

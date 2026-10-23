@@ -363,12 +363,11 @@ def _sector_sum(drv_data, lap_idx):
     Returns None if any of the sector times is missing, i.e. if no
     complete sum can be calculated.
     """
-    total = datetime.timedelta(0)
-    for key in ("Sector1Time", "Sector2Time", "Sector3Time"):
-        sector_time = drv_data[key][lap_idx]
-        if pd.isna(sector_time):
-            return None
-        total += sector_time
+    total = (drv_data["Sector1Time"][lap_idx]
+             + drv_data["Sector2Time"][lap_idx]
+             + drv_data["Sector3Time"][lap_idx])
+    if pd.isna(total):
+        return None
     return total
 
 
