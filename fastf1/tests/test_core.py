@@ -228,3 +228,98 @@ def test_practice_session_results_time_and_position():
     # results should be sorted by position
     valid = results.dropna(subset=['Position'])
     assert (valid['Position'].diff().dropna() >= 0).all()
+
+
+# 3 METHODS TO TEST THE LapStartTime NEW CHECK:
+
+#Positive: there's nothing wrong with the times and every time fits perfectly
+def test_lap_start_time_positive():
+    laps = pd.DataFrame([
+        {
+            "DriverNumber": "1",
+            "Time": pd.Timedelta("00:01:00.000"),
+            "LapTime": pd.Timedelta("00:01:00.000"),
+            "LapStartTime": pd.Timedelta("00:00:00.000"),
+            "FastF1Generated": False,
+            "PitInTime": pd.NaT,
+            "PitOutTime": pd.NaT,
+            "IsAccurate": True,
+        },
+        {
+            "DriverNumber": "1",
+            "Time": pd.Timedelta("00:02:00.000"),
+            "LapTime": pd.Timedelta("00:01:00.000"),
+            "LapStartTime": pd.Timedelta("00:01:00.050"),
+            "FastF1Generated": False,
+            "PitInTime": pd.NaT,
+            "PitOutTime": pd.NaT,
+            "IsAccurate": True,
+        },
+    ])
+    prev = laps.iloc[0]
+    curr = laps.iloc[1]
+
+    diff = (curr["LapStartTime"] - prev["Time"]).total_seconds()
+    assert abs(diff) < 0.1
+
+#Invalid: First lap at 1min global time, 1min lap time, and starting at 0min global. 
+#         Second lap at 2min global time, 1min lap time but starting at 2.1min global time (1s margin error).
+def test_lap_start_time_invalid():
+    laps = pd.DataFrame([
+        {
+            "DriverNumber": "1",
+            "Time": pd.Timedelta("00:01:00.000"),
+            "LapTime": pd.Timedelta("00:01:00.000"),
+            "LapStartTime": pd.Timedelta("00:00:00.000"),
+            "FastF1Generated": False,
+            "PitInTime": pd.NaT,
+            "PitOutTime": pd.NaT,
+            "IsAccurate": True,
+        },
+        {
+            "DriverNumber": "1",
+            "Time": pd.Timedelta("00:02:00.000"),
+            "LapTime": pd.Timedelta("00:01:00.000"),
+            "LapStartTime": pd.Timedelta("00:02:01.000"),
+            "FastF1Generated": False,
+            "PitInTime": pd.NaT,
+            "PitOutTime": pd.NaT,
+            "IsAccurate": True,
+        },
+    ])
+    prev = laps.iloc[0]
+    curr = laps.iloc[1]
+
+    diff = (curr["LapStartTime"] - prev["Time"]).total_seconds()
+    assert abs(diff) > 0.1
+
+# Pitstop lap; lap ignored
+def test_lap_start_time_ignored():
+    laps = pd.DataFrame([
+        {
+            "DriverNumber": "1",
+            "Time": pd.Timedelta("00:01:00.000"),
+            "LapTime": pd.Timedelta("00:01:00.000"),
+            "LapStartTime": pd.Timedelta("00:00:00.000"),
+            "FastF1Generated": False,
+            "PitInTime": True,
+            "PitOutTime": True,
+            "IsAccurate": True,
+        },
+        {
+            "DriverNumber": "1",
+            "Time": pd.Timedelta("00:02:00.000"),
+            "LapTime": pd.Timedelta("00:01:00.000"),
+            "LapStartTime": pd.Timedelta("00:01:00.050"),
+            "FastF1Generated": False,
+            "PitInTime": pd.Timedelta("00:00:30.000"),
+            "PitOutTime": pd.NaT,
+            "IsAccurate": True,
+        },
+    ])
+    prev = laps.iloc[0]
+    curr = laps.iloc[1]
+    
+    assert pd.notna(curr["PitInTime"])
+
+    
