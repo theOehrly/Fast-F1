@@ -6,9 +6,8 @@ F1TV Account Authentication
 F1TV Account Usage
 ------------------
 
-FastF1 can require an active F1TV Access/Pro/Premium subscription to access certain data.
-Currently, authentication is only required when using the :ref:`livetiming`.
-All data that is obtained after the session has ended can be accessed without authentication.
+FastF1 requires an active F1TV Access/Pro/Premium subscription to access most of the available
+data.
 
 When FastF1 encounters a feature that requires authentication, it will automatically prompt
 you to authenticate with your F1TV account if you haven't done so already.
@@ -24,6 +23,12 @@ When authentication is required, FastF1 will:
 4. Use this token for subsequent data requests
 
 The stored token is independent of the sign-in method that was used to obtain it.
+
+Tokens are usually valid for four days. After this, a new login is required to obtain a new
+token. Tokens cannot be automatically refreshed before they expire.
+Depending on the chosen login method, FastF1 can automatically login in and obtain a new
+token when necessary. This is possible, for example, when the login credentials are provided
+via environment variables.
 
 
 Sign-in Methods
