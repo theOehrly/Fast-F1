@@ -1,6 +1,7 @@
 import io
 import json
 import stat
+import sys
 import time
 
 import jwt
@@ -192,13 +193,20 @@ def test_token_repr_hides_value():
 def test_token_store_roundtrip_and_permissions(tmp_path):
     path = tmp_path / "token.json"
     path.write_text("{}")
-    path.chmod(0o644)
+    # Windows does not support Unix-style file permissions.
+    # Testing whether they are set correctly would therefore fail.
+    # The default token path on Windows is in the user data directory
+    # which is only accessible to the signed-in user. This prevents
+    # access by other users on Windows.
+    if sys.platform != "win32":
+        path.chmod(0o644)
 
     store = TokenManager(lambda: _token(), path)
     token = _token()
     store.store(token)
 
-    assert stat.S_IMODE(path.stat().st_mode) == 0o600
+    if sys.platform != "win32":
+        assert stat.S_IMODE(path.stat().st_mode) == 0o600
     assert store.get_stored() == token
     assert list(tmp_path.iterdir()) == [path]  # no leftover temp file
 

@@ -74,6 +74,8 @@ class TokenManager:
             path: Path | None = None
     ):
         if path is None:
+            # Default path should be the user data dir. On Windows, this also
+            # ensures that the token is not accessible by other users.
             self._token_path = Path(
                 platformdirs.user_data_dir("fastf1")) / "f1auth_token.json"
         else:
@@ -129,6 +131,8 @@ class TokenManager:
         self._token_path.parent.mkdir(parents=True, exist_ok=True)
         with open(self._token_path, "w") as f:
             # restrict access to this user before writing the token
+            # has no effect on Windows, but the token path defaults to
+            # the user data dir to prevent unauthorized access
             os.chmod(self._token_path, 0o600)
             json.dump({"version": self.VERSION, **asdict(token)}, f)
 
