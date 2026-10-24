@@ -137,6 +137,13 @@ html_theme_options = {
     },
     "check_switcher": False,
     "show_version_warning_banner": True,
+    "announcement": (
+        "Following changes by Formula 1, FastF1 now requires an F1TV Access "
+        "subscription (or higher plan) for most of its features. "
+        "Account authentication is added in FastF1 v3.9.0 - please update to "
+        "continue using FastF1. "
+        "<a href='/api_reference/accounts_auth.html'>Learn more</a>"
+    ),
 }
 html_logo = "_static/banner.png"
 html_favicon = "_static/favicon.png"
