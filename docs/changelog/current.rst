@@ -1,3 +1,19 @@
+What's new in v3.9.2
+--------------------------
+
+(released 02/11/2026)
+
+
+Bug Fixes
+^^^^^^^^^
+
+- Fixed a bug that prevented loading of telemetry data for the 2026 Mexican GP
+  due to an unexpected timestamp format in the source data. (#992)
+  This was missed in the previous patch release v3.9.2 where the bug was
+  already fixed for everything but telemetry data.
+
+
+
 What's new in v3.9.1
 --------------------------
 
