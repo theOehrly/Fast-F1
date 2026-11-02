@@ -1,11 +1,10 @@
 import os
-
 from unittest.mock import patch
 
 import fastf1.events
 from fastf1.exceptions import F1AuthError
-from fastf1.livetiming.data import LiveTimingData
 from fastf1.livetiming.client import SignalRClient
+from fastf1.livetiming.data import LiveTimingData
 
 
 def test_file_loading_w_errors():
