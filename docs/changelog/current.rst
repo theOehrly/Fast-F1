@@ -1,3 +1,17 @@
+What's new in v3.9.1
+--------------------------
+
+(released 02/11/2026)
+
+
+Bug Fixes
+^^^^^^^^^
+
+- Fixed a bug that prevented loading of the data for the 2026 Mexican GP due
+  to an unexpected timestamp format in the source data. (#992)
+
+
+
 What's new in v3.9.0
 --------------------------
 
