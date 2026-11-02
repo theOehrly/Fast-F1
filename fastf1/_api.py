@@ -1801,11 +1801,21 @@ def fetch_page(path, name):
                 # Special case to improve memory efficiency
                 return records
             decode_error_count = 0
-            tl = 12  # length of timestamp: len('00:00:00:000')
+            tl = 12  # default length of timestamp: len('00:00:00:000')
+            # some sessions use a different timestamp format (e.g. 2026
+            # Mexican GP Race); timestamp format may differ per row!
             ret = []
             for e in records:
                 try:
-                    ret.append([e[:tl], parse(e[tl:], zipped=is_z)])
+                    # determine timestamp format
+                    if e[2] == ":":
+                        # format HH:MM:SS.mmm expect a column at index 2
+                        ret.append([e[:tl], parse(e[tl:], zipped=is_z)])
+                    else:
+                        # format [D]D.HH:MM:SS.mmm offset based on first dot
+                        p = e.index(".") + 1
+                        q = p + 12
+                        ret.append([e[p:q], parse(e[q:], zipped=is_z)])
                 except json.JSONDecodeError:
                     decode_error_count += 1
                     continue
