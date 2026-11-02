@@ -1008,8 +1008,6 @@ def car_data(path, response=None, livedata=None):
     columns = ["Time", "Date", "RPM", "Speed", "nGear", "Throttle", "Brake",
                "DRS", "Source"]  # correct order required!
 
-    ts_length = 12  # length of timestamp: len('00:00:00:000')
-
     data = {}
     decode_error_count = 0
 
@@ -1019,8 +1017,9 @@ def car_data(path, response=None, livedata=None):
                 time = to_timedelta(record[0])
                 jrecord: dict = parse(record[1], zipped=True)
             else:
-                time = to_timedelta(record[:ts_length])
-                jrecord: dict = parse(record[ts_length:], zipped=True)
+                _ts, _data = _split_line(record)
+                time = to_timedelta(_ts)
+                jrecord: dict = parse(_data, zipped=True)
 
             for entry in jrecord["Entries"]:
                 # date format is '2020-08-08T09:45:03.0619797Z' with a varying
@@ -1171,7 +1170,6 @@ def position_data(path, response=None, livedata=None):
     if not response:
         return {}
 
-    ts_length = 12  # length of timestamp: len('00:00:00:000')
     columns = ["Time", "Date", "Status", "X", "Y", "Z",
                "Source"]  # correct order required!
 
@@ -1184,8 +1182,9 @@ def position_data(path, response=None, livedata=None):
                 time = record[0]
                 jrecord: dict = parse(record[1], zipped=True)
             else:
-                time = to_timedelta(record[:ts_length])
-                jrecord: dict = parse(record[ts_length:], zipped=True)
+                _ts, _data = _split_line(record)
+                time = to_timedelta(_ts)
+                jrecord: dict = parse(_data, zipped=True)
 
             for sample in jrecord["Position"]:
                 # date format is '2020-08-08T09:45:03.0619797Z' with a varying
@@ -1762,6 +1761,24 @@ def session_info(path, response=None, livedata=None):
     return data
 
 
+def _split_line(line: str) -> tuple[str, str]:
+    # Splits a single line of the recorded stream data into timestamp and
+    # JSON data. The timestamp length can vary in some session (GH#992)
+    if line[2] == ":":
+        # format HH:MM:SS.mmm expect a column at index 2
+        # length of timestamp is always 12 characters
+        ts = line[:12]
+        data = line[12:]
+    else:
+        # format [D]D.HH:MM:SS.mmm determine offset based on first dot
+        # length of timestamp may be inconsistent
+        p = line.index(".") + 1
+        q = p + 12
+        ts = line[p:q]
+        data = line[q:]
+    return ts, data
+
+
 def fetch_page(path, name):
     """
     .. warning::
@@ -1797,28 +1814,21 @@ def fetch_page(path, name):
         raw = r.content.decode("utf-8-sig")
         if is_stream:
             records = raw.split("\r\n")[:-1]  # last split is empty
+
             if name in ("position", "car_data"):
                 # Special case to improve memory efficiency
                 return records
+
             decode_error_count = 0
-            tl = 12  # default length of timestamp: len('00:00:00:000')
-            # some sessions use a different timestamp format (e.g. 2026
-            # Mexican GP Race); timestamp format may differ per row!
             ret = []
             for e in records:
                 try:
-                    # determine timestamp format
-                    if e[2] == ":":
-                        # format HH:MM:SS.mmm expect a column at index 2
-                        ret.append([e[:tl], parse(e[tl:], zipped=is_z)])
-                    else:
-                        # format [D]D.HH:MM:SS.mmm offset based on first dot
-                        p = e.index(".") + 1
-                        q = p + 12
-                        ret.append([e[p:q], parse(e[q:], zipped=is_z)])
+                    ts, data = _split_line(e)
+                    ret.append([ts, parse(data, zipped=is_z)])
                 except json.JSONDecodeError:
                     decode_error_count += 1
                     continue
+
             if decode_error_count > 0:
                 _logger.warning(f"Failed to decode {decode_error_count}"
                                 f" messages ({len(records)} messages "
@@ -1856,7 +1866,7 @@ def parse(text: str, zipped: bool = False) -> str | dict:
     if zipped:
         text = zlib.decompress(base64.b64decode(text), -zlib.MAX_WBITS)
         return parse(text.decode("utf-8-sig"))
-    _logger.warning("Couldn't parse text")
+    _logger.warning("Couldn't parse data record")
     return text
 
 
