@@ -131,21 +131,33 @@ you are looking for.
   >>> event['EventName']
   'Spanish Grand Prix'
 
-But be aware that this does not always work. Sometimes another name just
-matches the provided string better. For example, what we actually want is the
-'Emilia Romagna Grand Prix' but we get the 'Belgian Grand Prix' if we don't
-specify the name fully and/or correct enough. Why? Because FastF1 is not a
-proper intelligent search engine. So check your results.
+But be aware that this does not always work. FastF1 is not a proper
+intelligent search engine, so a name that is too short or ambiguous may not
+match any event with enough confidence. In that case a
+:class:`~fastf1.exceptions.FuzzyMatchError` is raised instead of guessing.
 
   >>> event = fastf1.get_event(2021, 'Emilian')
-  >>> event['EventName']
-  'Belgian Grand Prix'
+  Traceback (most recent call last):
+      ...
+  fastf1.exceptions.FuzzyMatchError: Found no match for 'emilian' with sufficient relative confidence
 
 We need to be a bit more precise here.
 
   >>> event = fastf1.get_event(2021, 'Emilia Romagna')
   >>> event['EventName']
   'Emilia Romagna Grand Prix'
+
+If you would rather get an error than a possibly wrong event, fuzzy matching
+can be disabled by setting ``exact_match=True``. The event name then needs to
+match exactly (not case sensitive) and a :class:`KeyError` is raised if it
+does not. This is useful in scripts that load many events, where a silently
+substituted event is easy to miss.
+
+  >>> event = fastf1.get_event(2021, 'Emilia Romagna Grand Prix', exact_match=True)
+  >>> event['EventName']
+  'Emilia Romagna Grand Prix'
+
+:func:`fastf1.get_session` supports ``exact_match`` as well.
 
 Events and sessions can also be loaded by their country or location.
 
