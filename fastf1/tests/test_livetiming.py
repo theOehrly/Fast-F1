@@ -45,44 +45,28 @@ def test_duplicate_removal(tmpdir):
     assert len(livedata.get('TimingAppData')) == 1
 
 
-def test_no_auth_omits_token_factory(tmpdir):
-    # test that the access_token_factory is not set when no auth is used
-    tmpfile = os.path.join(tmpdir, "tmpfile.txt")
-    client = SignalRClient(tmpfile, no_auth=True)
-    with patch("fastf1.livetiming.client.requests") as fake_requests, \
-            patch("fastf1.livetiming.client.HubConnectionBuilder") as builder:
-        fake_requests.options.return_value.cookies = {"AWSALBCORS": "x"}
-        client._is_connected = True
+def _get_connection_options(client):
+    with patch("fastf1.livetiming.client.requests"), \
+            patch("fastf1.livetiming.client.HubConnectionBuilder") as hub:
+        client._is_connected = True  # the mocked connection never opens
         client._run()
-        client._output_file.close()
-        options = builder.return_value.with_url.call_args.kwargs["options"]
-        assert "access_token_factory" not in options
+    client._output_file.close()
+    return hub.return_value.with_url.call_args.kwargs["options"]
+
+
+def test_no_auth_omits_token_factory(tmpdir):
+    client = SignalRClient(os.path.join(tmpdir, "tmpfile.txt"), no_auth=True)
+    assert "access_token_factory" not in _get_connection_options(client)
 
 
 def test_failed_login_omits_token_factory(tmpdir):
-    tmpfile = os.path.join(tmpdir, "tmpfile.txt")
-    client = SignalRClient(tmpfile)
-    with patch("fastf1.livetiming.client.requests") as fake_requests, \
-            patch("fastf1.livetiming.client.HubConnectionBuilder") as hub, \
-            patch("fastf1.livetiming.client.get_token",
-                    side_effect=F1AuthError("failed")):
-        fake_requests.options.return_value.cookies = {"AWSALBCORS": "x"}
-        client._is_connected = True
-        client._run()
-        client._output_file.close()
-        options = hub.return_value.with_url.call_args.kwargs["options"]
-        assert "access_token_factory" not in options
+    client = SignalRClient(os.path.join(tmpdir, "tmpfile.txt"))
+    with patch("fastf1.livetiming.client.get_token",
+               side_effect=F1AuthError("failed")):
+        assert "access_token_factory" not in _get_connection_options(client)
 
 
 def test_login_passes_token_factory(tmpdir):
-    tmpfile = os.path.join(tmpdir, "tmpfile.txt")
-    client = SignalRClient(tmpfile)
-    with patch("fastf1.livetiming.client.requests") as fake_requests, \
-            patch("fastf1.livetiming.client.HubConnectionBuilder") as hub, \
-            patch("fastf1.livetiming.client.get_token"):
-        fake_requests.options.return_value.cookies = {"AWSALBCORS": "x"}
-        client._is_connected = True
-        client._run()
-        client._output_file.close()
-        options = hub.return_value.with_url.call_args.kwargs["options"]
-        assert "access_token_factory" in options
+    client = SignalRClient(os.path.join(tmpdir, "tmpfile.txt"))
+    with patch("fastf1.livetiming.client.get_token"):
+        assert "access_token_factory" in _get_connection_options(client)
