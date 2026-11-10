@@ -1,6 +1,7 @@
 import math
 
 import numpy
+import numpy as np
 import pandas
 import pandas as pd
 import pytest
@@ -299,6 +300,112 @@ def test_add_driver_ahead_resampled(reference_laps_data):
     test_data = test_data.add_driver_ahead()
     # only first value may be NaN
     assert test_data['DistanceToDriverAhead'].isnull().sum() <= 1
+
+
+def _reference_driver_ahead(tel):
+    # straightforward implementation of calculate_driver_ahead that uses the
+    # Telemetry methods for each driver; used as reference for the optimized
+    # implementation
+    session = tel.session
+    t_start = tel['SessionTime'].iloc[0]
+    t_end = tel['SessionTime'].iloc[-1]
+    combined = pd.DataFrame()
+    own_laps = session.laps[session.laps['DriverNumber'] == tel.driver]
+    first_lap_number = (own_laps[own_laps['LapStartTime'] <= t_start]
+                        ['LapNumber'].iloc[-1])
+    for drv in session.drivers:
+        if drv not in session.car_data:
+            continue
+        drv_laps = session.laps[session.laps['DriverNumber'] == drv]
+        if drv_laps.empty:
+            continue
+        before = drv_laps[drv_laps['LapStartTime'] <= t_start]
+        if not before.empty:
+            n_before = before['LapNumber'].iloc[-1]
+            if n_before < first_lap_number:
+                n_before += 1
+        else:
+            n_before = min(drv_laps['LapNumber'])
+        after = drv_laps[drv_laps['Time'] >= t_end]
+        n_after = after['LapNumber'].iloc[0] if not after.empty \
+            else max(drv_laps['LapNumber'])
+        pad_before = pad_after = 0
+        while True:
+            relevant = drv_laps[
+                (drv_laps['LapNumber'] >= n_before - pad_before)
+                & (drv_laps['LapNumber'] <= n_after + pad_after)
+            ]
+            if pad_before or pad_after or relevant.empty:
+                break
+            if pd.isna(relevant['LapStartTime'].iloc[-1]):
+                pad_before += 1
+            elif pd.isna(relevant['Time'].iloc[0]):
+                pad_after += 1
+            else:
+                break
+        if relevant.empty:
+            continue
+        drv_tel = session.car_data[drv].slice_by_lap(relevant)
+        if drv_tel.empty:
+            continue
+        drv_tel = drv_tel.add_distance().slice_by_time(t_start, t_end)
+        if drv_tel.empty:
+            continue
+        drv_tel = drv_tel.loc[:, ('SessionTime', 'Distance')] \
+            .rename(columns={'Distance': drv}).set_index('SessionTime')
+        combined = combined.join(drv_tel, how='outer')
+
+    others = combined.columns != tel.driver
+    drv_map = combined.columns[others].to_numpy()
+    own_dst = combined.loc[:, tel.driver].to_numpy()
+    other_dst = combined.loc[:, others].to_numpy()
+    other_dst[np.diff(other_dst, axis=0, prepend=other_dst[:1, :]) == 0] \
+        = np.nan
+    delta = other_dst - own_dst[:, None]
+    delta[np.isnan(delta) | (delta < 0)] = np.inf
+    index_ahead = np.argmin(delta, axis=1)
+    all_inf = np.all(delta == np.inf, axis=1)
+    drv_ahead = np.array([drv_map[i] for i in index_ahead])
+    drv_ahead[all_inf] = ''
+    dist = delta[np.arange(len(index_ahead)), index_ahead]
+    dist[all_inf] = np.nan
+    return drv_ahead, dist
+
+
+@pytest.mark.parametrize('modification', [None, 'lap_times', 'speed'])
+@pytest.mark.parametrize('lap_number', [1, 2, 20, 35])
+def test_calculate_driver_ahead_reference(reference_laps_data, monkeypatch,
+                                          lap_number, modification):
+    # the result needs to be exactly the same as the result of the reference
+    # implementation, also if some lap timestamps or speed values of other
+    # drivers are missing
+    session, laps = reference_laps_data
+    if modification == 'lap_times':
+        mod_laps = session.laps.copy()
+        rows = mod_laps.index[
+            (mod_laps['LapNumber'] >= lap_number - 1)
+            & (mod_laps['LapNumber'] <= lap_number + 1)
+            & (mod_laps['Driver'] != 'HAM')
+        ]
+        mod_laps.loc[rows[::3], 'LapStartTime'] = pd.NaT
+        mod_laps.loc[rows[1::3], 'Time'] = pd.NaT
+        monkeypatch.setattr(session, '_laps', mod_laps)
+    elif modification == 'speed':
+        ham_number = laps.pick_drivers('HAM')['DriverNumber'].iloc[0]
+        for drv, car_data in list(session.car_data.items()):
+            if drv == ham_number:
+                continue
+            mod_car_data = car_data.copy()
+            mod_car_data.loc[mod_car_data.index[::50], 'Speed'] = np.nan
+            monkeypatch.setitem(session.car_data, drv, mod_car_data)
+
+    lap = session.laps.pick_drivers('HAM').pick_laps(lap_number)
+    tel = lap.get_car_data()
+    drv_ahead, dist = tel.calculate_driver_ahead()
+    ref_drv_ahead, ref_dist = _reference_driver_ahead(tel)
+
+    np.testing.assert_array_equal(drv_ahead, ref_drv_ahead)
+    np.testing.assert_array_equal(dist, ref_dist)
 
 
 def test_add_track_status(reference_laps_data):
