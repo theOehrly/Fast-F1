@@ -1005,11 +1005,19 @@ class Telemetry(BaseDataFrame):
         # the "lap after" where the telemetry slice ends.
         # Integrate distance over all relevant laps and slice by t_start and
         # t_end after to get the interesting part only.
-        own_laps = self.session.laps[
-            self.session.laps["DriverNumber"] == self.driver
-            ]
-        first_lap_number = ((own_laps[own_laps["LapStartTime"] <= t_start])
-                            ["LapNumber"].iloc[-1])
+        # The lap data of all drivers is converted to numpy arrays only once,
+        # as filtering the laps separately for each driver is slow.
+        laps = self.session.laps
+        lap_drivers = laps["DriverNumber"].to_numpy()
+        lap_numbers = laps["LapNumber"].to_numpy()
+        lap_start_times = laps["LapStartTime"].to_numpy()
+        lap_end_times = laps["Time"].to_numpy()
+        t_start_np = t_start.to_timedelta64()
+        t_end_np = t_end.to_timedelta64()
+
+        is_own_lap = lap_drivers == self.driver
+        first_lap_number = (lap_numbers[is_own_lap]
+                            [lap_start_times[is_own_lap] <= t_start_np][-1])
         own_ref_tel = None
 
         for drv in self.session.drivers:
@@ -1017,15 +1025,17 @@ class Telemetry(BaseDataFrame):
                 continue
             # find correct first relevant lap; very important for correct zero
             # point in distance
-            drv_laps = self.session.laps[
-                self.session.laps["DriverNumber"] == drv
-                ]
-            if drv_laps.empty:
+            is_drv_lap = lap_drivers == drv
+            drv_lap_numbers = lap_numbers[is_drv_lap]
+            drv_lap_start_times = lap_start_times[is_drv_lap]
+            drv_lap_end_times = lap_end_times[is_drv_lap]
+            if drv_lap_numbers.size == 0:
                 # Only include drivers who participated in this session
                 continue
-            drv_laps_before = drv_laps[(drv_laps["LapStartTime"] <= t_start)]
-            if not drv_laps_before.empty:
-                lap_n_before = drv_laps_before["LapNumber"].iloc[-1]
+            drv_laps_before \
+                = drv_lap_numbers[drv_lap_start_times <= t_start_np]
+            if drv_laps_before.size > 0:
+                lap_n_before = drv_laps_before[-1]
                 if lap_n_before < first_lap_number:
                     # driver is behind on track an therefore will cross the
                     # finish line AFTER self therefore above check for
@@ -1034,14 +1044,14 @@ class Telemetry(BaseDataFrame):
                     # lap_n_before += 1
                     lap_n_before += 1
             else:
-                lap_n_before = min(drv_laps["LapNumber"])
+                lap_n_before = min(drv_lap_numbers)
 
             # find last relevant lap so as to no do too much unnecessary
             # calculation later
-            drv_laps_after = drv_laps[drv_laps["Time"] >= t_end]
-            lap_n_after = drv_laps_after["LapNumber"].iloc[0] \
-                if not drv_laps_after.empty \
-                else max(drv_laps["LapNumber"])
+            drv_laps_after = drv_lap_numbers[drv_lap_end_times >= t_end_np]
+            lap_n_after = drv_laps_after[0] \
+                if drv_laps_after.size > 0 \
+                else max(drv_lap_numbers)
 
             # pad_before/_after is used to extend the range of relevant laps
             # by up to one lap in each direction if the previously determined
@@ -1050,14 +1060,10 @@ class Telemetry(BaseDataFrame):
             pad_before = 0
             pad_after = 0
             while True:
-                relevant_laps = None
-                try:
-                    relevant_laps = drv_laps[
-                        (drv_laps["LapNumber"] >= (lap_n_before - pad_before))
-                        & (drv_laps["LapNumber"] <= lap_n_after + pad_after)
-                    ]
-                except IndexError:
-                    break
+                is_relevant = (
+                    (drv_lap_numbers >= (lap_n_before - pad_before))
+                    & (drv_lap_numbers <= lap_n_after + pad_after)
+                )
 
                 if (pad_before >= 1) or (pad_after >= 1):
                     _logger.warning(f"Car number {drv} cannot be located "
@@ -1065,43 +1071,92 @@ class Telemetry(BaseDataFrame):
                                     f"between cars.")
                     break
 
-                if relevant_laps.empty:
+                if not is_relevant.any():
                     break
 
                 # a relevant timestamp is NaT; pad accordingly and try again
-                if pd.isna(relevant_laps["LapStartTime"].iloc[-1]):
+                if np.isnat(drv_lap_start_times[is_relevant][-1]):
                     pad_before += 1
                     continue
-                if pd.isna(relevant_laps["Time"].iloc[0]):
+                if np.isnat(drv_lap_end_times[is_relevant][0]):
                     pad_after += 1
                     continue
                 break
 
-            if (relevant_laps is None) or relevant_laps.empty:
+            if not is_relevant.any():
                 continue
 
-            # first slice by lap and calculate distance, so that distance is
-            # zero at finish line
-            drv_tel = self.session.car_data[drv] \
-                .slice_by_lap(relevant_laps)
-
-            if drv_tel.empty:
+            # time frame of the relevant laps, same as in slice_by_lap;
+            # NaT values are skipped
+            starts = drv_lap_start_times[is_relevant]
+            ends = drv_lap_end_times[is_relevant]
+            starts = starts[~np.isnat(starts)]
+            ends = ends[~np.isnat(ends)]
+            if (starts.size == 0) or (ends.size == 0):
                 continue
-
-            drv_tel = drv_tel.add_distance()
-
-            # now slice again by time to only get the relevant time frame
-            drv_tel = drv_tel.slice_by_time(t_start, t_end)
-            if drv_tel.empty:
-                continue
+            laps_start = starts.min()
+            laps_end = ends.max()
 
             if drv == self.driver:
+                # the reference telemetry is returned and needs all channels;
+                # first slice by lap and calculate distance, so that distance
+                # is zero at finish line
+                drv_tel = self.session.car_data[drv].slice_by_time(
+                    pd.Timedelta(laps_start), pd.Timedelta(laps_end)
+                )
+                if drv_tel.empty:
+                    continue
+
+                drv_tel = drv_tel.add_distance()
+
+                # now slice again by time to only get the relevant time frame
+                drv_tel = drv_tel.slice_by_time(t_start, t_end)
+                if drv_tel.empty:
+                    continue
+
                 own_ref_tel = drv_tel
+                drv_tel = drv_tel.loc[:, ("SessionTime", "Distance")] \
+                    .rename(columns={"Distance": drv}) \
+                    .set_index("SessionTime")
 
-            drv_tel = drv_tel.loc[:, ("SessionTime", "Distance")] \
-                .rename(columns={"Distance": drv})
+            else:
+                # only the distance is needed for all other drivers; calculate
+                # it directly with numpy in the same way as slice_by_lap and
+                # add_distance, which is much faster than creating
+                # intermediate Telemetry objects
+                car_data = self.session.car_data[drv]
+                session_time = car_data["SessionTime"].to_numpy()
+                in_laps = ((session_time <= laps_end)
+                           & (session_time >= laps_start))
+                if not in_laps.any():
+                    continue
+                session_time = session_time[in_laps]
+                speed = car_data["Speed"].to_numpy()[in_laps]
 
-            drv_tel = drv_tel.set_index("SessionTime")
+                # 'Time' of the slice in seconds, zero at the start of the
+                # first relevant lap
+                time = (session_time - laps_start) / np.timedelta64(1, "s")
+                dt = np.diff(time, prepend=0.0)
+                # calculate_differential_distance uses the scalar Timedelta
+                # method for the first value, which can round differently
+                dt[0] = pd.Timedelta(session_time[0] - laps_start) \
+                    .total_seconds()
+                ds = speed / 3.6 * dt
+                # cumulative sum that skips NaN values, like pandas cumsum
+                distance = np.nancumsum(ds)
+                distance[np.isnan(ds)] = np.nan
+
+                # now slice again by time to only get the relevant time frame
+                in_frame = ((session_time <= t_end_np)
+                            & (session_time >= t_start_np))
+                if not in_frame.any():
+                    continue
+                drv_tel = pd.DataFrame(
+                    {drv: distance[in_frame]},
+                    index=pd.Index(session_time[in_frame],
+                                   name="SessionTime")
+                )
+
             combined_distance = combined_distance.join(drv_tel, how="outer")
 
         # create driver map for array
