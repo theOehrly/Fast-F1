@@ -66,6 +66,10 @@ def _load_drivers_from_f1_livetiming(
         abbreviation = driver_entry.get("Tla", "")
         name = " ".join((driver_entry.get("FirstName", ""),
                          driver_entry.get("LastName", "")))
+        if not name.strip():
+            name = driver_entry.get("FullName", "")
+            # full name is given as "First LAST", convert to "First Last"
+            name = " ".join([s.capitalize() for s in name.split(" ")])
 
         if not (abbreviation.strip() and name.strip() and team_name.strip()):
             _logger.warning(
