@@ -9,7 +9,6 @@ from signalrcore.hub_connection_builder import HubConnectionBuilder
 from signalrcore.messages.completion_message import CompletionMessage
 
 import fastf1
-from fastf1.exceptions import F1AuthError
 from fastf1.internals.f1account import get_token
 
 
@@ -110,6 +109,9 @@ class SignalRClient:
 
         self._connection = None
         self._is_connected = False
+        # stop flag prevents further message processing while in the
+        # process of closing the file and the connection
+        self._stop = False
 
         if not logger:
             logging.basicConfig(
@@ -124,6 +126,9 @@ class SignalRClient:
         self._t_last_message = None
 
     def _on_message(self, msg: list | CompletionMessage):
+        if self._stop:
+            return  # stopping already, don't process anymore
+
         self._t_last_message = time.time()
 
         if isinstance(msg, CompletionMessage):
@@ -156,7 +161,7 @@ class SignalRClient:
         self.logger.info("Connection closed")
 
     def _run(self):
-        self._output_file = open(self.filename, self.filemode)  # noqa: SIM115
+        access_token_factory = self._access_token_factory()
 
         # Pre-negotiate to the get a valid AWSALBCORS header token
         r = requests.options(self._negotiate_url, headers=self.headers)
@@ -169,7 +174,6 @@ class SignalRClient:
             "verify_ssl": True,
             "headers": self.headers
         }
-        access_token_factory = self._access_token_factory()
         if access_token_factory is not None:
             options["access_token_factory"] = access_token_factory
 
@@ -197,13 +201,7 @@ class SignalRClient:
         if self._no_auth:
             return None
         # sign in before connecting, so that a failure is reported early
-        try:
-            get_token()
-        except F1AuthError as exc:
-            self.logger.warning(f"Failed to authenticate with Formula 1 "
-                                f"account, continuing without "
-                                f"authentication: {exc}")
-            return None
+        get_token()
         # renews the token if necessary when reconnecting
         return lambda: get_token().value
 
@@ -217,25 +215,24 @@ class SignalRClient:
                 self.logger.warning(f"Timeout - received no data for more "
                                     f"than {self.timeout} seconds!")
 
-                self._exit()
                 return
 
             time.sleep(1)
-
-    def _exit(self):
-        self._connection.stop()
-        self._output_file.close()
 
     def start(self):
         """Connect to the data stream and start writing the data to a file."""
         self.logger.info(f"Starting FastF1 live timing client "
                          f"[v{fastf1.__version__}]")
-        self._run()
-        try:
-            self._supervise()
-        except KeyboardInterrupt:
-            self.logger.info("Exiting...")
-            self._exit()
+        with open(self.filename, self.filemode) as self._output_file:
+            try:
+                self._run()
+                self._supervise()
+            except KeyboardInterrupt:
+                self.logger.info("Exiting...")
+            finally:
+                self._stop = True
+                if self._connection is not None:
+                    self._connection.stop()
 
     async def async_start(self):
         """

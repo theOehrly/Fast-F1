@@ -1,6 +1,8 @@
 import os
 from unittest.mock import patch
 
+import pytest
+
 import fastf1.events
 from fastf1.exceptions import F1AuthError
 from fastf1.livetiming.client import SignalRClient
@@ -50,7 +52,6 @@ def _get_connection_options(client):
             patch("fastf1.livetiming.client.HubConnectionBuilder") as hub:
         client._is_connected = True  # the mocked connection never opens
         client._run()
-    client._output_file.close()
     return hub.return_value.with_url.call_args.kwargs["options"]
 
 
@@ -59,11 +60,12 @@ def test_no_auth_omits_token_factory(tmpdir):
     assert "access_token_factory" not in _get_connection_options(client)
 
 
-def test_failed_login_omits_token_factory(tmpdir):
-    client = SignalRClient(os.path.join(tmpdir, "tmpfile.txt"))
-    with patch("fastf1.livetiming.client.get_token",
-               side_effect=F1AuthError("failed")):
-        assert "access_token_factory" not in _get_connection_options(client)
+def test_failed_login_raises_F1AuthError(tmpdir):
+    with pytest.raises(F1AuthError):
+        client = SignalRClient(os.path.join(tmpdir, "tmpfile.txt"))
+        with patch("fastf1.livetiming.client.get_token",
+                   side_effect=F1AuthError()):
+            _get_connection_options(client)
 
 
 def test_login_passes_token_factory(tmpdir):
