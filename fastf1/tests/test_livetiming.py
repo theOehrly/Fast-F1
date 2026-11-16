@@ -68,5 +68,8 @@ def test_failed_login_omits_token_factory(tmpdir):
 
 def test_login_passes_token_factory(tmpdir):
     client = SignalRClient(os.path.join(tmpdir, "tmpfile.txt"))
-    with patch("fastf1.livetiming.client.get_token"):
-        assert "access_token_factory" in _get_connection_options(client)
+    with patch("fastf1.livetiming.client.get_token") as mock_get_token:
+        mock_get_token.return_value.value = "token123"
+        options = _get_connection_options(client)
+        assert "access_token_factory" in options
+        assert options["access_token_factory"]() == "token123"
