@@ -6,12 +6,12 @@ import zlib
 import numpy as np
 import pandas as pd
 
+from fastf1.internals.pandas_extensions import create_df_fast
 from fastf1.internals.parsing_helpers import (
     recursive_dict_get,
     to_datetime,
     to_timedelta
 )
-from fastf1.internals.pandas_extensions import create_df_fast
 from fastf1.logger import (
     get_logger,
     soft_exceptions
@@ -26,7 +26,7 @@ base_url_mirror = "https://livetiming-mirror.fastf1.dev"
 
 headers: dict[str, str] = {
     "Connection": "close",
-    "TE": "identity",
+    "TE": "identity",  # codespell:ignore
     "User-Agent": "BestHTTP",
     "Accept-Encoding": "gzip, identity",
 }
@@ -253,7 +253,7 @@ def _extended_timing_data(path, response=None, livedata=None):
                  logger=_logger)
 def _align_laps(laps_data, stream_data):
     # align lap start and end times between drivers based on Gap to leader
-    if pd.isnull(stream_data["GapToLeader"]).all():
+    if pd.isna(stream_data["GapToLeader"]).all():
         return  # no data to align on
 
     expected_gap = {}
@@ -272,8 +272,8 @@ def _align_laps(laps_data, stream_data):
         skip_drivers = laps_data.loc[
             (
                 (laps_data["NumberOfLaps"] == (offset + 1)) &
-                ((~pd.isnull(laps_data["PitInTime"])) |
-                 (~pd.isnull(laps_data["PitOutTime"])))
+                ((~pd.isna(laps_data["PitInTime"])) |
+                 (~pd.isna(laps_data["PitOutTime"])))
             ), "Driver"
         ].to_list()
 
@@ -355,6 +355,20 @@ def _get_gap_str_for_drv(drv, idx, laps_data, stream_data):
     ref_idx = (stream_data[stream_data["Driver"] == drv]["Time"]
                - first_time).abs().idxmin()
     return stream_data.loc[ref_idx]["GapToLeader"]
+
+
+def _sector_sum(drv_data, lap_idx):
+    """Sum of the three sector times of a lap.
+
+    Returns None if any of the sector times is missing, i.e. if no
+    complete sum can be calculated.
+    """
+    total = (drv_data["Sector1Time"][lap_idx]
+             + drv_data["Sector2Time"][lap_idx]
+             + drv_data["Sector3Time"][lap_idx])
+    if pd.isna(total):
+        return None
+    return total
 
 
 def _laps_data_driver(driver_raw, empty_vals, drv):
@@ -466,14 +480,21 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             # missing or if the value is an empty string
 
             val = to_timedelta(val)  # empty string converts to None here!
+            lap_idx = lapcnt - lap_offset
             # Set None values too, to explicitly differentiate the case where
             # no information about the value is found in the source from the
             # case here where the source indicates that no value exists.
-            if (val is None) or (val.total_seconds() < 150):
-                # laps which are longer than 150 seconds are ignored; usually this is the case between Q1, Q2 and Q3
-                # because all three qualifying sessions are one session here. Those timestamps are often wrong and
-                # sometimes associated with the wrong lap
-                drv_data["LapTime"][lapcnt - lap_offset] = val
+            if ((val is None) or (val.total_seconds() < 150)
+                    or (val == _sector_sum(drv_data, lap_idx))):
+                # Lap times longer than 150 seconds are usually incorrect:
+                # because all three qualifying sessions are one session here,
+                # the value that is received between Q1, Q2 and Q3 is the time
+                # since the driver's previous lap. Those values are often wrong
+                # and sometimes associated with the wrong lap. Such a value is
+                # only accepted if the sector times that were received for this
+                # lap add up to exactly the same value, which identifies it as
+                # a genuinely slow lap (e.g. safety car or red flag).
+                drv_data["LapTime"][lap_idx] = val
 
         if "Speeds" in resp:
             for trapkey, trapname in (("I1", "SpeedI1"), ("I2", "SpeedI2"), ("FL", "SpeedFL"), ("ST", "SpeedST")):
@@ -543,7 +564,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
     def data_in_lap(lap_n):
         relevant = ("Sector1Time", "Sector2Time", "Sector3Time", "SpeedI1", "SpeedI2",
                     "SpeedFL", "SpeedST", "LapTime")
-        return any(not pd.isnull(drv_data[col][lap_n]) for col in relevant)
+        return any(not pd.isna(drv_data[col][lap_n]) for col in relevant)
 
     # 'NumberOfLaps' always introduces a new lap (can be a previous one) but sometimes there is one more lap at the end
     # in this case the data will be added as usual above, lap count and pit stops are added here and the 'Time' is
@@ -634,14 +655,14 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         for sector_time, session_time in ((pd.Timedelta(0), drv_data["Sector3SessionTime"][i]),
                                           (drv_data["Sector3Time"][i], drv_data["Sector2SessionTime"][i]),
                                           (drv_data["Sector2Time"][i], drv_data["Sector1SessionTime"][i])):
-            if pd.isnull(session_time):
+            if pd.isna(session_time):
                 continue
-            if pd.isnull(sector_time):
+            if pd.isna(sector_time):
                 break  # need to stop here because else the sector sum will be incorrect
 
             sector_sum += sector_time
             new_time = session_time + sector_sum
-            if not pd.isnull(new_time) and (new_time < min_time or pd.isnull(min_time)):
+            if not pd.isna(new_time) and (new_time < min_time or pd.isna(min_time)):
                 min_time = new_time
         if i > 0 and min_time < drv_data["Time"][i - 1]:
             integrity_errors.append(i + 1)  # not be possible if sector times and lap time are correct
@@ -650,8 +671,8 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
         drv_data["Time"][i] = min_time
 
     # last lap needs to be removed if it does not have a 'Time' and it could not be calculated (likely an inlap)
-    if pd.isnull(drv_data["Time"][-1]):
-        if not pd.isnull(drv_data["PitInTime"][-1]):
+    if pd.isna(drv_data["Time"][-1]):
+        if not pd.isna(drv_data["PitInTime"][-1]):
             drv_data["Time"][-1] = drv_data["PitInTime"][-1]
         else:
             for key in drv_data:
@@ -672,8 +693,8 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
 
     # need to go both directions once to make everything match up; also recalculate sector times
     for i in range(len(drv_data["Time"]) - 1):
-        if (pd.isnull(drv_data["Time"][i])
-                or pd.isnull(drv_data["LapTime"][i + 1])):
+        if (pd.isna(drv_data["Time"][i])
+                or pd.isna(drv_data["LapTime"][i + 1])):
             # lap not usable, missing critical values; more checks follow
             continue
 
@@ -681,7 +702,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
                 < drv_data["Time"][i+1]:
             drv_data["Time"][i+1] = new_time
 
-        if pd.isnull(drv_data["Sector1Time"][i + 1]):
+        if pd.isna(drv_data["Sector1Time"][i + 1]):
             continue
 
         if (new_s1_time := drv_data["Time"][i]
@@ -689,7 +710,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
                 < drv_data["Sector1SessionTime"][i+1]:
             drv_data["Sector1SessionTime"][i+1] = new_s1_time
 
-        if pd.isnull(drv_data["Sector2Time"][i + 1]):
+        if pd.isna(drv_data["Sector2Time"][i + 1]):
             continue
 
         if (new_s2_time := drv_data["Time"][i] + drv_data["Sector1Time"][i+1]
@@ -697,7 +718,7 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
                 < drv_data["Sector2SessionTime"][i+1]:
             drv_data["Sector2SessionTime"][i+1] = new_s2_time
 
-        if pd.isnull(drv_data["Sector3Time"][i + 1]):
+        if pd.isna(drv_data["Sector3Time"][i + 1]):
             continue
 
         if (new_s3_time := drv_data["Time"][i] + drv_data["Sector1Time"][i+1]
@@ -987,8 +1008,6 @@ def car_data(path, response=None, livedata=None):
     columns = ["Time", "Date", "RPM", "Speed", "nGear", "Throttle", "Brake",
                "DRS", "Source"]  # correct order required!
 
-    ts_length = 12  # length of timestamp: len('00:00:00:000')
-
     data = {}
     decode_error_count = 0
 
@@ -998,8 +1017,9 @@ def car_data(path, response=None, livedata=None):
                 time = to_timedelta(record[0])
                 jrecord: dict = parse(record[1], zipped=True)
             else:
-                time = to_timedelta(record[:ts_length])
-                jrecord: dict = parse(record[ts_length:], zipped=True)
+                _ts, _data = _split_line(record)
+                time = to_timedelta(_ts)
+                jrecord: dict = parse(_data, zipped=True)
 
             for entry in jrecord["Entries"]:
                 # date format is '2020-08-08T09:45:03.0619797Z' with a varying
@@ -1150,7 +1170,6 @@ def position_data(path, response=None, livedata=None):
     if not response:
         return {}
 
-    ts_length = 12  # length of timestamp: len('00:00:00:000')
     columns = ["Time", "Date", "Status", "X", "Y", "Z",
                "Source"]  # correct order required!
 
@@ -1163,8 +1182,9 @@ def position_data(path, response=None, livedata=None):
                 time = record[0]
                 jrecord: dict = parse(record[1], zipped=True)
             else:
-                time = to_timedelta(record[:ts_length])
-                jrecord: dict = parse(record[ts_length:], zipped=True)
+                _ts, _data = _split_line(record)
+                time = to_timedelta(_ts)
+                jrecord: dict = parse(_data, zipped=True)
 
             for sample in jrecord["Position"]:
                 # date format is '2020-08-08T09:45:03.0619797Z' with a varying
@@ -1741,6 +1761,24 @@ def session_info(path, response=None, livedata=None):
     return data
 
 
+def _split_line(line: str) -> tuple[str, str]:
+    # Splits a single line of the recorded stream data into timestamp and
+    # JSON data. The timestamp length can vary in some session (GH#992)
+    if line[2] == ":":
+        # format HH:MM:SS.mmm expect a column at index 2
+        # length of timestamp is always 12 characters
+        ts = line[:12]
+        data = line[12:]
+    else:
+        # format [D]D.HH:MM:SS.mmm determine offset based on first dot
+        # length of timestamp may be inconsistent
+        p = line.index(".") + 1
+        q = p + 12
+        ts = line[p:q]
+        data = line[q:]
+    return ts, data
+
+
 def fetch_page(path, name):
     """
     .. warning::
@@ -1765,29 +1803,32 @@ def fetch_page(path, name):
     is_stream = "jsonStream" in page
     is_z = ".z." in page
 
-    r = Cache.requests_get(base_url + path + pages[name], headers=headers)
+    urls = (
+        base_url + path + pages[name],
+        base_url_mirror + path + pages[name]
+    )
 
-    if r.status_code >= 400:
-        _logger.debug(f"Falling back to livetiming mirror ({base_url_mirror})")
-        r = Cache.requests_get(base_url_mirror + path + pages[name],
-                               headers=headers)
+    r = Cache.requests_get(urls, headers=headers)
 
     if r.status_code == 200:
         raw = r.content.decode("utf-8-sig")
         if is_stream:
             records = raw.split("\r\n")[:-1]  # last split is empty
+
             if name in ("position", "car_data"):
                 # Special case to improve memory efficiency
                 return records
+
             decode_error_count = 0
-            tl = 12  # length of timestamp: len('00:00:00:000')
             ret = []
             for e in records:
                 try:
-                    ret.append([e[:tl], parse(e[tl:], zipped=is_z)])
+                    ts, data = _split_line(e)
+                    ret.append([ts, parse(data, zipped=is_z)])
                 except json.JSONDecodeError:
                     decode_error_count += 1
                     continue
+
             if decode_error_count > 0:
                 _logger.warning(f"Failed to decode {decode_error_count}"
                                 f" messages ({len(records)} messages "
@@ -1825,7 +1866,7 @@ def parse(text: str, zipped: bool = False) -> str | dict:
     if zipped:
         text = zlib.decompress(base64.b64decode(text), -zlib.MAX_WBITS)
         return parse(text.decode("utf-8-sig"))
-    _logger.warning("Couldn't parse text")
+    _logger.warning("Couldn't parse data record")
     return text
 
 

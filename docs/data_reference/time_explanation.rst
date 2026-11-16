@@ -38,7 +38,7 @@ For a sample of telemetry data this means, that the sample will always have the 
 `SessionTime`. But its value for `Time` will change when the dataset is modified.
 
 Take the following set of example telemetry. Lets assume the variable `tel` holds previously loaded telemetry data
-for one driver an for a full session (only time data is shown for simplification).
+for one driver for a full session (only time data is shown for simplification).
 
 .. doctest::
   :hide:

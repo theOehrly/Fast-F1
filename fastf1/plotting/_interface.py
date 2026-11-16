@@ -43,7 +43,10 @@ def _get_driver_team_mapping(
         mapping = DriverTeamMapping(year=year, teams=teams)
         _DRIVER_TEAM_MAPPINGS[api_path] = mapping
 
-    return _DRIVER_TEAM_MAPPINGS[api_path]
+    dtm = _DRIVER_TEAM_MAPPINGS[api_path]
+    if not dtm.teams:
+        raise ValueError("No drivers/teams found for this session!")
+    return dtm
 
 
 def _get_driver(
