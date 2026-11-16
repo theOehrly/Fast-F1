@@ -167,9 +167,11 @@ class SignalRClient:
         # Configure and create connection
         options = {
             "verify_ssl": True,
-            "access_token_factory": self._access_token_factory(),
             "headers": self.headers
         }
+        access_token_factory = self._access_token_factory()
+        if access_token_factory is not None:
+            options["access_token_factory"] = access_token_factory
 
         self._connection = HubConnectionBuilder() \
             .with_url(self._connection_url, options=options) \
