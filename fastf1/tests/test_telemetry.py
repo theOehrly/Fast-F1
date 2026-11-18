@@ -1,4 +1,5 @@
 import math
+import warnings
 
 import numpy
 import pandas
@@ -225,7 +226,13 @@ def test_drop_unknown_channels(caplog):
     assert "test_keep" in tel.columns
     assert "test_drop" in tel.columns
 
-    tel = fastf1.core.Telemetry(data, drop_unknown_channels=True)
+    # check that we raise our warning while ignoring the Pandas 4 deprecation
+    with (warnings.catch_warnings(),
+          pytest.warns(UserWarning, match="`drop_unknown_channels`")):
+        warnings.filterwarnings(
+            "ignore", category=Warning, message=".*inplace keyword.*"
+        )
+        tel = fastf1.core.Telemetry(data, drop_unknown_channels=True)
     assert "Speed" in tel.columns
     assert "test_keep" in tel.columns
     assert "test_drop" not in tel.columns
@@ -289,7 +296,7 @@ def test_add_driver_ahead(reference_laps_data, resample_rule):
     # values need to change over the course of the lap
     assert len(test_data['DistanceToDriverAhead'].unique()) > 2
     # DriverAhead must not be empty
-    assert (test_data['DriverAhead'].unique() != ['']).any()
+    assert (test_data['DriverAhead'].unique().astype(object) != ['']).any()
 
 
 def test_add_driver_ahead_resampled(reference_laps_data):

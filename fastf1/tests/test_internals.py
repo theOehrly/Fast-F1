@@ -11,6 +11,7 @@ from fastf1.internals.pandas_base import (
     _BaseSeriesConstructor
 )
 from fastf1.internals.pandas_extensions import _unsafe_create_df_fast
+from fastf1.testing import PDStringDtype
 
 
 def test_pandas_base_internal_imports():
@@ -207,9 +208,8 @@ def test_base_frame_default_columns():
             'C': object,
             'D': 'object',
             'E': Optional[int],
-            'F': 'string[python]',
-            'G': str,
-            'known': 'string[python]'
+            'F': str,
+            'known': str
         }
 
 
@@ -226,13 +226,12 @@ def test_base_frame_default_columns():
     assert df['C'].dtype == np.dtype('O')
     assert df['D'].dtype == np.dtype('O')
     assert df['E'].dtype == np.dtype('O')
-    assert df['F'].dtype == 'string[python]'
+    assert df['F'].dtype == PDStringDtype
 
     assert df['A'].iloc[0] == 0
     assert np.isnan(df['B'].iloc[0])
     assert df['C'].iloc[0] is None
     assert df['D'].iloc[0] is None
     assert df['E'].iloc[0] is None
-    assert pd.isna(df['F'].iloc[0])
-    assert df['G'].iloc[0] == ""
+    assert df['F'].iloc[0] == ""
     assert df['known'].iloc[0] == "a"

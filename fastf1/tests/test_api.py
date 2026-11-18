@@ -6,6 +6,7 @@ import pytest
 
 import fastf1._api
 from fastf1 import Cache
+from fastf1.testing import PDStringDtype
 
 
 def test_timing_data():
@@ -20,11 +21,25 @@ def test_timing_data():
         assert len(lap_data['Driver'].unique()) == 20  # 20 drivers
         assert len(lap_data.columns) == 18
         assert (lap_data.dtypes == [
-            'timedelta64[ns]', 'object', 'timedelta64[ns]', 'int64', 'int64',
-            'timedelta64[ns]', 'timedelta64[ns]', 'timedelta64[ns]',
-            'timedelta64[ns]', 'timedelta64[ns]', 'timedelta64[ns]',
-            'timedelta64[ns]', 'timedelta64[ns]', 'float64', 'float64',
-            'float64', 'float64', 'bool']).all()
+            'timedelta64[us]',  # Time
+            PDStringDtype,  # Driver
+            'timedelta64[us]',  # LapTime
+            'int64',  # NumberOfLaps
+            'int64', # NumberOfPitStops
+            'timedelta64[us]',  # PitOutTime
+            'timedelta64[us]',  # PitInTime
+            'timedelta64[us]',  # Sector1Time
+            'timedelta64[us]',  # Sector2Time
+            'timedelta64[us]',  # Sector3Time
+            'timedelta64[us]',  # Sector1SessionTime
+            'timedelta64[us]',  # Sector2SessionTime
+            'timedelta64[us]',  # Sector3SessionTime
+            'float64',  # SpeedI1
+            'float64',  # SpeedI2
+            'float64',  # SpeedFL
+            'float64',  # SpeedST
+            'bool'  # IsPersonalBest
+        ]).all()
 
         # these columns should not contain any NA values
         assert not lap_data.isna().loc[:, ('Time', 'Driver', 'NumberOfLaps',
@@ -56,8 +71,13 @@ def test_timing_data():
         # ########## verify stream data
         # columns are Time, Driver, Position, GapToLeader, IntervalToPositionAhead
         assert len(stream_data.columns) == 5
-        assert (stream_data.dtypes == ['timedelta64[ns]', 'object', 'int64',
-                                       'float64', 'float64']).all()
+        assert (stream_data.dtypes == [
+            'timedelta64[us]',  # Time
+            PDStringDtype,  # Driver
+            'int64',  # Position
+            'float64',  # GapToLeader
+            'float64' # IntervalToPositionAhead
+        ]).all()
         assert not stream_data.loc[:, ('Time', 'Driver', 'Position')]\
             .isna().any().any()
 
@@ -72,9 +92,20 @@ def test_timing_app_data():
         assert isinstance(data, pd.DataFrame)
         assert len(data.columns) == 13
         assert (data.dtypes == [
-            'float64', 'object', 'timedelta64[ns]', 'int64', 'float64',
-            'object', 'object', 'object', 'timedelta64[ns]', 'float64',
-            'object', 'float64', 'object']).all()
+            'float64',  #  LapNumber
+            PDStringDtype,  #  Driver
+            'timedelta64[us]',  #  LapTime
+            'int64',  #  Stint
+            'float64', #  TotalLaps
+            PDStringDtype,  #  Compound
+            'object',  #  New [bool | None]
+            PDStringDtype,  #  TyresNotChanged [str | np.nan]
+            'timedelta64[us]',  #  Time
+            'float64', #  LapFlags
+            'object',  #  LapCountTime
+            'float64',  #  StartLaps
+            'object' #  Outlap
+        ]).all()
 
 
 def test_car_data(caplog):
@@ -88,8 +119,16 @@ def test_car_data(caplog):
         assert len(data) == 36  # 20 drivers and some problem with the raw data
         assert list(data.values())[0].shape == (27897, 9)  # dataframe shape
         assert (list(data.values())[0].dtypes == [
-            'timedelta64[ns]', 'datetime64[ns]', 'int64', 'int64', 'int64',
-            'int64', 'bool', 'int64', 'object']).all()
+            'timedelta64[us]',  # Time
+            'datetime64[us]',  # Date
+            'int64',  # RPM
+            'int64',  # Speed
+            'int64',  # nGear
+            'int64',  # Throttle
+            'bool',  # Brake
+            'int64',  # DRS
+            PDStringDtype  # Source
+        ]).all()
 
 
 def test_position_data(caplog):
@@ -103,8 +142,8 @@ def test_position_data(caplog):
         assert len(data) == 20  # 20 drivers
         assert list(data.values())[0].shape == (26840, 7)  # dataframe shape
         assert (list(data.values())[0].dtypes == [
-            'timedelta64[ns]', 'datetime64[ns]', 'object',
-            'int64', 'int64', 'int64', 'object']).all()
+            'timedelta64[us]', 'datetime64[us]', PDStringDtype,
+            'int64', 'int64', 'int64', PDStringDtype]).all()
 
 
 def test_track_status_data():

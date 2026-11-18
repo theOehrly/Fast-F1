@@ -409,7 +409,7 @@ def test_quali_q3_cancelled(source):
     # Remove Q3 to simulate cancelled Q3. If a future race has a cancelled Q3,
     # that would be a better test case. The last one was the US GP in 2015, so
     # no lap data is available.
-    session.session_status.drop([13, 14, 15, 16], inplace=True)
+    session._session_status = session.session_status.drop([13, 14, 15, 16])
     session.results['Q3'] = np.timedelta64("NaT", "ns")
     if source == "session_status":
         # delete precalculated split times (from api parser)

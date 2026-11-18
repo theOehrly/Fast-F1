@@ -156,12 +156,12 @@ def test_first_lap_time_added_from_ergast_in_race():
 def test_lap_start_time_dtype_single_lap():
     # When a driver only completes one lap, the LapStartTime column only
     # contains a NaT value. Ensure that this column still has the correct
-    # timedelta64 dtype as pandas defaults to datetime64[ns] when all values
+    # timedelta64 dtype as pandas defaults to datetime64[us] when all values
     # are NaT (see GH#674)
     session = fastf1.get_session(2022, 10, 1)
     session.load(telemetry=False, weather=False)
 
-    assert session.laps['LapStartTime'].dtype == 'timedelta64[ns]'
+    assert session.laps['LapStartTime'].dtype == 'timedelta64[us]'
 
 
 def test_consecutive_equal_lap_times():
