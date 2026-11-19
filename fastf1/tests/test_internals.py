@@ -8,6 +8,7 @@ import pytest
 from fastf1.internals.pandas_base import (
     BaseDataFrame,
     BaseSeries,
+    IsPandas3,
     _BaseSeriesConstructor
 )
 from fastf1.internals.pandas_extensions import _unsafe_create_df_fast
@@ -38,8 +39,10 @@ def test_fast_df_creation():
     dtypes = ['int64',
               'float64',
               'object',
-              'timedelta64[us]',
-              'datetime64[us]',]
+              # pandas3 will cast differently and ensuring the correct dtype
+              # is up to the caller therefore allow difference here
+              'timedelta64[us]' if IsPandas3 else 'timedelta64[ns]',
+              'datetime64[us]' if IsPandas3 else 'datetime64[ns]',]
 
     df_safe = pd.DataFrame(data)
 

@@ -6,6 +6,7 @@ from pandas import (
 )
 
 from fastf1.internals import internals_logger as logger
+from fastf1.internals.pandas_base import IsPandas3
 
 
 try:
@@ -120,7 +121,8 @@ def _unsafe_create_df_fast(
 
     df = DataFrame(mgr)
 
-    if str_dtype_columns:
+    # only use the StringDType starting with pandas 3.0
+    if str_dtype_columns and IsPandas3:
         from pandas import StringDtype
         str_dtype = StringDtype(na_value=np.nan)
         for col in str_dtype_columns:
