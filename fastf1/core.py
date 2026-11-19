@@ -374,11 +374,20 @@ class Telemetry(BaseDataFrame):
             :class:`Telemetry`
         """
         if interpolate_edges:
-            edges = Telemetry({"SessionTime": (start_time, end_time),
-                               "Date": (start_time + self.session.t0_date,
-                                        end_time + self.session.t0_date)
-                               },
-                              session=self.session).__finalize__(self)
+            edges = Telemetry(
+                {
+                    "SessionTime": (start_time, end_time),
+                    "Date": (
+                        start_time + self.session.t0_date,
+                        end_time + self.session.t0_date,
+                    ),
+                },
+                session=self.session,
+            )
+            # fix time resolution on pandas <3.0
+            edges["SessionTime"] \
+                = edges["SessionTime"].astype("timedelta64[us]")
+            edges["Date"] = edges["Date"].astype("datetime64[us]")
             d = self.merge_channels(edges, frequency="original")
 
         else:
