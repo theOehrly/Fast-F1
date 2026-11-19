@@ -12,6 +12,8 @@ import numpy as np
 import pandas as pd
 import requests
 
+from fastf1.internals.pandas_base import IsPandas3
+
 
 _MP_CONFIGURED = False
 _REQUESTS_PATCHED = False
@@ -24,8 +26,7 @@ HTTP_CACHE_DIR = "fastf1/testing/data/http_cache"
 TEST_CACHE_DIR = "test_cache"
 
 
-PDStringDtype = pd.StringDtype(na_value=np.nan) \
-    if hasattr(pd, "StringDtype") else "object"
+PDStringDtype = pd.StringDtype(na_value=np.nan) if IsPandas3 else "object"
 
 
 class SubprocessTestError(Exception):

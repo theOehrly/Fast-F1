@@ -9,6 +9,9 @@ from typing import (
 import pandas as pd
 
 
+IsPandas3 = bool(pd.__version__.startswith("3."))
+
+
 # dangerous import of pandas internals
 # these imports are covered by
 # test_internals.py::test_pandas_base_internal_imports
