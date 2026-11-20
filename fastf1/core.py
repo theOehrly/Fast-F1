@@ -2806,9 +2806,10 @@ class Session:
 
         circuit_info = get_circuit_info(year=self.event.year,
                                         circuit_key=circuit_key)
-        circuit_info.add_marker_distance(
-            reference_lap=self.laps.pick_fastest()
-        )
+        if circuit_info is not None:
+            circuit_info.add_marker_distance(
+                reference_lap=self.laps.pick_fastest()
+            )
         return circuit_info
 
     def _calculate_t0_date(self, *tel_data_sets: dict):
