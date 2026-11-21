@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from fastf1 import get_session
 from fastf1.mvapi import get_circuit_info
 from fastf1.testing import (
@@ -40,3 +42,13 @@ def _test_get_circuit_info():
 
     get_circuit_info(year=2020, circuit_key=0)
     assert "Failed to load circuit info" in log_handle.text
+
+
+def test_session_get_circuit_info_none_when_unavailable():
+    # GH#1002: Session.get_circuit_info() must return None gracefully when
+    # the upstream mvapi returns None (e.g. for circuits without data)
+    session = get_session(2020, "Italy", "R")
+    session.load(telemetry=False)
+    with patch("fastf1.core.get_circuit_info", return_value=None):
+        result = session.get_circuit_info()
+    assert result is None
