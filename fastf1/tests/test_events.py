@@ -6,6 +6,7 @@ import pytest
 import fastf1.core
 import fastf1.events
 from fastf1.exceptions import FuzzyMatchError
+from fastf1.testing import PDStringDtype
 
 
 @pytest.mark.parametrize('backend', ['fastf1', 'f1timing', 'ergast'])
@@ -82,9 +83,9 @@ def test_event_schedule_partial_data_init():
          'Session1DateUtc': [None, None, None]},
         _force_default_cols=True
     )
-    assert schedule.dtypes['EventName'] == 'object'
+    assert schedule.dtypes['EventName'] == PDStringDtype
     assert schedule.dtypes['Session1Date'] == 'object'
-    assert schedule.dtypes['Session1DateUtc'] == '<M8[ns]'
+    assert schedule.dtypes['Session1DateUtc'] == '<M8[us]'
 
 
 def test_event_schedule_constructor_sliced():

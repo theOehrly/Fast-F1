@@ -8,7 +8,11 @@ import os
 import subprocess
 from typing import Callable
 
+import numpy as np
+import pandas as pd
 import requests
+
+from fastf1.internals.pandas_base import IsPandas3
 
 
 _MP_CONFIGURED = False
@@ -20,6 +24,9 @@ CREATE_HTTP_CACHE = False
 HTTP_CACHE_DIR = "fastf1/testing/data/http_cache"
 #: Stage 2 cache (``*.ff1pkl``); disposable, not version controlled
 TEST_CACHE_DIR = "test_cache"
+
+
+PDStringDtype = pd.StringDtype(na_value=np.nan) if IsPandas3 else "object"
 
 
 class SubprocessTestError(Exception):

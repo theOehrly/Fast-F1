@@ -24,6 +24,10 @@ jobs:
           - python-version: "3.12"
           - python-version: "3.13"
           - python-version: "3.14"
+          - name-suffix: "(Pandas 2.x)"
+            python-version: "3.14"
+            extra-requirements: "pandas==2.3.3"
+          - python-version: "3.15"
     name: Tests on ${{ matrix.python-version }} ${{ matrix.name-suffix }}
     steps:
       - name: Checkout repo

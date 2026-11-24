@@ -9,6 +9,9 @@ from typing import (
 import pandas as pd
 
 
+IsPandas3 = bool(pd.__version__.startswith("3."))
+
+
 # dangerous import of pandas internals
 # these imports are covered by
 # test_internals.py::test_pandas_base_internal_imports
@@ -58,7 +61,7 @@ class BaseDataFrame(pd.DataFrame):
     A dictionary that defines the default columns of the DataFrame and their
     corresponding data types. The keys are the column names and the values are
     the data types. The data types can be given as strings
-    (e.g. 'datetime64[ns]') or as classes (e.g. int).
+    (e.g. 'datetime64[us]') or as classes (e.g. int).
     """
 
     _internal_names = pd.DataFrame._internal_names + ["base_class_view"]
@@ -89,7 +92,7 @@ class BaseDataFrame(pd.DataFrame):
                 if self[col].isna().all():
                     # empty column, set appropriate NA-type
                     if isinstance(_type, str) and _type != "object":
-                        # type given as string, e.g. 'datetime64[ns]'
+                        # type given as string, e.g. 'datetime64[us]'
                         self[col] = pd.Series(dtype=_type)
                     elif type(None) in typing.get_args(_type):
                         # type given using typing module and type is marked as
@@ -165,7 +168,8 @@ class _BaseSeriesConstructor(pd.Series):
             # do "conventional" slicing and return a pd.Series
             constructor = pd.Series
 
-        elif parent.index is index:
+        elif (len(parent.index) == len(index)
+              and (parent.index == index).all()):
             # our index matches the parent index, therefore, the data is
             # a column of the parent DataFrame
             constructor = parent._constructor_sliced_vertical

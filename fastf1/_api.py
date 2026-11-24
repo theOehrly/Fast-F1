@@ -239,11 +239,20 @@ def _extended_timing_data(path, response=None, livedata=None):
 
     laps_data = pd.DataFrame(laps_data)
     stream_data = pd.DataFrame(stream_data)
+    stream_data["Time"] = stream_data["Time"].astype("timedelta64[us]")
+    stream_data["Driver"] = stream_data["Driver"].astype(str)
 
     _align_laps(laps_data, stream_data)
 
     # pandas doesn't correctly infer bool dtype columns, set type explicitly
-    laps_data[["IsPersonalBest"]] = laps_data[["IsPersonalBest"]].astype(bool)
+    laps_data["IsPersonalBest"] = laps_data["IsPersonalBest"].astype(bool)
+    time_cols = [
+        "Time", "LapTime", "PitOutTime", "PitInTime", "Sector1Time",
+        "Sector2Time", "Sector3Time", "Sector1SessionTime",
+        "Sector2SessionTime", "Sector3SessionTime"
+    ]
+    laps_data[time_cols] = laps_data[time_cols].astype("timedelta64[us]")
+
 
     return laps_data, stream_data, session_split_times
 
@@ -936,7 +945,11 @@ def timing_app_data(path, response=None, livedata=None):
                     data["Driver"][-1] = driver_number
                     data["Stint"][-1] = int(stint_number)
 
-    return pd.DataFrame(data)
+    df = pd.DataFrame(data)
+    df["Time"] = df["Time"].astype("timedelta64[us]")
+    df["LapTime"] = df["LapTime"].astype("timedelta64[us]")
+
+    return df
 
 
 @Cache.api_request_wrapper
@@ -1061,8 +1074,8 @@ def car_data(path, response=None, livedata=None):
     most_complete_ref = None
     for drv in data:
         arr_all = np.array(data[drv])
-        time = arr_all[:, 0].astype("timedelta64[ns]")
-        date = arr_all[:, 1].astype("datetime64[ns]")
+        time = arr_all[:, 0].astype("timedelta64[us]")
+        date = arr_all[:, 1].astype("datetime64[us]")
         rpm = arr_all[:, 2].astype("int64")
         speed = arr_all[:, 3].astype("int64")
         ngear = arr_all[:, 4].astype("int64")
@@ -1074,7 +1087,8 @@ def car_data(path, response=None, livedata=None):
         data[drv] = create_df_fast(
             arrays=[time, date,
                     rpm, speed, ngear, throttle, brake, drs, source],
-            columns=columns
+            columns=columns,
+            str_dtype_columns=["Source"]
         )
 
         if (most_complete_ref is None) \
@@ -1110,6 +1124,7 @@ def car_data(path, response=None, livedata=None):
             .fillna(value=0, inplace=False) \
             .astype("int64")
 
+        data[drv][bool_channels] = data[drv][bool_channels].astype(bool)
         data[drv][bool_channels] = \
             data[drv].loc[:, bool_channels] \
             .fillna(value=False, inplace=False) \
@@ -1229,8 +1244,8 @@ def position_data(path, response=None, livedata=None):
     most_complete_ref = None
     for drv in data:
         arr_all = np.array(data[drv])
-        time = arr_all[:, 0].astype("timedelta64[ns]")
-        date = arr_all[:, 1].astype("datetime64[ns]")
+        time = arr_all[:, 0].astype("timedelta64[us]")
+        date = arr_all[:, 1].astype("datetime64[us]")
         status = arr_all[:, 2].astype("object")
         x = arr_all[:, 3].astype("int64")
         y = arr_all[:, 4].astype("int64")
@@ -1239,7 +1254,8 @@ def position_data(path, response=None, livedata=None):
 
         data[drv] = create_df_fast(
             arrays=[time, date, status, x, y, z, source],
-            columns=columns
+            columns=columns,
+            str_dtype_columns=["Source", "Status"]
         )
 
         # check length of dataframe; sometimes there can be missing data

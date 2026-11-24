@@ -1,6 +1,7 @@
 from fastf1 import get_session
 from fastf1.mvapi import get_circuit_info
 from fastf1.testing import (
+    PDStringDtype,
     capture_log,
     run_in_subprocess
 )
@@ -12,7 +13,7 @@ def test_get_circuit_info():
     assert circuit_info is not None
 
     for col, dtype in (("X", 'float64'), ("Y", 'float64'), ("Number", 'int64'),
-                       ("Letter", 'object'), ("Angle", 'float64'),
+                       ("Letter", PDStringDtype), ("Angle", 'float64'),
                        ("Distance", 'float64')):
         assert col in circuit_info.corners.columns
         assert circuit_info.corners.dtypes[col] == dtype

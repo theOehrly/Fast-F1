@@ -142,8 +142,7 @@ class Telemetry(BaseDataFrame):
         session: Instance of associated session object.
             Required for full functionality!
         driver: Driver number as string. Required for full functionality!
-        drop_unknown_channels: Remove all unknown data channels (i.e. columns)
-            on initialization.
+
         **kwargs: passed through to `pandas.DataFrame` superclass
     """
 
@@ -188,9 +187,9 @@ class Telemetry(BaseDataFrame):
         "DRS": "int",
         "nGear": "int",
         "Source": str,
-        "Date": "datetime64[ns]",
-        "Time": "timedelta64[ns]",
-        "SessionTime": "timedelta64[ns]",
+        "Date": "datetime64[us]",
+        "Time": "timedelta64[us]",
+        "SessionTime": "timedelta64[us]",
         "Distance": "float64",
         "RelativeDistance": "float64",
         "DifferentialDistance": "float64",
@@ -206,13 +205,22 @@ class Telemetry(BaseDataFrame):
                  *args,
                  session: "Session" = None,
                  driver: str = None,
-                 drop_unknown_channels: bool = False,
                  **kwargs):
+        if "drop_unknown_channels" in kwargs:
+            drop_unknown_channels = kwargs.pop("drop_unknown_channels")
+        else:
+            drop_unknown_channels = False
+
         super().__init__(*args, **kwargs)
         self.session: Session | None = session
         self.driver = driver
 
         if drop_unknown_channels:
+            # ToDo: remove in v3.11
+            warnings.warn(
+                "argument `drop_unknown_channels` is deprecated and will be "
+                "removed in a future version", UserWarning
+            )
             unknown = set(self.columns).difference(self._CHANNELS.keys())
             # `self` cannot be rebound here, so the drop must be inplace
             super().drop(columns=unknown, inplace=True)  # noqa: PD002
@@ -366,11 +374,20 @@ class Telemetry(BaseDataFrame):
             :class:`Telemetry`
         """
         if interpolate_edges:
-            edges = Telemetry({"SessionTime": (start_time, end_time),
-                               "Date": (start_time + self.session.t0_date,
-                                        end_time + self.session.t0_date)
-                               },
-                              session=self.session).__finalize__(self)
+            edges = Telemetry(
+                {
+                    "SessionTime": (start_time, end_time),
+                    "Date": (
+                        start_time + self.session.t0_date,
+                        end_time + self.session.t0_date,
+                    ),
+                },
+                session=self.session,
+            )
+            # fix time resolution on pandas <3.0
+            edges["SessionTime"] \
+                = edges["SessionTime"].astype("timedelta64[us]")
+            edges["Date"] = edges["Date"].astype("datetime64[us]")
             d = self.merge_channels(edges, frequency="original")
 
         else:
@@ -2750,7 +2767,6 @@ class Session:
                         src[drv].drop(labels="Time", axis=1),
                         session=self,
                         driver=drv,
-                        drop_unknown_channels=True,
                         _cast_default_cols=True
                     )
                 except KeyError:
@@ -2879,20 +2895,20 @@ class Laps(BaseDataFrame):
     """
 
     _COLUMNS = {
-        "Time": "timedelta64[ns]",
+        "Time": "timedelta64[us]",
         "Driver": str,
         "DriverNumber": str,
-        "LapTime": "timedelta64[ns]",
+        "LapTime": "timedelta64[us]",
         "LapNumber": "float64",
         "Stint": "float64",
-        "PitOutTime": "timedelta64[ns]",
-        "PitInTime": "timedelta64[ns]",
-        "Sector1Time": "timedelta64[ns]",
-        "Sector2Time": "timedelta64[ns]",
-        "Sector3Time": "timedelta64[ns]",
-        "Sector1SessionTime": "timedelta64[ns]",
-        "Sector2SessionTime": "timedelta64[ns]",
-        "Sector3SessionTime": "timedelta64[ns]",
+        "PitOutTime": "timedelta64[us]",
+        "PitInTime": "timedelta64[us]",
+        "Sector1Time": "timedelta64[us]",
+        "Sector2Time": "timedelta64[us]",
+        "Sector3Time": "timedelta64[us]",
+        "Sector1SessionTime": "timedelta64[us]",
+        "Sector2SessionTime": "timedelta64[us]",
+        "Sector3SessionTime": "timedelta64[us]",
         "SpeedI1": "float64",
         "SpeedI2": "float64",
         "SpeedFL": "float64",
@@ -2902,8 +2918,8 @@ class Laps(BaseDataFrame):
         "TyreLife": "float64",
         "FreshTyre": bool,
         "Team": str,
-        "LapStartTime": "timedelta64[ns]",
-        "LapStartDate": "datetime64[ns]",
+        "LapStartTime": "timedelta64[us]",
+        "LapStartDate": "datetime64[us]",
         "TrackStatus": str,
         "Position": "float64",  # need to support NaN
         "Deleted": bool | None,
@@ -3927,10 +3943,10 @@ class SessionResults(BaseDataFrame):
         "Position": "float64",
         "ClassifiedPosition": str,
         "GridPosition": "float64",
-        "Q1": "timedelta64[ns]",
-        "Q2": "timedelta64[ns]",
-        "Q3": "timedelta64[ns]",
-        "Time": "timedelta64[ns]",
+        "Q1": "timedelta64[us]",
+        "Q2": "timedelta64[us]",
+        "Q3": "timedelta64[us]",
+        "Time": "timedelta64[us]",
         "Status": str,
         "Points": "float64",
         "Laps": "float64"
