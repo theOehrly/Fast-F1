@@ -1,3 +1,6 @@
+import math
+import warnings
+
 import numpy
 import pandas
 import pandas as pd
@@ -201,7 +204,7 @@ def test_merging_10_hz(reference_laps_data):
         assert ch in merged.columns
 
     # assert correct number of samples for duration at 10 Hz within +-1 sample
-    n_samples_target = round(test_car_data['Time'].iloc[-1].total_seconds() * 10, 0)
+    n_samples_target = math.floor(test_car_data['Time'].iloc[-1].total_seconds() * 10)
     assert len(merged) in (n_samples_target-1, n_samples_target, n_samples_target+1)
 
     # no values should be nan; everything should be interpolated
@@ -223,7 +226,13 @@ def test_drop_unknown_channels(caplog):
     assert "test_keep" in tel.columns
     assert "test_drop" in tel.columns
 
-    tel = fastf1.core.Telemetry(data, drop_unknown_channels=True)
+    # check that we raise our warning while ignoring the Pandas 4 deprecation
+    with (warnings.catch_warnings(),
+          pytest.warns(UserWarning, match="`drop_unknown_channels`")):
+        warnings.filterwarnings(
+            "ignore", category=Warning, message=".*inplace keyword.*"
+        )
+        tel = fastf1.core.Telemetry(data, drop_unknown_channels=True)
     assert "Speed" in tel.columns
     assert "test_keep" in tel.columns
     assert "test_drop" not in tel.columns
@@ -287,7 +296,7 @@ def test_add_driver_ahead(reference_laps_data, resample_rule):
     # values need to change over the course of the lap
     assert len(test_data['DistanceToDriverAhead'].unique()) > 2
     # DriverAhead must not be empty
-    assert (test_data['DriverAhead'].unique() != ['']).any()
+    assert (test_data['DriverAhead'].unique().astype(object) != ['']).any()
 
 
 def test_add_driver_ahead_resampled(reference_laps_data):

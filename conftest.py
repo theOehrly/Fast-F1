@@ -1,34 +1,13 @@
 import logging
 import os
-import re
 
 import pytest
 
 import fastf1.testing
 
 
-ERGAST_BACKEND_OVERRIDE = os.environ.get("FASTF1_TEST_ERGAST_BACKEND_OVERRIDE")
-
-if ERGAST_BACKEND_OVERRIDE:
-    import fastf1.ergast
-
-    fastf1.ergast.interface.BASE_URL = ERGAST_BACKEND_OVERRIDE
-
-
-# URLs for which no frozen test data exists, collected during the test run
-OFFLINE_CACHE_MISSES: set[str] = set()
-
-
-class _OfflineCacheMissHandler(logging.Handler):
-    """Collects the URLs that FastF1 could not serve from the frozen test
-    data, so that they can be reported once at the end of the test run."""
-    _PATTERN = re.compile(r"^Offline mode is enabled but no cached response "
-                          r"is available for '(?P<url>.*)'$")
-
-    def emit(self, record):
-        match = self._PATTERN.match(record.getMessage())
-        if match is not None:
-            OFFLINE_CACHE_MISSES.add(match["url"])
+# Collects the URLs for which no frozen test data exists during the test run
+CACHE_MISS_HANDLER = fastf1.testing.OfflineCacheMissHandler()
 
 
 def pytest_addoption(parser):
@@ -63,7 +42,7 @@ def pytest_configure(config):
 
     # Collect missing test data, so that it can be reported in the terminal
     # summary with an actionable message.
-    logging.getLogger("fastf1").addHandler(_OfflineCacheMissHandler())
+    logging.getLogger("fastf1").addHandler(CACHE_MISS_HANDLER)
 
     # Delete cached function output (stage 2), so that all http requests
     # access the Cache to renew the entries if necessary. The HTTP cache
@@ -89,19 +68,10 @@ def pytest_collection_modifyitems(config, items):
                 item.add_marker(skip_prj)
 
 
-def pytest_terminal_summary(terminalreporter, exitstatus, config):
-    terminalreporter.ensure_newline()
-    terminalreporter.section("Parameter Overrides", sep="-", blue=True,
-                             bold=True)
-    terminalreporter.line(f"Ergast backend override: "
-                          f"{ERGAST_BACKEND_OVERRIDE}")
-
+def pytest_terminal_summary(terminalreporter, config):
     if config.getoption("--create-http-cache"):
         _report_recorded_data(terminalreporter)
-    elif exitstatus and OFFLINE_CACHE_MISSES:
-        # Only report on failure. Some requests are expected to miss, for
-        # example when the primary API is unavailable and the test data was
-        # recorded from the mirror instead.
+    elif CACHE_MISS_HANDLER.missed_urls:
         _report_missing_data(terminalreporter)
 
 
@@ -112,37 +82,24 @@ def _report_missing_data(terminalreporter):
         "The tests run offline against frozen test data. No data is "
         "available for the following requests:"
     )
-    for url in sorted(OFFLINE_CACHE_MISSES):
+    for url in sorted(CACHE_MISS_HANDLER.missed_urls):
         terminalreporter.line(f"  {url}")
     terminalreporter.line(
         "\nIf this is caused by an outdated submodule, run "
-        "`git submodule update --init --depth 1` to get the latest test "
+        "`git submodule update --init --depth 1 fastf1/testing/data` to "
+        "get the latest test "
         "dataset."
         "\nIf a test requires new data, record it with "
         "`python -m pytest --create-http-cache <test>` and contribute "
         "the new files in fastf1/testing/data/ to "
         "https://github.com/theOehrly/fastf1-test-data."
-        "\nMissing cached requests may be irrelevant for some tests if "
-        "test data is fetched from a fallback mirror instead."
     )
 
 
 def _report_recorded_data(terminalreporter):
-    import subprocess
-
     # the submodule's working tree; git reports paths relative to it
     submodule_dir = os.path.dirname(fastf1.testing.HTTP_CACHE_DIR)
-
-    proc = subprocess.run(
-        ["git", "-C", submodule_dir,
-         "status", "--porcelain", "--untracked-files=all"],
-        capture_output=True, text=True, check=False
-    )
-    if proc.returncode:
-        return
-
-    # porcelain format: two status characters, a space, then the path
-    files = [line[3:] for line in proc.stdout.splitlines()]
+    files, total = fastf1.testing.report_recorded_data_files(submodule_dir)
 
     terminalreporter.ensure_newline()
     terminalreporter.section("Recorded Test Data", sep="-", blue=True,
@@ -151,10 +108,8 @@ def _report_recorded_data(terminalreporter):
         terminalreporter.line("No new test data was recorded.")
         return
 
-    total = 0
-    for name in sorted(files):
+    for name in files:
         terminalreporter.line(f"  {name}")
-        total += os.path.getsize(os.path.join(submodule_dir, name))
 
     terminalreporter.line(
         f"\n{len(files)} file(s), {total / 1024 ** 2:.1f} MB. Commit these in "

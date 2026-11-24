@@ -239,11 +239,20 @@ def _extended_timing_data(path, response=None, livedata=None):
 
     laps_data = pd.DataFrame(laps_data)
     stream_data = pd.DataFrame(stream_data)
+    stream_data["Time"] = stream_data["Time"].astype("timedelta64[us]")
+    stream_data["Driver"] = stream_data["Driver"].astype(str)
 
     _align_laps(laps_data, stream_data)
 
     # pandas doesn't correctly infer bool dtype columns, set type explicitly
-    laps_data[["IsPersonalBest"]] = laps_data[["IsPersonalBest"]].astype(bool)
+    laps_data["IsPersonalBest"] = laps_data["IsPersonalBest"].astype(bool)
+    time_cols = [
+        "Time", "LapTime", "PitOutTime", "PitInTime", "Sector1Time",
+        "Sector2Time", "Sector3Time", "Sector1SessionTime",
+        "Sector2SessionTime", "Sector3SessionTime"
+    ]
+    laps_data[time_cols] = laps_data[time_cols].astype("timedelta64[us]")
+
 
     return laps_data, stream_data, session_split_times
 
@@ -357,6 +366,20 @@ def _get_gap_str_for_drv(drv, idx, laps_data, stream_data):
     return stream_data.loc[ref_idx]["GapToLeader"]
 
 
+def _sector_sum(drv_data, lap_idx):
+    """Sum of the three sector times of a lap.
+
+    Returns None if any of the sector times is missing, i.e. if no
+    complete sum can be calculated.
+    """
+    total = (drv_data["Sector1Time"][lap_idx]
+             + drv_data["Sector2Time"][lap_idx]
+             + drv_data["Sector3Time"][lap_idx])
+    if pd.isna(total):
+        return None
+    return total
+
+
 def _laps_data_driver(driver_raw, empty_vals, drv):
     """
     .. warning::
@@ -466,14 +489,21 @@ def _laps_data_driver(driver_raw, empty_vals, drv):
             # missing or if the value is an empty string
 
             val = to_timedelta(val)  # empty string converts to None here!
+            lap_idx = lapcnt - lap_offset
             # Set None values too, to explicitly differentiate the case where
             # no information about the value is found in the source from the
             # case here where the source indicates that no value exists.
-            if (val is None) or (val.total_seconds() < 150):
-                # laps which are longer than 150 seconds are ignored; usually this is the case between Q1, Q2 and Q3
-                # because all three qualifying sessions are one session here. Those timestamps are often wrong and
-                # sometimes associated with the wrong lap
-                drv_data["LapTime"][lapcnt - lap_offset] = val
+            if ((val is None) or (val.total_seconds() < 150)
+                    or (val == _sector_sum(drv_data, lap_idx))):
+                # Lap times longer than 150 seconds are usually incorrect:
+                # because all three qualifying sessions are one session here,
+                # the value that is received between Q1, Q2 and Q3 is the time
+                # since the driver's previous lap. Those values are often wrong
+                # and sometimes associated with the wrong lap. Such a value is
+                # only accepted if the sector times that were received for this
+                # lap add up to exactly the same value, which identifies it as
+                # a genuinely slow lap (e.g. safety car or red flag).
+                drv_data["LapTime"][lap_idx] = val
 
         if "Speeds" in resp:
             for trapkey, trapname in (("I1", "SpeedI1"), ("I2", "SpeedI2"), ("FL", "SpeedFL"), ("ST", "SpeedST")):
@@ -915,7 +945,11 @@ def timing_app_data(path, response=None, livedata=None):
                     data["Driver"][-1] = driver_number
                     data["Stint"][-1] = int(stint_number)
 
-    return pd.DataFrame(data)
+    df = pd.DataFrame(data)
+    df["Time"] = df["Time"].astype("timedelta64[us]")
+    df["LapTime"] = df["LapTime"].astype("timedelta64[us]")
+
+    return df
 
 
 @Cache.api_request_wrapper
@@ -987,8 +1021,6 @@ def car_data(path, response=None, livedata=None):
     columns = ["Time", "Date", "RPM", "Speed", "nGear", "Throttle", "Brake",
                "DRS", "Source"]  # correct order required!
 
-    ts_length = 12  # length of timestamp: len('00:00:00:000')
-
     data = {}
     decode_error_count = 0
 
@@ -998,8 +1030,9 @@ def car_data(path, response=None, livedata=None):
                 time = to_timedelta(record[0])
                 jrecord: dict = parse(record[1], zipped=True)
             else:
-                time = to_timedelta(record[:ts_length])
-                jrecord: dict = parse(record[ts_length:], zipped=True)
+                _ts, _data = _split_line(record)
+                time = to_timedelta(_ts)
+                jrecord: dict = parse(_data, zipped=True)
 
             for entry in jrecord["Entries"]:
                 # date format is '2020-08-08T09:45:03.0619797Z' with a varying
@@ -1041,8 +1074,8 @@ def car_data(path, response=None, livedata=None):
     most_complete_ref = None
     for drv in data:
         arr_all = np.array(data[drv])
-        time = arr_all[:, 0].astype("timedelta64[ns]")
-        date = arr_all[:, 1].astype("datetime64[ns]")
+        time = arr_all[:, 0].astype("timedelta64[us]")
+        date = arr_all[:, 1].astype("datetime64[us]")
         rpm = arr_all[:, 2].astype("int64")
         speed = arr_all[:, 3].astype("int64")
         ngear = arr_all[:, 4].astype("int64")
@@ -1054,7 +1087,8 @@ def car_data(path, response=None, livedata=None):
         data[drv] = create_df_fast(
             arrays=[time, date,
                     rpm, speed, ngear, throttle, brake, drs, source],
-            columns=columns
+            columns=columns,
+            str_dtype_columns=["Source"]
         )
 
         if (most_complete_ref is None) \
@@ -1090,6 +1124,7 @@ def car_data(path, response=None, livedata=None):
             .fillna(value=0, inplace=False) \
             .astype("int64")
 
+        data[drv][bool_channels] = data[drv][bool_channels].astype(bool)
         data[drv][bool_channels] = \
             data[drv].loc[:, bool_channels] \
             .fillna(value=False, inplace=False) \
@@ -1150,7 +1185,6 @@ def position_data(path, response=None, livedata=None):
     if not response:
         return {}
 
-    ts_length = 12  # length of timestamp: len('00:00:00:000')
     columns = ["Time", "Date", "Status", "X", "Y", "Z",
                "Source"]  # correct order required!
 
@@ -1163,8 +1197,9 @@ def position_data(path, response=None, livedata=None):
                 time = record[0]
                 jrecord: dict = parse(record[1], zipped=True)
             else:
-                time = to_timedelta(record[:ts_length])
-                jrecord: dict = parse(record[ts_length:], zipped=True)
+                _ts, _data = _split_line(record)
+                time = to_timedelta(_ts)
+                jrecord: dict = parse(_data, zipped=True)
 
             for sample in jrecord["Position"]:
                 # date format is '2020-08-08T09:45:03.0619797Z' with a varying
@@ -1209,8 +1244,8 @@ def position_data(path, response=None, livedata=None):
     most_complete_ref = None
     for drv in data:
         arr_all = np.array(data[drv])
-        time = arr_all[:, 0].astype("timedelta64[ns]")
-        date = arr_all[:, 1].astype("datetime64[ns]")
+        time = arr_all[:, 0].astype("timedelta64[us]")
+        date = arr_all[:, 1].astype("datetime64[us]")
         status = arr_all[:, 2].astype("object")
         x = arr_all[:, 3].astype("int64")
         y = arr_all[:, 4].astype("int64")
@@ -1219,7 +1254,8 @@ def position_data(path, response=None, livedata=None):
 
         data[drv] = create_df_fast(
             arrays=[time, date, status, x, y, z, source],
-            columns=columns
+            columns=columns,
+            str_dtype_columns=["Source", "Status"]
         )
 
         # check length of dataframe; sometimes there can be missing data
@@ -1741,6 +1777,24 @@ def session_info(path, response=None, livedata=None):
     return data
 
 
+def _split_line(line: str) -> tuple[str, str]:
+    # Splits a single line of the recorded stream data into timestamp and
+    # JSON data. The timestamp length can vary in some session (GH#992)
+    if line[2] == ":":
+        # format HH:MM:SS.mmm expect a column at index 2
+        # length of timestamp is always 12 characters
+        ts = line[:12]
+        data = line[12:]
+    else:
+        # format [D]D.HH:MM:SS.mmm determine offset based on first dot
+        # length of timestamp may be inconsistent
+        p = line.index(".") + 1
+        q = p + 12
+        ts = line[p:q]
+        data = line[q:]
+    return ts, data
+
+
 def fetch_page(path, name):
     """
     .. warning::
@@ -1765,29 +1819,32 @@ def fetch_page(path, name):
     is_stream = "jsonStream" in page
     is_z = ".z." in page
 
-    r = Cache.requests_get(base_url + path + pages[name], headers=headers)
+    urls = (
+        base_url + path + pages[name],
+        base_url_mirror + path + pages[name]
+    )
 
-    if r.status_code >= 400:
-        _logger.debug(f"Falling back to livetiming mirror ({base_url_mirror})")
-        r = Cache.requests_get(base_url_mirror + path + pages[name],
-                               headers=headers)
+    r = Cache.requests_get(urls, headers=headers)
 
     if r.status_code == 200:
         raw = r.content.decode("utf-8-sig")
         if is_stream:
             records = raw.split("\r\n")[:-1]  # last split is empty
+
             if name in ("position", "car_data"):
                 # Special case to improve memory efficiency
                 return records
+
             decode_error_count = 0
-            tl = 12  # length of timestamp: len('00:00:00:000')
             ret = []
             for e in records:
                 try:
-                    ret.append([e[:tl], parse(e[tl:], zipped=is_z)])
+                    ts, data = _split_line(e)
+                    ret.append([ts, parse(data, zipped=is_z)])
                 except json.JSONDecodeError:
                     decode_error_count += 1
                     continue
+
             if decode_error_count > 0:
                 _logger.warning(f"Failed to decode {decode_error_count}"
                                 f" messages ({len(records)} messages "
@@ -1825,7 +1882,7 @@ def parse(text: str, zipped: bool = False) -> str | dict:
     if zipped:
         text = zlib.decompress(base64.b64decode(text), -zlib.MAX_WBITS)
         return parse(text.decode("utf-8-sig"))
-    _logger.warning("Couldn't parse text")
+    _logger.warning("Couldn't parse data record")
     return text
 
 

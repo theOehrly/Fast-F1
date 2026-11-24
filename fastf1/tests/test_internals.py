@@ -1,3 +1,4 @@
+import datetime
 from typing import Optional
 
 import numpy as np
@@ -7,9 +8,11 @@ import pytest
 from fastf1.internals.pandas_base import (
     BaseDataFrame,
     BaseSeries,
+    IsPandas3,
     _BaseSeriesConstructor
 )
 from fastf1.internals.pandas_extensions import _unsafe_create_df_fast
+from fastf1.testing import PDStringDtype
 
 
 def test_pandas_base_internal_imports():
@@ -22,16 +25,31 @@ def test_pandas_base_internal_imports():
 
 
 def test_fast_df_creation():
-    data = {'A': [1, 2, 3], 'B': [1.0, 2.0, 3.0], 3: ['a', 'b', 'c']}
+    data = {'int': [1, 2, 3],
+            'float': [1.0, 2.0, 3.0],
+            'str': ['a', 'b', 'c'],
+            'td': [datetime.timedelta(seconds=10),
+                   datetime.timedelta(seconds=20),
+                   datetime.timedelta(seconds=30)],
+            'dt': [datetime.datetime(2026, 4, 28, 22, 59, 34, 154),
+                   datetime.datetime(2026, 4, 28, 22, 59, 34, 359),
+                   datetime.datetime(2026, 4, 28, 22, 59, 34, 687)]}
 
     # need to explicitly force numpy dtypes to match pandas defaults
-    dtypes = ['int64', 'float64', 'object']
+    dtypes = ['int64',
+              'float64',
+              'object',
+              # pandas3 will cast differently and ensuring the correct dtype
+              # is up to the caller therefore allow difference here
+              'timedelta64[us]' if IsPandas3 else 'timedelta64[ns]',
+              'datetime64[us]' if IsPandas3 else 'datetime64[ns]',]
 
     df_safe = pd.DataFrame(data)
 
     arrays = list(np.array(d, dtype=t) for d, t in zip(data.values(), dtypes))
     df_fast = _unsafe_create_df_fast(
-        arrays=arrays, columns=list(data.keys())
+        arrays=arrays, columns=list(data.keys()),
+        str_dtype_columns=['str', ]
     )
 
     pd.testing.assert_frame_equal(df_safe, df_fast)
@@ -193,9 +211,8 @@ def test_base_frame_default_columns():
             'C': object,
             'D': 'object',
             'E': Optional[int],
-            'F': 'string[python]',
-            'G': str,
-            'known': 'string[python]'
+            'F': str,
+            'known': str
         }
 
 
@@ -212,13 +229,12 @@ def test_base_frame_default_columns():
     assert df['C'].dtype == np.dtype('O')
     assert df['D'].dtype == np.dtype('O')
     assert df['E'].dtype == np.dtype('O')
-    assert df['F'].dtype == 'string[python]'
+    assert df['F'].dtype == PDStringDtype
 
     assert df['A'].iloc[0] == 0
     assert np.isnan(df['B'].iloc[0])
     assert df['C'].iloc[0] is None
     assert df['D'].iloc[0] is None
     assert df['E'].iloc[0] is None
-    assert pd.isna(df['F'].iloc[0])
-    assert df['G'].iloc[0] == ""
+    assert df['F'].iloc[0] == ""
     assert df['known'].iloc[0] == "a"

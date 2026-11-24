@@ -34,5 +34,5 @@ docs/gen_modules/
 docs/api_reference/api_autogen/
 
 # all variations of cache directories
-*_cache/
+**/*_cache/
 .DS_Store

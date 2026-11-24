@@ -9,7 +9,7 @@ from signalrcore.hub_connection_builder import HubConnectionBuilder
 from signalrcore.messages.completion_message import CompletionMessage
 
 import fastf1
-from fastf1.internals.f1auth import get_auth_token
+from fastf1.internals.f1account import get_token
 
 
 def messages_from_raw(r: Iterable):
@@ -80,7 +80,6 @@ class SignalRClient:
     _connection_url = "wss://livetiming.formula1.com/signalrcore"
     _negotiate_url = "https://livetiming.formula1.com/signalrcore/negotiate"
 
-
     def __init__(self,
                  filename: str,
                  filemode: str = "w",
@@ -110,6 +109,9 @@ class SignalRClient:
 
         self._connection = None
         self._is_connected = False
+        # stop flag prevents further message processing while in the
+        # process of closing the file and the connection
+        self._stop = False
 
         if not logger:
             logging.basicConfig(
@@ -124,6 +126,9 @@ class SignalRClient:
         self._t_last_message = None
 
     def _on_message(self, msg: list | CompletionMessage):
+        if self._stop:
+            return  # stopping already, don't process anymore
+
         self._t_last_message = time.time()
 
         if isinstance(msg, CompletionMessage):
@@ -156,7 +161,7 @@ class SignalRClient:
         self.logger.info("Connection closed")
 
     def _run(self):
-        self._output_file = open(self.filename, self.filemode)  # noqa: SIM115
+        access_token_factory = self._access_token_factory()
 
         # Pre-negotiate to the get a valid AWSALBCORS header token
         r = requests.options(self._negotiate_url, headers=self.headers)
@@ -167,9 +172,10 @@ class SignalRClient:
         # Configure and create connection
         options = {
             "verify_ssl": True,
-            "access_token_factory": None if self._no_auth else get_auth_token,
             "headers": self.headers
         }
+        if access_token_factory is not None:
+            options["access_token_factory"] = access_token_factory
 
         self._connection = HubConnectionBuilder() \
             .with_url(self._connection_url, options=options) \
@@ -191,6 +197,14 @@ class SignalRClient:
             "Subscribe", [self.topics], on_invocation=self._on_message
         )
 
+    def _access_token_factory(self):
+        if self._no_auth:
+            return None
+        # sign in before connecting, so that a failure is reported early
+        get_token()
+        # renews the token if necessary when reconnecting
+        return lambda: get_token().value
+
     def _supervise(self):
         # check if data is still being received and exit if not
         self._t_last_message = time.time()
@@ -201,25 +215,24 @@ class SignalRClient:
                 self.logger.warning(f"Timeout - received no data for more "
                                     f"than {self.timeout} seconds!")
 
-                self._exit()
                 return
 
             time.sleep(1)
-
-    def _exit(self):
-        self._connection.stop()
-        self._output_file.close()
 
     def start(self):
         """Connect to the data stream and start writing the data to a file."""
         self.logger.info(f"Starting FastF1 live timing client "
                          f"[v{fastf1.__version__}]")
-        self._run()
-        try:
-            self._supervise()
-        except KeyboardInterrupt:
-            self.logger.info("Exiting...")
-            self._exit()
+        with open(self.filename, self.filemode) as self._output_file:
+            try:
+                self._run()
+                self._supervise()
+            except KeyboardInterrupt:
+                self.logger.info("Exiting...")
+            finally:
+                self._stop = True
+                if self._connection is not None:
+                    self._connection.stop()
 
     async def async_start(self):
         """

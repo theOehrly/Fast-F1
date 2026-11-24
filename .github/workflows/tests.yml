@@ -8,11 +8,6 @@ on:
   pull_request:
 
 
-env:
-  # Set environment variable with value from configuration variable
-  FASTF1_TEST_ERGAST_BACKEND_OVERRIDE: ${{ vars.FASTF1_TEST_ERGAST_BACKEND_OVERRIDE }}
-
-
 jobs:
   run-code-tests:
     if: (!contains(github.event.head_commit.message, '[skip-pytest]')) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name)
@@ -29,16 +24,24 @@ jobs:
           - python-version: "3.12"
           - python-version: "3.13"
           - python-version: "3.14"
+          - name-suffix: "(Pandas 2.x)"
+            python-version: "3.14"
+            extra-requirements: "pandas==2.3.3"
+          - python-version: "3.15"
     name: Tests on ${{ matrix.python-version }} ${{ matrix.name-suffix }}
     steps:
       - name: Checkout repo
-        # The tests run against frozen test data that is provided by the
-        # 'fastf1-test-data' submodule. The commit that is referenced by this
-        # repository is used, so that a test run is reproducible
         uses: actions/checkout@v4
         with:
-          submodules: true
           fetch-depth: 1
+
+      - name: Fetch frozen test data
+        # The tests run against frozen test data that is provided by the
+        # 'fastf1-test-data' submodule. The commit that is referenced by this
+        # repository is used, so that a test run is reproducible. (Fetched
+        # explicitly, so that the unrelated doc data submodule is not fetched
+        # as well.)
+        run: git submodule update --init --depth 1 fastf1/testing/data
 
       - name: Setup python
         uses: actions/setup-python@v6

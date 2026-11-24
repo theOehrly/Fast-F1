@@ -42,14 +42,15 @@ If you have the proper privileges, you can use ``git@`` instead of
 ``https://``, which works through the ssh protocol and might be easier to use
 if you are using 2-factor authentication.
 
-The data that the tests run against is provided by a git submodule. If you
-intend to run the tests, fetch it from within the :file:`Fast-F1` directory
-using ::
+The data that the tests and the documentation build run against is provided by
+two git submodules. Fetch them from within the :file:`Fast-F1` directory, as
+needed, using ::
 
-    git submodule update --init --depth 1
+    git submodule update --init --depth 1 fastf1/testing/data   # for the tests
+    git submodule update --init --depth 1 docs/data             # for the docs
 
-This downloads roughly 80 MB and uses about 260 MB of disk space. See
-:ref:`testing_test_data` for details.
+Each of these downloads roughly 80 MB and uses a few hundred MB of disk space.
+See :ref:`testing_test_data` and :ref:`documenting_doc_data` for details.
 
 Installing FastF1 in editable mode
 ======================================

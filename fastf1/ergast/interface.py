@@ -13,7 +13,8 @@ from fastf1 import (
 )
 from fastf1.internals.pandas_base import (
     BaseDataFrame,
-    BaseSeries
+    BaseSeries,
+    IsPandas3
 )
 from fastf1.req import Cache
 
@@ -576,7 +577,7 @@ class Ergast:
                 query_result[i].pop(subcategory["name"])
                 for i in range(len(query_result))
             ]
-            return ErgastMultiResponse(
+            r = ErgastMultiResponse(
                 response_headers=resp, query_filters=body,
                 metadata=query_metadata, selectors=selectors,
                 response_description=query_result,
@@ -584,12 +585,34 @@ class Ergast:
                 category=category, subcategory=subcategory,
                 auto_cast=auto_cast
             )
-        return ErgastSimpleResponse(
-            response_headers=resp, query_filters=body,
-            metadata=query_metadata, selectors=selectors,
-            response=query_result, category=category,
-            auto_cast=auto_cast
-        )
+            cls._fix_df_time_resolution(r.description)
+            for df in r.content:
+                cls._fix_df_time_resolution(df)
+
+        else:
+            r = ErgastSimpleResponse(
+                response_headers=resp, query_filters=body,
+                metadata=query_metadata, selectors=selectors,
+                response=query_result, category=category,
+                auto_cast=auto_cast
+            )
+            cls._fix_df_time_resolution(r)
+
+        return r
+
+    @staticmethod
+    def _fix_df_time_resolution(
+            df: ErgastResultFrame
+    ):
+        if IsPandas3:
+            return
+
+        # convert to correct timestamp resolution (required for pandas <3.0)
+        for column in df.columns:
+            if df[column].dtype == "datetime64[ns]":
+                df[column] = df[column].astype("datetime64[us]")
+            elif df[column].dtype == "timedelta64[ns]":
+                df[column] = df[column].astype("timedelta64[us]")
 
     def _build_default_result(
             self, *,

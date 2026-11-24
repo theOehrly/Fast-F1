@@ -748,4 +748,4 @@ def test_ergast_api_endpoints_multi_response():
 
     assert result.content[0].shape[1] == 26  # correct dataframe shape
     assert 'fastestLapTime' in result.content[0].columns  # columns renamed
-    assert result.content[0]['fastestLapTime'].dtype == '<m8[ns]'  # casting
+    assert result.content[0]['fastestLapTime'].dtype == '<m8[us]'  # casting

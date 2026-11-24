@@ -25,7 +25,7 @@ To run the tests you will need to
 Running the tests
 -----------------
 
-In the root directory of your development repository run::
+In the **root directory** of your development repository run::
 
    python -m pytest
 
@@ -74,7 +74,7 @@ This test data lives in a separate repository,
 included as a git submodule in :file:`fastf1/testing/data/`. Fetch it before
 running the tests for the first time::
 
-   git submodule update --init --depth 1
+   git submodule update --init --depth 1 fastf1/testing/data
 
 The submodule contains the recorded API responses in :file:`http_cache/` as
 well as the static test files that some tests read directly, namely the
@@ -86,6 +86,9 @@ FastF1 commit. Checking out an older version of FastF1 and updating the
 submodule therefore gives you exactly the test data that this version was
 developed against. The continuous integration tests use the same referenced
 commit, so that they test against the same data as a local test run.
+
+The documentation build uses a separate dataset, see
+:ref:`documenting_doc_data`.
 
 The directory :file:`test_cache/` that is created in the root of the repository
 is used for FastF1's own parsed-data cache (stage 2 cache) while the tests run.
@@ -99,7 +102,7 @@ Adding test data
 If a test fails because no test data is available for a request, pytest will
 report the affected URLs at the end of the test run. This usually means that
 the submodule is out of date, so try running
-``git submodule update --init --depth 1`` first.
+``git submodule update --init --depth 1 fastf1/testing/data`` first.
 
 If you write a test that requires data which has not been recorded yet, you
 need to record it. **Please first check whether you can write your test based

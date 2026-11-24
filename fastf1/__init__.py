@@ -22,6 +22,7 @@ from fastf1.events import (  # noqa: F401
     get_testing_event,
     get_testing_session
 )
+from fastf1.internals.f1account import set_auth_method  # noqa: F401
 from fastf1.logger import set_log_level  # noqa: F401
 from fastf1.req import Cache  # noqa: F401
 
