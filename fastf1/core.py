@@ -2236,13 +2236,14 @@ class Session:
             pd.Timedelta(0), *stint_split_times, pd.Timedelta(days=1)
         ]
 
+        has_late_tyre_data = not (df["Time"] < self.session_start_time).any()
         # ### Problem 1: Detect bunched up tyre data messages at the start
         #                of a race session and adjust their timestamps.
         # ref: GH#863
         if (self.name in self._RACE_LIKE_SESSIONS
                 and did_pit_in_session
                 and (self.session_start_time is not None)
-                and not (df["Time"] < self.session_start_time).any()):
+                and has_late_tyre_data):
             # No tyre data messages were registered before the start of the
             # session. This points towards a delay in the transmission of the
             # data. Check if messages for multiple stints are bunched up with
@@ -2268,7 +2269,8 @@ class Session:
         # ### Problem 1b: Fix delayed first stint-0 tyre data
         # ref: GH#970
         if (self.name in self._RACE_LIKE_SESSIONS
-                and self.session_start_time is not None):
+                and self.session_start_time is not None
+                and has_late_tyre_data):
             stint_zero = df.loc[df["Stint"] == 0]
 
             if not stint_zero.empty:
