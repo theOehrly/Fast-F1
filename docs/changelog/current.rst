@@ -1,3 +1,4 @@
+What's new in v3.9.0
 What's new in v3.9.2
 --------------------------
 
@@ -28,7 +29,6 @@ Bug Fixes
 
 
 
-What's new in v3.9.0
 --------------------------
 
 (released 24/10/2026)

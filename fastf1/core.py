@@ -2236,13 +2236,14 @@ class Session:
             pd.Timedelta(0), *stint_split_times, pd.Timedelta(days=1)
         ]
 
+        has_late_tyre_data = not (df["Time"] < self.session_start_time).any()
         # ### Problem 1: Detect bunched up tyre data messages at the start
         #                of a race session and adjust their timestamps.
         # ref: GH#863
         if (self.name in self._RACE_LIKE_SESSIONS
                 and did_pit_in_session
                 and (self.session_start_time is not None)
-                and not (df["Time"] < self.session_start_time).any()):
+                and has_late_tyre_data):
             # No tyre data messages were registered before the start of the
             # session. This points towards a delay in the transmission of the
             # data. Check if messages for multiple stints are bunched up with
@@ -2264,6 +2265,25 @@ class Session:
                     df.loc[
                         (df["Stint"] == n) & (df["Time"] == first_ts), "Time"
                     ] = stint_brackets[n] + pd.Timedelta(milliseconds=1)
+
+        # ### Problem 1b: Fix delayed first stint-0 tyre data
+        # ref: GH#970
+        if (self.name in self._RACE_LIKE_SESSIONS
+                and self.session_start_time is not None
+                and has_late_tyre_data):
+            stint_zero = df.loc[df["Stint"] == 0]
+
+            if not stint_zero.empty:
+                first_stint_zero_idx = stint_zero["Time"].idxmin()
+                first_stint_zero_time = df.loc[
+                    first_stint_zero_idx, "Time"
+                ]
+
+                if first_stint_zero_time > self.session_start_time:
+                    df.loc[first_stint_zero_idx, "Time"] = (
+                        self.session_start_time
+                        - pd.Timedelta(milliseconds=1)
+                    )
 
         # ### Problem 2: detect and fix incorrectly incremented stint counter
         # ref: GH#715, GH#742
