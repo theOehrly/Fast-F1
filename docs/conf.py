@@ -218,6 +218,7 @@ sphinx_gallery_conf = {
     # if an example does not produce an output plot, use the following image
     # as the thumbnail.
     "default_thumb_file": "_static/logo.png",
+    "matplotlib_animations": True,
 
     # Modules for which function/class level galleries are created. In
     # this case sphinx_gallery and numpy in a tuple of strings.
