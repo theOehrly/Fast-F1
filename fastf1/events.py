@@ -818,9 +818,9 @@ class EventSchedule(BaseDataFrame):
         name and officialName of each event. This is not guaranteed to return
         the correct result. You should therefore always check if the function
         actually returns the event you had wanted.
-        To guarantee the function returns the event queried, toggle
-        strict_search, which will only return an event if its event name
-        matches (non case sensitive) the query string.
+        To guarantee the function returns the event queried, set
+        ``exact_match=True``, which will only return an event if its event
+        name matches (non case sensitive) the query string.
 
         .. warning:: You should avoid adding common words to ``name`` to avoid
             false string matches.
